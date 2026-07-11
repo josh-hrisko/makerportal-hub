@@ -14,11 +14,11 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 const directorySchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  '@id': 'https://makerportal.ai/#directory',
+  '@id': 'https://www.makerportal.ai/#directory',
   name: 'MakerPortal Application Directory',
   description: pageDescription,
-  url: 'https://makerportal.ai',
-  isPartOf: { '@id': 'https://makerportal.ai/#website' },
+  url: 'https://www.makerportal.ai',
+  isPartOf: { '@id': 'https://www.makerportal.ai/#website' },
   mainEntity: {
     '@type': 'ItemList',
     numberOfItems: apps.length,

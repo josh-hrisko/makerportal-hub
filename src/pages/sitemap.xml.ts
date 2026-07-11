@@ -13,9 +13,9 @@ const escapeXml = (value: string) => value.replace(/[<>&'\"]/g, (character) => (
 export const GET: APIRoute = async () => {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
   const urls = [
-    'https://makerportal.ai',
-    'https://makerportal.ai/blog',
-    ...posts.map((post) => `https://makerportal.ai/blog/${post.id}`),
+    'https://www.makerportal.ai',
+    'https://www.makerportal.ai/blog',
+    ...posts.map((post) => `https://www.makerportal.ai/blog/${post.id}`),
     ...apps.map((app) => app.url),
   ];
   const body = `<?xml version="1.0" encoding="UTF-8"?>

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://makerportal.ai/sitemap.xml
+Sitemap: https://www.makerportal.ai/sitemap.xml

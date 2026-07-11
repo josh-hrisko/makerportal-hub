@@ -3,7 +3,7 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  site: 'https://makerportal.ai',
+  site: 'https://www.makerportal.ai',
   output: 'static',
   trailingSlash: 'ignore',
   build: {
