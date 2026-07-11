@@ -7,9 +7,10 @@ interface Props {
   description?: string;
   canonical?: URL | string;
   noindex?: boolean;
+  type?: 'website' | 'article';
 }
 
-const { title, description, canonical, noindex } = Astro.props;
+const { title, description, canonical, noindex, type } = Astro.props;
 const year = new Date().getFullYear();
 
 const organizationSchema = {
@@ -20,16 +21,14 @@ const organizationSchema = {
       '@id': 'https://makersportal.com/#organization',
       name: 'MakerPortal',
       url: 'https://makersportal.com',
-      sameAs: [
-        'https://makerportal.ai',
-      ],
-      description: 'An independent, high-velocity software studio creating specialized utility, productivity, and lifestyle web applications.',
+      sameAs: ['https://makerportal.ai', 'https://github.com/josh-hrisko'],
+      description: 'An independent software studio creating focused utility, productivity, and lifestyle applications.',
     },
     {
       '@type': 'WebSite',
       '@id': 'https://makerportal.ai/#website',
       url: 'https://makerportal.ai',
-      name: 'MakerPortal Apps',
+      name: 'MakerPortal',
       publisher: { '@id': 'https://makersportal.com/#organization' },
       inLanguage: 'en-US',
     },
@@ -38,44 +37,61 @@ const organizationSchema = {
 ---
 
 <!doctype html>
-<html lang="en" class="bg-neutral-950">
+<html lang="en" class="bg-[#080808]">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="theme-color" content="#080808" />
     <meta name="color-scheme" content="dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap.xml" />
-    <SeoMeta title={title} description={description} canonical={canonical} noindex={noindex} />
+    <SeoMeta title={title} description={description} canonical={canonical} noindex={noindex} type={type} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
     <slot name="head" />
   </head>
-  <body class="flex min-h-screen flex-col font-sans text-neutral-100 antialiased">
-    <a href="#main-content" class="fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-emerald-400 px-4 py-2 font-semibold text-neutral-950 transition-transform focus:translate-y-0">
-      Skip to content
-    </a>
+  <body class="flex min-h-screen flex-col overflow-x-clip font-sans text-zinc-100 antialiased">
+    <a href="#main-content" class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-lime-300 px-4 py-2 font-semibold text-black transition-transform focus:translate-y-0">Skip to content</a>
 
-    <header class="border-b border-white/[0.06]">
-      <nav aria-label="Primary navigation" class="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-        <a href="/" class="inline-flex items-center gap-3 rounded-md">
-          <span aria-hidden="true" class="grid size-9 place-items-center rounded-xl border border-emerald-400/25 bg-emerald-400/10 text-sm font-bold text-emerald-300">M</span>
-          <span class="text-sm font-semibold tracking-[0.14em] text-neutral-100">MAKERPORTAL</span>
+    <header class="relative z-50 border-b border-white/[0.07] bg-[#080808]/90">
+      <nav aria-label="Primary navigation" class="mx-auto flex h-[4.75rem] max-w-[88rem] items-center justify-between px-5 sm:px-8 lg:px-10">
+        <a href="/" class="group inline-flex items-center gap-3 rounded-lg">
+          <span aria-hidden="true" class="relative grid size-9 place-items-center overflow-hidden rounded-full bg-lime-300 text-xs font-black text-black">
+            MP
+            <span class="absolute inset-x-0 bottom-0 h-1/2 translate-y-full bg-white transition-transform duration-300 group-hover:translate-y-0"></span>
+          </span>
+          <span class="text-sm font-bold tracking-[0.12em] text-white">MAKERPORTAL</span>
         </a>
-        <a href="https://makersportal.com" rel="me" class="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-white">
-          Studio journal
-          <span aria-hidden="true" class="ml-1.5">↗</span>
-        </a>
+
+        <div class="flex items-center gap-1 sm:gap-2">
+          <a href="/#apps" class="hidden min-h-11 items-center rounded-full px-4 text-sm font-medium text-zinc-400 transition-colors hover:text-white sm:inline-flex">Apps</a>
+          <a href="/blog" class="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium text-zinc-300 transition-colors hover:text-white sm:px-4"><span class="sm:hidden">Notes</span><span class="hidden sm:inline">Field notes</span></a>
+          <a href="https://makersportal.com" rel="me" class="inline-flex min-h-11 items-center rounded-full border border-white/15 px-3 text-sm font-semibold text-white transition-colors hover:border-lime-300/60 hover:text-lime-300 sm:px-4">
+            Studio <span aria-hidden="true" class="ml-1.5">↗</span>
+          </a>
+        </div>
       </nav>
     </header>
 
-    <main id="main-content" class="flex-1">
-      <slot />
-    </main>
+    <main id="main-content" class="flex-1"><slot /></main>
 
-    <footer class="border-t border-white/[0.06]">
-      <div class="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-neutral-400 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <p>© {year} MakerPortal. Independent software, thoughtfully made.</p>
-        <a href="https://makersportal.com" rel="me" class="w-fit rounded-sm transition-colors hover:text-neutral-200">makersportal.com</a>
+    <footer class="border-t border-white/[0.08] bg-[#080808]">
+      <div class="mx-auto grid max-w-[88rem] gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_auto] md:items-end lg:px-10">
+        <div>
+          <a href="/" class="text-xl font-semibold tracking-tight text-white">MakerPortal<span class="text-lime-300">.</span></a>
+          <p class="mt-3 max-w-md text-sm leading-6 text-zinc-400">Independent software for people who care about the details.</p>
+        </div>
+        <div class="flex flex-wrap gap-x-6 gap-y-3 text-sm text-zinc-400 md:justify-end">
+          <a href="/#apps" class="hover:text-white">Apps</a>
+          <a href="/blog" class="hover:text-white">Field notes</a>
+          <a href="https://makersportal.com" rel="me" class="hover:text-white">Studio journal ↗</a>
+          <a href="https://github.com/josh-hrisko" rel="me" class="hover:text-white">GitHub ↗</a>
+        </div>
+      </div>
+      <div class="border-t border-white/[0.06]">
+        <div class="mx-auto flex max-w-[88rem] flex-col gap-2 px-5 py-5 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-zinc-500 sm:flex-row sm:justify-between sm:px-8 lg:px-10">
+          <p>© {year} MakerPortal</p>
+          <p>Built slowly enough to care · Shipped quickly enough to matter</p>
+        </div>
       </div>
     </footer>
   </body>

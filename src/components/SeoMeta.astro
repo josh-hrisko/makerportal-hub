@@ -4,6 +4,7 @@ interface Props {
   description?: string;
   canonical?: URL | string;
   noindex?: boolean;
+  type?: 'website' | 'article';
 }
 
 const {
@@ -11,9 +12,11 @@ const {
   description = 'Explore focused productivity, dashboard, utility, and lifestyle apps built by MakerPortal.',
   canonical = new URL(Astro.url.pathname, Astro.site),
   noindex = false,
+  type = 'website',
 } = Astro.props;
 
 const canonicalUrl = canonical.toString();
+const socialImage = new URL('/social-card.png', Astro.site).toString();
 ---
 
 <title>{title}</title>
@@ -21,13 +24,19 @@ const canonicalUrl = canonical.toString();
 <link rel="canonical" href={canonicalUrl} />
 <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
 
-<meta property="og:type" content="website" />
+<meta property="og:type" content={type} />
 <meta property="og:site_name" content="MakerPortal" />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonicalUrl} />
 <meta property="og:locale" content="en_US" />
+<meta property="og:image" content={socialImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="MakerPortal — Software with a point of view." />
 
-<meta name="twitter:card" content="summary" />
+<meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={socialImage} />
+<meta name="twitter:image:alt" content="MakerPortal — Software with a point of view." />

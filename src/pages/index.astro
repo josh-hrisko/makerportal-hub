@@ -1,10 +1,15 @@
 ---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import AppCard from '../components/AppCard.astro';
 import Layout from '../layouts/Layout.astro';
 import { apps } from '../data/apps';
 
-const pageTitle = 'MakerPortal Apps — Focused Software, Shipped Monthly';
-const pageDescription = 'Explore focused productivity, dashboard, utility, and lifestyle apps independently designed and shipped by MakerPortal.';
+const pageTitle = 'MakerPortal — Independent Software, Shipped with Intent';
+const pageDescription = 'A small independent studio building unusually focused software across audio, productivity, finance, and everyday life.';
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  .slice(0, 3);
 
 const directorySchema = {
   '@context': 'https://schema.org',
@@ -21,12 +26,12 @@ const directorySchema = {
       '@type': 'ListItem',
       position: index + 1,
       item: {
-        '@type': 'WebApplication',
+        '@type': 'SoftwareApplication',
         name: app.title,
         description: app.description,
         url: app.url,
         applicationCategory: app.category,
-        operatingSystem: 'Any',
+        operatingSystem: app.platform,
         publisher: { '@id': 'https://makersportal.com/#organization' },
       },
     })),
@@ -39,61 +44,146 @@ const directorySchema = {
     <script is:inline type="application/ld+json" set:html={JSON.stringify(directorySchema)}></script>
   </Fragment>
 
-  <section aria-labelledby="hero-title" class="mx-auto max-w-7xl px-5 pb-16 pt-20 sm:px-8 sm:pb-20 sm:pt-28">
-    <div class="max-w-4xl">
-      <p class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.07] px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-emerald-300">
-        <span aria-hidden="true" class="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
-        Independent software studio
-      </p>
-      <h1 id="hero-title" class="max-w-3xl text-balance text-5xl font-semibold leading-[1.02] tracking-[-0.045em] text-white sm:text-6xl lg:text-7xl">
-        Small tools.<br />Meaningful momentum.
-      </h1>
-      <p class="mt-7 max-w-2xl text-pretty text-lg leading-8 text-neutral-400 sm:text-xl">
-        A growing collection of focused applications, independently designed and shipped at the pace of one new idea every month.
-      </p>
-    </div>
+  <section class="hero-grid relative isolate overflow-hidden border-b border-white/[0.08]" aria-labelledby="hero-title">
+    <div aria-hidden="true" class="hero-aura absolute left-1/2 top-0 -z-20 h-[42rem] w-[58rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime-300/[0.08] blur-[130px]"></div>
+    <div class="mx-auto grid min-h-[calc(100svh-4.75rem)] max-w-[88rem] items-center gap-14 px-5 py-20 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:px-10 lg:py-24">
+      <div class="relative z-10 max-w-4xl">
+        <div class="mb-8 flex flex-wrap items-center gap-3">
+          <p class="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/[0.07] px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-lime-300">
+            <span aria-hidden="true" class="signal-dot size-1.5 rounded-full bg-lime-300"></span>
+            Studio transmission / 2026
+          </p>
+          <span class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-zinc-500">Los Angeles · Worldwide</span>
+        </div>
 
-    <dl class="mt-12 flex flex-wrap gap-x-10 gap-y-5 border-t border-neutral-800 pt-7 sm:mt-16">
-      <div>
-        <dt class="text-xs uppercase tracking-widest text-neutral-400">Released</dt>
-        <dd class="mt-1 text-xl font-semibold text-neutral-200">{apps.length} apps</dd>
+        <h1 id="hero-title" class="text-balance text-[clamp(3.6rem,8vw,7.6rem)] font-semibold leading-[0.87] tracking-[-0.072em] text-white">
+          Software with<br />a point of <span class="relative whitespace-nowrap text-lime-300">view<span aria-hidden="true" class="absolute -right-4 top-0 size-2 rounded-full bg-orange-400"></span></span>.
+        </h1>
+        <p class="mt-9 max-w-2xl text-pretty text-lg leading-8 text-zinc-300 sm:text-xl sm:leading-9">
+          MakerPortal is an independent studio turning sharp ideas into useful, opinionated products—one deliberate release at a time.
+        </p>
+
+        <div class="mt-10 flex flex-wrap items-center gap-4">
+          <a href="#apps" class="inline-flex min-h-12 items-center gap-3 rounded-full bg-lime-300 px-5 text-sm font-bold text-black transition duration-300 hover:bg-white motion-reduce:transition-none">
+            Enter the app matrix
+            <span aria-hidden="true">↓</span>
+          </a>
+          <a href="/blog" class="inline-flex min-h-12 items-center rounded-full border border-white/15 px-5 text-sm font-semibold text-white transition-colors hover:border-white/40">Read field notes</a>
+        </div>
       </div>
-      <div>
-        <dt class="text-xs uppercase tracking-widest text-neutral-400">Cadence</dt>
-        <dd class="mt-1 text-xl font-semibold text-neutral-200">Monthly</dd>
+
+      <div class="relative mx-auto w-full max-w-[36rem] lg:mr-0" role="group" aria-label={`${apps.length} applications orbiting the MakerPortal studio`}>
+        <div class="orbit-stage relative aspect-square">
+          <div aria-hidden="true" class="orbit-line orbit-line-1 absolute inset-[8%] rounded-full border border-white/10"></div>
+          <div aria-hidden="true" class="orbit-line orbit-line-2 absolute inset-[23%] rounded-full border border-dashed border-white/15"></div>
+          <div class="absolute inset-[34%] grid place-items-center rounded-full border border-lime-300/25 bg-[#10150d] shadow-[0_0_90px_rgba(190,242,100,0.12)]">
+            <div class="text-center">
+              <span class="block text-4xl font-black tracking-[-0.08em] text-lime-300 sm:text-5xl">MP</span>
+              <span class="mt-1 block font-mono text-[0.52rem] uppercase tracking-[0.2em] text-zinc-400">Build / Learn / Ship</span>
+            </div>
+          </div>
+
+          {apps.map((app, index) => (
+            <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.5rem] place-items-center rounded-2xl border border-white/15 bg-[#141414] shadow-2xl transition-transform hover:scale-110 focus:scale-110 motion-reduce:transition-none sm:size-20`} aria-label={`Open ${app.title} in a new tab`}>
+              <Image src={app.icon} alt="" width={52} height={52} class="size-[3.25rem] rounded-xl" />
+            </a>
+          ))}
+
+          <div aria-hidden="true" class="absolute bottom-[12%] left-[17%] rounded-full border border-white/10 bg-black/60 px-3 py-2 backdrop-blur-sm">
+            <span class="font-mono text-[0.58rem] uppercase tracking-[0.17em] text-zinc-400">System status</span>
+            <span class="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold text-white"><span class="signal-dot size-1.5 rounded-full bg-lime-300"></span>Shipping</span>
+          </div>
+        </div>
       </div>
-      <div>
-        <dt class="text-xs uppercase tracking-widest text-neutral-400">Built with</dt>
-        <dd class="mt-1 text-xl font-semibold text-neutral-200">Focus</dd>
-      </div>
-    </dl>
+    </div>
   </section>
 
-  <section aria-labelledby="directory-title" class="mx-auto max-w-7xl px-5 pb-24 sm:px-8 sm:pb-32">
-    <div class="mb-8 flex items-end justify-between gap-4">
-      <div>
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-emerald-400">Application matrix</p>
-        <h2 id="directory-title" class="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Explore the collection</h2>
-      </div>
-      <p class="hidden text-sm text-neutral-400 sm:block">Newest first</p>
+  <div class="ticker overflow-hidden border-b border-white/[0.08] bg-lime-300 py-3 text-black">
+    <p class="sr-only">Studio principles: on-device first, no committee software, useful on day one, craft over clutter, and one release at a time.</p>
+    <div class="ticker-track flex w-max items-center whitespace-nowrap font-mono text-[0.67rem] font-bold uppercase tracking-[0.2em] motion-reduce:animate-none">
+      {[0, 1].map(() => (
+        <span aria-hidden="true" class="flex items-center">
+          <span class="mx-7">On-device first</span><span>✦</span>
+          <span class="mx-7">No committee software</span><span>✦</span>
+          <span class="mx-7">Useful on day one</span><span>✦</span>
+          <span class="mx-7">Craft over clutter</span><span>✦</span>
+          <span class="mx-7">One release at a time</span><span>✦</span>
+        </span>
+      ))}
     </div>
+  </div>
 
-    <div class="grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
-      {apps.map((app) => <AppCard {...app} />)}
+  <section id="apps" aria-labelledby="apps-title" class="scroll-mt-6 border-b border-white/[0.08]">
+    <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
+      <div class="grid gap-8 border-b border-white/10 pb-10 md:grid-cols-[1fr_0.7fr] md:items-end">
+        <div>
+          <p class="section-kicker">Application matrix / {String(apps.length).padStart(2, '0')}</p>
+          <h2 id="apps-title" class="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[0.96] tracking-[-0.05em] text-white sm:text-6xl">Different problems.<br /><span class="text-zinc-500">The same obsession.</span></h2>
+        </div>
+        <p class="max-w-xl text-base leading-7 text-zinc-400 md:justify-self-end md:text-right">Every product lives in its own repository, carries its own risk, and earns its own reason to exist. The studio is the thread connecting them.</p>
+      </div>
+
+      <div class="mt-8 grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {apps.map((app) => <AppCard {...app} />)}
+      </div>
     </div>
   </section>
 
-  <section aria-labelledby="studio-title" class="border-t border-white/[0.06] bg-neutral-900/30">
-    <div class="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 md:grid-cols-[1fr_auto] md:items-center md:py-20">
-      <div class="max-w-2xl">
-        <p class="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-neutral-400">Behind the builds</p>
-        <h2 id="studio-title" class="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Follow the process, not just the products.</h2>
-        <p class="mt-4 leading-7 text-neutral-400">Notes on independent development, product decisions, and the craft behind each release live at the MakerPortal studio journal.</p>
+  <section aria-labelledby="operating-title" class="relative overflow-hidden border-b border-white/[0.08] bg-[#0d0d0d]">
+    <div aria-hidden="true" class="absolute -right-48 top-1/2 size-[38rem] -translate-y-1/2 rounded-full border border-white/[0.04]"></div>
+    <div class="mx-auto grid max-w-[88rem] gap-16 px-5 py-24 sm:px-8 sm:py-32 lg:grid-cols-[0.8fr_1.2fr] lg:px-10">
+      <div>
+        <p class="section-kicker">Operating system</p>
+        <h2 id="operating-title" class="mt-4 text-balance text-4xl font-semibold leading-none tracking-[-0.05em] text-white sm:text-5xl">A studio built for momentum.</h2>
+        <p class="mt-6 max-w-md leading-7 text-zinc-400">Small surface area. Direct feedback. Enough rigor to last, enough speed to stay alive.</p>
       </div>
-      <a href="https://makersportal.com" rel="me" class="inline-flex min-h-12 w-fit items-center justify-center rounded-xl bg-emerald-400 px-5 text-sm font-semibold text-neutral-950 transition-colors hover:bg-emerald-300">
-        Read the journal
-        <span aria-hidden="true" class="ml-2">↗</span>
-      </a>
+
+      <ol class="divide-y divide-white/10 border-y border-white/10">
+        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9">
+          <span class="font-mono text-xs text-lime-300">01 / NOTICE</span>
+          <div><h3 class="text-2xl font-semibold tracking-tight text-white">Start with friction.</h3><p class="mt-2 max-w-2xl leading-7 text-zinc-400">Find the repeated annoyance, the expert workflow, or the tiny moment everyone else decided was too small.</p></div>
+        </li>
+        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9">
+          <span class="font-mono text-xs text-orange-300">02 / REDUCE</span>
+          <div><h3 class="text-2xl font-semibold tracking-tight text-white">Cut until the idea becomes obvious.</h3><p class="mt-2 max-w-2xl leading-7 text-zinc-400">The best version is rarely the biggest. It is the one whose purpose survives every subtraction.</p></div>
+        </li>
+        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9">
+          <span class="font-mono text-xs text-violet-300">03 / SHIP</span>
+          <div><h3 class="text-2xl font-semibold tracking-tight text-white">Put it in real hands.</h3><p class="mt-2 max-w-2xl leading-7 text-zinc-400">A shipped product teaches more than a perfect prototype. Release, listen, refine, repeat.</p></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="notes-title" class="border-b border-white/[0.08]">
+    <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="section-kicker">Field notes / from inside the build</p>
+          <h2 id="notes-title" class="mt-4 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">Thinking in public.</h2>
+        </div>
+        <a href="/blog" class="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-lime-300 hover:text-white">All field notes <span aria-hidden="true">→</span></a>
+      </div>
+
+      <div class="mt-12 grid border-t border-white/10 md:grid-cols-3">
+        {posts.map((post, index) => (
+          <article class="group relative border-b border-white/10 py-8 md:border-b-0 md:border-r md:px-7 md:first:pl-0 md:last:border-r-0 md:last:pr-0">
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-zinc-500">Note {String(index + 1).padStart(2, '0')} · {post.data.readingTime}</p>
+            <h3 class="mt-8 text-2xl font-semibold leading-tight tracking-[-0.035em] text-white transition-colors group-hover:text-lime-300">{post.data.title}</h3>
+            <p class="mt-4 text-sm leading-6 text-zinc-400">{post.data.description}</p>
+            <a href={`/blog/${post.id}`} class="mt-8 inline-flex min-h-11 items-center text-sm font-semibold text-white before:absolute before:inset-0">Read note <span aria-hidden="true" class="ml-2 transition-transform group-hover:translate-x-1">→</span></a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="closing-title" class="relative isolate overflow-hidden">
+    <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_110%,rgba(190,242,100,0.18),transparent_45%)]"></div>
+    <div class="mx-auto max-w-[88rem] px-5 py-28 text-center sm:px-8 sm:py-40 lg:px-10">
+      <p class="section-kicker">The next release is already moving</p>
+      <h2 id="closing-title" class="mx-auto mt-5 max-w-5xl text-balance text-5xl font-semibold leading-[0.92] tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">Make the thing<br />you wish existed.</h2>
+      <a href="https://makersportal.com" rel="me" class="mt-10 inline-flex min-h-12 items-center gap-3 rounded-full bg-white px-6 text-sm font-bold text-black transition-colors hover:bg-lime-300">Follow the studio journal <span aria-hidden="true">↗</span></a>
     </div>
   </section>
 </Layout>

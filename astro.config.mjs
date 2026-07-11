@@ -11,7 +11,6 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      filter: (page) => !page.endsWith('/blog'),
       namespaces: {
         news: false,
         xhtml: false,

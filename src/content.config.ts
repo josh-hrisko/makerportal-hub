@@ -12,6 +12,8 @@ const blog = defineCollection({
     draft: z.boolean().default(false),
     image: z.string().optional(),
     tags: z.array(z.string()).default([]),
+    eyebrow: z.string().default('Field note'),
+    readingTime: z.string().default('4 min read'),
   }),
 });
 

@@ -1,0 +1,49 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const canonical = new URL(`/blog/${post.id}`, Astro.site);
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.publishedAt.toISOString(),
+  dateModified: (post.data.updatedAt ?? post.data.publishedAt).toISOString(),
+  mainEntityOfPage: canonical.toString(),
+  author: { '@id': 'https://makersportal.com/#organization' },
+  publisher: { '@id': 'https://makersportal.com/#organization' },
+};
+---
+
+<Layout title={`${post.data.title} — MakerPortal`} description={post.data.description} canonical={canonical} type="article">
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(articleSchema)}></script>
+  </Fragment>
+  <article>
+    <header class="hero-grid border-b border-white/[0.08]">
+      <div class="mx-auto max-w-5xl px-5 pb-16 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
+        <a href="/blog" class="inline-flex min-h-11 items-center text-sm font-semibold text-zinc-400 hover:text-white">← All field notes</a>
+        <p class="section-kicker mt-12">{post.data.eyebrow}</p>
+        <h1 class="mt-5 text-balance text-5xl font-semibold leading-[0.94] tracking-[-0.055em] text-white sm:text-7xl">{post.data.title}</h1>
+        <p class="mt-7 max-w-3xl text-lg leading-8 text-zinc-300 sm:text-xl">{post.data.description}</p>
+        <div class="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-5 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-zinc-500">
+          <time datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time>
+          <span aria-hidden="true">/</span>
+          <span>{post.data.readingTime}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
+      <div class="prose-studio"><Content /></div>
+    </div>
+  </article>
+</Layout>
