@@ -1,0 +1,82 @@
+---
+import SeoMeta from '../components/SeoMeta.astro';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: URL | string;
+  noindex?: boolean;
+}
+
+const { title, description, canonical, noindex } = Astro.props;
+const year = new Date().getFullYear();
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://makersportal.com/#organization',
+      name: 'MakerPortal',
+      url: 'https://makersportal.com',
+      sameAs: [
+        'https://makerportal.ai',
+      ],
+      description: 'An independent, high-velocity software studio creating specialized utility, productivity, and lifestyle web applications.',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://makerportal.ai/#website',
+      url: 'https://makerportal.ai',
+      name: 'MakerPortal Apps',
+      publisher: { '@id': 'https://makersportal.com/#organization' },
+      inLanguage: 'en-US',
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en" class="bg-neutral-950">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <SeoMeta title={title} description={description} canonical={canonical} noindex={noindex} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
+    <slot name="head" />
+  </head>
+  <body class="flex min-h-screen flex-col font-sans text-neutral-100 antialiased">
+    <a href="#main-content" class="fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-emerald-400 px-4 py-2 font-semibold text-neutral-950 transition-transform focus:translate-y-0">
+      Skip to content
+    </a>
+
+    <header class="border-b border-white/[0.06]">
+      <nav aria-label="Primary navigation" class="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
+        <a href="/" class="inline-flex items-center gap-3 rounded-md">
+          <span aria-hidden="true" class="grid size-9 place-items-center rounded-xl border border-emerald-400/25 bg-emerald-400/10 text-sm font-bold text-emerald-300">M</span>
+          <span class="text-sm font-semibold tracking-[0.14em] text-neutral-100">MAKERPORTAL</span>
+        </a>
+        <a href="https://makersportal.com" rel="me" class="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-neutral-400 transition-colors hover:bg-white/5 hover:text-white">
+          Studio journal
+          <span aria-hidden="true" class="ml-1.5">↗</span>
+        </a>
+      </nav>
+    </header>
+
+    <main id="main-content" class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="border-t border-white/[0.06]">
+      <div class="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-neutral-400 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <p>© {year} MakerPortal. Independent software, thoughtfully made.</p>
+        <a href="https://makersportal.com" rel="me" class="w-fit rounded-sm transition-colors hover:text-neutral-200">makersportal.com</a>
+      </div>
+    </footer>
+  </body>
+</html>

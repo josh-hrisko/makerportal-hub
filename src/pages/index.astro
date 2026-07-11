@@ -1,0 +1,99 @@
+---
+import AppCard from '../components/AppCard.astro';
+import Layout from '../layouts/Layout.astro';
+import { apps } from '../data/apps';
+
+const pageTitle = 'MakerPortal Apps — Focused Software, Shipped Monthly';
+const pageDescription = 'Explore focused productivity, dashboard, utility, and lifestyle apps independently designed and shipped by MakerPortal.';
+
+const directorySchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': 'https://makerportal.ai/#directory',
+  name: 'MakerPortal Application Directory',
+  description: pageDescription,
+  url: 'https://makerportal.ai',
+  isPartOf: { '@id': 'https://makerportal.ai/#website' },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: apps.length,
+    itemListElement: apps.map((app, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'WebApplication',
+        name: app.title,
+        description: app.description,
+        url: app.url,
+        applicationCategory: app.category,
+        operatingSystem: 'Any',
+        publisher: { '@id': 'https://makersportal.com/#organization' },
+      },
+    })),
+  },
+};
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(directorySchema)}></script>
+  </Fragment>
+
+  <section aria-labelledby="hero-title" class="mx-auto max-w-7xl px-5 pb-16 pt-20 sm:px-8 sm:pb-20 sm:pt-28">
+    <div class="max-w-4xl">
+      <p class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.07] px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-emerald-300">
+        <span aria-hidden="true" class="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
+        Independent software studio
+      </p>
+      <h1 id="hero-title" class="max-w-3xl text-balance text-5xl font-semibold leading-[1.02] tracking-[-0.045em] text-white sm:text-6xl lg:text-7xl">
+        Small tools.<br />Meaningful momentum.
+      </h1>
+      <p class="mt-7 max-w-2xl text-pretty text-lg leading-8 text-neutral-400 sm:text-xl">
+        A growing collection of focused applications, independently designed and shipped at the pace of one new idea every month.
+      </p>
+    </div>
+
+    <dl class="mt-12 flex flex-wrap gap-x-10 gap-y-5 border-t border-neutral-800 pt-7 sm:mt-16">
+      <div>
+        <dt class="text-xs uppercase tracking-widest text-neutral-400">Released</dt>
+        <dd class="mt-1 text-xl font-semibold text-neutral-200">{apps.length} apps</dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-widest text-neutral-400">Cadence</dt>
+        <dd class="mt-1 text-xl font-semibold text-neutral-200">Monthly</dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-widest text-neutral-400">Built with</dt>
+        <dd class="mt-1 text-xl font-semibold text-neutral-200">Focus</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="directory-title" class="mx-auto max-w-7xl px-5 pb-24 sm:px-8 sm:pb-32">
+    <div class="mb-8 flex items-end justify-between gap-4">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-emerald-400">Application matrix</p>
+        <h2 id="directory-title" class="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Explore the collection</h2>
+      </div>
+      <p class="hidden text-sm text-neutral-400 sm:block">Newest first</p>
+    </div>
+
+    <div class="grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
+      {apps.map((app) => <AppCard {...app} />)}
+    </div>
+  </section>
+
+  <section aria-labelledby="studio-title" class="border-t border-white/[0.06] bg-neutral-900/30">
+    <div class="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 md:grid-cols-[1fr_auto] md:items-center md:py-20">
+      <div class="max-w-2xl">
+        <p class="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-neutral-400">Behind the builds</p>
+        <h2 id="studio-title" class="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Follow the process, not just the products.</h2>
+        <p class="mt-4 leading-7 text-neutral-400">Notes on independent development, product decisions, and the craft behind each release live at the MakerPortal studio journal.</p>
+      </div>
+      <a href="https://makersportal.com" rel="me" class="inline-flex min-h-12 w-fit items-center justify-center rounded-xl bg-emerald-400 px-5 text-sm font-semibold text-neutral-950 transition-colors hover:bg-emerald-300">
+        Read the journal
+        <span aria-hidden="true" class="ml-2">↗</span>
+      </a>
+    </div>
+  </section>
+</Layout>

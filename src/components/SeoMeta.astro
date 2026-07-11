@@ -1,0 +1,33 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: URL | string;
+  noindex?: boolean;
+}
+
+const {
+  title = 'MakerPortal — Independent Software Studio',
+  description = 'Explore focused productivity, dashboard, utility, and lifestyle apps built by MakerPortal.',
+  canonical = new URL(Astro.url.pathname, Astro.site),
+  noindex = false,
+} = Astro.props;
+
+const canonicalUrl = canonical.toString();
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrl} />
+<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="MakerPortal" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
