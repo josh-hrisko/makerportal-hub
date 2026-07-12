@@ -28,8 +28,8 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const { error } = await resend.emails.send({
-      from: 'MakerPortal Hub <onboarding@resend.dev>', // Keep as onboarding@resend.dev until you verify a domain in Resend
-      to: ['engineer@makersportal.com'],
+      from: 'MakerPortal Hub <notifications@makerportal.ai>', 
+      to: ['hello@makerportal.ai'], 
       subject: `New MakerPortal inquiry from ${name}`,
       html: `
         <h3>New Contact Request</h3>

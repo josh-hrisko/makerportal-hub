@@ -9,3 +9,5 @@ dist/
 analytics/credentials.json
 analytics/client_secret*.json
 analytics/token.json
+
+.env
