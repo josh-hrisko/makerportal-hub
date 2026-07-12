@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import AppCard from '../components/AppCard.astro';
+import ContactCard from '../components/ContactCard.astro';
 import Layout from '../layouts/Layout.astro';
 import { apps } from '../data/apps';
 
@@ -266,13 +267,25 @@ const directorySchema = {
     </div>
   </section>
 
-  <!-- Closing Call To Action -->
-  <section aria-labelledby="closing-title" class="relative isolate overflow-hidden">
+  <!-- Contact & CTA Section -->
+  <section aria-labelledby="closing-title" class="relative isolate overflow-hidden border-t border-muted-text/15">
     <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_110%,rgba(206,68,93,0.12),transparent_45%)]"></div>
-    <div class="mx-auto max-w-[88rem] px-5 py-28 text-center sm:px-8 sm:py-40 lg:px-10">
-      <p class="section-kicker">The next release is already moving</p>
-      <h2 id="closing-title" class="mx-auto mt-5 max-w-5xl text-balance text-5xl font-semibold leading-[0.92] tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">Make the thing<br />you wish existed.</h2>
-      <a href="https://makersportal.com" rel="me" class="mt-10 inline-flex min-h-12 items-center gap-3 rounded-full bg-primary-cta px-6 text-sm font-bold text-white transition duration-300 hover:scale-[1.02] hover:bg-primary-cta/90 shadow-md shadow-primary-cta/20 hover:shadow-primary-cta/35 motion-reduce:transition-none">Follow the studio journal <span aria-hidden="true">↗</span></a>
+    <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
+      
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <p class="section-kicker">The next release is already moving</p>
+          <h2 id="closing-title" class="mt-5 text-balance text-5xl font-semibold leading-[0.92] tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">Make the thing<br />you wish existed.</h2>
+          <div class="mt-10 flex flex-wrap gap-4">
+            <a href="https://makersportal.com" rel="me" class="inline-flex min-h-12 items-center gap-3 rounded-full bg-primary-cta px-6 text-sm font-bold text-white transition duration-300 hover:scale-[1.02] hover:bg-primary-cta/90 shadow-md shadow-primary-cta/20 hover:shadow-primary-cta/35 motion-reduce:transition-none">Follow the studio journal <span aria-hidden="true">↗</span></a>
+            <a href="#contact" class="inline-flex min-h-12 items-center rounded-full border border-muted-text/30 px-6 text-sm font-semibold text-primary-text transition-colors hover:border-brand-anchor hover:text-brand-anchor hover:bg-brand-anchor/10">Get in touch</a>
+          </div>
+        </div>
+        
+        <!-- Contact Card -->
+        <ContactCard />
+      </div>
+
     </div>
   </section>
 </Layout>
