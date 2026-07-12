@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const { error } = await resend.emails.send({
       from: 'MakerPortal Hub <notifications@makerportal.ai>', 
-      to: ['hello@makerportal.ai'], 
+      to: ['engineer@makersportal.com'], 
       subject: `New MakerPortal inquiry from ${name}`,
       html: `
         <h3>New Contact Request</h3>
