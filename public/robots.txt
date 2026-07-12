@@ -1,4 +1,26 @@
 User-agent: *
 Allow: /
 
+# Explicitly allow friendly AI bots to read content for context and citations
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
 Sitemap: https://www.makerportal.ai/sitemap.xml

@@ -89,7 +89,7 @@ const directorySchema = {
 
           {apps.map((app, index) => (
             <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.5rem] place-items-center rounded-2xl border border-muted-text/20 bg-card-bg shadow-2xl transition-transform hover:scale-110 hover:border-brand-anchor/50 focus:scale-110 motion-reduce:transition-none sm:size-20`} aria-label={`Open ${app.title} in a new tab`}>
-              <Image src={app.icon} alt="" width={52} height={52} class="size-[3.25rem] rounded-xl transition duration-300 hover:rotate-3" />
+              <Image src={app.icon} alt={`${app.title} application icon`} width={52} height={52} class="size-[3.25rem] rounded-xl transition duration-300 hover:rotate-3" />
             </a>
           ))}
 

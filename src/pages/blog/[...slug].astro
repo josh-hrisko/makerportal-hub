@@ -4,28 +4,49 @@ import Layout from '../../layouts/Layout.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  posts.sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+  return posts.map((post, index) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      nextPost: index > 0 ? posts[index - 1] : null,
+      prevPost: index < posts.length - 1 ? posts[index + 1] : null,
+    },
+  }));
 }
 
-const { post } = Astro.props;
+const { post, prevPost, nextPost } = Astro.props;
 const { Content } = await render(post);
 const canonical = new URL(`/blog/${post.id}`, Astro.site);
+const publishedTime = post.data.publishedAt.toISOString();
+const modifiedTime = (post.data.updatedAt ?? post.data.publishedAt).toISOString();
 const articleSchema = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
   headline: post.data.title,
   description: post.data.description,
-  datePublished: post.data.publishedAt.toISOString(),
-  dateModified: (post.data.updatedAt ?? post.data.publishedAt).toISOString(),
+  datePublished: publishedTime,
+  dateModified: modifiedTime,
   mainEntityOfPage: canonical.toString(),
   author: { '@id': 'https://makersportal.com/#organization' },
   publisher: { '@id': 'https://makersportal.com/#organization' },
 };
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Field Notes', item: 'https://www.makerportal.ai/blog' },
+    { '@type': 'ListItem', position: 3, name: post.data.title, item: canonical.toString() },
+  ],
+};
 ---
 
-<Layout title={`${post.data.title} — MakerPortal`} description={post.data.description} canonical={canonical} type="article">
+<Layout title={`${post.data.title} — MakerPortal`} description={post.data.description} canonical={canonical} type="article" publishedTime={publishedTime} modifiedTime={modifiedTime}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(articleSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
   </Fragment>
   <article>
     <header class="hero-grid border-b border-muted-text/15">
@@ -44,6 +65,21 @@ const articleSchema = {
 
     <div class="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
       <div class="prose-studio"><Content /></div>
+      
+      <div class="mt-16 border-t border-muted-text/20 pt-10 grid gap-6 sm:grid-cols-2">
+        {prevPost ? (
+          <a href={`/blog/${prevPost.id}`} class="group flex flex-col items-start gap-2 rounded-2xl border border-muted-text/15 bg-card-bg/30 p-6 transition-colors hover:border-brand-anchor/50 hover:bg-card-bg">
+            <span class="font-mono text-[0.65rem] uppercase tracking-widest text-muted-text">Previous Note</span>
+            <span class="text-lg font-semibold leading-tight text-white transition-colors group-hover:text-brand-anchor">{prevPost.data.title}</span>
+          </a>
+        ) : <div />}
+        {nextPost && (
+          <a href={`/blog/${nextPost.id}`} class="group flex flex-col items-end gap-2 rounded-2xl border border-muted-text/15 bg-card-bg/30 p-6 text-right transition-colors hover:border-primary-cta/50 hover:bg-card-bg sm:col-start-2">
+            <span class="font-mono text-[0.65rem] uppercase tracking-widest text-muted-text">Next Note</span>
+            <span class="text-lg font-semibold leading-tight text-white transition-colors group-hover:text-primary-cta">{nextPost.data.title}</span>
+          </a>
+        )}
+      </div>
     </div>
   </article>
 </Layout>
