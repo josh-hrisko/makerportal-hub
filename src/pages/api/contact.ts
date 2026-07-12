@@ -38,54 +38,85 @@ export const POST: APIRoute = async ({ request }) => {
       subject: `[${topic}] New inquiry from ${name}`,
       html: `
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
         <head>
           <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Inquiry</title>
         </head>
-        <body style="margin: 0; padding: 40px 20px; background-color: #F5F5F7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E5E5EA; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <body style="margin: 0; padding: 40px 20px; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #FFFFFF;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #0E1116; border-radius: 24px; overflow: hidden; border: 1px solid #2A2F3A; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
             
-            <div style="padding: 40px 40px 20px 40px;">
-              <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #86868B; font-weight: 600;">Inquiry Topic: ${topic}</p>
-              <h1 style="margin: 8px 0 24px 0; font-size: 24px; font-weight: 600; color: #1D1D1F; letter-spacing: -0.5px;">New Message Received</h1>
-              
-              <div style="margin-bottom: 24px;">
-                <p style="margin: 0; font-size: 15px; font-weight: 600; color: #1D1D1F;">${name}</p>
-                <a href="mailto:${email}" style="color: #0066CC; text-decoration: none; font-size: 14px;">${email}</a>
-              </div>
-              
-              <div style="border-left: 3px solid #E5E5EA; padding-left: 16px; margin: 32px 0;">
-                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #1D1D1F;">
-                  ${(message as string).replace(/\n/g, '<br>')}
-                </p>
-              </div>
+            <!-- Hero Banner -->
+            <div style="width: 100%; height: 200px; background-color: #1A1F2B; background-image: url('https://makerportal.ai/social-card.png'); background-size: cover; background-position: center; border-bottom: 1px solid #2A2F3A;">
             </div>
             
-            <div style="background-color: #F5F5F7; border-top: 1px solid #E5E5EA; padding: 24px 40px;">
-              <p style="margin: 0 0 12px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #86868B; font-weight: 600;">System Diagnostic</p>
-              <table style="width: 100%; font-size: 12px; color: #86868B; line-height: 1.6; border-collapse: collapse;">
+            <div style="padding: 40px;">
+              <!-- Badge -->
+              <div style="display: inline-block; padding: 6px 12px; background-color: rgba(206, 68, 93, 0.15); border: 1px solid rgba(206, 68, 93, 0.3); border-radius: 100px; color: #CE445D; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px;">
+                ${topic}
+              </div>
+              
+              <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.5px;">New Inquiry Received</h1>
+              <p style="margin: 0 0 32px 0; font-size: 16px; color: #8A92A6; line-height: 1.5;">You have a new message from MakerPortal.ai. Please review the details below.</p>
+              
+              <!-- User Profile Box -->
+              <div style="background-color: #151A23; border: 1px solid #2A2F3A; border-radius: 16px; padding: 24px; margin-bottom: 32px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #64748B; font-weight: 600;">Sender</p>
+                <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600; color: #FFFFFF;">${name}</p>
+                <a href="mailto:${email}" style="color: #60A5FA; text-decoration: none; font-size: 15px; font-weight: 500;">${email}</a>
+              </div>
+              
+              <!-- Message Content -->
+              <div style="margin-bottom: 40px;">
+                <p style="margin: 0 0 16px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #64748B; font-weight: 600;">Message</p>
+                <div style="font-size: 16px; line-height: 1.7; color: #E2E8F0;">
+                  ${(message as string).replace(/\n/g, '<br>')}
+                </div>
+              </div>
+              
+              <!-- Reply Button -->
+              <a href="mailto:${email}" style="display: inline-block; width: 100%; text-align: center; background: linear-gradient(135deg, #CE445D, #A33246); color: #FFFFFF; text-decoration: none; padding: 16px 0; border-radius: 12px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px;">Reply to ${name}</a>
+            </div>
+            
+            <!-- System Diagnostic -->
+            <div style="background-color: #151A23; border-top: 1px solid #2A2F3A; padding: 32px 40px;">
+              <p style="margin: 0 0 16px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748B; font-weight: 600;">Diagnostic Metadata</p>
+              <table style="width: 100%; font-size: 13px; color: #94A3B8; line-height: 1.6; border-collapse: collapse;">
                 <tr>
-                  <td style="padding-bottom: 4px; width: 80px;"><strong>Timezone:</strong></td>
-                  <td style="padding-bottom: 4px;">${timezone}</td>
+                  <td style="padding-bottom: 8px; width: 90px; color: #64748B;">Timezone:</td>
+                  <td style="padding-bottom: 8px; color: #F8FAFC;">${timezone}</td>
                 </tr>
                 <tr>
-                  <td style="padding-bottom: 4px;"><strong>Screen:</strong></td>
-                  <td style="padding-bottom: 4px;">${screenSize}</td>
+                  <td style="padding-bottom: 8px; color: #64748B;">Screen:</td>
+                  <td style="padding-bottom: 8px; color: #F8FAFC;">${screenSize}</td>
                 </tr>
                 <tr>
-                  <td style="padding-bottom: 4px;"><strong>Source:</strong></td>
-                  <td style="padding-bottom: 4px;">${url}</td>
+                  <td style="padding-bottom: 8px; color: #64748B;">Source URL:</td>
+                  <td style="padding-bottom: 8px; color: #F8FAFC;">
+                    <a href="${url}" style="color: #60A5FA; text-decoration: none;">${url}</a>
+                  </td>
                 </tr>
                 <tr>
-                  <td valign="top"><strong>Device:</strong></td>
-                  <td>${userAgent}</td>
+                  <td valign="top" style="color: #64748B;">Device:</td>
+                  <td style="color: #F8FAFC;">${userAgent}</td>
                 </tr>
               </table>
             </div>
             
           </div>
-          <div style="text-align: center; margin-top: 24px;">
-            <p style="margin: 0; font-size: 12px; color: #86868B;">MakerPortal Hub Secure Dispatch</p>
+          
+          <!-- Footer Links & Socials -->
+          <div style="max-width: 600px; margin: 32px auto 0 auto; text-align: center;">
+            <img src="https://makerportal.ai/favicon.svg" alt="MakerPortal Logo" width="32" height="32" style="margin-bottom: 16px; opacity: 0.5;">
+            <p style="margin: 0 0 12px 0; font-size: 13px; color: #64748B;">
+              This transmission was securely dispatched from <a href="https://makerportal.ai" style="color: #94A3B8; text-decoration: underline;">MakerPortal.ai</a>
+            </p>
+            <div style="margin-top: 16px;">
+              <a href="https://makersportal.com" style="color: #60A5FA; text-decoration: none; font-size: 13px; margin: 0 8px;">Studio Journal</a>
+              <span style="color: #334155;">&bull;</span>
+              <a href="https://makerportal.ai" style="color: #60A5FA; text-decoration: none; font-size: 13px; margin: 0 8px;">Visit Hub</a>
+            </div>
           </div>
         </body>
         </html>
