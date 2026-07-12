@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" role="img" aria-label="makerportal.ai lowercase">
+  <text x="0" y="36" font-family="'Plus Jakarta Sans', Inter, sans-serif" font-weight="600" font-size="32" letter-spacing="-0.04em" fill="white">makerportal</text>
+  <g transform="translate(224 12)">
+    <rect width="56" height="26" rx="13" fill="#CE445D"/>
+    <text x="11" y="18" font-family="monospace" font-size="14" font-weight="700" letter-spacing="0.08em" fill="white">.AI</text>
+  </g>
+</svg>

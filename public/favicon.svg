@@ -1,20 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MakerPortal">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="MakerPortal favicon">
   <rect width="64" height="64" rx="16" fill="#0F141C"/>
-  <!-- subtle inner border -->
   <rect x="0.5" y="0.5" width="63" height="63" rx="15.5" fill="none" stroke="white" stroke-opacity="0.08"/>
-  <!-- portal dome -->
-  <g transform="translate(15 10)">
-    <!-- glow -->
-    <circle cx="17" cy="8" r="18" fill="#CE445D" opacity="0.18" style="filter: blur(8px)"/>
-    <!-- rays -->
-    <g stroke="#CE445D" stroke-width="2.6" stroke-linecap="round">
-      <line x1="17" y1="1" x2="17" y2="6.5"/>
-      <line x1="6" y1="4" x2="9.5" y2="8.2"/>
-      <line x1="28" y1="4" x2="24.5" y2="8.2"/>
-    </g>
-    <!-- dome -->
-    <path d="M4 20.5V13C4 5.8 9.2 1.5 17 1.5C24.8 1.5 30 5.8 30 13V20.5H4Z" fill="#CE445D"/>
-    <!-- threshold -->
-    <rect x="2" y="24.5" width="30" height="4.2" rx="2.1" fill="white" opacity="0.94"/>
+  <g transform="translate(8 8) scale(1.5)">
+    <circle cx="16" cy="16" r="12" fill="#CE445D" opacity="0.22" style="filter: blur(5px)"/>
+    <path d="M 16,2 C 16,10 10,16 2,16 C 10,16 16,22 16,30 C 16,22 22,16 30,16 C 22,16 16,10 16,2 Z M 16,11 A 5,5 0 1 0 16,21 A 5,5 0 1 0 16,11 Z" fill="#CE445D" fill-rule="evenodd" />
   </g>
 </svg>

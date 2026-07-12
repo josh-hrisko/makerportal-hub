@@ -1,91 +1,450 @@
 ---
-// BrandLogo — makerportal.ai identity system
-// Concept A: Signal Portal — direct evolution of original LED from makersportal.com
-// Dome = portal / LED bulb, base = plinth, rays = inference emission
+// BrandLogo — makerportal.ai identity system v0.9
+// Rebuilt for perfect typography spacing + custom outlined wordmark
+// Dot moves ONLY inside lockup variants (sliding transition) and stays 100% static in wordmark-only layouts
+// Space between makerportal and ai has been tightened by shifting ai path left by 8px and centering dot
 interface Props {
-  variant?: 'full' | 'icon' | 'wordmark';
+  variant?: 'full' | 'icon' | 'lockup' | 'lowercase' | 'wordmark' | 'mp';
   size?: 'sm' | 'md' | 'lg';
   class?: string;
-  mono?: boolean; // monochrome for footer / light bg
+  mono?: boolean;
   animated?: boolean;
+  concept?: 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n';
 }
-const { variant = 'full', size = 'md', mono = false, animated = true, class: className = '' } = Astro.props as Props;
+const { variant = 'full', size = 'md', mono = false, animated = true, class: className = '', concept } = Astro.props as Props;
 
 const sizes = {
-  sm: { icon: 'size-7', text: 'text-[0.78rem]' },
-  md: { icon: 'size-9', text: 'text-sm' },
-  lg: { icon: 'size-12', text: 'text-base' },
+  sm: { 
+    iconHeight: 'h-6 w-6',
+    wordmarkHeight: 'h-4 w-[85px]',
+    lockupGap: 'gap-2',
+    lockupWidth: 'w-[105px]',
+    textLower: 'text-base',
+    badgeText: 'text-[0.55rem]',
+    mpSize: 'h-6 w-6 rounded-md'
+  },
+  md: { 
+    iconHeight: 'h-8 w-8',
+    wordmarkHeight: 'h-5 w-[105px]',
+    lockupGap: 'gap-3',
+    lockupWidth: 'w-[140px]',
+    textLower: 'text-xl',
+    badgeText: 'text-[0.65rem]',
+    mpSize: 'h-8 w-8 rounded-lg'
+  },
+  lg: { 
+    iconHeight: 'h-12 w-12',
+    wordmarkHeight: 'h-8 w-[168px]',
+    lockupGap: 'gap-4',
+    lockupWidth: 'w-[218px]',
+    textLower: 'text-3xl',
+    badgeText: 'text-[0.8rem]',
+    mpSize: 'h-12 w-12 rounded-xl'
+  },
 }[size];
+
+// Outlined path for 'makerportal' (Plus Jakarta Sans Bold at 24px)
+const makerPath = "M 4.61 22 L 1.46 22 L 1.46 8.94 L 4.42 8.94 L 4.42 10.58 Q 4.94 9.62 5.9 9.14 Q 6.86 8.66 8.06 8.68 L 8.06 8.68 Q 9.38 8.66 10.45 9.23 Q 11.52 9.81 12.1 10.77 L 12.1 10.77 Q 12.77 9.71 13.81 9.18 Q 14.86 8.66 16.15 8.66 L 16.15 8.66 Q 17.54 8.66 18.64 9.29 Q 19.73 9.93 20.35 11.03 Q 20.98 12.14 20.98 13.6 L 20.98 13.6 L 20.98 22 L 17.83 22 L 17.83 14.34 Q 17.83 13.05 17.15 12.29 Q 16.46 11.54 15.31 11.54 L 15.31 11.54 Q 14.18 11.54 13.49 12.3 Q 12.79 13.07 12.79 14.34 L 12.79 14.34 L 12.79 22 L 9.65 22 L 9.65 14.34 Q 9.65 13.05 8.96 12.29 Q 8.28 11.54 7.13 11.54 L 7.13 11.54 Q 5.98 11.54 5.29 12.3 Q 4.61 13.07 4.61 14.34 L 4.61 14.34 L 4.61 22 M 27.6 22.29 L 27.6 22.29 Q 25.56 22.29 24.34 21.28 Q 23.11 20.27 23.11 18.54 L 23.11 18.54 Q 23.11 16.91 24.22 15.83 Q 25.32 14.75 27.62 14.37 L 27.62 14.37 L 31.51 13.74 L 31.51 13.31 Q 31.51 12.47 30.85 11.91 Q 30.19 11.34 29.11 11.34 L 29.11 11.34 Q 28.08 11.34 27.31 11.88 Q 26.54 12.42 26.18 13.31 L 26.18 13.31 L 23.62 12.06 Q 24.19 10.53 25.73 9.59 Q 27.26 8.66 29.23 8.66 L 29.23 8.66 Q 30.84 8.66 32.05 9.26 Q 33.26 9.86 33.96 10.9 Q 34.66 11.94 34.66 13.31 L 34.66 13.31 L 34.66 22 L 31.68 22 L 31.68 20.63 Q 30.14 22.29 27.6 22.29 M 26.38 18.42 L 26.38 18.42 Q 26.38 19.1 26.88 19.49 Q 27.38 19.89 28.18 19.89 L 28.18 19.89 Q 29.66 19.89 30.59 18.96 Q 31.51 18.04 31.51 16.67 L 31.51 16.67 L 31.51 16.14 L 28.22 16.7 Q 26.38 17.03 26.38 18.42 M 40.7 22 L 37.56 22 L 37.56 3.83 L 40.7 3.83 L 40.7 14.13 L 45.65 8.94 L 49.56 8.94 L 44.74 14.2 L 49.66 22 L 46.06 22 L 42.41 16.19 L 40.7 18.04 L 40.7 22 M 57.36 22.29 L 57.36 22.29 Q 55.34 22.29 53.83 21.38 Q 52.32 20.46 51.48 18.92 Q 50.64 17.37 50.64 15.45 L 50.64 15.45 Q 50.64 13.5 51.49 11.97 Q 52.34 10.43 53.81 9.54 Q 55.27 8.66 57.12 8.66 L 57.12 8.66 Q 59.14 8.66 60.55 9.53 Q 61.97 10.41 62.72 11.85 Q 63.48 13.29 63.48 15.04 L 63.48 15.04 Q 63.48 15.4 63.44 15.75 Q 63.41 16.1 63.31 16.36 L 63.31 16.36 L 53.9 16.36 Q 54.05 17.82 55.01 18.68 Q 55.97 19.53 57.38 19.53 L 57.38 19.53 Q 58.46 19.53 59.22 19.07 Q 59.98 18.62 60.41 17.85 L 60.41 17.85 L 62.95 19.1 Q 62.35 20.49 60.85 21.39 Q 59.35 22.29 57.36 22.29 M 57.12 11.25 L 57.12 11.25 Q 55.94 11.25 55.09 11.96 Q 54.24 12.66 53.98 13.96 L 53.98 13.96 L 60.12 13.96 Q 60.02 12.76 59.2 12 Q 58.37 11.25 57.12 11.25 M 69 22 L 65.86 22 L 65.86 8.94 L 68.81 8.94 L 68.81 10.77 Q 69.31 9.69 70.22 9.24 Q 71.14 8.8 72.34 8.8 L 72.34 8.8 L 73.1 8.8 L 73.1 11.58 L 71.98 11.58 Q 70.66 11.58 69.83 12.41 Q 69 13.24 69 14.73 L 69 14.73 L 69 22 M 77.98 26.8 L 74.83 26.8 L 74.83 8.94 L 77.78 8.94 L 77.78 10.46 Q 78.48 9.62 79.56 9.14 Q 80.64 8.66 81.98 8.66 L 81.98 8.66 Q 83.83 8.66 85.32 9.57 Q 86.81 10.48 87.68 12.02 Q 88.56 13.55 88.56 15.47 L 88.56 15.47 Q 88.56 17.39 87.7 18.94 Q 86.83 20.49 85.34 21.39 Q 83.86 22.29 81.96 22.29 L 81.96 22.29 Q 80.76 22.29 79.73 21.89 Q 78.7 21.5 77.98 20.75 L 77.98 20.75 L 77.98 26.8 M 81.6 19.41 L 81.6 19.41 Q 82.68 19.41 83.51 18.9 Q 84.34 18.4 84.82 17.51 Q 85.3 16.62 85.3 15.47 L 85.3 15.47 Q 85.3 14.34 84.82 13.46 Q 84.34 12.57 83.51 12.05 Q 82.68 11.54 81.6 11.54 L 81.6 11.54 Q 80.54 11.54 79.73 12.05 Q 78.91 12.57 78.44 13.46 Q 77.98 14.34 77.98 15.47 L 77.98 15.47 Q 77.98 16.62 78.44 17.51 Q 78.91 18.4 79.73 18.9 Q 80.54 19.41 81.6 19.41 M 97.34 22.29 L 97.34 22.29 Q 95.42 22.29 93.85 21.4 Q 92.28 20.51 91.36 18.98 Q 90.43 17.44 90.43 15.47 L 90.43 15.47 Q 90.43 13.5 91.36 11.97 Q 92.28 10.43 93.84 9.54 Q 95.4 8.66 97.34 8.66 L 97.34 8.66 Q 99.24 8.66 100.8 9.54 Q 102.36 10.43 103.3 11.97 Q 104.23 13.5 104.23 15.47 L 104.23 15.47 Q 104.23 17.44 103.3 18.99 Q 102.36 20.54 100.8 21.41 Q 99.24 22.29 97.34 22.29 M 97.34 19.41 L 97.34 19.41 Q 98.38 19.41 99.19 18.9 Q 100.01 18.4 100.48 17.51 Q 100.94 16.62 100.94 15.47 L 100.94 15.47 Q 100.94 14.34 100.48 13.46 Q 100.01 12.57 99.19 12.05 Q 98.38 11.54 97.34 11.54 L 97.34 11.54 Q 96.26 11.54 95.45 12.05 Q 94.63 12.57 94.16 13.46 Q 93.7 14.34 93.7 15.47 L 93.7 15.47 Q 93.7 16.62 94.16 17.51 Q 94.63 18.4 95.45 18.9 Q 96.26 19.41 97.34 19.41 M 109.75 22 L 106.61 22 L 106.61 8.94 L 109.56 8.94 L 109.56 10.77 Q 110.06 9.69 110.98 9.24 Q 111.89 8.8 113.09 8.8 L 113.09 8.8 L 113.86 8.8 L 113.86 11.58 L 112.73 11.58 Q 111.41 11.58 110.58 12.41 Q 109.75 13.24 109.75 14.73 L 109.75 14.73 L 109.75 22 M 121.9 22.14 L 121.9 22.14 Q 119.69 22.14 118.48 20.93 Q 117.26 19.72 117.26 17.51 L 117.26 17.51 L 117.26 11.75 L 115.01 11.75 L 115.01 8.94 L 115.25 8.94 Q 116.21 8.94 116.74 8.44 Q 117.26 7.94 117.26 6.98 L 117.26 6.98 L 117.26 5.97 L 120.41 5.97 L 120.41 8.94 L 123.41 8.94 L 123.41 11.75 L 120.41 11.75 L 120.41 17.34 Q 120.41 18.33 120.94 18.86 Q 121.46 19.38 122.62 19.38 L 122.62 19.38 Q 122.98 19.38 123.46 19.31 L 123.46 19.31 L 123.46 22 Q 123.12 22.05 122.69 22.1 Q 122.26 22.14 121.9 22.14 M 129.77 22.29 L 129.77 22.29 Q 127.73 22.29 126.5 21.28 Q 125.28 20.27 125.28 18.54 L 125.28 18.54 Q 125.28 16.91 126.38 15.83 Q 127.49 14.75 129.79 14.37 L 129.79 14.37 L 133.68 13.74 L 133.68 13.31 Q 133.68 12.47 133.02 11.91 Q 132.36 11.34 131.28 11.34 L 131.28 11.34 Q 130.25 11.34 129.48 11.88 Q 128.71 12.42 128.35 13.31 L 128.35 13.31 L 125.78 12.06 Q 126.36 10.53 127.9 9.59 Q 129.43 8.66 131.4 8.66 L 131.4 8.66 Q 133.01 8.66 134.22 9.26 Q 135.43 9.86 136.13 10.9 Q 136.82 11.94 136.82 13.31 L 136.82 13.31 L 136.82 22 L 133.85 22 L 133.85 20.63 Q 132.31 22.29 129.77 22.29 M 128.54 18.42 L 128.54 18.42 Q 128.54 19.1 129.05 19.49 Q 129.55 19.89 130.34 19.89 L 130.34 19.89 Q 131.83 19.89 132.76 18.96 Q 133.68 18.04 133.68 16.67 L 133.68 16.67 L 133.68 16.14 L 130.39 16.7 Q 128.54 17.03 128.54 18.42 M 142.87 22 L 139.73 22 L 139.73 3.83 L 142.87 3.83 L 142.87 22";
+const aiPath = "M 162.14 22.29 L 162.14 22.29 Q 160.1 22.29 158.87 21.28 Q 157.65 20.27 157.65 18.54 L 157.65 18.54 Q 157.65 16.91 158.75 15.83 Q 159.86 14.75 162.16 14.37 L 162.16 14.37 L 166.05 13.74 L 166.05 13.31 Q 166.05 12.47 165.39 11.91 Q 164.73 11.34 163.65 11.34 L 163.65 11.34 Q 162.62 11.34 161.85 11.88 Q 161.08 12.42 160.72 13.31 L 160.72 13.31 L 158.15 12.06 Q 158.73 10.53 160.26 9.59 Q 161.8 8.66 163.77 8.66 L 163.77 8.66 Q 165.38 8.66 166.59 9.26 Q 167.8 9.86 168.5 10.9 Q 169.19 11.94 169.19 13.31 L 169.19 13.31 L 169.19 22 L 166.22 22 L 166.22 20.63 Q 164.68 22.29 162.14 22.29 M 160.91 18.42 L 160.91 18.42 Q 160.91 19.1 161.42 19.49 Q 161.92 19.89 162.71 19.89 L 162.71 19.89 Q 164.2 19.89 165.12 18.96 Q 166.05 18.04 166.05 16.67 L 166.05 16.67 L 166.05 16.14 L 162.76 16.7 Q 160.91 17.03 160.91 18.42 M 175.24 7.48 L 172.1 7.48 L 172.1 4.12 L 175.24 4.12 L 175.24 7.48 M 175.24 22 L 172.1 22 L 172.1 8.94 L 175.24 8.94 L 175.24 22";
+
+// Tightened spacing calculations: ai shifted left by 8px, period dot centered in new gap
+const dotX = 146.2;
+const dotY = 19.1;
+const dotRadius = 2.4;
 ---
 
 <style is:global>
   @keyframes portal-glow-pulse {
-    0%, 100% { opacity: 0.4; transform: translate(-50%, 0) scale(1); }
-    50% { opacity: 0.7; transform: translate(-50%, 0) scale(1.08); }
+    0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.1); }
   }
-  @keyframes ray-idle {
-    0%, 100% { opacity: 0.9; }
-    50% { opacity: 0.72; }
+  @keyframes sparkle-idle {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.04) rotate(2deg); }
   }
-  .portal-ray {
-    transform-origin: center;
-    animation: ray-idle 3.2s ease-in-out infinite;
+  @keyframes neural-orbit {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
-  .portal-ray:nth-child(1) { animation-delay: 0s; }
-  .portal-ray:nth-child(2) { animation-delay: 0.4s; }
-  .portal-ray:nth-child(3) { animation-delay: 0.2s; }
-  @media (prefers-reduced-motion: reduce) {
-    .portal-ray { animation: none !important; }
-    .portal-glow { animation: none !important; }
+
+  /* Concept Switching Styles */
+  .concept-path { display: none !important; }
+
+  /* Local overrides via data-concept attribute */
+  [data-concept="a"] .concept-a-path { display: block !important; }
+  [data-concept="b"] .concept-b-path { display: block !important; }
+  [data-concept="c"] .concept-c-path { display: block !important; }
+  [data-concept="d"] .concept-d-path { display: block !important; }
+  [data-concept="e"] .concept-e-path { display: block !important; }
+  [data-concept="f"] .concept-f-path { display: block !important; }
+  [data-concept="g"] .concept-g-path { display: block !important; }
+  [data-concept="h"] .concept-h-path { display: block !important; }
+  [data-concept="i"] .concept-i-path { display: block !important; }
+  [data-concept="j"] .concept-j-path { display: block !important; }
+  [data-concept="k"] .concept-k-path { display: block !important; }
+  [data-concept="l"] .concept-l-path { display: block !important; }
+  [data-concept="m"] .concept-m-path { display: block !important; }
+  [data-concept="n"] .concept-n-path { display: block !important; }
+
+  /* Body-level switcher fallbacks */
+  body:not([data-brand-concept]) :not([data-concept]) .concept-g-path { display: block !important; }
+  body[data-brand-concept="a"] :not([data-concept]) .concept-a-path { display: block !important; }
+  body[data-brand-concept="b"] :not([data-concept]) .concept-b-path { display: block !important; }
+  body[data-brand-concept="c"] :not([data-concept]) .concept-c-path { display: block !important; }
+  body[data-brand-concept="d"] :not([data-concept]) .concept-d-path { display: block !important; }
+  body[data-brand-concept="e"] :not([data-concept]) .concept-e-path { display: block !important; }
+  body[data-brand-concept="f"] :not([data-concept]) .concept-f-path { display: block !important; }
+  body[data-brand-concept="g"] :not([data-concept]) .concept-g-path { display: block !important; }
+  body[data-brand-concept="h"] :not([data-concept]) .concept-h-path { display: block !important; }
+  body[data-brand-concept="i"] :not([data-concept]) .concept-i-path { display: block !important; }
+  body[data-brand-concept="j"] :not([data-concept]) .concept-j-path { display: block !important; }
+  body[data-brand-concept="k"] :not([data-concept]) .concept-k-path { display: block !important; }
+  body[data-brand-concept="l"] :not([data-concept]) .concept-l-path { display: block !important; }
+  body[data-brand-concept="m"] :not([data-concept]) .concept-m-path { display: block !important; }
+  body[data-brand-concept="n"] :not([data-concept]) .concept-n-path { display: block !important; }
+
+  /* Shared static core dot visibility */
+  .concept-core-dot { display: block; }
+  [data-concept="a"] .concept-core-dot,
+  [data-concept="n"] .concept-core-dot { display: none !important; }
+  body[data-brand-concept="a"] :not([data-concept]) .concept-core-dot { display: none !important; }
+  body[data-brand-concept="n"] :not([data-concept]) .concept-core-dot { display: none !important; }
+
+  /* Micro-animations */
+  .portal-sparkle-path { transform-origin: 16px 16px; }
+  .group\/logo:hover .portal-sparkle-path,
+  .group\/icon:hover .portal-sparkle-path {
+    animation: sparkle-idle 1.6s ease-in-out infinite;
+  }
+
+  .led-beams { transform-origin: 16px 16px; transition: transform 0.3s ease; }
+  .group\/logo:hover .led-beams,
+  .group\/icon:hover .led-beams {
+    transform: translateY(-1.5px);
+  }
+
+  .moebius-loop { transform-origin: 16px 16px; transition: transform 0.6s ease; }
+  .group\/logo:hover .moebius-loop,
+  .group\/icon:hover .moebius-loop {
+    transform: rotate(180deg);
+  }
+
+  .wave-left, .wave-right { transition: transform 0.3s ease; }
+  .wave-left { transform-origin: 9px 16px; }
+  .wave-right { transform-origin: 23px 16px; }
+  .group\/logo:hover .wave-left,
+  .group\/icon:hover .wave-left {
+    transform: translateX(1.2px);
+  }
+  .group\/logo:hover .wave-right,
+  .group\/icon:hover .wave-right {
+    transform: translateX(-1.2px);
+  }
+
+  .hex-portal { transform-origin: 16px 16px; transition: transform 0.4s ease; }
+  .group\/logo:hover .hex-portal, .group\/icon:hover .hex-portal { transform: rotate(30deg); }
+
+  .helix-left, .helix-right { transition: transform 0.4s ease; }
+  .helix-left { transform-origin: 10px 16px; }
+  .helix-right { transform-origin: 22px 16px; }
+  .group\/logo:hover .helix-left, .group\/icon:hover .helix-left { transform: rotate(15deg) scale(1.05); }
+  .group\/logo:hover .helix-right, .group\/icon:hover .helix-right { transform: rotate(-15deg) scale(1.05); }
+
+  .cyber-arch { transform-origin: 16px 16px; transition: transform 0.6s ease; }
+  .group\/logo:hover .cyber-arch, .group\/icon:hover .cyber-arch { transform: rotate(-90deg); }
+
+  .orbital-ring { transform-origin: 16px 16px; transition: transform 0.5s ease; }
+  .group\/logo:hover .orbital-ring, .group\/icon:hover .orbital-ring { transform: rotate(15deg) scale(1.08); }
+
+  .spark-vert, .spark-horiz { transition: transform 0.3s ease; }
+  .spark-vert { transform-origin: 16px 16px; }
+  .spark-horiz { transform-origin: 16px 16px; }
+  .group\/logo:hover .spark-vert, .group\/icon:hover .spark-vert { transform: scaleY(1.1); }
+  .group\/logo:hover .spark-horiz, .group\/icon:hover .spark-horiz { transform: scaleX(1.1); }
+
+  .aperture-c { transition: transform 0.4s ease; }
+  .group\/logo:hover .aperture-c, .group\/icon:hover .aperture-c { transform: scale(0.9); }
+
+  .silicon-box { transform-origin: 16px 16px; transition: transform 0.3s ease; }
+  .group\/logo:hover .silicon-box, .group\/icon:hover .silicon-box { transform: scale(1.05); }
+
+  .folding-wave { transform-origin: 16px 16px; transition: transform 0.5s ease; }
+  .group\/logo:hover .folding-wave, .group\/icon:hover .folding-wave { transform: rotate(72deg); }
+
+  .gate-left, .gate-right { transition: transform 0.3s ease; }
+  .gate-left { transform-origin: 10px 16px; }
+  .gate-right { transform-origin: 22px 16px; }
+  .group\/logo:hover .gate-left, .group\/icon:hover .gate-left { transform: scaleY(1.15); }
+  .group\/logo:hover .gate-right, .group\/icon:hover .gate-right { transform: scaleY(1.15); }
+
+  .neural-orbits { transform-origin: 16px 16px; }
+  .group\/logo:hover .neural-orbits, .group\/icon:hover .neural-orbits { animation: neural-orbit 4s linear infinite; }
+
+  /* Sliding Lockup Dot Transition Animation (Dot moves from period to icon on hover) */
+  .lockup-dot {
+    cx: 184.2px; /* 146.2 + 38 translation */
+    cy: 19.1px;
+    r: 2.4px;
+    transition: cx 0.55s cubic-bezier(0.25, 1, 0.4, 1), cy 0.55s cubic-bezier(0.25, 1, 0.4, 1), r 0.55s cubic-bezier(0.25, 1, 0.4, 1);
+  }
+  .group\/logo:hover .lockup-dot {
+    cx: 16px;
+    cy: 16px;
+    r: 3.2px;
   }
 </style>
 
+{/* ICON - Standalone Portal Icon */}
 {
   variant === 'icon' && (
-    <span class:list={['group/icon relative inline-flex items-center justify-center overflow-visible', sizes.icon, className]} aria-hidden="true">
+    <span data-concept={concept} class:list={['group/icon relative inline-flex items-center justify-center overflow-visible', sizes.iconHeight, className]} aria-hidden="true">
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
-        {/* rays - emission ticks with hover burst */}
-        <g class="portal-rays" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2.2" stroke-linecap="round" opacity="0.95">
-          <line class="portal-ray transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:-translate-y-[2.5px] group-hover/icon:opacity-100" x1="16" y1="1.2" x2="16" y2="5.2" />
-          <line class="portal-ray transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:-translate-x-[1.8px] group-hover/icon:-translate-y-[1.8px] group-hover/icon:opacity-100" x1="7.8" y1="4.2" x2="10.6" y2="7.2" />
-          <line class="portal-ray transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:translate-x-[1.8px] group-hover/icon:-translate-y-[1.8px] group-hover/icon:opacity-100" x1="24.2" y1="4.2" x2="21.4" y2="7.2" />
-        </g>
-        {/* portal dome */}
-        <path class="transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:scale-[1.04] origin-center" d="M8 16.2V11.2C8 5.9 11.6 2.8 16 2.8C20.4 2.8 24 5.9 24 11.2V16.2H8Z" fill={mono ? 'currentColor' : '#CE445D'} />
-        {/* base plinth - portal threshold */}
-        <rect x="7" y="19.6" width="18" height="2.8" rx="1.4" fill={mono ? 'currentColor' : '#E2E8F0'} opacity={mono ? '1' : '0.9'} />
-      </svg>
-      {/* glow */}
-      <span class="portal-glow pointer-events-none absolute left-1/2 top-1 size-8 -translate-x-1/2 rounded-full bg-primary-cta/30 blur-[10px] transition-all duration-500 group-hover/icon:bg-primary-cta/50 group-hover/icon:blur-[12px] group-hover/icon:size-10" aria-hidden="true" style={animated ? 'animation: portal-glow-pulse 3.2s ease-in-out infinite' : undefined}></span>
-    </span>
-  )
-}
+        {/* Glow */}
+        <circle cx="16" cy="16" r="12" fill={mono ? 'none' : '#CE445D'} opacity={mono ? 0 : 0.22} style="filter: blur(5px)"/>
+        
+        {/* Concept A: AI Sparkle Portal */}
+        <path class="concept-path concept-a-path portal-sparkle-path" d="M 16,2 C 16,10 10,16 2,16 C 10,16 16,22 16,30 C 16,22 22,16 30,16 C 22,16 16,10 16,2 Z M 16,11 A 5,5 0 1 0 16,21 A 5,5 0 1 0 16,11 Z" fill={mono ? 'currentColor' : '#CE445D'} fill-rule="evenodd" />
 
-{
-  variant === 'full' && (
-    <span class:list={['group/logo relative inline-flex items-center gap-3', className]}>
-      <span class:list={['relative grid place-items-center overflow-hidden rounded-[11px] bg-canvas border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_1px_2px_rgba(0,0,0,0.3)] transition-colors duration-300 group-hover:border-white/15', sizes.icon]} aria-hidden="true">
-        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-[78%] w-[78%] overflow-visible">
-          <g class="portal-rays" stroke={mono ? 'white' : '#CE445D'} stroke-width="2.1" stroke-linecap="round">
-            <line class="portal-ray transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:-translate-y-[2.5px]" x1="16" y1="1" x2="16" y2="4.6" />
-            <line class="portal-ray transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:-translate-x-[2px] group-hover/logo:-translate-y-[1.8px]" x1="8.2" y1="3.8" x2="10.8" y2="6.6" />
-            <line class="portal-ray transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:translate-x-[2px] group-hover/logo:-translate-y-[1.8px]" x1="23.8" y1="3.8" x2="21.2" y2="6.6" />
+        {/* Concept B: Evolved LED Signal */}
+        <g class="concept-path concept-b-path">
+          <path d="M 8 20 A 8 8 0 0 1 24 20 L 21 20 A 5 5 0 0 0 11 20 Z" fill={mono ? 'currentColor' : '#CE445D'} />
+          <path d="M 6 24 L 26 24" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2" stroke-linecap="round" />
+          <g class="led-beams">
+            <path d="M 6 12 L 9 14" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+            <path d="M 16 4 L 16 7" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+            <path d="M 26 12 L 23 14" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
           </g>
-          <path class="transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:scale-[1.06] origin-center" d="M8.2 15.6V11.1C8.2 6.1 11.6 3.2 16 3.2C20.4 3.2 23.8 6.1 23.8 11.1V15.6H8.2Z" fill={mono ? 'white' : '#CE445D'} />
-          <rect x="7" y="18.8" width="18" height="2.6" rx="1.3" fill="white" opacity="0.92" class="transition-opacity duration-300 group-hover/logo:opacity-100" />
-        </svg>
-        {/* subtle glow */}
-        <span class="portal-glow pointer-events-none absolute -top-6 left-1/2 size-12 -translate-x-1/2 rounded-full bg-primary-cta/40 blur-[14px] transition-all duration-500 group-hover/logo:bg-primary-cta/60 group-hover/logo:blur-[16px] group-hover/logo:-top-5" aria-hidden="true" style={animated ? 'animation: portal-glow-pulse 3.6s ease-in-out infinite' : undefined}></span>
-      </span>
-      <span class:list={['font-bold tracking-[0.12em] text-white transition-colors duration-300 group-hover/logo:text-white', sizes.text]}>MAKERPORTAL</span>
+        </g>
+
+        {/* Concept C: Infinity Moebius Loop */}
+        <g class="concept-path concept-c-path">
+          <path d="M 16 16 C 12 10 6 10 6 16 C 6 22 12 22 16 16 C 20 10 26 10 26 16 C 26 22 20 22 16 16 Z" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" class="moebius-loop" />
+        </g>
+
+        {/* Concept D: Quantum Pulse Wave */}
+        <g class="concept-path concept-d-path">
+          <path d="M 9 6 C 5 12 5 20 9 26" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="wave-left" />
+          <path d="M 23 6 C 27 12 27 20 23 26" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="wave-right" />
+        </g>
+
+        {/* Concept E: Hexagon Portal */}
+        <g class="concept-path concept-e-path hex-portal">
+          <path d="M 16 4 L 27 10 L 27 22 L 16 28 L 5 22 L 5 10 Z" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+          <path d="M 16 4 L 16 8 M 5 22 L 9 20 M 27 22 L 23 20" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+        </g>
+
+        {/* Concept F: Helix Signal */}
+        <g class="concept-path concept-f-path">
+          <path d="M 10 4 C 18 10 14 22 10 28" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="helix-left" />
+          <path d="M 22 4 C 14 10 18 22 22 28" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="helix-right" />
+        </g>
+
+        {/* Concept G: Cybernetic Arch */}
+        <g class="concept-path concept-g-path">
+          <path d="M 6 16 A 10 10 0 1 1 26 16" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-dasharray="7 5" stroke-linecap="round" fill="none" class="cyber-arch" />
+        </g>
+
+        {/* Concept H: Orbital Ring */}
+        <g class="concept-path concept-h-path">
+          <ellipse cx="16" cy="16" rx="12" ry="4.5" transform="rotate(-30 16 16)" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" fill="none" class="orbital-ring" />
+        </g>
+
+        {/* Concept I: Spark Wave */}
+        <g class="concept-path concept-i-path">
+          <path d="M 16 4 C 12 10 20 22 16 28" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none" class="spark-vert" />
+          <path d="M 4 16 C 10 12 22 20 28 16" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none" class="spark-horiz" />
+        </g>
+
+        {/* Concept J: Aperture Grid */}
+        <g class="concept-path concept-j-path">
+          <g stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" stroke-linecap="round" fill="none" class="aperture-c">
+            <path d="M 8 12 L 8 8 L 12 8" />
+            <path d="M 20 8 L 24 8 L 24 12" />
+            <path d="M 24 20 L 24 24 L 20 24" />
+            <path d="M 12 24 L 8 24 L 8 20" />
+          </g>
+        </g>
+
+        {/* Concept K: Silicon Portal */}
+        <g class="concept-path concept-k-path">
+          <rect x="8" y="8" width="16" height="16" rx="2" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" fill="none" class="silicon-box" />
+          <path d="M 16 3 L 16 8 M 16 24 L 16 29 M 3 16 L 8 16 M 24 16 L 29 16" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+        </g>
+
+        {/* Concept L: Folding Wave */}
+        <g class="concept-path concept-l-path">
+          <path d="M 16 4 L 26 11 L 22 25 L 10 25 L 6 11 Z" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linejoin="round" fill="none" class="folding-wave" />
+        </g>
+
+        {/* Concept M: Binary Gate */}
+        <g class="concept-path concept-m-path">
+          <path d="M 10 6 L 10 26" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.6" stroke-linecap="round" class="gate-left" />
+          <path d="M 22 6 L 22 26" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.6" stroke-linecap="round" class="gate-right" />
+        </g>
+
+        {/* Concept N: Neural Cluster */}
+        <g class="concept-path concept-n-path neural-orbits">
+          <circle cx="16" cy="6" r="2" fill={mono ? 'currentColor' : 'white'} />
+          <circle cx="8" cy="22" r="2" fill={mono ? 'currentColor' : 'white'} />
+          <circle cx="24" cy="22" r="2" fill={mono ? 'currentColor' : 'white'} />
+          <path d="M 16 6 L 16 13 M 8 22 L 13 18 M 24 22 L 19 18" stroke={mono ? 'currentColor' : 'white'} opacity="0.3" stroke-width="1.5" />
+          <circle cx="16" cy="16" r="3.2" fill={mono ? 'currentColor' : '#CE445D'} />
+        </g>
+
+        {/* Shared Core Dot - Hidden for A and N */}
+        <circle cx="16" cy="16" r="3.2" fill={mono ? 'currentColor' : '#CE445D'} class="concept-core-dot" />
+      </svg>
+      {/* Background Pulse Glow */}
+      <span class="portal-glow-el pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 size-8 -translate-x-1/2 rounded-full bg-[#CE445D]/20 blur-[8px] transition-all duration-500 group-hover/icon:bg-[#CE445D]/35 group-hover/icon:blur-[10px] group-hover/icon:size-10" aria-hidden="true" style={animated ? 'animation: portal-glow-pulse 3.2s ease-in-out infinite' : undefined}></span>
     </span>
   )
 }
 
+{/* FULL - Custom Lowercase solid-filled wordmark (Outlined from font) */}
 {
-  variant === 'wordmark' && (
-    <span class:list={['inline-flex items-baseline', className]}>
-      <span class:list={['font-bold tracking-[0.12em] text-white', sizes.text]}>MAKERPORTAL<span class="text-primary-cta">.</span></span>
+  (variant === 'full' || variant === 'lowercase' || variant === 'wordmark') && (
+    <span class:list={['group/logo inline-flex items-center justify-center overflow-visible', sizes.wordmarkHeight, className]}>
+      <svg viewBox="0 0 198 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
+        <g fill={mono ? 'currentColor' : 'white'} fill-rule="evenodd" class="transition-all duration-300 group-hover/logo:opacity-95">
+          <path d={makerPath} />
+          {/* Shifting AI path left by 8px */}
+          <g transform="translate(-8, 0)">
+            <path d={aiPath} />
+          </g>
+        </g>
+        {/* Crimson Period Dot - Static (NO hover scale or translation) */}
+        <circle cx={dotX} cy={dotY} r={dotRadius} fill={mono ? 'currentColor' : '#CE445D'} stroke="none" />
+      </svg>
+    </span>
+  )
+}
+
+{/* LOCKUP - Single SVG with dot translation animation */}
+{
+  variant === 'lockup' && (
+    <span data-concept={concept} class:list={['group/logo relative inline-flex items-center overflow-visible', sizes.lockupWidth, className]}>
+      <svg viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
+        {/* Icon Glow */}
+        <circle cx="16" cy="16" r="12" fill={mono ? 'none' : '#CE445D'} opacity={mono ? 0 : 0.22} style="filter: blur(5px)"/>
+
+        {/* --- ICON CONCEPTS (A to N) at x=0 --- */}
+        
+        {/* Concept A: AI Sparkle Portal */}
+        <path class="concept-path concept-a-path portal-sparkle-path" d="M 16,2 C 16,10 10,16 2,16 C 10,16 16,22 16,30 C 16,22 22,16 30,16 C 22,16 16,10 16,2 Z M 16,11 A 5,5 0 1 0 16,21 A 5,5 0 1 0 16,11 Z" fill={mono ? 'currentColor' : '#CE445D'} fill-rule="evenodd" />
+
+        {/* Concept B: Evolved LED Signal */}
+        <g class="concept-path concept-b-path">
+          <path d="M 8 20 A 8 8 0 0 1 24 20 L 21 20 A 5 5 0 0 0 11 20 Z" fill={mono ? 'currentColor' : '#CE445D'} />
+          <path d="M 6 24 L 26 24" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2" stroke-linecap="round" />
+          <g class="led-beams">
+            <path d="M 6 12 L 9 14" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+            <path d="M 16 4 L 16 7" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+            <path d="M 26 12 L 23 14" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+          </g>
+        </g>
+
+        {/* Concept C: Infinity Moebius Loop */}
+        <g class="concept-path concept-c-path">
+          <path d="M 16 16 C 12 10 6 10 6 16 C 6 22 12 22 16 16 C 20 10 26 10 26 16 C 26 22 20 22 16 16 Z" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" class="moebius-loop" />
+        </g>
+
+        {/* Concept D: Quantum Pulse Wave */}
+        <g class="concept-path concept-d-path">
+          <path d="M 9 6 C 5 12 5 20 9 26" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="wave-left" />
+          <path d="M 23 6 C 27 12 27 20 23 26" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="wave-right" />
+        </g>
+
+        {/* Concept E: Hexagon Portal */}
+        <g class="concept-path concept-e-path hex-portal">
+          <path d="M 16 4 L 27 10 L 27 22 L 16 28 L 5 22 L 5 10 Z" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+          <path d="M 16 4 L 16 8 M 5 22 L 9 20 M 27 22 L 23 20" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+        </g>
+
+        {/* Concept F: Helix Signal */}
+        <g class="concept-path concept-f-path">
+          <path d="M 10 4 C 18 10 14 22 10 28" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="helix-left" />
+          <path d="M 22 4 C 14 10 18 22 22 28" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" fill="none" class="helix-right" />
+        </g>
+
+        {/* Concept G: Cybernetic Arch */}
+        <g class="concept-path concept-g-path">
+          <path d="M 6 16 A 10 10 0 1 1 26 16" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-dasharray="7 5" stroke-linecap="round" fill="none" class="cyber-arch" />
+        </g>
+
+        {/* Concept H: Orbital Ring */}
+        <g class="concept-path concept-h-path">
+          <ellipse cx="16" cy="16" rx="12" ry="4.5" transform="rotate(-30 16 16)" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" fill="none" class="orbital-ring" />
+        </g>
+
+        {/* Concept I: Spark Wave */}
+        <g class="concept-path concept-i-path">
+          <path d="M 16 4 C 12 10 20 22 16 28" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none" class="spark-vert" />
+          <path d="M 4 16 C 10 12 22 20 28 16" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none" class="spark-horiz" />
+        </g>
+
+        {/* Concept J: Aperture Grid */}
+        <g class="concept-path concept-j-path">
+          <g stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" stroke-linecap="round" fill="none" class="aperture-c">
+            <path d="M 8 12 L 8 8 L 12 8" />
+            <path d="M 20 8 L 24 8 L 24 12" />
+            <path d="M 24 20 L 24 24 L 20 24" />
+            <path d="M 12 24 L 8 24 L 8 20" />
+          </g>
+        </g>
+
+        {/* Concept K: Silicon Portal */}
+        <g class="concept-path concept-k-path">
+          <rect x="8" y="8" width="16" height="16" rx="2" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.2" fill="none" class="silicon-box" />
+          <path d="M 16 3 L 16 8 M 16 24 L 16 29 M 3 16 L 8 16 M 24 16 L 29 16" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2" stroke-linecap="round" />
+        </g>
+
+        {/* Concept L: Folding Wave */}
+        <g class="concept-path concept-l-path">
+          <path d="M 16 4 L 26 11 L 22 25 L 10 25 L 6 11 Z" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linejoin="round" fill="none" class="folding-wave" />
+        </g>
+
+        {/* Concept M: Binary Gate */}
+        <g class="concept-path concept-m-path">
+          <path d="M 10 6 L 10 26" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.6" stroke-linecap="round" class="gate-left" />
+          <path d="M 22 6 L 22 26" stroke={mono ? 'currentColor' : 'white'} stroke-width="2.6" stroke-linecap="round" class="gate-right" />
+        </g>
+
+        {/* Concept N: Neural Cluster */}
+        <g class="concept-path concept-n-path neural-orbits">
+          <circle cx="16" cy="6" r="2" fill={mono ? 'currentColor' : 'white'} />
+          <circle cx="8" cy="22" r="2" fill={mono ? 'currentColor' : 'white'} />
+          <circle cx="24" cy="22" r="2" fill={mono ? 'currentColor' : 'white'} />
+          <path d="M 16 6 L 16 13 M 8 22 L 13 18 M 24 22 L 19 18" stroke={mono ? 'currentColor' : 'white'} opacity="0.3" stroke-width="1.5" />
+          <circle cx="16" cy="16" r="3.2" fill={mono ? 'currentColor' : '#CE445D'} />
+        </g>
+
+        {/* --- WORDMARK (Shifted by x=38, and inside shifted ai path by -8px for perfect kerning) --- */}
+        <g transform="translate(38, 0)">
+          <g fill={mono ? 'currentColor' : 'white'} fill-rule="evenodd" class="transition-all duration-300 group-hover/logo:opacity-95">
+            <path d={makerPath} />
+            <g transform="translate(-8, 0)">
+              <path d={aiPath} />
+            </g>
+          </g>
+        </g>
+
+        {/* --- TRANSITIONING DOT (cx=16 -> cx=184.2 on hover) --- */}
+        <circle class="lockup-dot" fill={mono ? 'currentColor' : '#CE445D'} stroke="none" />
+      </svg>
+      {/* Background Pulse Glow */}
+      <span class="portal-glow-el pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 size-8 rounded-full bg-[#CE445D]/20 blur-[8px] transition-all duration-500 group-hover/logo:bg-[#CE445D]/35 group-hover/logo:blur-[10px]" aria-hidden="true" style={animated ? 'animation: portal-glow-pulse 3.2s ease-in-out infinite' : undefined}></span>
+    </span>
+  )
+}
+
+{/* MP Monogram Monolith */}
+{
+  variant === 'mp' && (
+    <span class:list={['relative inline-flex items-center justify-center overflow-hidden bg-[#0F141C] border border-white/10 shadow-[0_0_15px_rgba(206,68,93,0.12)]', sizes.mpSize, className]} aria-hidden="true">
+      <svg viewBox="0 0 48 48" class="h-[80%] w-[80%]">
+        <path d="M8 32V11h4.2l4.8 9 4.8-9H26v21h-3V17.8L18.5 27H17L12.5 17.8V32H8Z" fill="white"/>
+        <path d="M28 11h6.5c3.6 0 6.2 2.2 6.2 5.6S38.1 22 34.6 22H31.2V32H28V11ZM31.2 19.2h3.2c1.8 0 2.9-1 2.9-2.7S36.2 13.8 34.4 13.8H31.2V19.2Z" fill="white"/>
+      </svg>
     </span>
   )
 }

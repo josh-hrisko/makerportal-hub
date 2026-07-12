@@ -1,0 +1,398 @@
+---
+import Layout from '../layouts/Layout.astro';
+import BrandLogo from '../components/BrandLogo.astro';
+
+const title = 'Brand & Assets — MakerPortal.ai';
+const description = 'Official brand assets, custom typographic wordmark, standalone portal icon, and app icon system for makerportal.ai';
+---
+
+<Layout title={title} description={description} noindex>
+  <!-- Hero Section -->
+  <section class="border-b border-muted-text/15 relative overflow-hidden bg-[#0F141C]">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(206,68,93,0.08),rgba(15,20,28,0))] pointer-events-none"></div>
+    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 lg:px-10 relative z-10">
+      <p class="section-kicker text-[#CE445D]">Identity / Specifications</p>
+      <h1 class="mt-6 max-w-4xl text-balance text-5xl font-bold leading-[0.95] tracking-[-0.05em] text-white sm:text-7xl">
+        makerportal.ai brand system.
+      </h1>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-text">
+        Bespoke software studio identity evolved from legacy hardware roots. Engineered for 2026.
+      </p>
+    </div>
+  </section>
+
+  <!-- Brand Assets Showcase -->
+  <section class="border-b border-muted-text/15 bg-card-bg/10">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 lg:px-10">
+      <div class="grid gap-8 lg:grid-cols-3">
+        <!-- 1. Standalone Icon -->
+        <div class="rounded-3xl border border-muted-text/10 bg-[#151D27]/40 p-8 flex flex-col justify-between hover:border-[#CE445D]/30 transition duration-300">
+          <div>
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Icon / Gateway</p>
+            <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">AI Sparkle Portal</h3>
+            <p class="mt-3 text-sm leading-6 text-muted-text">
+              A custom 4-pointed sparkle representing AI/intelligence, merged with a hollow core portal gateway. Highly balanced, geometric, and modern.
+            </p>
+          </div>
+          <div class="mt-8 flex min-h-[10rem] items-center justify-center rounded-2xl bg-canvas border border-white/[0.04] p-6">
+            <BrandLogo variant="icon" size="lg" />
+          </div>
+        </div>
+
+        <!-- 2. Primary Wordmark -->
+        <div class="rounded-3xl border border-muted-text/10 bg-[#151D27]/40 p-8 flex flex-col justify-between hover:border-white/10 transition duration-300">
+          <div>
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-white/60">Logotype / Primary</p>
+            <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">Custom Wordmark</h3>
+            <p class="mt-3 text-sm leading-6 text-muted-text">
+              A custom typographic lowercase wordmark derived from the premium geometric sans font Plus Jakarta Sans Bold, with an accent crimson period dot.
+            </p>
+          </div>
+          <div class="mt-8 flex min-h-[10rem] items-center justify-center rounded-2xl bg-canvas border border-white/[0.04] p-6">
+            <BrandLogo variant="full" size="lg" />
+          </div>
+        </div>
+
+        <!-- 3. Lockup / Header Default -->
+        <div class="rounded-3xl border border-muted-text/10 bg-[#151D27]/40 p-8 flex flex-col justify-between hover:border-[#CE445D]/20 transition duration-300">
+          <div>
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text">Lockup / Primary</p>
+            <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">Icon + Wordmark</h3>
+            <p class="mt-3 text-sm leading-6 text-muted-text">
+              Unified layout combining the gateway icon and logotype, designed for primary site navigation and global layouts.
+            </p>
+          </div>
+          <div class="mt-8 flex min-h-[10rem] items-center justify-center rounded-2xl bg-canvas border border-white/[0.04] p-6">
+            <BrandLogo variant="lockup" size="lg" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Concept Selection Playground -->
+  <section class="border-b border-muted-text/15 bg-[#121922]/30 py-16 relative">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(206,68,93,0.02),transparent)] pointer-events-none"></div>
+    <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10 relative z-10">
+      <div class="max-w-2xl">
+        <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Interactive Playground</p>
+        <h2 class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white sm:text-4xl">Riffing on Icon Concepts</h2>
+        <p class="mt-4 text-sm leading-6 text-muted-text">
+          We have generated four distinct candidates representing different combinations of your maker heritage and the AI landscape. Click any card below to swap the icon system-wide across this entire page and see it in action.
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7" id="concept-selector">
+        <!-- Candidate A: AI Sparkle Portal -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="a">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">A: AI Sparkle</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Sparkle Portal</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="a" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate B: Evolved LED Signal -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="b">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">B: Evolved LED</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Legacy Arch</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="b" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate C: Infinity Moebius Loop -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="c">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">C: Infinity Loop</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Moebius Spin</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="c" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate D: Quantum Pulse Wave -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="d">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">D: Quantum Wave</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Opposing Waves</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="d" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate E: Hexagon Portal -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="e">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">E: Hex Portal</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Hex Spokes</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="e" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate F: Helix Signal -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="f">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">F: Helix Signal</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Double Helix</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="f" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate G: Cybernetic Arch -->
+        <button class="concept-card active flex flex-col items-center justify-between rounded-2xl border border-[#CE445D]/50 bg-[#1A232E]/70 p-5 text-center cursor-pointer transition hover:border-[#CE445D] focus:outline-none w-full" data-set-concept="g">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">G: Cyber Arch</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-[#CE445D] uppercase tracking-wider">Segmented Arc</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="g" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate H: Orbital Ring -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="h">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">H: Orbital Ring</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Tilted Ellipse</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="h" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate I: Spark Wave -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="i">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">I: Spark Wave</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Sine + Cosine</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="i" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate J: Aperture Grid -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="j">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">J: Aperture Grid</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Lens Brackets</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="j" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate K: Silicon Portal -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="k">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">K: Silicon Box</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Microchip Pins</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="k" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate L: Folding Wave -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="l">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">L: Folding Loop</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Origami Path</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="l" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate M: Binary Gate -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="m">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">M: Binary Gate</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Parallel States</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="m" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate N: Neural Cluster -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="n">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">N: Neural Nodes</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Orbiting Nodes</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="n" animated={false} />
+          </div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.concept-card');
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          const concept = card.getAttribute('data-set-concept');
+          
+          // Set body attribute to trigger global logo concept switch
+          document.body.setAttribute('data-brand-concept', concept);
+          
+          // Update card active classes
+          cards.forEach(c => {
+            c.classList.remove('active', 'border-[#CE445D]/50', 'bg-[#1A232E]/70');
+            c.classList.add('border-white/[0.06]', 'bg-[#1A232E]/40');
+            const p = c.querySelector('p');
+            if (p) {
+              p.classList.remove('text-[#CE445D]');
+              p.classList.add('text-muted-text');
+            }
+          });
+          
+          card.classList.add('active', 'border-[#CE445D]/50', 'bg-[#1A232E]/70');
+          card.classList.remove('border-white/[0.06]', 'bg-[#1A232E]/40');
+          const p = card.querySelector('p');
+          if (p) {
+            p.classList.remove('text-muted-text');
+            p.classList.add('text-[#CE445D]');
+          }
+        });
+      });
+    });
+  </script>
+
+  <!-- App Icon System -->
+  <section class="border-b border-muted-text/15 bg-canvas">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 lg:px-10">
+      <div class="max-w-2xl">
+        <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Application Suite</p>
+        <h2 class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white sm:text-4xl">Unified App Icon Language</h2>
+        <p class="mt-4 text-sm leading-6 text-muted-text">
+          All apps share a common architectural base: a 64x64 canvas, custom blurred background glow matching the app accent, and the AI Sparkle Portal with a custom white glyph centered inside.
+        </p>
+      </div>
+
+      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- Biquadia -->
+        <div class="rounded-2xl border border-white/[0.06] bg-card-bg/40 p-6 flex flex-col items-center text-center">
+          <img src="/assets/app-icons/biquadia.svg" alt="Biquadia Icon" class="size-16 rounded-xl border border-white/10" />
+          <h4 class="mt-4 font-bold text-white">Biquadia</h4>
+          <p class="mt-1 font-mono text-[0.65rem] text-[#CE445D]">Audio / DSP • Crimson</p>
+        </div>
+
+        <!-- Notiary -->
+        <div class="rounded-2xl border border-white/[0.06] bg-card-bg/40 p-6 flex flex-col items-center text-center">
+          <img src="/assets/app-icons/notiary.svg" alt="Notiary Icon" class="size-16 rounded-xl border border-white/10" />
+          <h4 class="mt-4 font-bold text-white">Notiary</h4>
+          <p class="mt-1 font-mono text-[0.65rem] text-[#8B5CF6]">Semantic Markdown • Purple</p>
+        </div>
+
+        <!-- Thumb-Dash -->
+        <div class="rounded-2xl border border-white/[0.06] bg-card-bg/40 p-6 flex flex-col items-center text-center">
+          <img src="/assets/app-icons/thumbdash.svg" alt="Thumb-Dash Icon" class="size-16 rounded-xl border border-white/10" />
+          <h4 class="mt-4 font-bold text-white">Thumb-Dash</h4>
+          <p class="mt-1 font-mono text-[0.65rem] text-[#F59E0B]">Dashboard Bars • Amber</p>
+        </div>
+
+        <!-- PopCloset -->
+        <div class="rounded-2xl border border-white/[0.06] bg-card-bg/40 p-6 flex flex-col items-center text-center">
+          <img src="/assets/app-icons/popcloset.svg" alt="PopCloset Icon" class="size-16 rounded-xl border border-white/10" />
+          <h4 class="mt-4 font-bold text-white">PopCloset</h4>
+          <p class="mt-1 font-mono text-[0.65rem] text-[#326C88]">Wardrobe Hanger • Blue</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Color Palette & Spacing Guidelines -->
+  <section class="border-b border-muted-text/15 bg-card-bg/10">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 lg:px-10">
+      <div class="grid gap-12 md:grid-cols-2">
+        <!-- Colors -->
+        <div>
+          <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text">Color Tokens</p>
+          <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl border border-muted-text/10 bg-canvas p-4">
+              <div class="size-8 rounded-full bg-[#0F141C] border border-white/10"></div>
+              <p class="mt-3 font-mono text-[0.68rem] text-white">Canvas #0F141C</p>
+            </div>
+            <div class="rounded-2xl border border-muted-text/10 bg-canvas p-4">
+              <div class="size-8 rounded-full bg-[#1A232E]"></div>
+              <p class="mt-3 font-mono text-[0.68rem] text-white">Card #1A232E</p>
+            </div>
+            <div class="rounded-2xl border border-muted-text/10 bg-canvas p-4">
+              <div class="size-8 rounded-full bg-[#E2E8F0]"></div>
+              <p class="mt-3 font-mono text-[0.68rem] text-white">Text #E2E8F0</p>
+            </div>
+            <div class="rounded-2xl border border-muted-text/10 bg-canvas p-4">
+              <div class="size-8 rounded-full bg-[#CE445D]"></div>
+              <p class="mt-3 font-mono text-[0.68rem] text-white">CTA #CE445D</p>
+            </div>
+            <div class="rounded-2xl border border-muted-text/10 bg-canvas p-4">
+              <div class="size-8 rounded-full bg-[#326C88]"></div>
+              <p class="mt-3 font-mono text-[0.68rem] text-white">Blue #326C88</p>
+            </div>
+            <div class="rounded-2xl border border-muted-text/10 bg-canvas p-4">
+              <div class="size-8 rounded-full bg-[#5C6E7A]"></div>
+              <p class="mt-3 font-mono text-[0.68rem] text-white">Muted #5C6E7A</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guidelines Summary -->
+        <div>
+          <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text">Layout Specs</p>
+          <div class="mt-6 rounded-2xl border border-muted-text/10 bg-canvas p-6 space-y-4 text-sm text-muted-text">
+            <div>
+              <span class="font-bold text-white block">Clearspace</span>
+              A boundary of 0.5H (half height) must be kept clear around all wordmarks.
+            </div>
+            <div>
+              <span class="font-bold text-white block">Minimum Sizes</span>
+              16px for favicon, 32px height for wordmark legibility.
+            </div>
+            <div>
+              <span class="font-bold text-white block">Monogram & MP monogram</span>
+              <div class="mt-2 flex items-center gap-4">
+                <BrandLogo variant="mp" size="sm" />
+                <span class="text-xs">Monogram avatar used for secondary app icon container borders.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Downloadable Assets Links -->
+  <section class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 lg:px-10">
+    <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text">Ready Assets / Files</p>
+    <div class="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-4 font-mono text-xs">
+      <a href="/brand/logo-wordmark-dark.svg" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/brand/logo-wordmark-dark.svg</a>
+      <a href="/brand/logo-wordmark-light.svg" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/brand/logo-wordmark-light.svg</a>
+      <a href="/brand/logo-wordmark-editable.svg" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/brand/logo-wordmark-editable.svg</a>
+      <a href="/brand/logo-icon.svg" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/brand/logo-icon.svg</a>
+      <a href="/brand/logo-icon-editable.svg" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/brand/logo-icon-editable.svg</a>
+      <a href="/favicon.svg" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/favicon.svg</a>
+      <a href="/apple-touch-icon.png" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/apple-touch-icon.png (180px)</a>
+      <a href="/social-card.png" class="rounded-xl border border-white/5 bg-card-bg/20 p-4 hover:border-white/15 hover:text-white transition">/social-card.png (1200x630)</a>
+    </div>
+    <div class="mt-8 text-center sm:text-left">
+      <a href="/brand/brand-guidelines.md" class="inline-flex items-center gap-2 text-xs font-semibold text-[#CE445D] hover:underline">
+        Read detailed brand guidelines markdown <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</Layout>
