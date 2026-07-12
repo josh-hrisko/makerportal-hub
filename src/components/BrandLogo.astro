@@ -1,0 +1,91 @@
+---
+// BrandLogo — makerportal.ai identity system
+// Concept A: Signal Portal — direct evolution of original LED from makersportal.com
+// Dome = portal / LED bulb, base = plinth, rays = inference emission
+interface Props {
+  variant?: 'full' | 'icon' | 'wordmark';
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
+  mono?: boolean; // monochrome for footer / light bg
+  animated?: boolean;
+}
+const { variant = 'full', size = 'md', mono = false, animated = true, class: className = '' } = Astro.props as Props;
+
+const sizes = {
+  sm: { icon: 'size-7', text: 'text-[0.78rem]' },
+  md: { icon: 'size-9', text: 'text-sm' },
+  lg: { icon: 'size-12', text: 'text-base' },
+}[size];
+---
+
+<style is:global>
+  @keyframes portal-glow-pulse {
+    0%, 100% { opacity: 0.4; transform: translate(-50%, 0) scale(1); }
+    50% { opacity: 0.7; transform: translate(-50%, 0) scale(1.08); }
+  }
+  @keyframes ray-idle {
+    0%, 100% { opacity: 0.9; }
+    50% { opacity: 0.72; }
+  }
+  .portal-ray {
+    transform-origin: center;
+    animation: ray-idle 3.2s ease-in-out infinite;
+  }
+  .portal-ray:nth-child(1) { animation-delay: 0s; }
+  .portal-ray:nth-child(2) { animation-delay: 0.4s; }
+  .portal-ray:nth-child(3) { animation-delay: 0.2s; }
+  @media (prefers-reduced-motion: reduce) {
+    .portal-ray { animation: none !important; }
+    .portal-glow { animation: none !important; }
+  }
+</style>
+
+{
+  variant === 'icon' && (
+    <span class:list={['group/icon relative inline-flex items-center justify-center overflow-visible', sizes.icon, className]} aria-hidden="true">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
+        {/* rays - emission ticks with hover burst */}
+        <g class="portal-rays" stroke={mono ? 'currentColor' : '#CE445D'} stroke-width="2.2" stroke-linecap="round" opacity="0.95">
+          <line class="portal-ray transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:-translate-y-[2.5px] group-hover/icon:opacity-100" x1="16" y1="1.2" x2="16" y2="5.2" />
+          <line class="portal-ray transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:-translate-x-[1.8px] group-hover/icon:-translate-y-[1.8px] group-hover/icon:opacity-100" x1="7.8" y1="4.2" x2="10.6" y2="7.2" />
+          <line class="portal-ray transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:translate-x-[1.8px] group-hover/icon:-translate-y-[1.8px] group-hover/icon:opacity-100" x1="24.2" y1="4.2" x2="21.4" y2="7.2" />
+        </g>
+        {/* portal dome */}
+        <path class="transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/icon:scale-[1.04] origin-center" d="M8 16.2V11.2C8 5.9 11.6 2.8 16 2.8C20.4 2.8 24 5.9 24 11.2V16.2H8Z" fill={mono ? 'currentColor' : '#CE445D'} />
+        {/* base plinth - portal threshold */}
+        <rect x="7" y="19.6" width="18" height="2.8" rx="1.4" fill={mono ? 'currentColor' : '#E2E8F0'} opacity={mono ? '1' : '0.9'} />
+      </svg>
+      {/* glow */}
+      <span class="portal-glow pointer-events-none absolute left-1/2 top-1 size-8 -translate-x-1/2 rounded-full bg-primary-cta/30 blur-[10px] transition-all duration-500 group-hover/icon:bg-primary-cta/50 group-hover/icon:blur-[12px] group-hover/icon:size-10" aria-hidden="true" style={animated ? 'animation: portal-glow-pulse 3.2s ease-in-out infinite' : undefined}></span>
+    </span>
+  )
+}
+
+{
+  variant === 'full' && (
+    <span class:list={['group/logo relative inline-flex items-center gap-3', className]}>
+      <span class:list={['relative grid place-items-center overflow-hidden rounded-[11px] bg-canvas border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_1px_2px_rgba(0,0,0,0.3)] transition-colors duration-300 group-hover:border-white/15', sizes.icon]} aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-[78%] w-[78%] overflow-visible">
+          <g class="portal-rays" stroke={mono ? 'white' : '#CE445D'} stroke-width="2.1" stroke-linecap="round">
+            <line class="portal-ray transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:-translate-y-[2.5px]" x1="16" y1="1" x2="16" y2="4.6" />
+            <line class="portal-ray transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:-translate-x-[2px] group-hover/logo:-translate-y-[1.8px]" x1="8.2" y1="3.8" x2="10.8" y2="6.6" />
+            <line class="portal-ray transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:translate-x-[2px] group-hover/logo:-translate-y-[1.8px]" x1="23.8" y1="3.8" x2="21.2" y2="6.6" />
+          </g>
+          <path class="transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover/logo:scale-[1.06] origin-center" d="M8.2 15.6V11.1C8.2 6.1 11.6 3.2 16 3.2C20.4 3.2 23.8 6.1 23.8 11.1V15.6H8.2Z" fill={mono ? 'white' : '#CE445D'} />
+          <rect x="7" y="18.8" width="18" height="2.6" rx="1.3" fill="white" opacity="0.92" class="transition-opacity duration-300 group-hover/logo:opacity-100" />
+        </svg>
+        {/* subtle glow */}
+        <span class="portal-glow pointer-events-none absolute -top-6 left-1/2 size-12 -translate-x-1/2 rounded-full bg-primary-cta/40 blur-[14px] transition-all duration-500 group-hover/logo:bg-primary-cta/60 group-hover/logo:blur-[16px] group-hover/logo:-top-5" aria-hidden="true" style={animated ? 'animation: portal-glow-pulse 3.6s ease-in-out infinite' : undefined}></span>
+      </span>
+      <span class:list={['font-bold tracking-[0.12em] text-white transition-colors duration-300 group-hover/logo:text-white', sizes.text]}>MAKERPORTAL</span>
+    </span>
+  )
+}
+
+{
+  variant === 'wordmark' && (
+    <span class:list={['inline-flex items-baseline', className]}>
+      <span class:list={['font-bold tracking-[0.12em] text-white', sizes.text]}>MAKERPORTAL<span class="text-primary-cta">.</span></span>
+    </span>
+  )
+}

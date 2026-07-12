@@ -1,4 +1,5 @@
 ---
+import BrandLogo from '../components/BrandLogo.astro';
 import SeoMeta from '../components/SeoMeta.astro';
 import '../styles/global.css';
 
@@ -46,6 +47,8 @@ const organizationSchema = {
     <meta name="theme-color" content="#0F141C" />
     <meta name="color-scheme" content="dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="sitemap" href="/sitemap.xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,32 +60,210 @@ const organizationSchema = {
   <body class="flex min-h-screen flex-col overflow-x-clip font-sans text-primary-text antialiased">
     <a href="#main-content" class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-primary-cta px-4 py-2 font-semibold text-white transition-transform focus:translate-y-0">Skip to content</a>
 
-    <header class="relative z-50 border-b border-muted-text/15 bg-canvas/90 backdrop-blur-md">
+    <header class="sticky top-0 z-50 border-b border-muted-text/15 bg-canvas/90 backdrop-blur-md">
       <nav aria-label="Primary navigation" class="mx-auto flex h-[4.75rem] max-w-[88rem] items-center justify-between px-5 sm:px-8 lg:px-10">
-        <a href="/" class="group inline-flex items-center gap-3 rounded-lg">
-          <span aria-hidden="true" class="relative grid size-9 place-items-center overflow-hidden rounded-full bg-primary-cta text-xs font-black text-white">
-            MP
-            <span class="absolute inset-x-0 bottom-0 h-1/2 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"></span>
-          </span>
-          <span class="text-sm font-bold tracking-[0.12em] text-white">MAKERPORTAL</span>
+        <a href="/" class="group inline-flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-cta focus-visible:ring-offset-2 focus-visible:ring-offset-canvas" aria-label="MakerPortal home">
+          <BrandLogo variant="full" size="md" />
         </a>
 
-        <div class="flex items-center gap-1 sm:gap-2">
-          <a href="/#apps" class="hidden min-h-11 items-center rounded-full px-4 text-sm font-medium text-muted-text transition-colors hover:text-white sm:inline-flex">Apps</a>
-          <a href="/blog" class="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium text-primary-text/90 transition-colors hover:text-white sm:px-4"><span class="sm:hidden">Notes</span><span class="hidden sm:inline">Field notes</span></a>
-          <a href="https://makersportal.com" rel="me" class="inline-flex min-h-11 items-center rounded-full border border-muted-text/30 px-3 text-sm font-semibold text-white transition-colors hover:border-brand-anchor hover:text-brand-anchor sm:px-4">
+        <!-- Desktop nav -->
+        <div class="hidden items-center gap-1 md:flex">
+          <a href="/#apps" class="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium text-muted-text transition-colors hover:text-white">Apps</a>
+          <a href="/blog" class="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium text-primary-text/90 transition-colors hover:text-white">Field notes</a>
+          <a href="/#contact" class="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium text-muted-text transition-colors hover:text-white">Contact</a>
+          <a href="https://makersportal.com" rel="me" class="ml-2 inline-flex min-h-11 items-center rounded-full border border-muted-text/30 px-4 text-sm font-semibold text-white transition-colors hover:border-brand-anchor hover:text-brand-anchor">
             Studio <span aria-hidden="true" class="ml-1.5">↗</span>
           </a>
         </div>
+
+        <!-- Mobile controls -->
+        <div class="flex items-center gap-2 md:hidden">
+          <a href="/blog" class="inline-flex min-h-10 items-center rounded-full px-3 text-sm font-medium text-primary-text/90 transition-colors hover:text-white">Notes</a>
+          <button
+            id="mobile-menu-toggle"
+            type="button"
+            class="relative z-[60] grid size-11 place-items-center rounded-full border border-muted-text/20 bg-card-bg text-white transition-colors hover:border-muted-text/40 hover:bg-card-bg/80"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+            aria-label="Open navigation menu"
+          >
+            <span class="sr-only">Menu</span>
+            <span aria-hidden="true" class="flex flex-col items-center justify-center gap-1.5">
+              <span id="menu-line-1" class="block h-0.5 w-5 origin-center rounded-full bg-white transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"></span>
+              <span id="menu-line-2" class="block h-0.5 w-5 origin-center rounded-full bg-white transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"></span>
+            </span>
+          </button>
+        </div>
       </nav>
     </header>
+
+    <!-- Mobile: Backdrop -->
+    <div
+      id="mobile-menu-backdrop"
+      class="fixed inset-0 z-40 hidden bg-canvas/70 opacity-0 backdrop-blur-sm transition-opacity duration-300 md:hidden"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Mobile: Slide-out Drawer -->
+    <div
+      id="mobile-menu"
+      class="fixed inset-y-0 right-0 z-50 flex w-full translate-x-full flex-col bg-[#151D27]/95 border-l border-muted-text/15 backdrop-blur-2xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] md:hidden sm:w-[24rem]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Mobile navigation"
+      aria-hidden="true"
+      inert
+    >
+      <div class="flex h-[4.75rem] shrink-0 items-center justify-between border-b border-muted-text/10 px-5 sm:px-8">
+        <span class="inline-flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text"><BrandLogo variant="icon" size="sm" class="opacity-80" /> Navigation</span>
+        <span class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text/60">MAKERPORTAL — 2026</span>
+      </div>
+
+      <div class="flex flex-1 flex-col overflow-y-auto px-5 pb-10 pt-8 sm:px-8">
+        <ul class="space-y-1" role="list">
+          <li>
+            <a href="/" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-4 text-2xl font-semibold tracking-[-0.03em] text-white transition-colors hover:bg-white/[0.04] hover:text-primary-cta focus-visible:bg-white/[0.04] focus-visible:outline-none">
+              <span class="flex items-center gap-4"><span class="font-mono text-xs font-normal tracking-[0.18em] text-primary-cta">01</span> Home</span>
+              <span aria-hidden="true" class="text-muted-text transition-transform group-hover:translate-x-1 group-hover:text-primary-cta">→</span>
+            </a>
+          </li>
+          <li>
+            <a href="/#apps" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-4 text-2xl font-semibold tracking-[-0.03em] text-white transition-colors hover:bg-white/[0.04] hover:text-white focus-visible:bg-white/[0.04] focus-visible:outline-none">
+              <span class="flex items-center gap-4"><span class="font-mono text-xs font-normal tracking-[0.18em] text-muted-text">02</span> Apps</span>
+              <span aria-hidden="true" class="text-muted-text transition-transform group-hover:translate-x-1">→</span>
+            </a>
+          </li>
+          <li>
+            <a href="/blog" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-4 text-2xl font-semibold tracking-[-0.03em] text-white transition-colors hover:bg-white/[0.04] hover:text-white focus-visible:bg-white/[0.04] focus-visible:outline-none">
+              <span class="flex items-center gap-4"><span class="font-mono text-xs font-normal tracking-[0.18em] text-muted-text">03</span> Field Notes</span>
+              <span aria-hidden="true" class="text-muted-text transition-transform group-hover:translate-x-1">→</span>
+            </a>
+          </li>
+          <li>
+            <a href="/#contact" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-4 text-2xl font-semibold tracking-[-0.03em] text-white transition-colors hover:bg-white/[0.04] hover:text-white focus-visible:bg-white/[0.04] focus-visible:outline-none">
+              <span class="flex items-center gap-4"><span class="font-mono text-xs font-normal tracking-[0.18em] text-muted-text">04</span> Contact</span>
+              <span aria-hidden="true" class="text-muted-text transition-transform group-hover:translate-x-1">→</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="mt-auto pt-8">
+          <div class="rounded-2xl border border-muted-text/15 bg-card-bg/70 p-5">
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">Studio</p>
+            <a href="https://makersportal.com" rel="me" class="mt-3 inline-flex w-full items-center justify-between rounded-full bg-white px-5 py-3 text-sm font-bold text-canvas transition hover:bg-primary-text">
+              Open studio journal <span aria-hidden="true">↗</span>
+            </a>
+            <div class="mt-4 flex items-center gap-4 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-muted-text/80">
+              <a href="https://github.com/josh-hrisko" rel="me" class="transition-colors hover:text-white">GitHub ↗</a>
+              <span aria-hidden="true">·</span>
+              <a href="/rss.xml" class="transition-colors hover:text-white">RSS</a>
+            </div>
+          </div>
+          <p class="mt-6 px-1 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-text/60">On-device · Private · Crafted in Los Angeles</p>
+        </div>
+      </div>
+    </div>
+
+    <script is:inline>
+      (() => {
+        const toggle = document.getElementById('mobile-menu-toggle');
+        const menu = document.getElementById('mobile-menu');
+        const backdrop = document.getElementById('mobile-menu-backdrop');
+        const line1 = document.getElementById('menu-line-1');
+        const line2 = document.getElementById('menu-line-2');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+        if (!toggle || !menu || !backdrop || !line1 || !line2) return;
+
+        let isOpen = false;
+        let lastFocus = null;
+
+        const openMenu = () => {
+          if (isOpen) return;
+          isOpen = true;
+          lastFocus = document.activeElement;
+          toggle.setAttribute('aria-expanded', 'true');
+          toggle.setAttribute('aria-label', 'Close navigation menu');
+          menu.removeAttribute('inert');
+          menu.setAttribute('aria-hidden', 'false');
+          backdrop.classList.remove('hidden');
+          // force reflow for transition
+          void backdrop.offsetWidth;
+          backdrop.classList.remove('opacity-0');
+          backdrop.classList.add('opacity-100');
+          menu.classList.remove('translate-x-full');
+          menu.classList.add('translate-x-0');
+          document.body.style.overflow = 'hidden';
+          line1.classList.add('translate-y-[4px]', 'rotate-45');
+          line2.classList.add('-translate-y-[4px]', '-rotate-45');
+          // Focus first link after transition
+          setTimeout(() => {
+            const first = menu.querySelector('a');
+            if (first) first.focus();
+          }, 100);
+        };
+
+        const closeMenu = () => {
+          if (!isOpen) return;
+          isOpen = false;
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-label', 'Open navigation menu');
+          menu.setAttribute('aria-hidden', 'true');
+          backdrop.classList.remove('opacity-100');
+          backdrop.classList.add('opacity-0');
+          menu.classList.remove('translate-x-0');
+          menu.classList.add('translate-x-full');
+          document.body.style.overflow = '';
+          line1.classList.remove('translate-y-[4px]', 'rotate-45');
+          line2.classList.remove('-translate-y-[4px]', '-rotate-45');
+          setTimeout(() => {
+            backdrop.classList.add('hidden');
+            menu.setAttribute('inert', '');
+            if (lastFocus && lastFocus.focus) lastFocus.focus();
+          }, 300);
+        };
+
+        toggle.addEventListener('click', () => {
+          isOpen ? closeMenu() : openMenu();
+        });
+
+        backdrop.addEventListener('click', closeMenu);
+
+        mobileLinks.forEach((link) => {
+          link.addEventListener('click', () => {
+            // Allow anchor navigation on same page to smooth scroll first
+            closeMenu();
+          });
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && isOpen) {
+            e.preventDefault();
+            closeMenu();
+          }
+        });
+
+        // Close if resizing to desktop
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            if (window.innerWidth >= 768 && isOpen) closeMenu();
+          }, 100);
+        });
+
+        // Ensure initial state hidden for SR
+        menu.setAttribute('inert', '');
+      })();
+    </script>
 
     <main id="main-content" class="flex-1"><slot /></main>
 
     <footer class="border-t border-muted-text/15 bg-canvas">
       <div class="mx-auto grid max-w-[88rem] gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_auto] md:items-end lg:px-10">
         <div>
-          <a href="/" class="text-xl font-semibold tracking-tight text-white">MakerPortal<span class="text-primary-cta">.</span></a>
+          <a href="/" class="inline-flex items-center gap-2.5 text-xl font-semibold tracking-tight text-white">
+            <BrandLogo variant="icon" size="sm" /> MakerPortal<span class="text-primary-cta">.</span>
+          </a>
           <p class="mt-3 max-w-md text-sm leading-6 text-muted-text">Independent software for people who care about the details.</p>
         </div>
         <div class="flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-text md:justify-end">

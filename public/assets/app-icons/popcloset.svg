@@ -1,4 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect width="48" height="48" rx="11" fill="#351a2c"/>
-  <path d="M24 13a4 4 0 0 1 4 4c0 2-1.4 3.2-4 4.5L13 30l3 5h16l3-5-11-8.5" fill="none" stroke="#f9a8d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="PopCloset icon">
+  <rect width="64" height="64" rx="18" fill="#0F141C"/>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="17.5" fill="none" stroke="white" stroke-opacity="0.06"/>
+  <circle cx="32" cy="20" r="22" fill="#326C88" opacity="0.22" style="filter: blur(10px)"/>
+  <g stroke="#326C88" stroke-width="2.3" stroke-linecap="round" opacity="0.95">
+    <line x1="32" y1="5" x2="32" y2="9.5"/>
+    <line x1="20.5" y1="8" x2="23.5" y2="11.3"/>
+    <line x1="43.5" y1="8" x2="40.5" y2="11.3"/>
+  </g>
+  <path d="M14 28V20.2C14 11.8 20 6.8 32 6.8C44 6.8 50 11.8 50 20.2V28H14Z" fill="#326C88"/>
+  <!-- inner: hanger icon -->
+  <path d="M26 19.5L32 16L38 19.5L38 23.2H26V19.5Z M32 16V14.2" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.96" fill="none"/>
+  <rect x="10" y="31.5" width="44" height="5" rx="2.5" fill="white" opacity="0.95"/>
 </svg>
