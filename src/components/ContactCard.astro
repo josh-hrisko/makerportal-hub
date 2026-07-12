@@ -15,24 +15,44 @@
       <input type="text" id="botfield" name="botfield" tabindex="-1" autocomplete="off" />
     </div>
 
-    <div class="space-y-2">
-      <label for="name" class="block text-sm font-medium text-white">Name</label>
-      <input type="text" id="name" name="name" required class="block w-full rounded-xl border border-muted-text/20 bg-canvas/50 px-4 py-3 text-white placeholder-muted-text/50 focus:border-primary-cta focus:outline-none focus:ring-1 focus:ring-primary-cta sm:text-sm" placeholder="Tim Cook">
+    <!-- Topic Selector -->
+    <div class="sm:col-span-2 space-y-3">
+      <p class="text-sm font-medium text-white">What's on your mind?</p>
+      <div class="flex flex-wrap gap-3">
+        <label class="cursor-pointer">
+          <input type="radio" name="topic" value="General Inquiry" class="peer sr-only" checked>
+          <div class="rounded-full border border-muted-text/20 bg-canvas/50 px-4 py-2 text-sm font-medium text-muted-text transition-colors peer-checked:border-primary-cta peer-checked:bg-primary-cta/10 peer-checked:text-primary-cta hover:border-muted-text/40">General</div>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="topic" value="Project Proposal" class="peer sr-only">
+          <div class="rounded-full border border-muted-text/20 bg-canvas/50 px-4 py-2 text-sm font-medium text-muted-text transition-colors peer-checked:border-primary-cta peer-checked:bg-primary-cta/10 peer-checked:text-primary-cta hover:border-muted-text/40">Proposal</div>
+        </label>
+        <label class="cursor-pointer">
+          <input type="radio" name="topic" value="Bug Report" class="peer sr-only">
+          <div class="rounded-full border border-muted-text/20 bg-canvas/50 px-4 py-2 text-sm font-medium text-muted-text transition-colors peer-checked:border-primary-cta peer-checked:bg-primary-cta/10 peer-checked:text-primary-cta hover:border-muted-text/40">Bug Report</div>
+        </label>
+      </div>
     </div>
 
-    <div class="space-y-2">
-      <label for="email" class="block text-sm font-medium text-white">Email</label>
-      <input type="email" id="email" name="email" required class="block w-full rounded-xl border border-muted-text/20 bg-canvas/50 px-4 py-3 text-white placeholder-muted-text/50 focus:border-primary-cta focus:outline-none focus:ring-1 focus:ring-primary-cta sm:text-sm" placeholder="tim@apple.com">
+    <!-- Floating Label Inputs -->
+    <div class="relative">
+      <input type="text" id="name" name="name" required class="peer block w-full rounded-xl border border-muted-text/20 bg-canvas/50 px-4 pb-2 pt-6 text-white placeholder-transparent focus:border-primary-cta focus:outline-none focus:ring-1 focus:ring-primary-cta sm:text-sm" placeholder="Name">
+      <label for="name" class="absolute left-4 top-2 text-xs text-muted-text transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-cta">Name</label>
     </div>
 
-    <div class="space-y-2 sm:col-span-2">
-      <label for="message" class="block text-sm font-medium text-white">Message</label>
-      <textarea id="message" name="message" rows="4" required class="block w-full rounded-xl border border-muted-text/20 bg-canvas/50 px-4 py-3 text-white placeholder-muted-text/50 focus:border-primary-cta focus:outline-none focus:ring-1 focus:ring-primary-cta sm:text-sm" placeholder="How can we help?"></textarea>
+    <div class="relative">
+      <input type="email" id="email" name="email" required class="peer block w-full rounded-xl border border-muted-text/20 bg-canvas/50 px-4 pb-2 pt-6 text-white placeholder-transparent focus:border-primary-cta focus:outline-none focus:ring-1 focus:ring-primary-cta sm:text-sm" placeholder="Email">
+      <label for="email" class="absolute left-4 top-2 text-xs text-muted-text transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-cta">Email Address</label>
+    </div>
+
+    <div class="relative sm:col-span-2">
+      <textarea id="message" name="message" rows="4" required class="peer block w-full rounded-xl border border-muted-text/20 bg-canvas/50 px-4 pb-3 pt-6 text-white placeholder-transparent focus:border-primary-cta focus:outline-none focus:ring-1 focus:ring-primary-cta sm:text-sm" placeholder="Message"></textarea>
+      <label for="message" class="absolute left-4 top-2 text-xs text-muted-text transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary-cta">How can we help?</label>
     </div>
 
     <div class="sm:col-span-2">
       <!-- Sliding Unlock Bot Protection -->
-      <div class="unlock-container relative flex h-16 items-center justify-center overflow-hidden rounded-full border border-muted-text/20 bg-canvas/50 my-6" id="unlock-container">
+      <div class="unlock-container relative flex h-16 items-center justify-center overflow-hidden rounded-full border border-muted-text/20 bg-canvas/50 my-4" id="unlock-container">
         <div class="unlock-bg absolute left-0 top-0 h-full rounded-l-full bg-primary-cta/10 pointer-events-none w-0" id="unlock-bg"></div>
         <div class="unlock-handle absolute left-1 top-1 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-cta to-primary-cta/80 shadow-lg shadow-primary-cta/25 pointer-events-none transition-colors" id="unlock-handle">
           <svg viewBox="0 0 24 24" class="size-5 fill-none stroke-white stroke-2 transition-transform">
@@ -127,7 +147,6 @@
 
       container.classList.add('border-primary-cta');
       
-      // Change icon to unlocked
       handle.innerHTML = `
         <svg viewBox="0 0 24 24" class="size-5 fill-none stroke-white stroke-2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
@@ -155,6 +174,8 @@
       const name = (document.getElementById('name') as HTMLInputElement).value;
       const email = (document.getElementById('email') as HTMLInputElement).value;
       const message = (document.getElementById('message') as HTMLTextAreaElement).value;
+      const topicNode = document.querySelector('input[name="topic"]:checked') as HTMLInputElement;
+      const topic = topicNode ? topicNode.value : 'General Inquiry';
       
       if (botfield !== "") {
         formStatus.textContent = 'Verification failed. Please try again.';
@@ -164,6 +185,22 @@
         submitText.textContent = 'Send message';
         return false;
       }
+
+      // Passive Metadata Collection
+      let timezone = 'Unknown';
+      try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch(e) {}
+      
+      const payload = {
+        name,
+        email,
+        message,
+        botfield,
+        topic,
+        timezone,
+        userAgent: navigator.userAgent || 'Unknown',
+        screenSize: `${window.screen.width || 0}x${window.screen.height || 0}`,
+        url: window.location.href || 'Unknown'
+      };
       
       try {
         const response = await fetch('/api/contact', {
@@ -171,7 +208,7 @@
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name, email, message, botfield })
+          body: JSON.stringify(payload)
         });
         
         const data = await response.json();
