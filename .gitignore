@@ -4,3 +4,8 @@ dist/
 .vercel/
 .DS_Store
 *.log
+
+# Analytics credentials — never commit these
+analytics/credentials.json
+analytics/client_secret*.json
+analytics/token.json
