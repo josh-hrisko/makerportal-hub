@@ -164,7 +164,7 @@ const organizationSchema = {
 
     <div
       id="mobile-menu"
-      class="fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l border-white/[0.08] bg-[#121A24] shadow-[-24px_0_64px_rgba(0,0,0,0.55)] transition-transform duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] md:hidden"
+      class="fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l border-white/[0.08] bg-[#121A24] shadow-[-24px_0_64px_rgba(0,0,0,0.55)] transition-[transform,translate] duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] touch-pan-y md:hidden"
       role="dialog"
       aria-modal="true"
       aria-label="Navigation"
@@ -280,82 +280,136 @@ const organizationSchema = {
 
         try { menu.setAttribute('inert', ''); } catch {}
 
-        // Swipe-to-dismiss – dragging the panel left-to-right (its natural exit
-        // direction) closes it. Vertical drags are left untouched so the nav
-        // list's own scrolling keeps working.
+        // Swipe-to-dismiss (rightward). touch-pan-y on the panel lets vertical
+        // scroll keep working while horizontal stays available to JS. iOS was
+        // failing the old strict axis lock + high threshold on diagonal flicks.
         let dragging = false;
         let dragDecided = false;
         let dragAxis = null;
         let dragStartX = 0;
         let dragStartY = 0;
         let dragDeltaX = 0;
+        let dragLastX = 0;
+        let dragLastT = 0;
+        let dragVelocityX = 0;
         let menuWidthCache = 0;
+        let activePointerId = null;
+        let suppressClick = false;
+
+        const clearDragStyles = () => {
+          menu.style.transition = '';
+          menu.style.translate = '';
+          menu.style.transform = '';
+          backdrop.style.transition = '';
+          backdrop.style.opacity = '';
+          menu.style.touchAction = '';
+        };
 
         const endDrag = (shouldClose) => {
           if (!dragging) return;
           dragging = false;
+          const axis = dragAxis;
           dragAxis = null;
-          menu.style.transition = '';
-          backdrop.style.transition = '';
+          activePointerId = null;
+          if (axis !== 'x') {
+            clearDragStyles();
+            return;
+          }
+          menu.style.transition = 'transform 0.22s cubic-bezier(0.25,1,0.5,1), translate 0.22s cubic-bezier(0.25,1,0.5,1)';
+          backdrop.style.transition = 'opacity 0.2s ease';
           if (shouldClose) {
-            // Animate the rest of the way off-screen from wherever the finger
-            // released using the exact pixel equivalent of the CSS
-            // `translate-x-full` class, then hand off to it with zero visual
-            // jump once the transition finishes (both resolve to the same
-            // transform value, so clearing the inline style is invisible).
+            suppressClick = true;
             menu.style.translate = `${menuWidthCache}px`;
+            menu.style.transform = `translate3d(${menuWidthCache}px,0,0)`;
             backdrop.style.opacity = '0';
             closeMenu();
-            setTimeout(() => {
-              menu.style.translate = '';
-              backdrop.style.opacity = '';
-            }, 280);
+            setTimeout(clearDragStyles, 260);
           } else {
-            menu.style.translate = '';
-            backdrop.style.opacity = '';
+            menu.style.translate = '0px';
+            menu.style.transform = 'translate3d(0,0,0)';
+            backdrop.style.opacity = '1';
+            setTimeout(clearDragStyles, 230);
           }
         };
 
         menu.addEventListener('pointerdown', (e) => {
-          if (!isOpen || (e.pointerType === 'mouse' && e.button !== 0)) return;
+          if (!isOpen || e.button !== 0) return;
+          // Ignore multi-touch / secondary pointers mid-drag.
+          if (activePointerId !== null) return;
           dragging = true;
           dragDecided = false;
           dragAxis = null;
           dragDeltaX = 0;
+          dragVelocityX = 0;
           dragStartX = e.clientX;
           dragStartY = e.clientY;
-          menuWidthCache = menu.getBoundingClientRect().width;
-          // Capture the pointer so move/up keep firing on the panel even once
-          // the finger has moved past its (now-translating) edge or off-screen.
+          dragLastX = e.clientX;
+          dragLastT = performance.now();
+          menuWidthCache = menu.offsetWidth || menu.getBoundingClientRect().width;
+          activePointerId = e.pointerId;
           try { menu.setPointerCapture(e.pointerId); } catch {}
-        }, { passive: true });
+        });
 
         menu.addEventListener('pointermove', (e) => {
-          if (!dragging) return;
+          if (!dragging || e.pointerId !== activePointerId) return;
           const dx = e.clientX - dragStartX;
           const dy = e.clientY - dragStartY;
+          const now = performance.now();
+          const dt = Math.max(1, now - dragLastT);
+          // Instantaneous velocity (px/ms) for flick-to-close.
+          dragVelocityX = (e.clientX - dragLastX) / dt;
+          dragLastX = e.clientX;
+          dragLastT = now;
+
           if (!dragDecided) {
-            if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+            // Slightly higher gate so taps don't steal; bias to horizontal when
+            // the gesture is clearly rightward (dismiss direction).
+            if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
             dragDecided = true;
-            dragAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+            const rightward = dx > 0;
+            const horizontalBias = rightward
+              ? Math.abs(dx) >= Math.abs(dy) * 0.65
+              : Math.abs(dx) > Math.abs(dy) * 1.15;
+            dragAxis = horizontalBias ? 'x' : 'y';
             if (dragAxis === 'x') {
               menu.style.transition = 'none';
               backdrop.style.transition = 'none';
+              menu.style.touchAction = 'none';
             }
           }
           if (dragAxis !== 'x') return;
-          e.preventDefault();
+          // Keep the browser from scrolling/claiming the gesture once locked.
+          if (e.cancelable) e.preventDefault();
           dragDeltaX = Math.max(0, dx);
           menu.style.translate = `${dragDeltaX}px`;
-          backdrop.style.opacity = String(Math.max(0, 1 - dragDeltaX / menuWidthCache));
+          menu.style.transform = `translate3d(${dragDeltaX}px,0,0)`;
+          backdrop.style.opacity = String(Math.max(0, 1 - dragDeltaX / Math.max(1, menuWidthCache)));
         }, { passive: false });
 
-        menu.addEventListener('pointerup', () => {
-          if (dragAxis !== 'x') { endDrag(false); return; }
-          const shouldClose = dragDeltaX > Math.min(120, menuWidthCache * 0.35);
-          endDrag(shouldClose);
+        const onPointerEnd = (e) => {
+          if (!dragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
+          if (dragAxis !== 'x') {
+            endDrag(false);
+            return;
+          }
+          // Distance OR flick velocity (px/ms ≈ 0.45 → ~450px/s).
+          const distanceOk = dragDeltaX > Math.min(56, menuWidthCache * 0.18);
+          const flickOk = dragVelocityX > 0.45 && dragDeltaX > 12;
+          endDrag(distanceOk || flickOk);
+        };
+        menu.addEventListener('pointerup', onPointerEnd);
+        menu.addEventListener('pointercancel', (e) => {
+          if (activePointerId !== null && e.pointerId !== activePointerId) return;
+          endDrag(false);
         });
-        menu.addEventListener('pointercancel', () => endDrag(false));
+        // After a successful swipe, swallow the synthetic click so a link under
+        // the finger doesn't navigate while the drawer closes.
+        menu.addEventListener('click', (e) => {
+          if (!suppressClick) return;
+          e.preventDefault();
+          e.stopPropagation();
+          suppressClick = false;
+        }, true);
 
         // Single scroll rAF: nav shadow + back-to-top visibility (avoids two
         // competing scroll listeners thrashing style under the fixed header).
