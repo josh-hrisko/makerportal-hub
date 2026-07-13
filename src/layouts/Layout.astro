@@ -1,6 +1,7 @@
 ---
 import BrandLogo from '../components/BrandLogo.astro';
 import SeoMeta from '../components/SeoMeta.astro';
+import { footerColumns, primaryNav, socials } from '../data/site-nav';
 import '../styles/global.css';
 // @ts-ignore – fontsource side-effect import has no types
 import '@fontsource-variable/plus-jakarta-sans';
@@ -28,6 +29,31 @@ interface Props {
 
 const { title, description, canonical, noindex, type, publishedTime, modifiedTime } = Astro.props;
 const year = new Date().getFullYear();
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => {
+  if (!href || href.startsWith('http') || href.startsWith('#')) return false;
+  const clean = href.split('#')[0].replace(/\/$/, '') || '/';
+  if (clean === '/') return path === '/';
+  return path === clean || path.startsWith(`${clean}/`);
+};
+const isNavItemActive = (href: string, columns?: { links: { href: string }[] }[]) => {
+  if (isActive(href)) return true;
+  return columns?.some((col) => col.links.some((l) => isActive(l.href))) ?? false;
+};
+const footerLinkClass = (href: string) =>
+  isActive(href)
+    ? 'w-fit font-medium text-primary-text'
+    : 'w-fit text-muted-text transition-colors hover:text-primary-text';
+const linkAttrs = (href: string, external?: boolean) =>
+  external
+    ? { href, target: '_blank', rel: href.includes('github.com/makerportal') || href.includes('MakerPortal') || href.includes('makersportal') || href.includes('x.com/MakerPortal') ? 'me noopener noreferrer' : 'noopener noreferrer' }
+    : { href };
+
+/** Long-form routes default readers toward paper; theme toggle still works sitewide. */
+const isReadingPath =
+  path.startsWith('/blog') ||
+  path === '/privacy' ||
+  path === '/terms';
 
 const organizationSchema = {
   '@context': 'https://schema.org',
@@ -43,10 +69,9 @@ const organizationSchema = {
         width: 512,
         height: 512
       },
-      sameAs: ['https://www.makerportal.ai', 'https://github.com/josh-hrisko', 'https://x.com/MakerPortal'],
+      sameAs: ['https://www.makerportal.ai', 'https://github.com/makerportal', 'https://x.com/MakerPortal'],
       description: 'An independent San Francisco software studio crafting privacy-first iOS & iPadOS applications powered by on-device neural networks, Apple Silicon native intelligence.',
       foundingDate: '2023',
-      founder: { '@type': 'Person', name: 'Josh Hrisco', sameAs: 'https://github.com/josh-hrisko' },
       location: { '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality: 'San Francisco', addressRegion: 'CA', addressCountry: 'US' } }
     },
     {
@@ -75,17 +100,33 @@ const organizationSchema = {
 ---
 
 <!doctype html>
-<html lang="en" class="bg-canvas scroll-smooth">
+<html lang="en" class="bg-canvas scroll-smooth" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0F141C" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0F141C" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F4F1EB" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark light" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" href="/sitemap.xml" />
+    <!-- FOUC-free theme: stored preference → system → dark default (studio brand).
+         Light chrome still needs contrast audit (docs/OPEN-ITEMS.md, docs/THEME-SYSTEM.md). -->
+    <script is:inline>
+      (() => {
+        try {
+          const stored = localStorage.getItem('mp-theme');
+          const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+          const theme = stored === 'light' || stored === 'dark' ? stored : systemLight ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (_) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
     <!-- Self-hosted variable fonts via fontsource - no render-blocking CDN.
          Preload the primary (latin) subset so the browser fetches it immediately,
          shortening the critical request chain instead of discovering it only after
@@ -114,44 +155,132 @@ const organizationSchema = {
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
     <slot name="head" />
     <!-- Agentic browsing meta -->
-    <meta name="ai:publisher" content="MakerPortal – Josh Hrisco – San Francisco" />
+    <meta name="ai:publisher" content="MakerPortal – San Francisco" />
     <meta name="ai:content-type" content="technology, iOS development, on-device AI, privacy-first software" />
   </head>
-  <body class="flex min-h-screen flex-col overflow-x-clip font-sans text-primary-text antialiased selection:bg-primary-cta selection:text-white">
+  <body class="flex min-h-screen flex-col overflow-x-clip bg-canvas font-sans text-primary-text antialiased selection:bg-primary-cta selection:text-white" data-reading-path={isReadingPath ? 'true' : 'false'}>
     <a href="#main-content" class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-brand-anchor px-4 py-2.5 font-semibold text-canvas shadow-lg transition-transform duration-300 focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Skip to main content</a>
 
     <header class="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-[88rem] px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
       <!-- Opaque pill nav (no backdrop-filter) — live backdrop-blur on a fixed
            header is a known iOS Safari compositor tax during scroll. -->
-      <nav aria-label="Primary" class="pointer-events-auto relative flex h-[3.875rem] items-center justify-between rounded-full border border-white/[0.08] bg-[#151D27]/95 px-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:border-white/[0.12] hover:bg-[#1A232E] hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.7)] sm:px-6" data-nav>
+      <nav aria-label="Primary" class="surface-nav pointer-events-auto relative flex h-[3.875rem] items-center justify-between rounded-full border px-3 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-300 sm:px-5" data-nav>
         
-        <a href="/" class="group/logo relative inline-flex items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-canvas" aria-label="MakerPortal — Home">
+        <a href="/" class="group/logo relative inline-flex shrink-0 items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-canvas" aria-label="MakerPortal — Home">
           <BrandLogo variant="lockup" size="md" />
         </a>
 
-        <div class="hidden items-center gap-1 md:flex">
-          <a href="/#apps" class="relative inline-flex min-h-9 items-center rounded-full px-3.5 text-[0.875rem] font-[500] tracking-[-0.01em] text-primary-text/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3.5 after:right-3.5 after:h-px after:origin-center after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100">Apps</a>
-          <a href="/blog" class="relative inline-flex min-h-9 items-center rounded-full px-3.5 text-[0.875rem] font-[500] tracking-[-0.01em] text-primary-text/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3.5 after:right-3.5 after:h-px after:origin-center after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100">Field notes</a>
-          <a href="/#contact" class="relative inline-flex min-h-9 items-center rounded-full px-3.5 text-[0.875rem] font-[500] tracking-[-0.01em] text-primary-text/70 transition-colors hover:text-white">Contact</a>
-          <a href="https://makersportal.com" rel="me noopener" target="_blank" class="ml-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3.5 text-[0.84rem] font-semibold tracking-[-0.01em] text-white transition-colors hover:border-white/15 hover:bg-white/[0.10]">
-            Studio <span aria-hidden="true" class="opacity-60 transition-transform group-hover:translate-x-0.5">↗</span>
+        <!-- Desktop: 5–7 top items + click mega panels (hover optional; click is reliable on trackpads) -->
+        <div class="hidden items-center gap-0.5 lg:flex">
+          {primaryNav.map((item) => {
+            const active = isNavItemActive(item.href, item.columns);
+            const hasMega = Boolean(item.columns?.length);
+            if (!hasMega) {
+              return (
+                <a
+                  href={item.href}
+                  class:list={['relative inline-flex min-h-9 items-center rounded-full px-3 text-[0.84rem] font-medium tracking-[-0.01em] transition-colors', active ? 'font-semibold text-primary-text' : 'text-muted-text hover:text-primary-text']}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              );
+            }
+            return (
+              <div class="relative" data-mega-root>
+                <button
+                  type="button"
+                  class:list={['inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-[0.84rem] font-medium tracking-[-0.01em] transition-colors', active ? 'font-semibold text-primary-text' : 'text-muted-text hover:text-primary-text']}
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                  data-mega-trigger
+                  data-mega-for={item.id}
+                >
+                  {item.label}
+                  <svg aria-hidden="true" viewBox="0 0 12 12" class="size-2.5 opacity-50"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </button>
+                <div
+                  id={`mega-${item.id}`}
+                  data-mega-panel
+                  class="invisible absolute left-1/2 top-[calc(100%+0.65rem)] z-[70] w-[min(92vw,36rem)] -translate-x-1/2 translate-y-1 scale-[0.98] opacity-0 transition-[opacity,transform,visibility] duration-150"
+                  hidden
+                >
+                  <div class="surface-card overflow-hidden rounded-[22px] border p-5 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.45)]">
+                    <div class:list={['grid gap-6', item.featured ? 'sm:grid-cols-[1fr_0.85fr]' : '']}>
+                      <div class:list={['grid gap-5', (item.columns?.length ?? 0) > 1 ? 'sm:grid-cols-2' : '']}>
+                        {item.columns?.map((col) => (
+                          <div>
+                            <p class="font-mono text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-muted-text">{col.title}</p>
+                            <ul class="mt-3 space-y-1" role="list">
+                              {col.links.map((link) => (
+                                <li>
+                                  <a
+                                    {...linkAttrs(link.href, link.external)}
+                                    class="group block rounded-xl px-2.5 py-2 transition-colors hover:bg-elevated/80"
+                                  >
+                                    <span class="flex items-center gap-2 text-[0.9rem] font-medium text-primary-text">
+                                      {link.label}
+                                      {link.external && <span class="text-[0.7rem] text-muted-text">↗</span>}
+                                      {link.badge && <span class="rounded-full bg-primary-cta/15 px-1.5 py-0.5 font-mono text-[0.55rem] uppercase tracking-wider text-primary-cta">{link.badge}</span>}
+                                    </span>
+                                    {link.description && <span class="mt-0.5 block text-[0.75rem] text-muted-text">{link.description}</span>}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                      {item.featured && (
+                        <a href={item.featured.href} class="flex flex-col justify-between rounded-2xl border border-border bg-canvas p-4 transition-colors hover:border-brand-anchor/30">
+                          <div>
+                            <p class="font-mono text-[0.58rem] uppercase tracking-[0.16em] text-primary-cta">{item.featured.kicker}</p>
+                            <p class="mt-2 text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">{item.featured.title}</p>
+                            <p class="mt-2 text-[0.8rem] leading-[1.55] text-muted-text">{item.featured.description}</p>
+                          </div>
+                          <span class="mt-4 text-[0.8rem] font-semibold text-brand-anchor">{item.featured.cta}</span>
+                        </a>
+                      )}
+                    </div>
+                    <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                      <a href={item.href} class="text-[0.8rem] font-medium text-muted-text hover:text-primary-text">All {item.label.toLowerCase()} →</a>
+                      <a href="/contact" class="text-[0.75rem] font-medium text-muted-text hover:text-primary-text">Contact</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <a href="/contact" class="ml-1 inline-flex min-h-9 items-center rounded-full border border-border bg-elevated/80 px-3.5 text-[0.82rem] font-semibold tracking-[-0.01em] text-primary-text transition-colors hover:border-brand-anchor/30 hover:bg-elevated">
+            Contact
           </a>
         </div>
 
-        <div class="flex items-center gap-2 md:hidden">
-          <a href="/blog" class="inline-flex min-h-10 items-center rounded-full px-3.5 text-[0.875rem] font-medium text-primary-text/75 transition-colors hover:text-white">Notes</a>
+        <div class="flex items-center gap-1 md:gap-2">
+          <button
+            type="button"
+            class="theme-toggle"
+            data-theme-toggle
+            aria-label="Toggle color theme"
+            title="Toggle light / dark"
+          >
+            <svg class="icon-moon size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 019.5 3 7 7 0 1021 14.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+            <svg class="icon-sun size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+          </button>
+          <a href="/shop" class="hidden min-h-9 items-center rounded-full px-2.5 text-[0.8125rem] font-medium text-muted-text transition-colors hover:text-primary-text sm:inline-flex lg:hidden">Shop</a>
+          <a href="/blog" class="hidden min-h-9 items-center rounded-full px-2.5 text-[0.8125rem] font-medium text-muted-text transition-colors hover:text-primary-text md:inline-flex lg:hidden">Notes</a>
           <button
             id="mobile-menu-toggle"
             type="button"
-            class="relative z-[60] grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.08] text-white transition-colors hover:border-white/20 hover:bg-white/[0.12]"
+            class="relative z-[60] grid size-10 place-items-center rounded-full border border-border bg-elevated/80 text-primary-text transition-colors hover:border-brand-anchor/40 hover:bg-elevated lg:hidden"
             aria-expanded="false"
             aria-controls="mobile-menu"
             aria-label="Open navigation"
           >
             <span class="sr-only">Menu</span>
             <span aria-hidden="true" class="relative flex size-4 flex-col items-center justify-center gap-1">
-              <span id="menu-line-1" class="block h-0.5 w-4 origin-center rounded-full bg-white transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"></span>
-              <span id="menu-line-2" class="block h-0.5 w-4 origin-center rounded-full bg-white transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"></span>
+              <span id="menu-line-1" class="block h-0.5 w-4 origin-center rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"></span>
+              <span id="menu-line-2" class="block h-0.5 w-4 origin-center rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"></span>
             </span>
           </button>
         </div>
@@ -160,48 +289,93 @@ const organizationSchema = {
 
     <!-- Solid dimmer + solid drawer (no backdrop-filter). Stacked full-viewport
          blurs with the fixed nav was the main iOS Safari menu/open lag source. -->
-    <div id="mobile-menu-backdrop" class="fixed inset-0 z-40 hidden bg-[#0A0E14]/72 opacity-0 transition-opacity duration-200 md:hidden" aria-hidden="true"></div>
+    <div id="mobile-menu-backdrop" class="fixed inset-0 z-40 hidden bg-canvas/70 opacity-0 transition-opacity duration-200 lg:hidden" aria-hidden="true"></div>
 
     <div
       id="mobile-menu"
-      class="fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l border-white/[0.08] bg-[#121A24] shadow-[-24px_0_64px_rgba(0,0,0,0.55)] transition-[transform,translate] duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] touch-pan-y md:hidden"
+      class="surface-drawer fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l shadow-[-24px_0_64px_rgba(0,0,0,0.35)] transition-[transform,translate] duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] touch-pan-y lg:hidden"
       role="dialog"
       aria-modal="true"
       aria-label="Navigation"
       aria-hidden="true"
       inert
     >
-      <div class="flex h-[4.25rem] shrink-0 items-center justify-between border-b border-white/[0.06] px-5 pl-6">
+      <div class="flex h-[4.25rem] shrink-0 items-center justify-between border-b border-border px-5 pl-6">
         <span class="inline-flex items-center gap-2 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text"><BrandLogo variant="icon" size="sm" class="opacity-80" /> Navigation</span>
-        <button
-          id="mobile-menu-close"
-          type="button"
-          aria-label="Close navigation"
-          class="grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.06] text-white/80 transition-colors hover:border-white/20 hover:bg-white/[0.10] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
-        >
-          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" class="size-4">
-            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-          </svg>
-        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme" title="Toggle light / dark">
+            <svg class="icon-moon size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 019.5 3 7 7 0 1021 14.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+            <svg class="icon-sun size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+          </button>
+          <button
+            id="mobile-menu-close"
+            type="button"
+            aria-label="Close navigation"
+            class="grid size-10 place-items-center rounded-full border border-border bg-elevated/60 text-primary-text transition-colors hover:border-brand-anchor/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" class="size-4">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <div class="flex flex-1 flex-col overflow-y-auto px-4 pb-8 pt-6">
-        <ul class="space-y-1" role="list">
-          <li><a href="/" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white transition-colors hover:bg-white/[0.04]">01 • Home <span aria-hidden="true" class="text-muted-text/70 transition-transform group-hover:translate-x-1">→</span></a></li>
-          <li><a href="/#apps" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">02 • Apps <span aria-hidden="true" class="text-muted-text/70 transition-transform group-hover:translate-x-1">→</span></a></li>
-          <li><a href="/blog" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">03 • Field Notes <span aria-hidden="true" class="text-muted-text/70">→</span></a></li>
-          <li><a href="/#contact" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">04 • Contact <span aria-hidden="true" class="text-muted-text/70">→</span></a></li>
-        </ul>
+      <div class="flex flex-1 flex-col overflow-y-auto px-4 pb-8 pt-4">
+        <a href="/" class="mobile-link mb-2 rounded-2xl px-4 py-3 text-[1.15rem] font-semibold text-white/90 hover:bg-white/[0.04]">Home</a>
+        <div class="space-y-1" data-mobile-nav>
+          {primaryNav.map((item, index) => (
+            <div class="rounded-2xl border border-transparent" data-mobile-section>
+              {item.columns?.length ? (
+                <>
+                  <button
+                    type="button"
+                    class="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-left text-[1.2rem] font-semibold tracking-[-0.02em] text-white/90 hover:bg-white/[0.04]"
+                    aria-expanded="false"
+                    data-mobile-accordion
+                  >
+                    <span>{String(index + 1).padStart(2, '0')} · {item.label}</span>
+                    <span aria-hidden="true" class="text-muted-text/60 transition-transform data-[open]:rotate-90" data-chevron>→</span>
+                  </button>
+                  <div class="hidden space-y-0.5 px-2 pb-3" data-mobile-panel>
+                    <a href={item.href} class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-brand-anchor hover:bg-white/[0.04]">Overview →</a>
+                    {item.columns.flatMap((col) =>
+                      col.links.map((link) => (
+                        <a
+                          {...linkAttrs(link.href, link.external)}
+                          class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] text-primary-text/75 hover:bg-white/[0.04] hover:text-white"
+                        >
+                          {link.label}{link.external ? ' ↗' : ''}
+                        </a>
+                      ))
+                    )}
+                  </div>
+                </>
+              ) : (
+                <a href={item.href} class="mobile-link flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.2rem] font-semibold tracking-[-0.02em] text-white/90 hover:bg-white/[0.04]">
+                  <span>{String(index + 1).padStart(2, '0')} · {item.label}</span>
+                  <span aria-hidden="true" class="text-muted-text/60">→</span>
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+        <a href="/contact" class="mobile-link mt-2 rounded-2xl bg-primary-text px-4 py-3.5 text-center text-[1rem] font-bold text-canvas hover:opacity-90">Contact studio</a>
 
         <div class="mt-auto pt-6">
-          <div class="rounded-[20px] border border-white/[0.06] bg-[#1A232E] p-5">
-            <p class="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-text/70">Studio Journal • makersportal.com</p>
-            <a href="https://makersportal.com" rel="me" class="mt-3 inline-flex w-full items-center justify-between rounded-full bg-white px-4 py-3 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas transition hover:bg-primary-text"><span>Open journal</span><span aria-hidden="true">↗</span></a>
-            <div class="mt-4 flex items-center gap-3 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text/70">
-              <a href="https://github.com/josh-hrisko" rel="me" class="hover:text-white">GitHub</a><span>•</span><a href="/rss.xml" class="hover:text-white">RSS</a>
+          <div class="surface-card rounded-[20px] border p-5">
+            <p class="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-text">Social · Subscribe</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              {socials.map((s) => (
+                <a
+                  {...linkAttrs(s.href, s.external)}
+                  class="rounded-full border border-border px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text hover:text-primary-text"
+                >
+                  {s.label}
+                </a>
+              ))}
             </div>
           </div>
-          <p class="mt-4 px-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">On-device • Private • Crafted in San Francisco</p>
+          <p class="mt-4 px-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">On-device · Private · San Francisco</p>
         </div>
       </div>
     </div>
@@ -210,7 +384,7 @@ const organizationSchema = {
       id="back-to-top"
       type="button"
       aria-label="Back to top"
-      class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-40 grid size-11 translate-y-2 place-items-center rounded-full border border-white/10 bg-[#1A232E] text-primary-text opacity-0 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-[opacity,transform] duration-250 pointer-events-none hover:border-brand-anchor/40 hover:bg-[#212D3A] hover:text-white focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:right-8 lg:right-10"
+      class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-40 grid size-11 translate-y-2 place-items-center rounded-full border border-border bg-card-bg text-primary-text opacity-0 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.25)] transition-[opacity,transform] duration-250 pointer-events-none hover:border-brand-anchor/40 hover:bg-elevated focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:right-8 lg:right-10"
     >
       <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" class="size-4"><path d="M10 16V4M10 4L4.5 9.5M10 4l5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
     </button>
@@ -460,52 +634,150 @@ const organizationSchema = {
             window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
           });
         }
+
+        // Desktop mega menus — click/keyboard (more reliable than hover-only).
+        const megaRoots = document.querySelectorAll('[data-mega-root]');
+        const closeAllMegas = (except) => {
+          megaRoots.forEach((root) => {
+            if (except && root === except) return;
+            const trigger = root.querySelector('[data-mega-trigger]');
+            const panel = root.querySelector('[data-mega-panel]');
+            if (!trigger || !panel) return;
+            trigger.setAttribute('aria-expanded', 'false');
+            panel.hidden = true;
+            panel.classList.add('invisible', 'opacity-0', 'scale-[0.98]', 'translate-y-1');
+            panel.classList.remove('visible', 'opacity-100', 'scale-100', 'translate-y-0');
+          });
+        };
+        megaRoots.forEach((root) => {
+          const trigger = root.querySelector('[data-mega-trigger]');
+          const panel = root.querySelector('[data-mega-panel]');
+          if (!trigger || !panel) return;
+          trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = trigger.getAttribute('aria-expanded') === 'true';
+            closeAllMegas(root);
+            if (open) {
+              trigger.setAttribute('aria-expanded', 'false');
+              panel.hidden = true;
+              panel.classList.add('invisible', 'opacity-0', 'scale-[0.98]', 'translate-y-1');
+              panel.classList.remove('visible', 'opacity-100', 'scale-100', 'translate-y-0');
+            } else {
+              trigger.setAttribute('aria-expanded', 'true');
+              panel.hidden = false;
+              requestAnimationFrame(() => {
+                panel.classList.remove('invisible', 'opacity-0', 'scale-[0.98]', 'translate-y-1');
+                panel.classList.add('visible', 'opacity-100', 'scale-100', 'translate-y-0');
+              });
+            }
+          });
+        });
+        document.addEventListener('click', () => closeAllMegas());
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeAllMegas();
+        });
+
+        // Mobile accordion sections
+        document.querySelectorAll('[data-mobile-accordion]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const section = btn.closest('[data-mobile-section]');
+            const panel = section && section.querySelector('[data-mobile-panel]');
+            const chevron = btn.querySelector('[data-chevron]');
+            if (!panel) return;
+            const open = !panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', open);
+            btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+            if (chevron) chevron.style.transform = open ? '' : 'rotate(90deg)';
+          });
+        });
+
+        // Theme toggle — dark default (studio brand); light optional; persists.
+        const applyTheme = (theme) => {
+          const next = theme === 'light' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          document.documentElement.style.colorScheme = next;
+          try { localStorage.setItem('mp-theme', next); } catch (_) {}
+          document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+            btn.setAttribute('aria-label', next === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
+            btn.setAttribute('title', next === 'light' ? 'Dark theme' : 'Light theme');
+          });
+          const meta = document.querySelector('meta[name="theme-color"]:not([media])');
+          if (meta) meta.setAttribute('content', next === 'light' ? '#F4F1EB' : '#0F141C');
+        };
+        document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+          });
+        });
+        // Keep in sync if OS preference changes and user has no stored choice
+        try {
+          const mq = window.matchMedia('(prefers-color-scheme: light)');
+          mq.addEventListener('change', (e) => {
+            if (localStorage.getItem('mp-theme')) return;
+            applyTheme(e.matches ? 'light' : 'dark');
+          });
+        } catch (_) {}
       })();
     </script>
 
     <main id="main-content" class="flex flex-1 flex-col pt-[max(4rem,calc(env(safe-area-inset-top)+4rem))]"><slot /></main>
 
-    <footer class="relative isolate mt-auto overflow-hidden border-t border-white/[0.06] bg-[#0C1118]">
-      <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom,rgba(93,169,214,0.08),transparent_60%),radial-gradient(ellipse_at_top_right,rgba(237,107,134,0.06),transparent_50%)]"></div>
-      <div class="mx-auto grid max-w-[88rem] gap-10 px-5 py-16 sm:px-8 md:grid-cols-[1.2fr_auto] md:items-start lg:px-10">
+    <footer class="surface-footer relative isolate mt-auto overflow-hidden border-t border-border">
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom,color-mix(in_srgb,var(--mp-anchor)_12%,transparent),transparent_60%),radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--mp-cta)_10%,transparent),transparent_50%)]"></div>
+      <div class="mx-auto grid max-w-[88rem] gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_2.2fr] lg:px-10">
         <div>
           <a href="/" class="inline-flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor" aria-label="MakerPortal home">
             <BrandLogo variant="lockup" size="md" />
           </a>
-          <p class="mt-4 max-w-md text-[0.925rem] leading-relaxed text-primary-text/60">Independent software for people who care about the details. Privacy-first iOS apps with on-device intelligence. Designed and engineered in San Francisco.</p>
+          <p class="mt-4 max-w-md text-[0.925rem] leading-relaxed text-muted-text">Independent software + media for on-device intelligence. Privacy-first iOS apps, field notes, video, and digital archives. San Francisco.</p>
           <div class="mt-6 flex flex-wrap gap-2">
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.03] px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">On-device ANE</span>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.03] px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">Zero Telemetry</span>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.03] px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">Swift / Metal / CoreML</span>
+            {socials.map((s) => (
+              <a
+                {...linkAttrs(s.href, s.external)}
+                class="rounded-full border border-border bg-card-bg/50 px-3 py-1.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text transition-colors hover:border-brand-anchor/30 hover:text-primary-text"
+              >
+                {s.label}
+              </a>
+            ))}
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-x-12 gap-y-8 text-[0.875rem]">
-          <div class="flex flex-col gap-3">
-            <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/80">Directory</span>
-            <a href="/#apps" class="w-fit text-primary-text/60 transition-colors hover:text-white">Apps</a>
-            <a href="/blog" class="w-fit text-primary-text/60 transition-colors hover:text-white">Field notes</a>
-            <a href="/#contact" class="w-fit text-primary-text/60 transition-colors hover:text-white">Contact</a>
-          </div>
-          <div class="flex flex-col gap-3">
-            <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/80">External</span>
-            <a href="https://makersportal.com" rel="me noopener" target="_blank" class="w-fit text-primary-text/60 transition-colors hover:text-white">Studio journal ↗</a>
-            <a href="https://github.com/josh-hrisko" rel="me noopener" target="_blank" class="w-fit text-primary-text/60 transition-colors hover:text-white">GitHub ↗</a>
-          </div>
+        <div class="grid grid-cols-2 gap-x-8 gap-y-10 text-[0.875rem] sm:grid-cols-3 lg:grid-cols-5">
+          {footerColumns.map((col) => (
+            <div class="flex flex-col gap-3">
+              <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-primary-text/80">{col.title}</span>
+              {col.links.map((link) => (
+                <a
+                  {...linkAttrs(link.href, link.external)}
+                  class={footerLinkClass(link.href)}
+                  aria-current={isActive(link.href) ? 'page' : undefined}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
-      <div class="border-t border-white/[0.06] bg-[#0A0E14]">
+      <div class="border-t border-border bg-canvas/80">
         <div class="mx-auto flex max-w-[88rem] flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <div class="flex flex-wrap items-center gap-3">
-            <div class="inline-flex items-center gap-2.5 rounded-full border border-white/[0.06] bg-[#1A232E] px-3.5 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+            <div class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card-bg px-3.5 py-1.5">
               <span class="relative flex size-1.5">
                 <span class="absolute inline-flex h-full w-full rounded-full bg-brand-anchor opacity-60 motion-safe:animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></span>
                 <span class="relative inline-flex size-1.5 rounded-full bg-brand-anchor"></span>
               </span>
-              <span class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-white/90">MakerPortal © {year}</span>
+              <span class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-primary-text">MakerPortal © {year}</span>
             </div>
-            <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">All rights reserved • SF • Worldwide</span>
+            <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">SF · Worldwide · Hybrid theme</span>
           </div>
-          <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">Built slowly enough to care • Shipped quickly enough to matter • Agentic-first</p>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">
+            <a href="/privacy" class="hover:text-primary-text">Privacy</a>
+            <a href="/terms" class="hover:text-primary-text">Terms</a>
+            <a href="/privacy#affiliates" class="hover:text-primary-text">Affiliates</a>
+            <a href="/sitemap.xml" class="hover:text-primary-text">Sitemap</a>
+          </div>
         </div>
       </div>
     </footer>

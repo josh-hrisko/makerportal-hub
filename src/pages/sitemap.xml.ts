@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { apps } from '../data/apps';
+import { hubRoutes } from '../data/site-nav';
 
 const escapeXml = (value: string) => value.replace(/[<>&'"]/g, (character) => ({
   '<': '&lt;',
@@ -22,14 +23,19 @@ export const GET: APIRoute = async () => {
   const today = new Date().toISOString();
 
   const entries: SitemapEntry[] = [
-    { url: 'https://www.makerportal.ai', lastmod: today, changefreq: 'weekly', priority: '1.0' },
-    { url: 'https://www.makerportal.ai/blog', lastmod: today, changefreq: 'weekly', priority: '0.9' },
+    ...hubRoutes.map((route) => ({
+      url: route.path === '/' ? 'https://www.makerportal.ai' : `https://www.makerportal.ai${route.path}`,
+      lastmod: today,
+      changefreq: route.changefreq,
+      priority: route.priority,
+    })),
     ...posts.map((post) => ({
       url: `https://www.makerportal.ai/blog/${post.id}`,
       lastmod: (post.data.updatedAt ?? post.data.publishedAt).toISOString(),
       changefreq: 'monthly',
       priority: '0.8',
     })),
+    // Product hosts (canonical on subdomains)
     ...apps.map((app) => {
       const date = new Date(app.date);
       const appLastmod = isNaN(date.getTime()) ? today : date.toISOString();

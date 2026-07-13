@@ -1,0 +1,62 @@
+---
+import HubShell from '../components/HubShell.astro';
+import Layout from '../layouts/Layout.astro';
+
+const title = 'About — MakerPortal Studio';
+const description =
+  'Independent San Francisco studio building privacy-first iOS apps with on-device intelligence. Zero telemetry, Apple Silicon native.';
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'About', item: 'https://www.makerportal.ai/about' },
+  ],
+};
+---
+
+<Layout title={title} description={description}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <HubShell
+    kicker="Studio · San Francisco · est. 2023"
+    title="Software with a point of view."
+    lead="MakerPortal is an independent studio engineering iOS & iPadOS apps that keep intelligence on-device — CoreML, Metal, Apple Neural Engine. Small surface area. Craft over clutter."
+    status="Entity page"
+  >
+    <Fragment slot="hero-actions">
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/team" class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Meet the team</a>
+        <a href="/apps" class="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-[0.9rem] font-medium text-primary-text/80 hover:text-primary-text">App matrix</a>
+        <a href="/contact" class="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-[0.9rem] font-medium text-primary-text/80 hover:text-primary-text">Contact</a>
+      </div>
+    </Fragment>
+  </HubShell>
+
+  <section class="border-b border-border">
+    <div class="mx-auto grid max-w-[88rem] gap-12 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-2 lg:px-10">
+      <div>
+        <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-[650] tracking-[-0.04em] text-primary-text">Studio</h2>
+        <p class="mt-4 text-[0.98rem] leading-[1.75] text-muted-text">
+          Independent software for people who care about privacy and latency. Based in San Francisco; distribution worldwide. See the people who ship it on the <a href="/team" class="font-medium text-brand-anchor hover:text-primary-text">team page</a>.
+        </p>
+        <ul class="mt-6 space-y-2 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-muted-text">
+          <li><a class="hover:text-primary-text" href="https://github.com/makerportal" rel="me" target="_blank">GitHub ↗</a></li>
+          <li><a class="hover:text-primary-text" href="https://x.com/MakerPortal" rel="me" target="_blank">X ↗</a></li>
+          <li><a class="hover:text-primary-text" href="https://makersportal.com" rel="me" target="_blank">Journal ↗</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-[650] tracking-[-0.04em] text-primary-text">Principles</h2>
+        <ol class="mt-4 space-y-4 text-[0.95rem] leading-[1.7] text-muted-text">
+          <li><strong class="text-primary-text">On-device first.</strong> Inference stays local. No cloud tax for intelligence features.</li>
+          <li><strong class="text-primary-text">Ship small.</strong> Narrow products, strong opinions, deliberate releases.</li>
+          <li><strong class="text-primary-text">Human media.</strong> Notes, video, and tools that teach the craft — not surveillance growth hacks.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</Layout>

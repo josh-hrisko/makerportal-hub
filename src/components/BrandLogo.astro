@@ -199,10 +199,10 @@ const dotRadius = 2.4;
   variant === 'wordmark' && (
     <span class:list={['inline-flex items-center overflow-visible', sizes.wordmarkHeight, className]} aria-hidden="true">
       <svg viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
-        <path d={makerPath} fill="white" />
+        <path d={makerPath} class="brand-wordmark-ink" fill="currentColor" />
         <circle cx={dotX} cy={dotY} r={dotRadius} fill={mono ? 'currentColor' : '#CE445D'} />
         <g transform="translate(-8, 0)">
-          <path d={aiPath} fill="white" />
+          <path d={aiPath} class="brand-wordmark-ink" fill="currentColor" />
         </g>
       </svg>
     </span>
@@ -235,7 +235,7 @@ const dotRadius = 2.4;
 
         {/* Wordmark shifted 38px right, ai shifted left 8px for perfect kerning */}
         <g transform="translate(38, 0)">
-          <g fill="white" fill-rule="evenodd">
+          <g class="brand-wordmark-ink" fill="currentColor" fill-rule="evenodd">
             <path d={makerPath} />
             <g transform="translate(-8, 0)">
               <path d={aiPath} />

@@ -1,0 +1,67 @@
+---
+import BrandLogo from '../components/BrandLogo.astro';
+import Layout from '../layouts/Layout.astro';
+
+const pageTitle = '404 — Page not found | MakerPortal';
+const pageDescription = 'That route is not on the MakerPortal hub. Head home, browse the app matrix, or open field notes.';
+---
+
+<Layout title={pageTitle} description={pageDescription} noindex>
+  <section class="relative isolate flex flex-1 flex-col justify-center overflow-hidden border-b border-border">
+    <div
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(50rem_36rem_at_50%_-10%,color-mix(in_srgb,var(--mp-cta)_14%,transparent),transparent_55%),radial-gradient(36rem_28rem_at_70%_60%,color-mix(in_srgb,var(--mp-anchor)_12%,transparent),transparent_50%)]"
+    ></div>
+
+    <div class="mx-auto w-full max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
+      <div class="max-w-2xl">
+        <div class="mb-8 flex items-center gap-3">
+          <span class="surface-card grid size-12 place-items-center rounded-2xl border">
+            <BrandLogo variant="icon" size="sm" class="size-8" />
+          </span>
+          <p class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary-cta">
+            404 • Route missing
+          </p>
+        </div>
+
+        <h1 class="text-balance text-[clamp(2.8rem,6vw,4.5rem)] font-[750] leading-[0.92] tracking-[-0.06em] text-primary-text">
+          This path<br />is offline.
+        </h1>
+        <p class="mt-6 max-w-lg text-[1.05rem] leading-[1.75] text-muted-text">
+          No page here on the studio hub. Products live on their own subdomains; this site is the catalog, notes, and contact surface.
+        </p>
+
+        <div class="mt-10 flex flex-wrap gap-3">
+          <a
+            href="/"
+            class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas transition hover:opacity-90"
+          >
+            Studio home
+          </a>
+          <a
+            href="/apps"
+            class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-5 text-[0.9rem] font-medium text-primary-text/85 transition-colors hover:border-white/15 hover:text-white"
+          >
+            App matrix
+          </a>
+          <a
+            href="/blog"
+            class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-5 text-[0.9rem] font-medium text-primary-text/85 transition-colors hover:border-white/15 hover:text-white"
+          >
+            Field notes
+          </a>
+          <a
+            href="/contact"
+            class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-5 text-[0.9rem] font-medium text-primary-text/85 transition-colors hover:border-white/15 hover:text-white"
+          >
+            Contact
+          </a>
+        </div>
+
+        <p class="mt-12 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/70">
+          makerportal.ai • Privacy-first • On-device
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

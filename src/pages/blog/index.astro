@@ -10,31 +10,38 @@ const description = 'Notes on independent software, product decisions, interface
 ---
 
 <Layout title={title} description={description}>
-  <section class="hero-grid border-b border-muted-text/15">
+  <section class="reading-paper border-b reading-line">
     <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
       <p class="section-kicker">MakerPortal / field notes</p>
-      <h1 class="mt-6 max-w-5xl text-balance text-6xl font-semibold leading-[0.9] tracking-[-0.065em] text-white sm:text-8xl">Notes from inside the build.</h1>
-      <p class="mt-8 max-w-2xl text-lg leading-8 text-primary-text/90 sm:text-xl">Working ideas about independent software, product judgment, interface craft, and the useful tension between speed and care.</p>
+      <h1 class="reading-ink mt-6 max-w-5xl text-balance text-6xl font-semibold leading-[0.9] tracking-[-0.065em] sm:text-8xl">Notes from inside the build.</h1>
+      <p class="mt-8 max-w-2xl text-lg leading-8 sm:text-xl" style="color: color-mix(in srgb, var(--mp-paper-ink) 85%, var(--mp-paper-muted))">Working ideas about independent software, product judgment, interface craft, and the useful tension between speed and care.</p>
+      <div class="mt-8 flex flex-wrap gap-4 text-[0.875rem]">
+        <a href="/" class="font-medium transition-colors" style="color: var(--mp-paper-muted)">← Studio home</a>
+        <a href="/apps" class="font-medium" style="color: var(--mp-paper-link)">App matrix →</a>
+        <a href="/resources" class="font-medium" style="color: var(--mp-paper-link)">Learn →</a>
+      </div>
     </div>
   </section>
 
-  <section aria-label="Published field notes">
+  <section class="reading-paper" aria-label="Published field notes">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
-      <div class="border-t border-muted-text/20">
+      <div class="border-t reading-line">
         {posts.map((post, index) => (
-          <article class="group relative grid gap-6 border-b border-muted-text/20 py-10 transition-colors hover:bg-card-bg/25 sm:grid-cols-[5rem_1fr_auto] sm:items-start sm:gap-8 sm:py-14">
-            <p class="font-mono text-xs text-muted-text">{String(index + 1).padStart(2, '0')}</p>
+          <article class="group relative grid gap-6 border-b reading-line py-10 transition-colors hover:bg-white/40 sm:grid-cols-[5rem_1fr_auto] sm:items-start sm:gap-8 sm:py-14">
+            <p class="font-mono text-xs reading-muted">{String(index + 1).padStart(2, '0')}</p>
             <div class="max-w-3xl">
-              <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-primary-cta">{post.data.eyebrow}</p>
-              <h2 class="mt-3 text-3xl font-semibold leading-tight tracking-[-0.04em] text-white transition-colors group-hover:text-primary-cta sm:text-4xl">{post.data.title}</h2>
-              <p class="mt-4 max-w-2xl leading-7 text-muted-text">{post.data.description}</p>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em]" style="color: var(--mp-paper-kicker)">{post.data.eyebrow}</p>
+              <h2 class="reading-ink mt-3 text-3xl font-semibold leading-tight tracking-[-0.04em] transition-colors group-hover:text-[var(--mp-paper-link)] sm:text-4xl">{post.data.title}</h2>
+              <p class="mt-4 max-w-2xl leading-7 reading-muted">{post.data.description}</p>
               <div class="mt-6 flex flex-wrap gap-2">
-                {post.data.tags.map((tag) => <span class="rounded-full border border-muted-text/20 bg-card-bg/40 px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-wider text-muted-text">{tag}</span>)}
+                {post.data.tags.map((tag) => (
+                  <span class="rounded-full border reading-line bg-white/60 px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-wider reading-muted">{tag}</span>
+                ))}
               </div>
             </div>
             <div class="flex items-center justify-between gap-5 sm:block sm:text-right">
-              <p class="font-mono text-[0.65rem] uppercase tracking-wider text-muted-text">{post.data.publishedAt.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'UTC' })}</p>
-              <a href={`/blog/${post.id}`} class="mt-0 inline-flex min-h-11 items-center text-sm font-semibold text-brand-anchor hover:text-primary-cta transition-colors duration-200 before:absolute before:inset-0 sm:mt-7">Read <span aria-hidden="true" class="ml-2 transition-transform group-hover:translate-x-1">→</span></a>
+              <p class="font-mono text-[0.65rem] uppercase tracking-wider reading-muted">{post.data.publishedAt.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'UTC' })}</p>
+              <a href={`/blog/${post.id}`} class="mt-0 inline-flex min-h-11 items-center text-sm font-semibold before:absolute before:inset-0 sm:mt-7" style="color: var(--mp-paper-link)">Read <span aria-hidden="true" class="ml-2 transition-transform group-hover:translate-x-1">→</span></a>
             </div>
           </article>
         ))}

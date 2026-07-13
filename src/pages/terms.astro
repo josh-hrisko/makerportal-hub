@@ -1,0 +1,44 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Terms of Use — MakerPortal';
+const description = 'Terms governing use of the MakerPortal website, content, and digital products.';
+const updated = 'July 13, 2026';
+---
+
+<Layout title={title} description={description}>
+  <div class="reading-paper flex-1 border-b reading-line">
+    <header class="border-b reading-line">
+      <div class="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
+        <p class="section-kicker">Legal · Terms</p>
+        <h1 class="reading-ink mt-5 text-balance text-[clamp(2.4rem,5vw,3.5rem)] font-[700] leading-[0.95] tracking-[-0.05em]">Terms of use.</h1>
+        <p class="mt-5 text-[1.05rem] leading-[1.7]" style="color: color-mix(in srgb, var(--mp-paper-ink) 85%, var(--mp-paper-muted))">
+          Simple rules for using the hub, content, and digital goods. Not a substitute for product EULAs on the App Store.
+        </p>
+        <p class="mt-4 font-mono text-[0.65rem] uppercase tracking-[0.14em] reading-muted">Updated {updated}</p>
+      </div>
+    </header>
+
+    <section>
+      <div class="prose-paper mx-auto max-w-3xl px-5 py-14 sm:px-8 sm:py-20">
+        <h2>Acceptance</h2>
+        <p>By using makerportal.ai you agree to these terms. If you do not agree, do not use the site.</p>
+
+        <h2>Content</h2>
+        <p>Field notes, videos, and resources are provided for informational purposes. You may not scrape the site for resale of content, misrepresent affiliation with MakerPortal, or remove sponsor/affiliate disclosures.</p>
+
+        <h2>Shop & downloads</h2>
+        <p>Digital products are licensed for personal or internal business use unless a listing states otherwise. Redistribution of paid archives without a commercial license is prohibited. Refunds, when offered, will be described on the product page.</p>
+
+        <h2>Apps</h2>
+        <p>iOS applications are governed by Apple’s App Store terms and any in-app license. Product sites on subdomains may include additional terms.</p>
+
+        <h2>Disclaimer</h2>
+        <p>The hub is provided “as is.” We are not liable for indirect damages arising from use of free content or third-party links.</p>
+
+        <h2>Contact</h2>
+        <p>Questions: <a href="/contact">Contact</a>.</p>
+      </div>
+    </section>
+  </div>
+</Layout>

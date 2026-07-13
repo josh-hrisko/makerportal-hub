@@ -1,0 +1,53 @@
+---
+import HubShell from '../components/HubShell.astro';
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Watch — MakerPortal Video & Demos';
+const description =
+  'On-device AI demos, shipping logs, and craft talks from MakerPortal. YouTube channel and embedded series live here.';
+
+const series = [
+  { title: 'Ship logs', blurb: 'Short release notes in motion — what shipped, what broke, what we kept.', status: 'Channel TBD' },
+  { title: 'On-device labs', blurb: 'CoreML, ANE, and Metal walkthroughs without the cloud tax.', status: 'Planned' },
+  { title: 'App walkthroughs', blurb: 'Biquadia, Notiary, Thumb-Dash, PopCloset — real product tours.', status: 'Planned' },
+];
+---
+
+<Layout title={title} description={description}>
+  <HubShell
+    kicker="Watch · Video · Demos"
+    title="See the craft."
+    lead="Video is a first-class surface for millions of viewers — demos, deep dives, and social clips that funnel back to apps, notes, and the shop."
+    status="Media scaffold"
+  >
+    <Fragment slot="hero-actions">
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="https://www.youtube.com/@MakerPortal" target="_blank" rel="me noopener" class="inline-flex min-h-11 items-center rounded-full bg-white px-5 text-[0.9rem] font-bold text-canvas hover:bg-primary-text">YouTube ↗</a>
+        <a href="/blog" class="inline-flex min-h-11 items-center rounded-full border border-white/10 px-5 text-[0.9rem] font-medium text-primary-text/80 hover:text-white">Field notes</a>
+      </div>
+    </Fragment>
+  </HubShell>
+
+  <section class="border-b border-white/[0.06]">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+      <div class="mb-10 aspect-video w-full max-w-4xl overflow-hidden rounded-[24px] border border-white/[0.08] bg-[#151D27] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+        <div class="grid h-full place-items-center p-8 text-center">
+          <div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-muted-text/70">Featured embed</p>
+            <p class="mt-3 text-lg font-semibold text-white">Connect the YouTube channel to light this up</p>
+            <p class="mt-2 max-w-md text-[0.9rem] text-primary-text/60">Placeholder stage for the latest upload or a studio playlist.</p>
+          </div>
+        </div>
+      </div>
+      <div class="grid gap-5 md:grid-cols-3">
+        {series.map((s) => (
+          <article class="rounded-[24px] border border-white/[0.06] bg-[#1A232E] p-6">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-brand-anchor">{s.status}</p>
+            <h2 class="mt-3 text-xl font-semibold text-white">{s.title}</h2>
+            <p class="mt-3 text-[0.92rem] leading-[1.65] text-primary-text/65">{s.blurb}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>

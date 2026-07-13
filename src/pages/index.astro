@@ -2,7 +2,6 @@
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import AppCard from '../components/AppCard.astro';
-import ContactCard from '../components/ContactCard.astro';
 import Layout from '../layouts/Layout.astro';
 import { apps } from '../data/apps';
 import BrandLogo from '../components/BrandLogo.astro';
@@ -100,9 +99,9 @@ const faqSchema = {
         </p>
 
         <div class="mt-9 flex flex-wrap items-center gap-3">
-          <a href="#apps" class="group inline-flex min-h-11 items-center gap-2.5 rounded-full bg-white px-5 text-[0.925rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.12),inset_0_1px_1px_rgba(255,255,255,0.8)] transition-[transform,background-color,box-shadow] duration-300 hover:scale-[1.02] hover:bg-primary-text hover:shadow-[0_8px_28px_rgba(255,255,255,0.18)]">
+          <a href="/apps" class="group inline-flex min-h-11 items-center gap-2.5 rounded-full bg-white px-5 text-[0.925rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.12),inset_0_1px_1px_rgba(255,255,255,0.8)] transition-[transform,background-color,box-shadow] duration-300 hover:scale-[1.02] hover:bg-primary-text hover:shadow-[0_8px_28px_rgba(255,255,255,0.18)]">
             Enter app matrix
-            <span aria-hidden="true" class="grid size-5 place-items-center rounded-full bg-canvas/10 transition-transform group-hover:translate-y-0.5">↓</span>
+            <span aria-hidden="true" class="grid size-5 place-items-center rounded-full bg-canvas/10 transition-transform group-hover:translate-x-0.5">→</span>
           </a>
           <a href="/blog" class="group inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-5 text-[0.9rem] font-medium tracking-[-0.01em] text-primary-text/80 transition-colors hover:border-white/15 hover:bg-white/[0.08] hover:text-white">
             Field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
@@ -199,8 +198,11 @@ const faqSchema = {
       </div>
 
       <div class="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-5 py-4 ">
-        <p class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-text/70">Total payload optimized: <strong class="text-primary-text/80">~9KB icons</strong> (was 6.4MB) • Self-hosted fonts • No third-party trackers</p>
-        <a href="https://github.com/josh-hrisko" target="_blank" rel="me" class="inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-brand-anchor hover:text-white">Open source pieces →</a>
+        <p class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-text/70">Products live on <strong class="text-primary-text/80">subdomains</strong> • Hub is the catalog • <strong class="text-primary-text/80">~9KB</strong> icons • No trackers</p>
+        <div class="flex flex-wrap items-center gap-4">
+          <a href="/apps" class="inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-brand-anchor hover:text-white">Full matrix →</a>
+          <a href="https://github.com/makerportal" target="_blank" rel="me noopener noreferrer" class="inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-primary-text/60 hover:text-white">Open source ↗</a>
+        </div>
       </div>
     </div>
   </section>
@@ -291,7 +293,7 @@ const faqSchema = {
           { n:'01', k:'NOTICE', title:'Start with friction.', desc:'Find the repeated annoyance, the expert workflow, or the tiny moment everyone else decided was too small to deserve software. Thats where leverage lives.', c:'text-primary-cta' },
           { n:'02', k:'REDUCE', title:'Cut until the idea becomes obvious.', desc:'The best version is rarely the biggest. It is the one whose purpose survives every subtraction. Ship half the features, twice the craft.', c:'text-brand-anchor' },
           { n:'03', k:'SHIP', title:'Put it in real hands.', desc:'A shipped product teaches more than a perfect prototype. Release, listen, refine, repeat. Telemetry is conversation, not surveillance.', c:'text-muted-text' },
-        ].map((step, i) => (
+        ].map((step) => (
           <li class="group grid gap-4 py-7 sm:grid-cols-[5.5rem_1fr] sm:py-8">
             <span class:list={['font-mono text-[0.72rem] font-bold tracking-[0.12em]', step.c]}>{step.n} / {step.k}</span>
             <div><h3 class="text-[1.35rem] font-semibold tracking-[-0.02em] text-white group-hover:text-primary-text transition-colors">{step.title}</h3><p class="mt-2 max-w-[38rem] text-[0.95rem] leading-[1.7] text-primary-text/60">{step.desc}</p></div>
@@ -326,25 +328,34 @@ const faqSchema = {
     </div>
   </section>
 
-  <!-- Closing CTA – frontier gradient + spatial -->
+  <!-- Closing CTA – hub routes to contact + journal -->
   <section aria-labelledby="closing-title" class="relative isolate overflow-hidden">
     <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(90%_70%_at_50%_120%,rgba(240,122,148,0.12),transparent_60%),radial-gradient(60%_50%_at_20%_30%,rgba(113,185,227,0.08),transparent_60%)]"></div>
     <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
-      <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+      <div class="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
         <div>
           <p class="section-kicker">Next release is already moving • Agentic-first • Privacy-first</p>
           <h2 id="closing-title" class="mt-5 text-balance text-[clamp(2.8rem,6vw,5.5rem)] font-[750] leading-[0.9] tracking-[-0.06em] text-white">Make the<br />thing you<br />wish existed.</h2>
           <div class="mt-8 flex flex-wrap gap-3">
-            <a href="https://makersportal.com" rel="me noopener" target="_blank" class="group inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition-all hover:scale-[1.02] hover:bg-primary-text">Follow studio journal <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">↗</span></a>
-            <a href="#contact" class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-[0.9rem] font-medium text-primary-text/80  transition-colors hover:border-white/15 hover:text-white hover:bg-white/[0.06]">Get in touch • No spam, just build logs</a>
+            <a href="/contact" class="group inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition-all hover:scale-[1.02] hover:bg-primary-text">Get in touch <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
+            <a href="/apps" class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-[0.9rem] font-medium text-primary-text/80 transition-colors hover:border-white/15 hover:text-white hover:bg-white/[0.06]">App matrix</a>
+            <a href="https://makersportal.com" rel="me noopener" target="_blank" class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-[0.9rem] font-medium text-primary-text/80 transition-colors hover:border-white/15 hover:text-white hover:bg-white/[0.06]">Studio journal ↗</a>
           </div>
-          <div class="mt-8 flex items-center gap-3 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">
+          <div class="mt-8 flex flex-wrap items-center gap-3 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">
             <span class="inline-flex items-center gap-1.5"><span class="size-1 rounded-full bg-emerald-400"></span> No cookies for app functionality</span>
             <span class="hidden sm:inline h-3 w-px bg-white/10"></span>
             <span class="hidden sm:inline">llms.txt • sitemap • RSS • Open Graph</span>
           </div>
         </div>
-        <ContactCard />
+        <aside class="rounded-[28px] border border-white/[0.06] bg-[#1A232E] p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] sm:p-8">
+          <p class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary-cta">Directory</p>
+          <ul class="mt-5 space-y-3 text-[0.95rem]">
+            <li><a href="/apps" class="group flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-primary-text/75 transition-colors hover:border-white/[0.06] hover:bg-white/[0.03] hover:text-white"><span>Application matrix</span><span aria-hidden="true" class="text-muted-text/60 transition-transform group-hover:translate-x-0.5">→</span></a></li>
+            <li><a href="/blog" class="group flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-primary-text/75 transition-colors hover:border-white/[0.06] hover:bg-white/[0.03] hover:text-white"><span>Field notes</span><span aria-hidden="true" class="text-muted-text/60 transition-transform group-hover:translate-x-0.5">→</span></a></li>
+            <li><a href="/contact" class="group flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-primary-text/75 transition-colors hover:border-white/[0.06] hover:bg-white/[0.03] hover:text-white"><span>Contact studio</span><span aria-hidden="true" class="text-muted-text/60 transition-transform group-hover:translate-x-0.5">→</span></a></li>
+          </ul>
+          <p class="mt-6 border-t border-white/[0.06] pt-5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/70">Products · <span class="text-primary-text/50">*.makerportal.ai</span></p>
+        </aside>
       </div>
     </div>
   </section>

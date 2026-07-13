@@ -1,0 +1,153 @@
+---
+import AppCard from '../components/AppCard.astro';
+import Layout from '../layouts/Layout.astro';
+import { apps } from '../data/apps';
+
+const pageTitle = 'Apps — MakerPortal Application Matrix | On-Device AI';
+const pageDescription =
+  'Studio portfolio of privacy-first iOS & iPadOS apps. Each product lives on its own subdomain — open Biquadia, Thumb-Dash, Notiary, or PopCloset for the full experience.';
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': 'https://www.makerportal.ai/apps#collection',
+  name: 'MakerPortal Application Matrix',
+  description: pageDescription,
+  url: 'https://www.makerportal.ai/apps',
+  isPartOf: { '@id': 'https://www.makerportal.ai/#website' },
+  about: {
+    '@type': 'Thing',
+    name: 'On-Device Machine Learning & Privacy-First Software',
+  },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: apps.length,
+    itemListElement: apps.map((app, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'SoftwareApplication',
+        '@id': `${app.url}#app`,
+        name: app.title,
+        description: app.description,
+        applicationCategory: app.category,
+        operatingSystem: app.platform,
+        url: app.url,
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+          availability: 'https://schema.org/InStock',
+        },
+        featureList: app.techBadges.join(', '),
+        publisher: { '@id': 'https://makersportal.com/#organization' },
+        author: { '@id': 'https://makersportal.com/#organization' },
+      },
+    })),
+  },
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Apps', item: 'https://www.makerportal.ai/apps' },
+  ],
+};
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(collectionSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <section class="hero-grid border-b border-white/[0.06]">
+    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
+      <p class="section-kicker">Application matrix / {String(apps.length).padStart(2, '0')} live • Subdomains</p>
+      <h1 class="mt-6 max-w-4xl text-balance text-[clamp(2.8rem,6vw,5rem)] font-[700] leading-[0.9] tracking-[-0.06em] text-white">
+        The catalog.<br /><span class="text-primary-text/55">Products live next door.</span>
+      </h1>
+      <p class="mt-7 max-w-2xl text-[1.05rem] leading-[1.75] text-primary-text/70 sm:text-lg">
+        This hub indexes the studio. Each app has its own subdomain for the full product story, store links, and privacy details — we do not duplicate them here.
+      </p>
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <span class="inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.03] px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/80">
+          <span class="size-1.5 rounded-full bg-emerald-400"></span>
+          100% on-device intelligence
+        </span>
+        <span class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/70">
+          Open product ↗ → subdomain
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="matrix-title" class="border-b border-white/[0.06]">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+      <div class="flex flex-col gap-4 border-b border-white/[0.06] pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 id="matrix-title" class="text-[clamp(1.6rem,3vw,2.1rem)] font-[650] tracking-[-0.04em] text-white">
+            Live applications
+          </h2>
+          <p class="mt-2 max-w-xl text-[0.95rem] leading-[1.65] text-primary-text/60">
+            Same local intelligence stack: CoreML, Metal, Apple Neural Engine. Zero cloud for inference.
+          </p>
+        </div>
+        <a href="/" class="inline-flex min-h-10 items-center text-[0.875rem] font-medium text-brand-anchor hover:text-white">
+          ← Studio home
+        </a>
+      </div>
+
+      <div class="mt-10 grid items-stretch gap-5 sm:gap-6 md:grid-cols-2 lg:gap-7">
+        {apps.map((app) => (
+          <AppCard {...app} class="md:col-span-1" />
+        ))}
+      </div>
+
+      <div class="mt-12 rounded-[20px] border border-white/[0.06] bg-white/[0.02] px-5 py-5 sm:px-6">
+        <p class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-text/70">Product hosts</p>
+        <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[0.9rem]">
+          {apps.map((app) => (
+            <li>
+              <a
+                href={app.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-primary-text/75 transition-colors hover:text-white"
+              >
+                {app.title} <span class="text-muted-text/60">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-b border-white/[0.06]" aria-label="Next steps">
+    <div class="mx-auto flex max-w-[88rem] flex-col gap-6 px-5 py-16 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-20 lg:px-10">
+      <div>
+        <p class="section-kicker">Studio</p>
+        <h2 class="mt-3 text-[clamp(1.5rem,3vw,2rem)] font-[650] tracking-[-0.04em] text-white">
+          Questions about an app or collab?
+        </h2>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <a
+          href="/contact"
+          class="inline-flex min-h-11 items-center rounded-full bg-white px-5 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas transition hover:bg-primary-text"
+        >
+          Contact studio
+        </a>
+        <a
+          href="/blog"
+          class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-[0.9rem] font-medium text-primary-text/80 transition-colors hover:border-white/15 hover:text-white"
+        >
+          Field notes →
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

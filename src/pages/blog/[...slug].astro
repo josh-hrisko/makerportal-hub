@@ -48,14 +48,16 @@ const breadcrumbSchema = {
     <script is:inline type="application/ld+json" set:html={JSON.stringify(articleSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
   </Fragment>
-  <article>
-    <header class="hero-grid border-b border-muted-text/15">
-      <div class="mx-auto max-w-5xl px-5 pb-16 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
-        <a href="/blog" class="inline-flex min-h-11 items-center text-sm font-semibold text-muted-text hover:text-white transition-colors duration-200">← All field notes</a>
-        <p class="section-kicker mt-12">{post.data.eyebrow}</p>
-        <h1 class="mt-5 text-balance text-5xl font-semibold leading-[0.94] tracking-[-0.055em] text-white sm:text-7xl">{post.data.title}</h1>
-        <p class="mt-7 max-w-3xl text-lg leading-8 text-primary-text/90 sm:text-xl">{post.data.description}</p>
-        <div class="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-muted-text/20 pt-5 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-muted-text">
+
+  <!-- Reading paper: warm light surface for long-form dwell (research polarity) -->
+  <article class="reading-paper flex-1 border-b reading-line">
+    <header class="border-b reading-line">
+      <div class="mx-auto max-w-5xl px-5 pb-14 pt-16 sm:px-8 sm:pb-20 sm:pt-24">
+        <a href="/blog" class="inline-flex min-h-11 items-center text-sm font-semibold transition-colors" style="color: var(--mp-paper-muted)">← All field notes</a>
+        <p class="section-kicker mt-10">{post.data.eyebrow}</p>
+        <h1 class="reading-ink mt-5 text-balance text-5xl font-semibold leading-[0.94] tracking-[-0.055em] sm:text-7xl">{post.data.title}</h1>
+        <p class="mt-7 max-w-3xl text-lg leading-8 sm:text-xl" style="color: color-mix(in srgb, var(--mp-paper-ink) 88%, var(--mp-paper-muted))">{post.data.description}</p>
+        <div class="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t reading-line pt-5 font-mono text-[0.65rem] uppercase tracking-[0.16em] reading-muted">
           <time datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time>
           <span aria-hidden="true">/</span>
           <span>{post.data.readingTime}</span>
@@ -63,20 +65,20 @@ const breadcrumbSchema = {
       </div>
     </header>
 
-    <div class="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
-      <div class="prose-studio"><Content /></div>
-      
-      <div class="mt-16 border-t border-muted-text/20 pt-10 grid gap-6 sm:grid-cols-2">
+    <div class="mx-auto max-w-3xl px-5 py-14 sm:px-8 sm:py-20">
+      <div class="prose-paper"><Content /></div>
+
+      <div class="mt-16 grid gap-6 border-t reading-line pt-10 sm:grid-cols-2">
         {prevPost ? (
-          <a href={`/blog/${prevPost.id}`} class="group flex flex-col items-start gap-2 rounded-2xl border border-muted-text/15 bg-card-bg/30 p-6 transition-colors hover:border-brand-anchor/50 hover:bg-card-bg">
-            <span class="font-mono text-[0.65rem] uppercase tracking-widest text-muted-text">Previous Note</span>
-            <span class="text-lg font-semibold leading-tight text-white transition-colors group-hover:text-brand-anchor">{prevPost.data.title}</span>
+          <a href={`/blog/${prevPost.id}`} class="reading-card group flex flex-col items-start gap-2 rounded-2xl p-6 transition-shadow hover:shadow-md">
+            <span class="font-mono text-[0.65rem] uppercase tracking-widest reading-muted">Previous Note</span>
+            <span class="text-lg font-semibold leading-tight reading-ink transition-colors group-hover:text-[var(--mp-paper-link)]">{prevPost.data.title}</span>
           </a>
         ) : <div />}
         {nextPost && (
-          <a href={`/blog/${nextPost.id}`} class="group flex flex-col items-end gap-2 rounded-2xl border border-muted-text/15 bg-card-bg/30 p-6 text-right transition-colors hover:border-primary-cta/50 hover:bg-card-bg sm:col-start-2">
-            <span class="font-mono text-[0.65rem] uppercase tracking-widest text-muted-text">Next Note</span>
-            <span class="text-lg font-semibold leading-tight text-white transition-colors group-hover:text-primary-cta">{nextPost.data.title}</span>
+          <a href={`/blog/${nextPost.id}`} class="reading-card group flex flex-col items-end gap-2 rounded-2xl p-6 text-right transition-shadow hover:shadow-md sm:col-start-2">
+            <span class="font-mono text-[0.65rem] uppercase tracking-widest reading-muted">Next Note</span>
+            <span class="text-lg font-semibold leading-tight reading-ink transition-colors group-hover:text-[var(--mp-paper-link)]">{nextPost.data.title}</span>
           </a>
         )}
       </div>

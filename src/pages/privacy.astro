@@ -1,0 +1,43 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Privacy Policy — MakerPortal';
+const description =
+  'How MakerPortal handles data on the hub and in our apps. Zero telemetry for on-device intelligence features. Affiliate disclosure.';
+const updated = 'July 13, 2026';
+---
+
+<Layout title={title} description={description}>
+  <div class="reading-paper flex-1 border-b reading-line">
+    <header class="border-b reading-line">
+      <div class="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
+        <p class="section-kicker">Legal · Privacy</p>
+        <h1 class="reading-ink mt-5 text-balance text-[clamp(2.4rem,5vw,3.5rem)] font-[700] leading-[0.95] tracking-[-0.05em]">Privacy policy.</h1>
+        <p class="mt-5 text-[1.05rem] leading-[1.7]" style="color: color-mix(in srgb, var(--mp-paper-ink) 85%, var(--mp-paper-muted))">
+          We design for minimal data. On-device app intelligence does not phone home. This hub collects only what you deliberately send.
+        </p>
+        <p class="mt-4 font-mono text-[0.65rem] uppercase tracking-[0.14em] reading-muted">Updated {updated}</p>
+      </div>
+    </header>
+
+    <section>
+      <div class="prose-paper mx-auto max-w-3xl px-5 py-14 sm:px-8 sm:py-20">
+        <h2>Scope</h2>
+        <p>This policy covers www.makerportal.ai (the hub) and describes how MakerPortal studio products approach privacy. Individual app subdomains may publish product-specific notices; where they conflict, the product notice controls for that app.</p>
+
+        <h2>Hub website</h2>
+        <p>We do not use advertising trackers or analytics SDKs that profile you across the web. Contact form submissions are processed to respond to your message (including spam prevention). Server logs may include standard technical data (IP, user agent) for security and reliability.</p>
+        <p>Theme preference is stored in <code>localStorage</code> on your device only — it never leaves your browser.</p>
+
+        <h2>Applications</h2>
+        <p>MakerPortal apps are built for on-device processing. Intelligence features are designed so your personal content does not leave the device for cloud inference. We do not sell personal data.</p>
+
+        <h2 id="affiliates">Affiliate disclosure</h2>
+        <p>Some resource or shop links may be affiliate links. If you purchase through them, we may earn a commission at no extra cost to you. We only recommend tools we believe are useful. Affiliate relationships never require us to share your personal browsing data with partners beyond what the merchant’s own checkout requires.</p>
+
+        <h2>Contact</h2>
+        <p>Privacy questions: <a href="/contact">Contact the studio</a>.</p>
+      </div>
+    </section>
+  </div>
+</Layout>

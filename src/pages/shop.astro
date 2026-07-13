@@ -1,0 +1,48 @@
+---
+import HubShell from '../components/HubShell.astro';
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Shop — MakerPortal Digital Goods & Archives';
+const description =
+  'Code packs, templates, and digital archives from MakerPortal. Transparent listings; affiliate products clearly disclosed.';
+
+const products = [
+  { id: 'code', title: 'Code packs', blurb: 'SwiftUI starters, CoreML sample projects, Metal snippets.', price: 'Coming soon', tag: 'Archives' },
+  { id: 'templates', title: 'UI templates', blurb: 'Privacy-first app shells and design tokens for iOS craft.', price: 'Coming soon', tag: 'Templates' },
+  { id: 'kits', title: 'Project kits', blurb: 'End-to-end on-device pipelines you can fork and ship.', price: 'Coming soon', tag: 'Kits' },
+];
+---
+
+<Layout title={title} description={description}>
+  <HubShell
+    kicker="Shop · Digital goods · Archives"
+    title="Own the archive."
+    lead="Downloads and code packs that compound the studio’s shipping practice. Listings expand as products ship — affiliate tools live under Learn with full disclosure."
+    status="Commerce scaffold"
+  >
+    <Fragment slot="hero-actions">
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/resources#tools" class="inline-flex min-h-11 items-center rounded-full border border-white/10 px-5 text-[0.9rem] font-medium text-primary-text/80 hover:text-white">Affiliate tools →</a>
+        <a href="/contact" class="inline-flex min-h-11 items-center rounded-full bg-white px-5 text-[0.9rem] font-bold text-canvas hover:bg-primary-text">Wholesale / licensing</a>
+      </div>
+    </Fragment>
+  </HubShell>
+
+  <section id="code" class="border-b border-white/[0.06]" aria-label="Products">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+      <div class="grid gap-5 md:grid-cols-3">
+        {products.map((p) => (
+          <article id={p.id === 'code' ? undefined : p.id} class="rounded-[24px] border border-white/[0.06] bg-[#1A232E] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-primary-cta">{p.tag}</p>
+            <h2 class="mt-3 text-xl font-semibold tracking-[-0.03em] text-white">{p.title}</h2>
+            <p class="mt-3 text-[0.92rem] leading-[1.65] text-primary-text/65">{p.blurb}</p>
+            <p class="mt-6 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-muted-text/70">{p.price}</p>
+          </article>
+        ))}
+      </div>
+      <p class="mt-10 max-w-2xl text-[0.85rem] leading-[1.6] text-muted-text/70">
+        Affiliate links, when present, are disclosed on the destination card and in our <a href="/privacy#affiliates" class="text-brand-anchor hover:text-white">privacy policy</a>. We never sell your data.
+      </p>
+    </div>
+  </section>
+</Layout>

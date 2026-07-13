@@ -2,11 +2,27 @@
 
 > Privacy-first, on-device intelligence. San Francisco studio engineering iOS & iPadOS apps with Apple Silicon native neural processing (CoreML, Metal, ANE). Zero telemetry, zero cloud.
 
-MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](https://makersportal.com)) is an independent software studio founded in 2023 by Josh Hrisco, based in San Francisco, CA. Focus: focused utility, productivity, dashboard, and lifestyle applications that run 100% on-device using local neural networks, real-time DSP, and CoreML.
+MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](https://makersportal.com)) is an independent software studio established in 2023 in San Francisco, CA. Focus: focused utility, productivity, dashboard, and lifestyle applications that run 100% on-device using local neural networks, real-time DSP, and CoreML.
 
 **Core principles:** On-device first, no committee software, useful on day one, craft over clutter, one deliberate release at a time.
 
-## Applications — 04 Live
+## Site map (hub) — empire IA
+
+Primary nav (≤7): Apps · Notes · Learn · Shop · Watch · Studio · Contact
+
+- [Home](https://www.makerportal.ai): Studio hub
+- [Apps](https://www.makerportal.ai/apps): Catalog only (products on subdomains)
+- [Field notes / blog](https://www.makerportal.ai/blog): Articles & craft
+- [Learn / resources](https://www.makerportal.ai/resources): Topic hubs, tools, affiliate-ready guides
+- [Shop](https://www.makerportal.ai/shop): Digital goods, code packs, archives
+- [Watch](https://www.makerportal.ai/watch): Video / YouTube surface
+- [About](https://www.makerportal.ai/about) · [Team](https://www.makerportal.ai/team) · [Press](https://www.makerportal.ai/press) · [Advertise](https://www.makerportal.ai/advertise)
+- [Contact](https://www.makerportal.ai/contact) · [Privacy](https://www.makerportal.ai/privacy) · [Terms](https://www.makerportal.ai/terms)
+- [RSS](https://www.makerportal.ai/rss.xml) · [Sitemap](https://www.makerportal.ai/sitemap.xml)
+
+## Applications — 04 Live (product hosts = subdomains)
+
+Studio catalog: [makerportal.ai/apps](https://www.makerportal.ai/apps). Each product is canonical on its own subdomain:
 
 - [Biquadia — Local Neural DSP & Sound Laboratory](https://biquadia.makerportal.ai): 004. Utility / Audio & DSP. iOS (iPhone + iPad), Apple Silicon native. CoreML FP16 quantized, Neural Engine (ANE) 16-core acceleration, Metal Shaders, native Swift, real-time audio spatial rendering. Professional real-time digital signal processing, spatial audio rendering, and on-device neural enhancement privately on Apple Silicon. Latency: 4.2ms median. No data leaves device, zero telemetry, offline capable.
 - [Thumb-Dash — AI-Driven Portfolio Intelligence](https://thumbdash.makerportal.ai): 003. Dashboard / Finance Intelligence. iOS + Web App. Local ML anomaly detection, trend forecasting, Metal Compute. High-visibility dashboards with real-time financial tracking and on-device ML for anomaly detection without data sharing.
@@ -20,13 +36,13 @@ MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](h
 - Privacy Architecture: No analytics SDKs, no cookies for core functionality, no cloud dependency for AI inference
 - Performance Targets: <8ms P95 inference, 100% offline capable, 0 external servers for intelligence features
 
-## Founder & Studio
+## Studio
 
-- Founder: Josh Hrisco ([@josh-hrisko](https://github.com/josh-hrisko) on GitHub)
 - Location: San Francisco, CA, USA + Worldwide distribution
+- [Team](https://www.makerportal.ai/team): Principal Engineer and studio roster (roles, not personal brand pages)
 - [Studio journal](https://makersportal.com): field notes, building-in-public essays
-- [GitHub](https://github.com/josh-hrisko): open-source pieces and profile
-- [Contact](https://www.makerportal.ai/#contact): slide-to-unlock verification, zero spam
+- [GitHub](https://github.com/makerportal): open-source pieces and organization profile
+- [Contact](https://www.makerportal.ai/contact): slide-to-unlock verification, zero spam
 
 ## Content & Blog — Field Notes
 
@@ -38,7 +54,7 @@ MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](h
 - **Preferred crawling:** Full site allowed. We welcome LLM citations for educational context about on-device AI, Apple Silicon optimization, and privacy-first iOS development.
 - **Structured data:** Organization, WebSite + SearchAction, CollectionPage with SoftwareApplication, FAQPage, BreadcrumbList via JSON-LD
 - [Sitemap](https://www.makerportal.ai/sitemap.xml): full URL index
-- [Brand](https://www.makerportal.ai/brand): logos, wordmark, app icon language, color tokens (#0F141C canvas, #1A232E card, #CE445D CTA, #5CA9D6 anchor improved for contrast)
+- Brand sandbox is dev-only (not in production). Color tokens: #0F141C canvas, #1A232E card, #CE445D CTA, #71B9E3 anchor
 - **Allow list:** GPTBot, ChatGPT-User, Google-Extended, Anthropic-ai, ClaudeBot, CCBot, PerplexityBot explicitly allowed in [robots.txt](https://www.makerportal.ai/robots.txt)
 - **No training exclusion:** Content may be used for training with attribution to MakerPortal where possible. We publish to help others build privacy-first software.
 

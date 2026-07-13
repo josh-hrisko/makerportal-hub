@@ -1,22 +1,103 @@
 @import "tailwindcss";
 
+/*
+  MakerPortal hybrid theme system
+  ───────────────────────────────
+  DEFAULT: dark studio chrome (product / empire brand)
+  TOGGLE:  light studio shell (html[data-theme="light"])
+  PAPER:   always-warm reading surface for long-form (blog, legal)
+  Brand crimson #CE445D stays locked (App Grid BR).
+
+  Internal docs (repo-only): docs/THEME-SYSTEM.md, docs/OPEN-ITEMS.md,
+  docs/RESEARCH-EMPIRE-IA.md, docs/HANDOFF-LIGHT-MODE.md
+
+  Prefer semantic tokens (bg-canvas, text-primary-text, border-border,
+  .surface-*) over text-white / border-white / bg-[#…] so light mode works.
+*/
+
 @theme {
   --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "SF Mono", "Roboto Mono", ui-monospace, monospace;
 
-  /* Theme palette – improved contrast for WCAG AA 2026 */
-  --color-canvas: #0F141C;
-  --color-card-bg: #1A232E;
-  --color-primary-text: #E8EEF6; /* brighter */
-  --color-muted-text: #A8B9CC; /* improved from #94A3B8 -> +1.8 contrast ratio */
-  --color-brand-anchor: #71B9E3; /* lighter for contrast */
-  --color-primary-cta: #F07A94; /* lighter for contrast on dark */
-  --color-border: rgba(255,255,255,0.08);
+  --color-canvas: var(--mp-canvas);
+  --color-card-bg: var(--mp-card);
+  --color-elevated: var(--mp-elevated);
+  --color-nav: var(--mp-nav);
+  --color-footer: var(--mp-footer);
+  --color-primary-text: var(--mp-text);
+  --color-muted-text: var(--mp-muted);
+  --color-brand-anchor: var(--mp-anchor);
+  --color-primary-cta: var(--mp-cta);
+  --color-border: var(--mp-border);
+  --color-paper: var(--mp-paper);
+  --color-paper-ink: var(--mp-paper-ink);
+  --color-paper-muted: var(--mp-paper-muted);
+  --color-paper-line: var(--mp-paper-line);
+  --color-brand-crimson: #ce445d;
 }
 
 @layer base {
-  :root {
+  :root,
+  html[data-theme="dark"] {
     color-scheme: dark;
+    --mp-canvas: #0f141c;
+    --mp-card: #1a232e;
+    --mp-elevated: #212d3a;
+    --mp-nav: #151d27;
+    --mp-footer: #0c1118;
+    --mp-text: #e8eef6;
+    --mp-muted: #a8b9cc;
+    --mp-anchor: #71b9e3;
+    --mp-cta: #f07a94;
+    --mp-border: rgba(255, 255, 255, 0.08);
+    --mp-grid-line: rgba(168, 185, 204, 0.028);
+    --mp-selection: #ce445d;
+    --mp-focus: rgba(113, 185, 227, 0.9);
+    --mp-focus-ring: rgba(113, 185, 227, 0.2);
+    --mp-scrollbar-track: #0f141c;
+    --mp-scrollbar-thumb: #1e2c3a;
+    --mp-scrollbar-thumb-hover: #2a3d52;
+    /* Reading paper — always warm light (long-form empire) */
+    --mp-paper: #f7f4ef;
+    --mp-paper-ink: #1a2330;
+    --mp-paper-muted: #5c6b7a;
+    --mp-paper-line: rgba(26, 35, 48, 0.1);
+    --mp-paper-card: #ffffff;
+    --mp-paper-kicker: #c43a55;
+    --mp-paper-link: #b8324f;
+    --mp-paper-code-bg: #ebe6de;
+  }
+
+  html[data-theme="light"] {
+    color-scheme: light;
+    --mp-canvas: #f4f1eb;
+    --mp-card: #ffffff;
+    --mp-elevated: #ebe6de;
+    --mp-nav: #ffffff;
+    --mp-footer: #ebe6de;
+    --mp-text: #1a2330;
+    --mp-muted: #5c6b7a;
+    --mp-anchor: #2a7aab;
+    --mp-cta: #ce445d;
+    --mp-border: rgba(26, 35, 48, 0.1);
+    --mp-grid-line: rgba(26, 35, 48, 0.05);
+    --mp-selection: #ce445d;
+    --mp-focus: rgba(42, 122, 171, 0.95);
+    --mp-focus-ring: rgba(42, 122, 171, 0.18);
+    --mp-scrollbar-track: #f4f1eb;
+    --mp-scrollbar-thumb: #d4cfc6;
+    --mp-scrollbar-thumb-hover: #b8b2a8;
+    --mp-paper: #faf8f4;
+    --mp-paper-ink: #1a2330;
+    --mp-paper-muted: #5c6b7a;
+    --mp-paper-line: rgba(26, 35, 48, 0.1);
+    --mp-paper-card: #ffffff;
+    --mp-paper-kicker: #c43a55;
+    --mp-paper-link: #b8324f;
+    --mp-paper-code-bg: #ebe6de;
+  }
+
+  :root {
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -28,54 +109,63 @@
   html {
     min-width: 320px;
     scroll-behavior: smooth;
-    background: #0F141C;
-    /* CLS fix: force the vertical scrollbar track to always be reserved from first
-       paint. `scrollbar-gutter: stable` alone only reserves a gutter once the box is
-       a scroll container; on first render (before hero animations/content settle)
-       the page can be short enough to not yet need a scrollbar, so one appears later
-       and steals ~20px of inline width from every element — a large, page-wide
-       layout shift. `overflow-y: scroll` makes the scrollbar (or its reserved gutter)
-       present immediately and permanently, eliminating that shift vector entirely. */
+    background: var(--mp-canvas);
     overflow-y: scroll;
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    scrollbar-color: #1A232E #0F141C;
+    scrollbar-color: var(--mp-scrollbar-thumb) var(--mp-scrollbar-track);
   }
 
   body {
     min-height: 100vh;
     margin: 0;
-    background: #0F141C;
-    color: #E8EEF6;
+    background: var(--mp-canvas);
+    color: var(--mp-text);
     position: relative;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: #0F141C; }
-  ::-webkit-scrollbar-thumb { background: #1E2C3A; border-radius: 999px; border: 2px solid #0F141C; }
-  ::-webkit-scrollbar-thumb:hover { background: #2A3D52; }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--mp-scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--mp-scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid var(--mp-scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--mp-scrollbar-thumb-hover);
+  }
 
-  /* Global grid – subtle, non-distracting, frontier spatial */
   body::before {
     position: fixed;
     inset: 0;
     z-index: -30;
     content: "";
     background-image:
-      linear-gradient(rgba(168,185,204,0.028) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(168,185,204,0.028) 1px, transparent 1px);
+      linear-gradient(var(--mp-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--mp-grid-line) 1px, transparent 1px);
     background-size: 5.5rem 5.5rem;
     mask-image: radial-gradient(80% 80% at 50% 0%, black 30%, transparent 85%);
     pointer-events: none;
   }
 
-  ::selection { color: #fff; background: #CE445D; }
+  ::selection {
+    color: #fff;
+    background: var(--mp-selection);
+  }
 
   :focus-visible {
-    outline: 2px solid rgba(113,185,227,0.9);
+    outline: 2px solid var(--mp-focus);
     outline-offset: 3px;
-    box-shadow: 0 0 0 4px rgba(113,185,227,0.2);
-    transition: outline-offset 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 0 0 4px var(--mp-focus-ring);
+    transition:
+      outline-offset 0.2s ease,
+      box-shadow 0.2s ease;
   }
 }
 
@@ -89,12 +179,54 @@
     color: var(--color-primary-cta);
   }
 
-  /* Hero – frontier spatial with depth layers */
+  /* Semantic surfaces (theme-aware) */
+  .surface-nav {
+    background-color: color-mix(in srgb, var(--mp-nav) 95%, transparent);
+    border-color: var(--mp-border);
+  }
+  .surface-card {
+    background-color: var(--mp-card);
+    border-color: var(--mp-border);
+  }
+  .surface-elevated {
+    background-color: var(--mp-elevated);
+  }
+  .surface-footer {
+    background-color: var(--mp-footer);
+  }
+  .surface-drawer {
+    background-color: var(--mp-nav);
+    border-color: var(--mp-border);
+  }
+
+  /* Long-form reading paper — forced light for dwell / bounce (NN/g polarity) */
+  .reading-paper {
+    background: var(--mp-paper);
+    color: var(--mp-paper-ink);
+  }
+  .reading-paper .section-kicker {
+    color: var(--mp-paper-kicker);
+  }
+  .reading-ink {
+    color: var(--mp-paper-ink);
+  }
+  .reading-muted {
+    color: var(--mp-paper-muted);
+  }
+  .reading-line {
+    border-color: var(--mp-paper-line);
+  }
+  .reading-card {
+    background: var(--mp-paper-card);
+    border: 1px solid var(--mp-paper-line);
+    color: var(--mp-paper-ink);
+  }
+
   .hero-grid {
     position: relative;
     background-image:
-      linear-gradient(rgba(168,185,204,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(168,185,204,0.05) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--mp-muted) 12%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--mp-muted) 12%, transparent) 1px, transparent 1px);
     background-size: 4rem 4rem;
     background-position: center top;
   }
@@ -104,13 +236,12 @@
     z-index: -10;
     content: "";
     background:
-      radial-gradient(120% 60% at 50% 0%, rgba(113,185,227,0.08), transparent 60%),
-      radial-gradient(60% 40% at 80% 20%, rgba(240,122,148,0.06), transparent 60%),
-      linear-gradient(90deg, #0F141C 0%, transparent 25%, transparent 75%, #0F141C 100%);
+      radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--mp-anchor) 14%, transparent), transparent 60%),
+      radial-gradient(60% 40% at 80% 20%, color-mix(in srgb, var(--mp-cta) 12%, transparent), transparent 60%),
+      linear-gradient(90deg, var(--mp-canvas) 0%, transparent 25%, transparent 75%, var(--mp-canvas) 100%);
     pointer-events: none;
   }
 
-  /* Signal dot – composited only transform+opacity */
   .signal-dot {
     position: relative;
     z-index: 1;
@@ -125,12 +256,6 @@
     animation: signal-pulse 2.4s ease-out infinite;
   }
 
-  /* Orbit – fixed CLS via contain: layout, explicit aspect.
-     No content-visibility here: this element is always inside the hero
-     (above the fold on every viewport), so it never gets the skip-rendering
-     benefit content-visibility:auto exists for, and its reserved
-     contain-intrinsic-size box was clipping the orbit apps' hover-scale
-     overflow on the left/right edges even while on-screen. */
   .orbit-stage {
     contain: layout style;
     aspect-ratio: 1 / 1;
@@ -141,23 +266,49 @@
     left: 50%;
     top: 50%;
     content: "";
-    background: rgba(168,185,204,0.12);
+    background: color-mix(in srgb, var(--mp-muted) 18%, transparent);
     transform: translate(-50%, -50%);
   }
-  .orbit-stage::before { width: 100%; height: 1px; }
-  .orbit-stage::after { width: 1px; height: 100%; }
+  .orbit-stage::before {
+    width: 100%;
+    height: 1px;
+  }
+  .orbit-stage::after {
+    width: 1px;
+    height: 100%;
+  }
 
-  .orbit-line-1 { animation: orbit-spin 42s linear infinite; }
-  .orbit-line-2 { animation: orbit-spin 32s linear infinite reverse; }
+  .orbit-line-1 {
+    animation: orbit-spin 42s linear infinite;
+  }
+  .orbit-line-2 {
+    animation: orbit-spin 32s linear infinite reverse;
+  }
 
   .orbit-app {
     z-index: 2;
     contain: layout;
   }
-  .orbit-app-1 { left: 8%; top: 14%; transform: rotate(-4deg); }
-  .orbit-app-2 { right: 2%; top: 22%; transform: rotate(6deg); }
-  .orbit-app-3 { bottom: 6%; right: 20%; transform: rotate(-6deg); }
-  .orbit-app-4 { bottom: 22%; left: 0; transform: rotate(4deg); }
+  .orbit-app-1 {
+    left: 8%;
+    top: 14%;
+    transform: rotate(-4deg);
+  }
+  .orbit-app-2 {
+    right: 2%;
+    top: 22%;
+    transform: rotate(6deg);
+  }
+  .orbit-app-3 {
+    bottom: 6%;
+    right: 20%;
+    transform: rotate(-6deg);
+  }
+  .orbit-app-4 {
+    bottom: 22%;
+    left: 0;
+    transform: rotate(4deg);
+  }
 
   .ticker-track {
     animation: ticker-scroll 36s linear infinite;
@@ -167,63 +318,242 @@
     inset: 0;
     z-index: -1;
     content: "";
-    opacity: 0.10;
-    background-image: linear-gradient(rgba(168,185,204,0.12) 1px, transparent 1px);
+    opacity: 0.1;
+    background-image: linear-gradient(color-mix(in srgb, var(--mp-muted) 20%, transparent) 1px, transparent 1px);
     background-size: 100% 2.5rem;
     mask-image: linear-gradient(to bottom, black, transparent 70%);
     pointer-events: none;
   }
 
-  /* Prose – improved contrast */
-  .prose-studio { color: #BFCFE0; font-size: 1.075rem; line-height: 1.85; }
-  .prose-studio > * + * { margin-top: 1.5rem; }
-  .prose-studio h2 { margin-top: 3.5rem; color: #FFFFFF; font-size: 1.8rem; line-height: 1.15; font-weight: 650; letter-spacing: -0.035em; }
-  .prose-studio h3 { margin-top: 2.5rem; color: #FFFFFF; font-size: 1.3rem; font-weight: 650; letter-spacing: -0.02em; }
-  .prose-studio strong { color: #FFFFFF; font-weight: 650; }
-  .prose-studio a { color: var(--color-primary-cta); text-decoration: underline; text-underline-offset: 0.22em; transition: color 0.2s; }
-  .prose-studio a:hover { color: #fff; }
-  .prose-studio ul, .prose-studio ol { padding-left: 1.4rem; }
-  .prose-studio ul { list-style: disc; }
-  .prose-studio ol { list-style: decimal; }
-  .prose-studio blockquote { border-left: 2px solid var(--color-primary-cta); padding-left: 1.5rem; color: #FFFFFF; font-size: 1.25rem; line-height: 1.6; }
-  .prose-studio code { border: 1px solid rgba(168,185,204,0.15); border-radius: 0.35rem; background: var(--color-card-bg); padding: 0.15rem 0.35rem; color: #fff; font-family: var(--font-mono); font-size: 0.88em; }
+  /* Dark-context prose (fallback) */
+  .prose-studio {
+    color: color-mix(in srgb, var(--mp-text) 78%, var(--mp-muted));
+    font-size: 1.075rem;
+    line-height: 1.85;
+  }
+  .prose-studio > * + * {
+    margin-top: 1.5rem;
+  }
+  .prose-studio h2 {
+    margin-top: 3.5rem;
+    color: var(--mp-text);
+    font-size: 1.8rem;
+    line-height: 1.15;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+  }
+  .prose-studio h3 {
+    margin-top: 2.5rem;
+    color: var(--mp-text);
+    font-size: 1.3rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+  .prose-studio strong {
+    color: var(--mp-text);
+    font-weight: 650;
+  }
+  .prose-studio a {
+    color: var(--color-primary-cta);
+    text-decoration: underline;
+    text-underline-offset: 0.22em;
+    transition: color 0.2s;
+  }
+  .prose-studio a:hover {
+    color: var(--mp-text);
+  }
+  .prose-studio ul,
+  .prose-studio ol {
+    padding-left: 1.4rem;
+  }
+  .prose-studio ul {
+    list-style: disc;
+  }
+  .prose-studio ol {
+    list-style: decimal;
+  }
+  .prose-studio blockquote {
+    border-left: 2px solid var(--color-primary-cta);
+    padding-left: 1.5rem;
+    color: var(--mp-text);
+    font-size: 1.25rem;
+    line-height: 1.6;
+  }
+  .prose-studio code {
+    border: 1px solid var(--mp-border);
+    border-radius: 0.35rem;
+    background: var(--mp-card);
+    padding: 0.15rem 0.35rem;
+    color: var(--mp-text);
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+  }
 
-  /* Opaque “glass” substitutes — real backdrop-filter is too expensive on iOS
-     Safari when stacked with fixed chrome and animated ATF layers. */
+  /* Paper prose — optimized for long reading sessions */
+  .prose-paper {
+    color: var(--mp-paper-ink);
+    font-size: 1.125rem;
+    line-height: 1.85;
+  }
+  .prose-paper > * + * {
+    margin-top: 1.5rem;
+  }
+  .prose-paper h2 {
+    margin-top: 3.25rem;
+    color: var(--mp-paper-ink);
+    font-size: 1.75rem;
+    line-height: 1.2;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+  }
+  .prose-paper h3 {
+    margin-top: 2.25rem;
+    color: var(--mp-paper-ink);
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+  .prose-paper p {
+    color: color-mix(in srgb, var(--mp-paper-ink) 92%, var(--mp-paper-muted));
+  }
+  .prose-paper strong {
+    color: var(--mp-paper-ink);
+    font-weight: 650;
+  }
+  .prose-paper a {
+    color: var(--mp-paper-link);
+    text-decoration: underline;
+    text-underline-offset: 0.22em;
+    transition: color 0.2s;
+  }
+  .prose-paper a:hover {
+    color: var(--mp-paper-ink);
+  }
+  .prose-paper ul,
+  .prose-paper ol {
+    padding-left: 1.4rem;
+    color: color-mix(in srgb, var(--mp-paper-ink) 90%, var(--mp-paper-muted));
+  }
+  .prose-paper ul {
+    list-style: disc;
+  }
+  .prose-paper ol {
+    list-style: decimal;
+  }
+  .prose-paper blockquote {
+    border-left: 3px solid var(--mp-paper-kicker);
+    padding-left: 1.5rem;
+    color: var(--mp-paper-ink);
+    font-size: 1.2rem;
+    line-height: 1.65;
+  }
+  .prose-paper code {
+    border: 1px solid var(--mp-paper-line);
+    border-radius: 0.35rem;
+    background: var(--mp-paper-code-bg);
+    padding: 0.15rem 0.35rem;
+    color: var(--mp-paper-ink);
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+  }
+
   .glass {
-    background: rgba(26,35,46,0.94);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: color-mix(in srgb, var(--mp-card) 94%, transparent);
+    border: 1px solid var(--mp-border);
   }
   .glass-strong {
-    background: rgba(21,29,39,0.97);
+    background: color-mix(in srgb, var(--mp-nav) 97%, transparent);
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: color-mix(in srgb, var(--mp-elevated) 80%, transparent);
+    color: var(--mp-text);
+    transition:
+      background-color 0.2s,
+      border-color 0.2s,
+      color 0.2s;
+  }
+  .theme-toggle:hover {
+    border-color: color-mix(in srgb, var(--mp-anchor) 40%, var(--mp-border));
+    background: var(--mp-elevated);
+  }
+  .theme-toggle .icon-sun {
+    display: none;
+  }
+  .theme-toggle .icon-moon {
+    display: block;
+  }
+  html[data-theme="light"] .theme-toggle .icon-sun {
+    display: block;
+  }
+  html[data-theme="light"] .theme-toggle .icon-moon {
+    display: none;
+  }
+
+  /* Wordmark ink follows theme text (paths use currentColor) */
+  [data-brand-logo] {
+    color: var(--mp-text);
   }
 }
 
 @keyframes signal-pulse {
-  0% { transform: scale(1); opacity: 0.6; }
-  65%, 100% { transform: scale(3.5); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  65%,
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
 }
-@keyframes orbit-spin { to { transform: rotate(360deg); } }
-@keyframes ticker-scroll { to { transform: translateX(-50%); } }
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes underline-draw {
-  /* Tailwind v4's scale-x-* utilities set the independent `scale` CSS property
-     (not `transform`) — animate that same property or the utility's initial
-     state never actually changes. */
-  to { scale: 1 1; }
+  to {
+    scale: 1 1;
+  }
 }
-/* Scroll-driven – with containment */
+
 @supports (animation-timeline: view()) {
   .animate-on-scroll {
-    animation: fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both;
+    animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
     animation-timeline: view();
     animation-range: entry 8% cover 28%;
   }
@@ -234,22 +564,37 @@
   }
 }
 @keyframes hero-fade {
-  /* Transform/opacity only — filter:blur on the hero column was promoting a
-     filtered layer over the LCP text and inflating Element Render Delay. */
-  to { opacity: 0; transform: translateY(40px) scale(0.98); }
+  to {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
 }
 
 @media (max-width: 640px) {
-  .hero-grid { background-size: 3rem 3rem; }
-  .hero-grid::after { background: linear-gradient(180deg, transparent 0%, #0F141C 82%); }
-  .orbit-app-1 { left: 4%; top: 8%; }
-  .orbit-app-2 { right: 0; top: 18%; }
-  .orbit-app-3 { bottom: 2%; right: 15%; }
-  .orbit-app-4 { bottom: 19%; left: 0; }
+  .hero-grid {
+    background-size: 3rem 3rem;
+  }
+  .hero-grid::after {
+    background: linear-gradient(180deg, transparent 0%, var(--mp-canvas) 82%);
+  }
+  .orbit-app-1 {
+    left: 4%;
+    top: 8%;
+  }
+  .orbit-app-2 {
+    right: 0;
+    top: 18%;
+  }
+  .orbit-app-3 {
+    bottom: 2%;
+    right: 15%;
+  }
+  .orbit-app-4 {
+    bottom: 19%;
+    left: 0;
+  }
 }
 
-/* Coarse pointers / phones: pause continuous ATF motion so Safari isn't
-   compositing infinite layers under the fixed header during scroll/tap. */
 @media (hover: none), (pointer: coarse) {
   .orbit-line-1,
   .orbit-line-2,
@@ -263,8 +608,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -272,9 +621,9 @@
   }
 }
 
-/* View transitions – frontier */
 @supports (view-transition-name: none) {
-  ::view-transition-old(root), ::view-transition-new(root) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
     animation-duration: 0.4s;
   }
 }

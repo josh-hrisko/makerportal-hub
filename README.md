@@ -24,3 +24,12 @@ Add one object to `src/data/apps.ts` and place its SVG icon in `public/assets/ap
 ## Publish a field note
 
 Add a Markdown file to `src/content/blog/` using the existing posts as a frontmatter reference. Published entries automatically appear on the homepage, the `/blog` index, their own generated route, and both sitemaps. Set `draft: true` to keep a note out of production.
+
+## Internal docs (repo-only)
+
+Engineering memory for agents and humans — **not** linked from the public site:
+
+- [`docs/README.md`](docs/README.md) — index  
+- [`docs/HANDOFF-LIGHT-MODE.md`](docs/HANDOFF-LIGHT-MODE.md) — next-session prompt (light-mode contrast)  
+- [`docs/RESEARCH-EMPIRE-IA.md`](docs/RESEARCH-EMPIRE-IA.md) — empire IA / blog research learnings  
+- [`docs/THEME-SYSTEM.md`](docs/THEME-SYSTEM.md) · [`docs/DECISIONS.md`](docs/DECISIONS.md) · [`docs/OPEN-ITEMS.md`](docs/OPEN-ITEMS.md) · [`docs/DID-NOT-WORK.md`](docs/DID-NOT-WORK.md)
