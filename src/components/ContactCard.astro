@@ -1,12 +1,12 @@
 ---
 ---
-<div class="relative isolate scroll-mt-28 overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#1A232E] p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_64px_-20px_rgba(0,0,0,0.6)] sm:p-10" id="contact">
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(20rem_20rem_at_100%_0%,rgba(206,68,93,0.10),transparent_60%),radial-gradient(18rem_18rem_at_0%_100%,rgba(113,185,227,0.08),transparent_55%)]"></div>
+<div class="surface-card relative isolate scroll-mt-28 overflow-hidden rounded-[28px] border bg-card-bg p-7 sm:p-10" id="contact">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(20rem_20rem_at_100%_0%,color-mix(in_srgb,var(--mp-cta)_10%,transparent),transparent_60%),radial-gradient(18rem_18rem_at_0%_100%,color-mix(in_srgb,var(--mp-anchor)_8%,transparent),transparent_55%)]"></div>
   
   <div class="max-w-xl">
     <p class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary-cta">Connect • Zero spam • SF → Worldwide</p>
-    <h3 class="mt-3 text-[2rem] font-bold leading-[0.95] tracking-[-0.03em] text-white sm:text-[2.4rem]">Let's build something private, fast & useful.</h3>
-    <p class="mt-3 text-[0.95rem] leading-[1.6] text-primary-text/65">Project idea, bug report, or just saying hi? Solve the slider to unlock — we keep it human.</p>
+    <h3 class="mt-3 text-[2rem] font-bold leading-[0.95] tracking-[-0.03em] text-primary-text sm:text-[2.4rem]">Let's build something private, fast & useful.</h3>
+    <p class="mt-3 text-[0.95rem] leading-[1.6] text-muted-text">Project idea, bug report, or just saying hi? Solve the slider to unlock — we keep it human.</p>
   </div>
 
   <form id="contact-form" class="relative z-20 mt-8 grid gap-5 sm:grid-cols-2">
@@ -16,7 +16,7 @@
     </div>
 
     <div class="sm:col-span-2 space-y-2.5">
-      <p class="text-[0.85rem] font-medium tracking-[-0.01em] text-white">What's on your mind?</p>
+      <p class="text-[0.85rem] font-medium tracking-[-0.01em] text-primary-text">What's on your mind?</p>
       <div class="flex flex-wrap gap-2">
         {[
           ['General Inquiry', 'General'],
@@ -26,45 +26,45 @@
         ].map(([value, label]) => (
           <label class="cursor-pointer">
             <input type="radio" name="topic" value={value} class="peer sr-only" checked={value==='General Inquiry'} />
-            <span class="inline-flex rounded-full border border-white/10 bg-canvas/60 px-3.5 py-2 text-[0.82rem] font-medium text-primary-text/70 ring-1 ring-transparent transition-all peer-checked:border-primary-cta/50 peer-checked:bg-primary-cta/10 peer-checked:text-primary-cta peer-checked:ring-primary-cta/20 hover:border-white/15 hover:text-primary-text">{label}</span>
+            <span class="inline-flex rounded-full border border-border bg-elevated/60 px-3.5 py-2 text-[0.82rem] font-medium text-muted-text ring-1 ring-transparent transition-all peer-checked:border-primary-cta/50 peer-checked:bg-primary-cta/10 peer-checked:text-primary-cta peer-checked:ring-primary-cta/20 hover:border-[var(--mp-border-strong)] hover:text-primary-text">{label}</span>
           </label>
         ))}
       </div>
     </div>
 
     <div class="relative">
-      <input type="text" id="name" name="name" required autocomplete="name" class="peer block w-full rounded-[14px] border border-white/10 bg-[#0F141C] px-4 pb-2.5 pt-6 text-[0.95rem] text-white placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Name" />
-      <label for="name" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text/80 transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">Name</label>
+      <input type="text" id="name" name="name" required autocomplete="name" class="peer block w-full rounded-[14px] border border-border bg-canvas px-4 pb-2.5 pt-6 text-[0.95rem] text-primary-text placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Name" />
+      <label for="name" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">Name</label>
     </div>
 
     <div class="relative">
-      <input type="email" id="email" name="email" required autocomplete="email" class="peer block w-full rounded-[14px] border border-white/10 bg-[#0F141C] px-4 pb-2.5 pt-6 text-[0.95rem] text-white placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Email" />
-      <label for="email" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text/80 transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">Email Address</label>
+      <input type="email" id="email" name="email" required autocomplete="email" class="peer block w-full rounded-[14px] border border-border bg-canvas px-4 pb-2.5 pt-6 text-[0.95rem] text-primary-text placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Email" />
+      <label for="email" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">Email Address</label>
     </div>
 
     <div class="relative sm:col-span-2">
-      <textarea id="message" name="message" rows="4" required placeholder="Message" class="peer block w-full resize-none rounded-[14px] border border-white/10 bg-[#0F141C] px-4 pb-3 pt-6 text-[0.95rem] leading-[1.5] text-white placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20"></textarea>
-      <label for="message" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text/80 transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">How can we help? Keep it brief.</label>
+      <textarea id="message" name="message" rows="4" required placeholder="Message" class="peer block w-full resize-none rounded-[14px] border border-border bg-canvas px-4 pb-3 pt-6 text-[0.95rem] leading-[1.5] text-primary-text placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20"></textarea>
+      <label for="message" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">How can we help? Keep it brief.</label>
     </div>
 
     <div class="sm:col-span-2 space-y-4">
-      <div class="unlock-container relative flex h-[3.75rem] items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#0F141C]" id="unlock-container">
+      <div class="unlock-container relative flex h-[3.75rem] items-center justify-center overflow-hidden rounded-full border border-border bg-canvas" id="unlock-container">
         <div class="unlock-bg absolute left-0 top-0 h-full rounded-full bg-primary-cta/10 pointer-events-none w-0 transition-[width] duration-100" id="unlock-bg"></div>
-        <div class="unlock-handle absolute left-1 top-1 flex size-[2.75rem] items-center justify-center rounded-full bg-white text-canvas shadow-[0_4px_16px_rgba(255,255,255,0.15)] pointer-events-none transition-[left]" id="unlock-handle" aria-hidden="true">
-          <svg viewBox="0 0 24 24" class="size-4 fill-none stroke-canvas stroke-[2.2]"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        <div class="unlock-handle absolute left-1 top-1 flex size-[2.75rem] items-center justify-center rounded-full bg-primary-text text-canvas shadow-[0_4px_16px_rgba(0,0,0,0.12)] pointer-events-none transition-[left]" id="unlock-handle" aria-hidden="true">
+          <svg viewBox="0 0 24 24" class="size-4 fill-none stroke-current stroke-[2.2]"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
         </div>
-        <span class="unlock-label pointer-events-none z-10 select-none text-[0.88rem] font-medium text-primary-text/70 transition-opacity" id="unlock-label">Slide to verify • Human check</span>
+        <span class="unlock-label pointer-events-none z-10 select-none text-[0.88rem] font-medium text-muted-text transition-opacity" id="unlock-label">Slide to verify • Human check</span>
         <input type="range" min="0" max="100" value="0" aria-label="Slide to unlock contact form" class="unlock-slider absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none opacity-0" id="unlock-slider" style="touch-action: none;" />
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
-        <button type="submit" id="submit-btn" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-6 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.12)] transition-all hover:scale-[1.02] hover:bg-primary-text disabled:opacity-40 disabled:pointer-events-none" disabled>
+        <button type="submit" id="submit-btn" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary-text px-6 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(0,0,0,0.10)] transition-all hover:scale-[1.02] hover:opacity-90 disabled:opacity-40 disabled:pointer-events-none" disabled>
           <span id="submit-text">Send message</span>
           <svg id="submit-spinner" class="hidden size-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
         </button>
-        <span class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text/70">Avg reply • 4h • No newsletter, ever</span>
+        <span class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">Avg reply • 4h • No newsletter, ever</span>
       </div>
-      <p id="form-status" class="hidden rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 text-[0.875rem] font-medium"></p>
+      <p id="form-status" class="hidden rounded-xl border border-border bg-elevated/60 px-4 py-3 text-[0.875rem] font-medium"></p>
     </div>
   </form>
 </div>
@@ -115,10 +115,12 @@
       bg.style.width = '100%';
       label.textContent = "Verified ✓";
       label.style.opacity = '1';
-      label.classList.add('text-white');
+      // Use primary-text not hardcoded white — works in both themes
+      label.classList.add('text-primary-text');
       slider.disabled = true;
       container.classList.add('border-emerald-400/30', 'shadow-[0_0_24px_rgba(52,211,153,0.15)]');
-      handle.classList.remove('bg-white','text-canvas');
+      // Handle was bg-primary-text text-canvas; strip both possible variants
+      handle.classList.remove('bg-white','bg-primary-text','text-canvas');
       handle.classList.add('bg-emerald-400','text-[#0A1A14]');
       handle.innerHTML = `<svg viewBox="0 0 24 24" class="size-4 stroke-[2.5]" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
       submitBtn.disabled = false;

@@ -164,7 +164,7 @@ const organizationSchema = {
     <header class="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-[88rem] px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
       <!-- Opaque pill nav (no backdrop-filter) — live backdrop-blur on a fixed
            header is a known iOS Safari compositor tax during scroll. -->
-      <nav aria-label="Primary" class="surface-nav pointer-events-auto relative flex h-[3.875rem] items-center justify-between rounded-full border px-3 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-300 sm:px-5" data-nav>
+      <nav aria-label="Primary" class="surface-nav pointer-events-auto relative flex h-[3.875rem] items-center justify-between rounded-full border px-3 transition-[transform,box-shadow,border-color,background-color] duration-300 sm:px-5" data-nav>
         
         <a href="/" class="group/logo relative inline-flex shrink-0 items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-canvas" aria-label="MakerPortal — Home">
           <BrandLogo variant="lockup" size="md" />
@@ -205,7 +205,7 @@ const organizationSchema = {
                   class="invisible absolute left-1/2 top-[calc(100%+0.65rem)] z-[70] w-[min(92vw,36rem)] -translate-x-1/2 translate-y-1 scale-[0.98] opacity-0 transition-[opacity,transform,visibility] duration-150"
                   hidden
                 >
-                  <div class="surface-card overflow-hidden rounded-[22px] border p-5 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.45)]">
+                  <div class="surface-card overflow-hidden rounded-[22px] border p-5">
                     <div class:list={['grid gap-6', item.featured ? 'sm:grid-cols-[1fr_0.85fr]' : '']}>
                       <div class:list={['grid gap-5', (item.columns?.length ?? 0) > 1 ? 'sm:grid-cols-2' : '']}>
                         {item.columns?.map((col) => (
@@ -293,7 +293,7 @@ const organizationSchema = {
 
     <div
       id="mobile-menu"
-      class="surface-drawer fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l shadow-[-24px_0_64px_rgba(0,0,0,0.35)] transition-[transform,translate] duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] touch-pan-y lg:hidden"
+      class="surface-drawer fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l transition-[transform,translate] duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] touch-pan-y lg:hidden"
       role="dialog"
       aria-modal="true"
       aria-label="Navigation"
@@ -321,7 +321,7 @@ const organizationSchema = {
       </div>
 
       <div class="flex flex-1 flex-col overflow-y-auto px-4 pb-8 pt-4">
-        <a href="/" class="mobile-link mb-2 rounded-2xl px-4 py-3 text-[1.15rem] font-semibold text-white/90 hover:bg-white/[0.04]">Home</a>
+        <a href="/" class="mobile-link mb-2 rounded-2xl px-4 py-3 text-[1.15rem] font-semibold text-primary-text hover:bg-elevated">Home</a>
         <div class="space-y-1" data-mobile-nav>
           {primaryNav.map((item, index) => (
             <div class="rounded-2xl border border-transparent" data-mobile-section>
@@ -329,7 +329,7 @@ const organizationSchema = {
                 <>
                   <button
                     type="button"
-                    class="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-left text-[1.2rem] font-semibold tracking-[-0.02em] text-white/90 hover:bg-white/[0.04]"
+                    class="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-left text-[1.2rem] font-semibold tracking-[-0.02em] text-primary-text hover:bg-elevated"
                     aria-expanded="false"
                     data-mobile-accordion
                   >
@@ -337,12 +337,12 @@ const organizationSchema = {
                     <span aria-hidden="true" class="text-muted-text/60 transition-transform data-[open]:rotate-90" data-chevron>→</span>
                   </button>
                   <div class="hidden space-y-0.5 px-2 pb-3" data-mobile-panel>
-                    <a href={item.href} class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-brand-anchor hover:bg-white/[0.04]">Overview →</a>
+                    <a href={item.href} class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-brand-anchor hover:bg-elevated">Overview →</a>
                     {item.columns.flatMap((col) =>
                       col.links.map((link) => (
                         <a
                           {...linkAttrs(link.href, link.external)}
-                          class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] text-primary-text/75 hover:bg-white/[0.04] hover:text-white"
+                          class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] text-muted-text hover:bg-elevated hover:text-primary-text"
                         >
                           {link.label}{link.external ? ' ↗' : ''}
                         </a>
@@ -351,7 +351,7 @@ const organizationSchema = {
                   </div>
                 </>
               ) : (
-                <a href={item.href} class="mobile-link flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.2rem] font-semibold tracking-[-0.02em] text-white/90 hover:bg-white/[0.04]">
+                <a href={item.href} class="mobile-link flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.2rem] font-semibold tracking-[-0.02em] text-primary-text hover:bg-elevated">
                   <span>{String(index + 1).padStart(2, '0')} · {item.label}</span>
                   <span aria-hidden="true" class="text-muted-text/60">→</span>
                 </a>

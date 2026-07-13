@@ -46,13 +46,13 @@ const breadcrumbSchema = {
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
   </Fragment>
 
-  <section class="hero-grid border-b border-white/[0.06]">
+  <section class="hero-grid border-b border-border">
     <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
       <p class="section-kicker">Connect • SF → Worldwide • Zero spam</p>
-      <h1 class="mt-6 max-w-3xl text-balance text-[clamp(2.8rem,6vw,5rem)] font-[700] leading-[0.9] tracking-[-0.06em] text-white">
-        Say hello.<br /><span class="text-primary-text/55">We actually read it.</span>
+      <h1 class="mt-6 max-w-3xl text-balance text-[clamp(2.8rem,6vw,5rem)] font-[700] leading-[0.9] tracking-[-0.06em] text-primary-text">
+        Say hello.<br /><span class="text-muted-text">We actually read it.</span>
       </h1>
-      <p class="mt-7 max-w-xl text-[1.05rem] leading-[1.75] text-primary-text/70 sm:text-lg">
+      <p class="mt-7 max-w-xl text-[1.05rem] leading-[1.75] text-muted-text sm:text-lg">
         Project proposals, product feedback, press, or a quiet hi. Slide to verify — keeps the inbox human.
       </p>
       <dl class="mt-10 grid max-w-2xl gap-4 sm:grid-cols-3">
@@ -61,41 +61,41 @@ const breadcrumbSchema = {
           ['Format', 'No newsletter, ever'],
           ['Locale', 'San Francisco + remote'],
         ].map(([k, v]) => (
-          <div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
-            <dt class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">{k}</dt>
-            <dd class="mt-1.5 text-[0.9rem] font-medium text-white/90">{v}</dd>
+          <div class="rounded-2xl border border-border bg-elevated/60 px-4 py-3.5">
+            <dt class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">{k}</dt>
+            <dd class="mt-1.5 text-[0.9rem] font-medium text-primary-text">{v}</dd>
           </div>
         ))}
       </dl>
     </div>
   </section>
 
-  <section class="border-b border-white/[0.06]" aria-labelledby="contact-form-title">
+  <section class="border-b border-border" aria-labelledby="contact-form-title">
     <div class="mx-auto grid max-w-[88rem] gap-12 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[0.85fr_1.15fr] lg:px-10">
       <div>
-        <h2 id="contact-form-title" class="text-[clamp(1.5rem,3vw,2rem)] font-[650] tracking-[-0.04em] text-white">
+        <h2 id="contact-form-title" class="text-[clamp(1.5rem,3vw,2rem)] font-[650] tracking-[-0.04em] text-primary-text">
           What we can help with
         </h2>
-        <ul class="mt-6 space-y-4 text-[0.95rem] leading-[1.65] text-primary-text/65">
+        <ul class="mt-6 space-y-4 text-[0.95rem] leading-[1.65] text-muted-text">
           <li class="flex gap-3">
             <span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary-cta" aria-hidden="true"></span>
-            <span><strong class="font-semibold text-white">Apps & product</strong> — bugs, feature ideas, App Store questions for any MakerPortal title.</span>
+            <span><strong class="font-semibold text-primary-text">Apps & product</strong> — bugs, feature ideas, App Store questions for any MakerPortal title.</span>
           </li>
           <li class="flex gap-3">
             <span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-anchor" aria-hidden="true"></span>
-            <span><strong class="font-semibold text-white">Collabs & press</strong> — interviews, partnership notes, thoughtful outreach only.</span>
+            <span><strong class="font-semibold text-primary-text">Collabs & press</strong> — interviews, partnership notes, thoughtful outreach only.</span>
           </li>
           <li class="flex gap-3">
-            <span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true"></span>
-            <span><strong class="font-semibold text-white">On-device craft</strong> — CoreML, privacy architecture, shipping small — happy to compare notes.</span>
+            <span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true"></span>
+            <span><strong class="font-semibold text-primary-text">On-device craft</strong> — CoreML, privacy architecture, shipping small — happy to compare notes.</span>
           </li>
         </ul>
         <div class="mt-10 flex flex-wrap gap-3">
-          <a href="/apps" class="inline-flex min-h-10 items-center text-[0.875rem] font-medium text-brand-anchor hover:text-white">
+          <a href="/apps" class="inline-flex min-h-10 items-center text-[0.875rem] font-medium text-brand-anchor hover:text-primary-text">
             Browse app matrix →
           </a>
           <span class="text-muted-text/40" aria-hidden="true">·</span>
-          <a href="/" class="inline-flex min-h-10 items-center text-[0.875rem] font-medium text-primary-text/60 hover:text-white">
+          <a href="/" class="inline-flex min-h-10 items-center text-[0.875rem] font-medium text-muted-text hover:text-primary-text">
             Studio home
           </a>
         </div>
