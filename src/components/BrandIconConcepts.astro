@@ -12,7 +12,16 @@ const accent = mono ? 'currentColor' : '#CE445D';
 const brFill = mono ? 'currentColor' : (showCore ? accent : '#2A4A6B');
 
 function svgFor(key: string): string {
-  const agm = `<g class="grid-stack"><rect class="grid-cell" x="3" y="3" width="12" height="12" rx="3" fill="${mono ? 'currentColor' : '#2A4A6B'}" /><rect class="grid-cell" x="17" y="3" width="12" height="12" rx="3" fill="${mono ? 'currentColor' : '#345E86'}" /><rect class="grid-cell" x="3" y="17" width="12" height="12" rx="3" fill="${mono ? 'currentColor' : '#3E6C99'}" /><rect class="grid-cell grid-cell-br" x="17" y="17" width="12" height="12" rx="3" fill="${brFill}" /></g>`;
+  const tl = mono ? 'currentColor' : '#2A4A6B';
+  const tr = mono ? 'currentColor' : '#345E86';
+  const bl = mono ? 'currentColor' : '#3E6C99';
+  // --cell-fill is the color each tile cycles back to *during the standalone
+  // icon's hover animation* — for the bottom-right tile that's deliberately
+  // NOT the same as its resting `fill` (crimson, when showCore) or the cycle
+  // would be a no-op there; it needs its own navy "off" tone distinct from
+  // its true rest state so the chase is visible on every tile equally.
+  const brCycleOff = mono ? 'currentColor' : tl;
+  const agm = `<g class="grid-stack"><rect class="grid-cell grid-cell-tl" x="3" y="3" width="12" height="12" rx="3" fill="${tl}" style="--cell-fill:${tl}" /><rect class="grid-cell grid-cell-tr" x="17" y="3" width="12" height="12" rx="3" fill="${tr}" style="--cell-fill:${tr}" /><rect class="grid-cell grid-cell-bl" x="3" y="17" width="12" height="12" rx="3" fill="${bl}" style="--cell-fill:${bl}" /><rect class="grid-cell grid-cell-br" x="17" y="17" width="12" height="12" rx="3" fill="${brFill}" style="--cell-fill:${brCycleOff}" /></g>`;
   const map: Record<string,string> = { agm };
   return map[key] || map['agm'];
 }

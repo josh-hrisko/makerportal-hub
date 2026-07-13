@@ -54,6 +54,35 @@ const dotRadius = 2.4;
     .grid-cell:nth-of-type(1) { transition-delay: 0s; }
     .grid-cell:nth-of-type(2) { transition-delay: 0.04s; }
     .grid-cell:nth-of-type(3) { transition-delay: 0.08s; }
+
+    /* Standalone icon only: the crimson accent chases clockwise around the
+       grid while hovered (TL → TR → BR → BL), each tile fading back to its
+       own resting color (--cell-fill, set per-cell in BrandIconConcepts.astro)
+       between turns. The lockup has its own story (the dot delivering the
+       accent), so this is scoped to .group/icon only. */
+    .group\/icon:hover .grid-cell-tl,
+    .group\/icon:hover .grid-cell-tr,
+    .group\/icon:hover .grid-cell-bl,
+    .group\/icon:hover .grid-cell-br {
+      animation: grid-accent-cycle 1.6s ease-in-out infinite;
+    }
+    .group\/icon:hover .grid-cell-tl { animation-delay: 0s; }
+    .group\/icon:hover .grid-cell-tr { animation-delay: 0.4s; }
+    /* Bottom-right is crimson at rest (showCore), unlike the other three
+       tiles — without this it would stay lit through TL/TR's turns too
+       (animation-delay leaves the pre-delay value untouched, which here
+       would be its true resting crimson, not the cycle's "off" color). The
+       plain `fill` switches it to that off color immediately on hover; once
+       its delayed animation starts, the keyframe's own 0% (also --cell-fill)
+       matches it exactly, so there's no jump. */
+    .group\/icon:hover .grid-cell-br { fill: var(--cell-fill); animation-delay: 0.8s; }
+    .group\/icon:hover .grid-cell-bl { animation-delay: 1.2s; }
+  }
+  @keyframes grid-accent-cycle {
+    0% { fill: var(--cell-fill); }
+    8% { fill: #CE445D; }
+    22% { fill: #CE445D; }
+    30%, 100% { fill: var(--cell-fill); }
   }
 
   /* Lockup dot — modeled as a <rect> (not <circle>) so it can morph shape,
@@ -124,7 +153,7 @@ const dotRadius = 2.4;
 {/* MP badge */}
 {
   variant === 'mp' && (
-    <span data-brand-logo data-concept={concept} class:list={['group/logo relative inline-flex items-center justify-center bg-card-bg border border-white/10 overflow-visible', sizes.mpSize, className]}>
+    <span data-brand-logo data-concept={concept} class:list={['group/icon relative inline-flex items-center justify-center bg-card-bg border border-white/10 overflow-visible', sizes.mpSize, className]}>
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-3/5 w-3/5 overflow-visible">
         <BrandIconConcepts mono={mono} showCore={true} activeConcept={concept} />
       </svg>
