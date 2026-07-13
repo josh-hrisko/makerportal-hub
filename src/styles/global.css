@@ -29,6 +29,14 @@
     min-width: 320px;
     scroll-behavior: smooth;
     background: #0F141C;
+    /* CLS fix: force the vertical scrollbar track to always be reserved from first
+       paint. `scrollbar-gutter: stable` alone only reserves a gutter once the box is
+       a scroll container; on first render (before hero animations/content settle)
+       the page can be short enough to not yet need a scrollbar, so one appears later
+       and steals ~20px of inline width from every element — a large, page-wide
+       layout shift. `overflow-y: scroll` makes the scrollbar (or its reserved gutter)
+       present immediately and permanently, eliminating that shift vector entirely. */
+    overflow-y: scroll;
     scrollbar-gutter: stable;
     scrollbar-width: thin;
     scrollbar-color: #1A232E #0F141C;

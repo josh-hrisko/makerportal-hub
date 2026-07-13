@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 64" role="img" aria-label="Editorial contrast">
-  <text x="0" y="38" font-family="'Plus Jakarta Sans', Inter, sans-serif" font-weight="800" font-size="34" letter-spacing="-0.07em" fill="white">MAKER</text>
-  <text x="136" y="38" font-family="'Georgia', serif" font-style="italic" font-weight="300" font-size="34" letter-spacing="-0.04em" fill="#E2E8F0">portal</text>
-  <g transform="translate(270 8)">
-    <rect width="36" height="18" rx="4" fill="white"/>
-    <text x="7" y="13" font-family="monospace" font-size="9" font-weight="700" fill="#0F141C">.AI</text>
-  </g>
-</svg>

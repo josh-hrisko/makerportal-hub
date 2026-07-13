@@ -13,7 +13,7 @@
   "icons": [
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "monochrome" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "screenshots": [
     { "src": "/social-card.png", "sizes": "1200x630", "type": "image/png", "form_factor": "wide", "label": "MakerPortal application matrix – privacy-first on-device AI" }

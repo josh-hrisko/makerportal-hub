@@ -6,6 +6,15 @@ import '../styles/global.css';
 import '@fontsource-variable/plus-jakarta-sans';
 // @ts-ignore
 import '@fontsource-variable/inter';
+// Resolved, hashed URLs for the primary (latin) subset woff2 files — used below to
+// (a) preload the exact critical font asset (fixes chained-request / LCP path) and
+// (b) re-declare the latin @font-face with font-display:optional instead of the
+//     fontsource default `swap`, so a late font swap can never reflow the hero text
+//     and regress CLS (root cause of the 0.667 CLS regression).
+// @ts-ignore – vite `?url` suffix has no types
+import plusJakartaLatinUrl from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
+// @ts-ignore
+import interLatinUrl from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 interface Props {
   title?: string;
@@ -77,7 +86,30 @@ const organizationSchema = {
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" href="/sitemap.xml" />
-    <!-- Self-hosted variable fonts via fontsource - no render-blocking CDN -->
+    <!-- Self-hosted variable fonts via fontsource - no render-blocking CDN.
+         Preload the primary (latin) subset so the browser fetches it immediately,
+         shortening the critical request chain instead of discovering it only after
+         CSS parses. -->
+    <link rel="preload" as="font" type="font/woff2" href={plusJakartaLatinUrl} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={interLatinUrl} crossorigin />
+    <style set:html={`
+      @font-face {
+        font-family: 'Plus Jakarta Sans Variable';
+        font-style: normal;
+        font-display: optional;
+        font-weight: 200 800;
+        src: url(${plusJakartaLatinUrl}) format('woff2-variations');
+        unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+      }
+      @font-face {
+        font-family: 'Inter Variable';
+        font-style: normal;
+        font-display: optional;
+        font-weight: 100 900;
+        src: url(${interLatinUrl}) format('woff2-variations');
+        unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+      }
+    `} />
     <SeoMeta title={title} description={description} canonical={canonical} noindex={noindex} type={type} publishedTime={publishedTime} modifiedTime={modifiedTime} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
     <slot name="head" />
@@ -139,26 +171,26 @@ const organizationSchema = {
     >
       <div class="flex h-[4.25rem] shrink-0 items-center justify-between border-b border-white/[0.06] px-6">
         <span class="inline-flex items-center gap-2 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text"><BrandLogo variant="icon" size="sm" class="opacity-80" /> Navigation</span>
-        <span class="font-mono text-[0.6rem] tracking-[0.16em] text-muted-text/50">2026 • LA</span>
+        <span class="font-mono text-[0.6rem] tracking-[0.16em] text-muted-text/70">2026 • SF</span>
       </div>
 
       <div class="flex flex-1 flex-col overflow-y-auto px-4 pb-8 pt-6">
         <ul class="space-y-1" role="list">
-          <li><a href="/" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white transition-colors hover:bg-white/[0.04]">01 • Home <span aria-hidden="true" class="text-muted-text/40 transition-transform group-hover:translate-x-1">→</span></a></li>
-          <li><a href="/#apps" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">02 • Apps <span aria-hidden="true" class="text-muted-text/40 transition-transform group-hover:translate-x-1">→</span></a></li>
-          <li><a href="/blog" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">03 • Field Notes <span aria-hidden="true" class="text-muted-text/40">→</span></a></li>
-          <li><a href="/#contact" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">04 • Contact <span aria-hidden="true" class="text-muted-text/40">→</span></a></li>
+          <li><a href="/" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white transition-colors hover:bg-white/[0.04]">01 • Home <span aria-hidden="true" class="text-muted-text/70 transition-transform group-hover:translate-x-1">→</span></a></li>
+          <li><a href="/#apps" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">02 • Apps <span aria-hidden="true" class="text-muted-text/70 transition-transform group-hover:translate-x-1">→</span></a></li>
+          <li><a href="/blog" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">03 • Field Notes <span aria-hidden="true" class="text-muted-text/70">→</span></a></li>
+          <li><a href="/#contact" class="mobile-link group flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/80 transition-colors hover:bg-white/[0.04] hover:text-white">04 • Contact <span aria-hidden="true" class="text-muted-text/70">→</span></a></li>
         </ul>
 
         <div class="mt-auto pt-6">
           <div class="rounded-[20px] border border-white/[0.06] bg-[#1A232E]/70 p-5 backdrop-blur-sm">
             <p class="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-text/70">Studio Journal • makersportal.com</p>
             <a href="https://makersportal.com" rel="me" class="mt-3 inline-flex w-full items-center justify-between rounded-full bg-white px-4 py-3 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas transition hover:bg-primary-text"><span>Open journal</span><span aria-hidden="true">↗</span></a>
-            <div class="mt-4 flex items-center gap-3 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text/60">
+            <div class="mt-4 flex items-center gap-3 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text/70">
               <a href="https://github.com/josh-hrisko" rel="me" class="hover:text-white">GitHub</a><span>•</span><a href="/rss.xml" class="hover:text-white">RSS</a><span>•</span><a href="/brand" class="hover:text-white">Brand</a>
             </div>
           </div>
-          <p class="mt-4 px-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/40">On-device • Private • Crafted in San Francisco</p>
+          <p class="mt-4 px-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">On-device • Private • Crafted in San Francisco</p>
         </div>
       </div>
     </div>
@@ -238,6 +270,83 @@ const organizationSchema = {
 
         try { menu.setAttribute('inert', ''); } catch {}
 
+        // Swipe-to-dismiss – dragging the panel left-to-right (its natural exit
+        // direction) closes it. Vertical drags are left untouched so the nav
+        // list's own scrolling keeps working.
+        let dragging = false;
+        let dragDecided = false;
+        let dragAxis = null;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragDeltaX = 0;
+        let menuWidthCache = 0;
+
+        const endDrag = (shouldClose) => {
+          if (!dragging) return;
+          dragging = false;
+          dragAxis = null;
+          menu.style.transition = '';
+          backdrop.style.transition = '';
+          if (shouldClose) {
+            // Animate the rest of the way off-screen from wherever the finger
+            // released using the exact pixel equivalent of the CSS
+            // `translate-x-full` class, then hand off to it with zero visual
+            // jump once the transition finishes (both resolve to the same
+            // transform value, so clearing the inline style is invisible).
+            menu.style.translate = `${menuWidthCache}px`;
+            backdrop.style.opacity = '0';
+            closeMenu();
+            setTimeout(() => {
+              menu.style.translate = '';
+              backdrop.style.opacity = '';
+            }, 520);
+          } else {
+            menu.style.translate = '';
+            backdrop.style.opacity = '';
+          }
+        };
+
+        menu.addEventListener('pointerdown', (e) => {
+          if (!isOpen || (e.pointerType === 'mouse' && e.button !== 0)) return;
+          dragging = true;
+          dragDecided = false;
+          dragAxis = null;
+          dragDeltaX = 0;
+          dragStartX = e.clientX;
+          dragStartY = e.clientY;
+          menuWidthCache = menu.getBoundingClientRect().width;
+          // Capture the pointer so move/up keep firing on the panel even once
+          // the finger has moved past its (now-translating) edge or off-screen.
+          try { menu.setPointerCapture(e.pointerId); } catch {}
+        }, { passive: true });
+
+        menu.addEventListener('pointermove', (e) => {
+          if (!dragging) return;
+          const dx = e.clientX - dragStartX;
+          const dy = e.clientY - dragStartY;
+          if (!dragDecided) {
+            if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+            dragDecided = true;
+            dragAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+            if (dragAxis === 'x') {
+              menu.style.transition = 'none';
+              backdrop.style.transition = 'none';
+            }
+          }
+          if (dragAxis !== 'x') return;
+          e.preventDefault();
+          dragDeltaX = Math.max(0, dx);
+          menu.style.translate = `${dragDeltaX}px`;
+          backdrop.style.opacity = String(Math.max(0, 1 - dragDeltaX / menuWidthCache));
+        }, { passive: false });
+
+        menu.addEventListener('pointerup', () => {
+          if (dragAxis !== 'x') { endDrag(false); return; }
+          const shouldClose = dragDeltaX > Math.min(120, menuWidthCache * 0.35);
+          endDrag(shouldClose);
+        });
+        menu.addEventListener('pointercancel', () => endDrag(false));
+
         // Nav shrink on scroll – spatial UI 2026
         const nav = document.querySelector('[data-nav]');
         let lastY = 0;
@@ -308,9 +417,9 @@ const organizationSchema = {
               </span>
               <span class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-white/90">MakerPortal © {year}</span>
             </div>
-            <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/40">All rights reserved • SF • Worldwide</span>
+            <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">All rights reserved • SF • Worldwide</span>
           </div>
-          <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/40">Built slowly enough to care • Shipped quickly enough to matter • Agentic-first</p>
+          <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">Built slowly enough to care • Shipped quickly enough to matter • Agentic-first</p>
         </div>
       </div>
     </footer>

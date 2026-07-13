@@ -63,7 +63,7 @@
           <span id="submit-text">Send message</span>
           <svg id="submit-spinner" class="hidden size-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
         </button>
-        <span class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text/40">Avg reply • 4h • No newsletter, ever</span>
+        <span class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text/70">Avg reply • 4h • No newsletter, ever</span>
       </div>
       <p id="form-status" class="hidden rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-[0.875rem] font-medium backdrop-blur-sm"></p>
     </div>
@@ -163,7 +163,7 @@
         const data = await response.json();
         if (response.ok) {
           form.style.display = 'none';
-          formStatus.innerHTML = '<strong class="text-emerald-300">Sent ✓</strong><br>Thanks — we reply within a few hours, LA time. No spam, just build notes.';
+          formStatus.innerHTML = '<strong class="text-emerald-300">Sent ✓</strong><br>Thanks — we reply within a few hours, SF time. No spam, just build notes.';
           formStatus.className = 'mt-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[0.875rem] font-medium text-emerald-200';
         } else throw new Error(data.error || 'Failed');
       } catch (err: any) {

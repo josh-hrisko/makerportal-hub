@@ -23,7 +23,6 @@ export interface AppEntry {
   url: string;
   icon: ImageMetadata;
   iconSet: { w64: ImageMetadata; w128: ImageMetadata; w256: ImageMetadata };
-  fallbackIcon: string; // public SVG
   date: string;
   category: AppCategory;
   platform: string;
@@ -41,7 +40,6 @@ export const apps: AppEntry[] = [
     url: 'https://biquadia.makerportal.ai',
     icon: biquadia128,
     iconSet: { w64: biquadia64, w128: biquadia128, w256: biquadia256 },
-    fallbackIcon: '/assets/app-icons/biquadia.svg',
     date: 'July 2026',
     category: 'Utility',
     platform: 'iOS (iPhone + iPad)',
@@ -57,7 +55,6 @@ export const apps: AppEntry[] = [
     url: 'https://thumbdash.makerportal.ai',
     icon: thumbdash128,
     iconSet: { w64: thumbdash64, w128: thumbdash128, w256: thumbdash256 },
-    fallbackIcon: '/assets/app-icons/thumbdash.svg',
     date: 'July 2026',
     category: 'Dashboard',
     platform: 'iOS + Web App',
@@ -72,7 +69,6 @@ export const apps: AppEntry[] = [
     url: 'https://notiary.makerportal.ai',
     icon: notiary128,
     iconSet: { w64: notiary64, w128: notiary128, w256: notiary256 },
-    fallbackIcon: '/assets/app-icons/notiary.svg',
     date: 'June 2026',
     category: 'Productivity',
     platform: 'iOS + Web App',
@@ -87,7 +83,6 @@ export const apps: AppEntry[] = [
     url: 'https://popcloset.makerportal.ai',
     icon: popcloset128,
     iconSet: { w64: popcloset64, w128: popcloset128, w256: popcloset256 },
-    fallbackIcon: '/assets/app-icons/popcloset.svg',
     date: 'May 2026',
     category: 'Lifestyle',
     platform: 'iOS + Web App',

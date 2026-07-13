@@ -71,7 +71,7 @@ const colors = accentMap[accent as AppAccent];
   <div class="relative mt-6 flex flex-1 flex-col">
     <div class="flex items-baseline gap-3">
       <h3 class="text-[1.65rem] font-bold leading-none tracking-[-0.03em] text-white">{title}</h3>
-      <span class="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted-text/60">{sequence}</span>
+      <span class="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted-text/70">{sequence}</span>
     </div>
     <p class:list={['mt-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em]', colors.text]}>{category} • {tagline}</p>
     
@@ -107,13 +107,32 @@ const colors = accentMap[accent as AppAccent];
 
 <script is:inline>
   // Spotlight effect – frontier 2026
+  // Perf: cache the bounding rect instead of calling getBoundingClientRect() on
+  // every pointermove (which can fire far more often than 60fps and forces a
+  // synchronous layout read each time). The rect is only re-measured on
+  // pointerenter/resize, and style writes are batched to one per animation
+  // frame using the latest pointer position.
   document.querySelectorAll('[data-app-card]').forEach((card) => {
+    let rect = null;
+    let pending = false;
+    let lastX = 0;
+    let lastY = 0;
+    const measure = () => { rect = card.getBoundingClientRect(); };
+    card.addEventListener('pointerenter', measure, { passive: true });
+    window.addEventListener('resize', measure, { passive: true });
     card.addEventListener('pointermove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      card.style.setProperty('--mouse-x', x + '%');
-      card.style.setProperty('--mouse-y', y + '%');
-    });
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (!rect) measure();
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        const x = ((lastX - rect.left) / rect.width) * 100;
+        const y = ((lastY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mouse-x', x + '%');
+        card.style.setProperty('--mouse-y', y + '%');
+        pending = false;
+      });
+    }, { passive: true });
   });
 </script>
