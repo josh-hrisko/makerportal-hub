@@ -85,7 +85,7 @@ const faqSchema = {
             <span aria-hidden="true" class="signal-dot size-1.5 rounded-full bg-primary-cta"></span>
             Studio transmission • SF • 2026
           </p>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-muted-text">
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.66rem] font-medium uppercase tracking-[0.12em] text-muted-text">
             <span class="size-1 rounded-full bg-emerald-400"></span> Shipping
           </span>
         </div>
@@ -135,8 +135,8 @@ const faqSchema = {
           <div aria-hidden="true" class="orbit-line orbit-line-1 absolute inset-[9%] rounded-full border border-border"></div>
           <div aria-hidden="true" class="orbit-line orbit-line-2 absolute inset-[24%] rounded-full border border-dashed border-border"></div>
           
-          <!-- Center node – card surface, brand border, theme-aware shadow -->
-          <div class="absolute inset-[35%] grid place-items-center rounded-full border border-brand-anchor/20 bg-card-bg shadow-[0_0_40px_rgba(113,185,227,0.15)]">
+          <!-- Center node – card surface, brand border, no lens flare (glow removed 2026-07-13). Previously had blue 0 0 40px rgba glow that competed with App Grid. -->
+          <div class="absolute inset-[35%] grid place-items-center rounded-full border border-border bg-card-bg shadow-sm">
             <div class="absolute inset-px rounded-full bg-gradient-to-b from-[color-mix(in_srgb,var(--mp-text)_6%,transparent)] to-transparent pointer-events-none"></div>
             <div class="relative text-center">
               <span class="mx-auto block size-12 sm:size-14 drop-shadow-lg" aria-hidden="true">
@@ -190,8 +190,8 @@ const faqSchema = {
         <div class="max-w-xl md:justify-self-end md:text-right">
           <p class="text-[0.95rem] leading-[1.7] text-muted-text">Every application runs natively on-device, leveraging local neural engines to protect privacy and eliminate latency. The studio is the connective craft, not the cloud.</p>
           <div class="mt-4 flex flex-wrap gap-1.5 md:justify-end">
-            <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">iOS 17+ • iPadOS 17+</span>
-            <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Swift • Metal • CoreML</span>
+            <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.66rem] font-medium uppercase tracking-[0.1em] text-muted-text">iOS 17+ • iPadOS 17+</span>
+            <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.66rem] font-medium uppercase tracking-[0.1em] text-muted-text">Swift • Metal • CoreML</span>
           </div>
         </div>
       </div>

@@ -86,8 +86,10 @@
     --mp-footer: #eae2d4;
     --mp-text: #16202e;
     --mp-muted: #4a5d6f;
-    --mp-anchor: #2a7aab;
-    --mp-cta: #ce445d;
+    /* Accessibility: anchor #2A7AAB was 4.17:1 on canvas (just under AA). Darken to #256997 = 5.25:1.
+       CTA #CE445D was 4.04:1 on canvas; darken to #B8324F = 5.16:1. BR tile stays #CE445D locked (brand). */
+    --mp-anchor: #256997;
+    --mp-cta: #b8324f;
     /* Border needs to be actually visible on white cards: 0.10 was hairline/muddy.
        0.14 gives separation without muddiness; 0.10 → 0.14 */
     --mp-border: rgba(22, 32, 46, 0.14);
@@ -537,31 +539,101 @@
     color: var(--mp-text);
   }
 
-  /* Accent overrides for light: violet/amber light Tailwind shades fail WCAG on white.
-     Dark keeps pastel high-luminance; light flips to deeper ink for 4.5:1+. */
+  /* ── Accessibility overrides for light: yellow / light purple / light green on white
+     fail WCAG (pastel #fbbf24 amber, #a78bfa violet, #34d399 emerald are ~1.5-2.5:1 on white).
+     Dark keeps pastel high-luminance; light flips to deeper ink for AA.
+
+     Targets:
+     - yellow on white: amber-300/400 text (was light yellow) → amber-800 #92400e (6.2:1) / amber-700 #b45309 (4.8:1)
+     - light purple on white: violet-300/400 text/bg (was #c4b5fd / #a78bfa ~2:1) → #6d28d9 / #7c3aed (6-5:1)
+     - light green dots: emerald-400/500 bg (was #34d399 / #10b981 ~1.8-2.5:1) → emerald-700 #047857 (5.2:1) / emerald-600 #059669 (4.0:1)
+     - Also fixes success/error states in ContactCard that used emerald-200/300 and red-300 on light.
+
+     These are decorative small UI (1-1.5px dots) — WCAG non-text needs 3:1, we aim 4.5:1 where text.
+  */
   html[data-theme="light"] .text-violet-300 {
-    color: #6d28d9;
+    color: #5b21b6; /* violet-800, 7.5:1 on white */
   }
   html[data-theme="light"] .text-violet-400 {
-    color: #6b21a8;
+    color: #6b21a8; /* deeper violet, 6.5:1 */
   }
   html[data-theme="light"] .bg-violet-400 {
-    background-color: #7c3aed;
+    background-color: #7c3aed; /* violet-600, 4.6:1 */
   }
   html[data-theme="light"] .bg-violet-500 {
-    background-color: #7c3aed;
+    background-color: #6d28d9; /* violet-700-ish, 6:1 */
   }
   html[data-theme="light"] .text-amber-300 {
-    color: #92400e;
+    color: #78350f; /* amber-900, 8:1, still reads amber/brown */
   }
   html[data-theme="light"] .text-amber-400 {
-    color: #92400e;
+    color: #92400e; /* amber-800, 6.2:1 */
   }
   html[data-theme="light"] .bg-amber-400 {
-    background-color: #b45309;
+    background-color: #b45309; /* amber-700, 4.8:1 */
   }
   html[data-theme="light"] .bg-amber-500 {
-    background-color: #b45309;
+    background-color: #92400e; /* amber-800, 6.2:1 for dots */
+  }
+  /* Emerald status dots – was light green (#34d399), invisible in bright light or low-light.
+     Non-text UI needs 3:1; we aim 5:1+ for status dots. */
+  html[data-theme="light"] .bg-emerald-400 {
+    background-color: #047857; /* emerald-700, 5.2:1 on white, visible in bright sun & low light */
+  }
+  html[data-theme="light"] .bg-emerald-500 {
+    background-color: #065f46; /* emerald-800, 7:1 */
+  }
+  /* Badge backgrounds that were 10% wash – boost visibility in light */
+  html[data-theme="light"] .bg-violet-500\/10 {
+    background-color: color-mix(in srgb, #7c3aed 14%, transparent);
+  }
+  html[data-theme="light"] .bg-amber-500\/10 {
+    background-color: color-mix(in srgb, #b45309 14%, transparent);
+  }
+  html[data-theme="light"] .bg-emerald-500\/10 {
+    background-color: color-mix(in srgb, #047857 12%, transparent);
+  }
+  html[data-theme="light"] .bg-emerald-500\/15 {
+    background-color: color-mix(in srgb, #047857 16%, transparent);
+  }
+  html[data-theme="light"] .border-violet-500\/15 {
+    border-color: color-mix(in srgb, #7c3aed 24%, transparent);
+  }
+  html[data-theme="light"] .border-amber-500\/15 {
+    border-color: color-mix(in srgb, #b45309 24%, transparent);
+  }
+  html[data-theme="light"] .border-emerald-500\/20 {
+    border-color: color-mix(in srgb, #047857 22%, transparent);
+  }
+  /* Success / error messages from ContactCard – light mode was invisible (emerald-200 on white ≈1.2:1) */
+  html[data-theme="light"] .text-emerald-200 {
+    color: #065f46; /* 7:1 */
+  }
+  html[data-theme="light"] .text-emerald-300 {
+    color: #047857; /* 5.2:1 */
+  }
+  html[data-theme="light"] .text-emerald-600 {
+    color: #047857;
+  }
+  html[data-theme="light"] .text-red-300 {
+    color: #991b1b; /* red-800, 7:1 */
+  }
+  html[data-theme="light"] .bg-red-500\/10 {
+    background-color: color-mix(in srgb, #b91c1c 10%, transparent);
+  }
+  html[data-theme="light"] .border-red-500\/20 {
+    border-color: color-mix(in srgb, #b91c1c 22%, transparent);
+  }
+  html[data-theme="light"] .border-emerald-400\/30 {
+    border-color: color-mix(in srgb, #047857 30%, transparent);
+  }
+  /* Unlock handle: after success it becomes bg-emerald-400 text-[#0A1A14] (dark text).
+     In light, dark text on emerald-700 fails; switch to white check for 4.5:1+. */
+  html[data-theme="light"] .unlock-handle.bg-emerald-400 {
+    color: #ffffff;
+  }
+  html[data-theme="light"] .unlock-handle.text-\[\#0A1A14\] {
+    color: #ffffff !important;
   }
 }
 

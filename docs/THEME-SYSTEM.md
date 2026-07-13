@@ -18,24 +18,24 @@
 | Tokens | CSS variables `--mp-*` in `src/styles/global.css` |
 | Tailwind bridge | `@theme { --color-canvas: var(--mp-canvas); ... }` |
 
-### Token roles (2026-07-13 — light contrast pass)
+### Token roles (2026-07-13 — light contrast + a11y pass)
 
-| Token | Dark | Light (actual) | Notes |
-|-------|------|----------------|-------|
+| Token | Dark | Light (actual) | Notes / Ratio vs canvas `#F4F1EB` + white |
+|-------|------|----------------|-------------------------------------------|
 | `--mp-canvas` | `#0F141C` | `#F4F1EB` | Warm paper-canvas; near-white but not glare |
 | `--mp-card` | `#1A232E` | `#FFFFFF` | Pure white cards lift via border+shadow in light |
-| `--mp-elevated` | `#212D3A` | `#E8DFD1` | Was `#EBE6DE`; darkened slightly for visible separation from canvas (`#F4F1EB` → `#E8DFD1` = ~9→15 L* delta). Used for badges, icon wells, secondary chips |
+| `--mp-elevated` | `#212D3A` | `#E8DFD1` | Was `#EBE6DE`; darkened for visible separation from canvas. Badges, icon wells, chips |
 | `--mp-nav` | `#151D27` | `#FFFFFF` | Opaque pill nav — no backdrop-filter (iOS perf lock) |
 | `--mp-footer` | `#0C1118` | `#EAE2D4` | Slightly darker than elevated for footer grounding |
-| `--mp-text` | `#E8EEF6` | `#16202E` | Was `#1A2330`; darkened to `16202E` for extra headroom on canvas/card |
-| `--mp-muted` | `#A8B9CC` | `#4A5D6F` | Was `#5C6B7A` (~4.2:1 on white, failed where opacity `/70` used). Now `#4A5D6F` ≈ 6.2:1 on white, 5.6:1 on canvas — passes AA for meaningful secondary text. Opacity variants (`/70`, `/80`) kept for decorative only |
-| `--mp-border` | `rgba(255,255,255,0.08)` | `rgba(22,32,46,0.14)` | Was 0.10, too faint. 0.14 gives visible card separation without muddiness |
-| `--mp-border-strong` | `rgba(255,255,255,0.14)` | `rgba(22,32,46,0.22)` | New token for hover states — replaces `hover:border-white/15` |
-| `--mp-anchor` | `#71B9E3` | `#2A7AAB` | Brand blue flips |
-| `--mp-cta` | `#F07A94` (display) / brand crimson `#CE445D` locked on App Grid | `#CE445D` | Crimson always locked for App Grid BR tile |
-| `--mp-shadow-*` | heavy black | soft ink `rgba(22,32,46,0.06-0.18)` | Theme-aware elevation (see below) |
+| `--mp-text` | `#E8EEF6` | `#16202E` | 14.5:1 canvas, 16.4:1 white |
+| `--mp-muted` | `#A8B9CC` | `#4A5D6F` | Was `#5C6B7A` (~4.2:1 white, failed). Now 6.04:1 canvas, 6.8:1 white — AA for meaningful secondary |
+| `--mp-border` | `rgba(255,255,255,0.08)` | `rgba(22,32,46,0.14)` | Was 0.10 faint; 0.14 visible separation |
+| `--mp-border-strong` | `rgba(255,255,255,0.14)` | `rgba(22,32,46,0.22)` | Hover states |
+| `--mp-anchor` | `#71B9E3` | `#256997` | Was `#2A7AAB` 4.17:1 canvas (just under). Now `#256997` 5.25:1 canvas, 5.92:1 white — AA |
+| `--mp-cta` | `#F07A94` / brand crimson `#CE445D` locked BR | `#B8324F` | Was `#CE445D` 4.04:1 canvas. Now `#B8324F` 5.16:1 canvas, 5.82:1 white — AA. BR tile stays `#CE445D` locked |
+| `--mp-shadow-*` | heavy black | soft ink `rgba(22,32,46,0.06-0.18)` | Theme-aware elevation |
 
-Brand crimson **App Grid BR tile** stays `#CE445D` regardless of theme.
+Brand crimson **App Grid BR tile** stays `#CE445D` regardless of theme. Only `mp-cta` text is darkened to `#B8324F` for a11y (brand tile locked).
 
 ### Theme-aware shadows (new)
 
@@ -72,15 +72,27 @@ This satisfies optional stretch: "Theme-aware shadows/rings for light (softer el
 
 `BrandLogo` wordmark paths use `fill="currentColor"`; `[data-brand-logo] { color: var(--mp-text) }` so light mode ink is dark.
 
-## Accent contrast (violet / amber)
+## Accent contrast (violet / amber / emerald) — a11y pass 2026-07-13
 
-`AppCard` originally used `text-violet-300` and `text-amber-300` — pastel, great on dark `#1A232E` (≈ 8:1), fails on white (≈ 2:1). Fix:
+`AppCard` and ticker dots originally used pastel Tailwind:
 
-- Global overrides in `global.css`: `html[data-theme="light"] .text-violet-300 { color:#6d28d9 }` (≈ 6.5:1 on white) etc.
-- Dots switched from `bg-violet-400` (light) to `bg-violet-500` base then light override to `#7c3aed` / `#b45309` for visibility.
-- Signal (`primary-cta`) and Rose (`brand-anchor`) already theme-aware via tokens — no override needed.
+- `text-violet-300` (#c4b5fd) ≈ 2:1 on white, `bg-violet-400` (#a78bfa) ≈ 2.2:1
+- `text-amber-300` (#fcd34d yellow) ≈ 1.5:1 on white, `bg-amber-400` (#fbbf24) ≈ 1.6:1
+- `bg-emerald-400` (#34d399 light green) ≈ 1.8:1 on white
 
-Documented inline in `AppCard.astro` + `global.css`.
+All fail WCAG non-text 3:1, and text needs 4.5:1. Fix in `global.css` light overrides:
+
+- Violet text: `text-violet-300` → `#5b21b6` (8.98:1 white, 7.97:1 canvas), `text-violet-400` → `#6b21a8` (6.5:1)
+- Violet bg dots: `bg-violet-400/500` → `#7c3aed` (5.7:1) / `#6d28d9` (7.1:1)
+- Amber text (yellow on white): `text-amber-300` → `#78350f` (9.07:1), `text-amber-400` → `#92400e` (7.09:1) — still reads amber/brown, not pure yellow which can't pass on white
+- Amber bg dots: `bg-amber-400/500` → `#b45309` (5.02:1) / `#92400e` (7.09:1)
+- Emerald status dots (shipping, ANE Active, live): `bg-emerald-400` → `#047857` (5.48:1), `bg-emerald-500` → `#065f46` (7.68:1)
+- Badge washes `bg-*-500/10` boosted to 14% mix for visibility in bright sun
+- Success/error in `ContactCard`: `text-emerald-200/300` (was ~1.2:1 white) → `#065f46`/`#047857`, `text-red-300` → `#991b1b` (8.31:1), backgrounds 10% → 10-12% mix of dark base
+
+Why not keep pure yellow? Pure yellow #fcd34d on white is 1.5:1 — physically impossible to make readable. WCAG requires we darken to amber-brown but keep warm hue. Same for light purple — we darken to deep violet but keep purple family. This is standard a11y trade: hue preserved, lightness lowered.
+
+Documented inline in `AppCard.astro` + `global.css:540+`.
 
 ## Fixed pages (2026-07-13 pass)
 
@@ -110,7 +122,8 @@ For any new page or component, force `html[data-theme="light"]` in DevTools and 
 - [ ] Mobile drawer: text `text-primary-text` not `text-white/90`, hover `bg-elevated` not `bg-white/[0.04]`, backdrop `bg-canvas/70` ok
 - [ ] Blog/paper: keep `.reading-paper` independent — do not convert long-form to chrome tokens
 - [ ] Shadows: light uses soft ink shadow, dark heavy — never raw `shadow-[0_8px_32px_-8px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.06)]` hardcoded in component (use token)
-- [ ] Accents violet/amber: verify `text-violet-300` etc overridden in light via global.css — contrast ≥4.5:1
+- [ ] Accents violet/amber/emerald: verify `text-violet-300` → `#5b21b6` 8.9:1, `bg-violet-400` → `#7c3aed` 5.7:1, `text-amber-300` yellow → `#78350f` 9:1 (pure yellow impossible), `bg-emerald-400` light green → `#047857` 5.48:1, etc overridden in light — text ≥4.5:1, dots ≥3:1, visible in bright sun and low light
 - [ ] `color-mix` preferred over `rgba(white,…)` for overlays — e.g., `from-[color-mix(in_srgb,var(--mp-text)_6%,transparent)]`
+- [ ] Brand cta `#CE445D` stays locked for App Grid tile, but `mp-cta` text `#B8324F` and `mp-anchor` `#256997` give ≥5:1 canvas — kicker/links readable
 
 Run `npm run build` — must pass `astro check` + static build + strip-dev-pages.
