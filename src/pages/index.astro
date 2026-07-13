@@ -110,27 +110,30 @@ const faqSchema = {
             Field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
           </a>
           <span class="hidden sm:inline-flex items-center gap-2 pl-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/70">
-            <span class="h-px w-6 bg-border"></span> 04 apps • {posts.length} notes • Private by default
+            <span class="h-px w-6 bg-border"></span> {String(apps.length).padStart(2,'0')} apps • {posts.length} notes • Private by default
           </span>
         </div>
 
-        <!-- Micro-trust row – frontier social proof -->
+        <!-- Micro-trust row – frontier social proof (cap 6 icons to avoid crowding with 11 live) -->
         <div class="mt-10 flex flex-wrap items-center gap-4 border-t border-border pt-6 text-[0.8rem] text-muted-text">
           <div class="flex -space-x-2">
-            {apps.map((app) => (
+            {apps.slice(0,6).map((app) => (
               <span class="grid size-7 place-items-center rounded-full border-2 border-canvas bg-card-bg shadow-sm">
                 <Image src={app.iconSet.w64} alt="" width={20} height={20} class="size-5 rounded-full object-contain" loading="lazy" decoding="async" />
               </span>
             ))}
+            {apps.length > 6 && (
+              <span class="grid size-7 place-items-center rounded-full border-2 border-canvas bg-elevated text-[0.6rem] font-semibold text-muted-text">+{apps.length-6}</span>
+            )}
           </div>
-          <span class="leading-[1.4]">Trusted for <em class="not-italic text-primary-text/90 font-medium">on-device</em> workflows — no accounts, no tracking, no compromises.</span>
+          <span class="leading-[1.4]">Trusted for <em class="not-italic text-primary-text/90 font-medium">on-device</em> workflows — {apps.length} apps, no accounts, no tracking.</span>
         </div>
       </div>
 
       <!-- Orbit Visual – fixed CLS via contain + fixed size, optimized images.
            Light mode: orbit lines use border-border (visible on paper), center node bg-card-bg,
            orbit apps bg-card-bg with border-border + shadow token so they lift off canvas. -->
-      <div class="relative mx-auto w-full max-w-[32rem] lg:mr-0 lg:max-w-[36rem]" role="group" aria-label={`${apps.length} applications in orbit`}>
+      <div class="relative mx-auto w-full max-w-[32rem] lg:mr-0 lg:max-w-[36rem]" role="group" aria-label={`${apps.length} applications in orbit — featured`}>
         <div class="orbit-stage relative mx-auto aspect-square w-full max-w-[min(100%,36rem)] overflow-visible">
           <div aria-hidden="true" class="orbit-line orbit-line-1 absolute inset-[9%] rounded-full border border-border"></div>
           <div aria-hidden="true" class="orbit-line orbit-line-2 absolute inset-[24%] rounded-full border border-dashed border-border"></div>
@@ -146,8 +149,8 @@ const faqSchema = {
             </div>
           </div>
 
-          <!-- Orbit apps – card bg so they stay distinct in light; elevated would also work but card keeps icon contrast -->
-          {apps.map((app, index) => (
+          <!-- Orbit apps – limited to 4 featured to keep CSS positions valid; all 11 live in grid below -->
+          {apps.filter((a) => a.featured || ['AuraLinter','Biquadia','Thumb-Dash','Notiary'].includes(a.title)).slice(0,4).map((app, index) => (
             <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.25rem] place-items-center rounded-[16px] border border-border bg-card-bg shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-[transform,border-color,box-shadow] duration-500 hover:scale-110 hover:border-brand-anchor/40 hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:size-[4.75rem]`} aria-label={`Open ${app.title} — ${app.tagline}`}>
               <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={52} height={52} densities={[1,2]} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" class="size-[2.85rem] rounded-[12px] object-contain transition-transform duration-500 hover:rotate-[-3deg]" />
             </a>
@@ -155,7 +158,7 @@ const faqSchema = {
 
           <div aria-hidden="true" class="absolute bottom-[10%] left-[14%] hidden rounded-full border border-border bg-card-bg px-3 py-2 shadow-xl sm:flex">
             <span class="font-mono text-[0.55rem] uppercase tracking-[0.16em] text-muted-text">System</span>
-            <span class="ml-2 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold text-primary-text"><span class="signal-dot size-1.5 rounded-full bg-emerald-400"></span>ANE Active</span>
+            <span class="ml-2 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold text-primary-text"><span class="signal-dot size-1.5 rounded-full bg-emerald-400"></span>{apps.length} live • ANE</span>
           </div>
         </div>
       </div>

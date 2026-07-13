@@ -1,38 +1,72 @@
 ---
 import { Image } from 'astro:assets';
 import type { AppAccent, AppEntry } from '../data/apps';
+import { apps as allApps } from '../data/apps';
 
-type Props = AppEntry & { class?: string };
+type Props = AppEntry & { class?: string; showRelated?: boolean };
 
-const { title, tagline, description, url, icon, date, category, platform, sequence, accent, techBadges, class: className } = Astro.props as Props;
+const {
+  title,
+  tagline,
+  description,
+  url,
+  icon,
+  date,
+  category,
+  platform,
+  sequence,
+  accent,
+  techBadges,
+  class: className,
+  iconDot,
+  external,
+  showRelated = true,
+} = Astro.props as Props;
 
 /* Accent map: glow / category text still uses brand tokens.
-   Tech badges now use icon-derived colors (sampled from actual app icons via
-   ImageMagick histogram) for the dot, with high-contrast primary-text for the label.
-   This fixes "yellow over light brown" – previously bg-amber-500/10 (10% wash) + text-amber-300
-   light yellow was ~1.5:1 on white, now primary-text 16:1 on elevated pill + dot shows icon hue.
+    Tech badges now use icon-derived colors (sampled from actual app icons via
+    ImageMagick histogram) for the dot, with high-contrast primary-text for the label.
+    This fixes "yellow over light brown" – previously bg-amber-500/10 (10% wash) + text-amber-300
+    light yellow was ~1.5:1 on white, now primary-text 16:1 on elevated pill + dot shows icon hue.
 
-   Icon histogram (dark / light accessible pair):
-   - Biquadia: #D98065 (5.46:1 dark card) / #8C4A3A (6.65:1 white, 5.04:1 elevated)
-   - Notiary: #779589 (4.87:1 dark) / #385348 (8.4:1 white, 6.37:1 elevated)
-   - Thumb-Dash: #D19274 (6.1:1 dark) / #7A4D3F (7.09:1 white, 5.37:1 elevated)
-   - PopCloset: #B3AEB1 (7.26:1 dark) / #424240 (10:1 white, 7.63:1 elevated)
+    Icon histogram (dark / light accessible pair) — updated 2026-07-13 expansion:
+    - Biquadia: #D98065 / #8C4A3A
+    - Notiary: #779589 / #385348
+    - Thumb-Dash: #D49371 / #5E3A2F (new icon #363130/#D49371 histogram)
+    - PopCloset: #B3AEB1 / #424240
+    - AuraLinter: #8AA0C6 / #2B3C5E — #070B28/#4C6492 dark navy
+    - nymic: #E69433 / #7A3410 — #C16223 burnt orange
+    - akous: #E7A6A2 / #7A4744 — dusty rose
+    - itria: #E6524A / #8C2F2C — coral red
+    - GridVerse: #B59CDC / #4E1A9E — #631FCB purple
+    - MotionLink: #4FC3E8 / #0F4F6B — #09A1D2 cyan
+    - BLExAR: #7FB8BE / #1F4E54 — #3C888F teal
 */
 const accentMap: Record<AppAccent, { glow: string; text: string; bg: string; border: string; dot: string }> = {
   signal: { glow: 'bg-primary-cta', text: 'text-primary-cta', bg: 'bg-primary-cta/10 border-primary-cta/20', border: 'group-hover:border-primary-cta/30', dot: 'bg-primary-cta' },
   violet: { glow: 'bg-violet-500', text: 'text-violet-300', bg: 'bg-violet-500/10 border-violet-500/15', border: 'group-hover:border-violet-400/25', dot: 'bg-violet-500' },
   rose:   { glow: 'bg-brand-anchor', text: 'text-brand-anchor', bg: 'bg-brand-anchor/10 border-brand-anchor/15', border: 'group-hover:border-brand-anchor/30', dot: 'bg-brand-anchor' },
   amber:  { glow: 'bg-amber-400', text: 'text-amber-300', bg: 'bg-amber-500/10 border-amber-500/15', border: 'group-hover:border-amber-400/25', dot: 'bg-amber-500' },
+  emerald:{ glow: 'bg-emerald-500', text: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/15', border: 'group-hover:border-emerald-400/25', dot: 'bg-emerald-500' },
+  cyan:   { glow: 'bg-cyan-500', text: 'text-cyan-300', bg: 'bg-cyan-500/10 border-cyan-500/15', border: 'group-hover:border-cyan-400/25', dot: 'bg-cyan-500' },
 };
 
 const iconBadgeDot: Record<AppAccent, { light: string; dark: string }> = {
-  signal: { light: '#8C4A3A', dark: '#D98065' }, // Biquadia icon reddish
-  violet: { light: '#385348', dark: '#779589' }, // Notiary teal
-  amber:  { light: '#7A4D3F', dark: '#D19274' }, // Thumb-Dash warm brown
-  rose:   { light: '#424240', dark: '#B3AEB1' }, // PopCloset neutral
+  signal: { light: '#8C4A3A', dark: '#D98065' },
+  violet: { light: '#385348', dark: '#779589' },
+  amber:  { light: '#7A4D3F', dark: '#D19274' },
+  rose:   { light: '#424240', dark: '#B3AEB1' },
+  emerald:{ light: '#1F4E54', dark: '#7FB8BE' }, // BLExAR teal
+  cyan:   { light: '#0F4F6B', dark: '#4FC3E8' }, // MotionLink cyan
 };
 
-const colors = accentMap[accent as AppAccent];
+const colors = accentMap[accent as AppAccent] ?? accentMap['signal'];
+const dotColors = iconDot ?? iconBadgeDot[accent as AppAccent] ?? iconBadgeDot['signal'];
+
+// Inter-app related — same category, exclude self, max 2
+const relatedApps = showRelated
+  ? allApps.filter((a) => a.category === category && a.title !== title).slice(0, 2)
+  : [];
 ---
 
 <article 
@@ -113,7 +147,6 @@ const colors = accentMap[accent as AppAccent];
       {techBadges && techBadges.length > 0 && (
         <div class="flex flex-wrap gap-1.5">
           {techBadges.map((badge: string) => {
-            const dotColors = iconBadgeDot[accent as AppAccent];
             return (
               <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-primary-text transition-colors">
                 <span
@@ -132,6 +165,31 @@ const colors = accentMap[accent as AppAccent];
           background-color: var(--dot-dark) !important;
         }
       </style>
+
+      {/* Inter-app navigation footer — theme-aware, no backdrop-filter */}
+      <div class="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+        <div class="flex items-center gap-2 text-[0.74rem]">
+          <a href="/apps" class="font-medium text-muted-text transition-colors hover:text-primary-text">
+            Explore {allApps.length} apps →
+          </a>
+          {external && (
+            <span class="rounded-full bg-elevated px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Legacy • makersportal.com</span>
+          )}
+        </div>
+        {relatedApps.length > 0 && (
+          <div class="flex items-center gap-1.5 text-[0.74rem] text-muted-text">
+            <span class="font-mono text-[0.62rem] uppercase tracking-[0.12em]">Related:</span>
+            {relatedApps.map((r, i) => (
+              <>
+                {i > 0 && <span class="text-muted-text/40">·</span>}
+                <a href={r.url} target="_blank" rel="noopener noreferrer" class="font-medium text-muted-text transition-colors hover:text-primary-text">
+                  {r.title}
+                </a>
+              </>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   </div>
 

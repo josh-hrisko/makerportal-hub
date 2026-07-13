@@ -1,0 +1,91 @@
+---
+/**
+ * AppSwitcher — small pill for inter-app navigation.
+ * Designed to be dropped into future *.makerportal.ai subdomain sites.
+ * Theme-aware, no backdrop-filter, opaque surfaces, AA contrast.
+ *
+ * Usage in subdomain:
+ *   import AppSwitcher from '@makerportal-hub/components/AppSwitcher.astro'
+ *   <AppSwitcher current="Biquadia" compact />
+ *
+ * Props:
+ * - current: title of current app to exclude/highlight
+ * - compact: show only dot + title in minimal pill
+ * - showLegacyBadge: show "Legacy" for makersportal.com links
+ */
+import { apps } from '../data/apps';
+import { getRelatedApps, getAppNavLinks } from '../data/app-nav';
+
+interface Props {
+  current?: string;
+  compact?: boolean;
+  showLegacyBadge?: boolean;
+  class?: string;
+  limit?: number;
+}
+
+const {
+  current,
+  compact = false,
+  showLegacyBadge = true,
+  class: className,
+  limit = 6,
+} = Astro.props as Props;
+
+const navLinks = getAppNavLinks();
+const related = current ? getRelatedApps(current, limit) : apps.slice(0, limit);
+const displayList = current ? related : navLinks.slice(0, limit).map((l) => apps.find((a) => a.title === l.title)!).filter(Boolean);
+---
+
+<div class:list={['app-switcher not-prose surface-card inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-full border bg-card-bg p-1.5 shadow-sm', className]} role="navigation" aria-label="More from MakerPortal">
+  <span class="ml-1 mr-1 inline-flex items-center gap-1.5 rounded-full bg-elevated px-2.5 py-1 font-mono text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-muted-text">
+    <span class="size-1.5 rounded-full bg-primary-cta"></span>
+    Studio
+  </span>
+
+  <div class="flex flex-wrap items-center gap-1">
+    {displayList.map((app) => {
+      const isCurrent = app.title === current;
+      const dot = app.iconDot;
+      return (
+        <a
+          href={isCurrent ? '/apps' : app.url}
+          target={isCurrent ? undefined : '_blank'}
+          rel={isCurrent ? undefined : 'noopener noreferrer'}
+          class:list={[
+            'group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.78rem] font-medium transition-colors',
+            isCurrent
+              ? 'border-border bg-elevated text-primary-text font-semibold'
+              : 'border-transparent bg-transparent text-muted-text hover:border-border hover:bg-elevated hover:text-primary-text',
+          ]}
+          aria-current={isCurrent ? 'page' : undefined}
+          title={`${app.title} — ${app.tagline}`}
+        >
+          <span
+            class="icon-dot size-1.5 shrink-0 rounded-full"
+            style={dot ? `--dot-light:${dot.light}; --dot-dark:${dot.dark}; background-color: var(--dot-light);` : ''}
+            aria-hidden="true"
+          ></span>
+          {!compact && <span class="hidden sm:inline">{app.title}</span>}
+          {compact && <span class="sr-only">{app.title}</span>}
+          {showLegacyBadge && app.external && (
+            <span class="ml-0.5 rounded-full bg-elevated px-1 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">Legacy</span>
+          )}
+        </a>
+      );
+    })}
+  </div>
+
+  <a href="/apps" class="ml-auto inline-flex items-center gap-1 rounded-full bg-primary-text px-3 py-1 text-[0.75rem] font-bold text-canvas transition-opacity hover:opacity-90">
+    {current ? `All ${apps.length}` : `${apps.length} apps`} <span aria-hidden="true">→</span>
+  </a>
+</div>
+
+<style>
+  .app-switcher .icon-dot {
+    background-color: var(--dot-light, var(--mp-muted));
+  }
+  html[data-theme='dark'] .app-switcher .icon-dot {
+    background-color: var(--dot-dark, var(--mp-muted)) !important;
+  }
+</style>

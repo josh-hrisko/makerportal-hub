@@ -583,6 +583,22 @@
   html[data-theme="light"] .bg-emerald-500 {
     background-color: #065f46; /* emerald-800, 7:1 */
   }
+  /* Cyan / teal for MotionLink + BLExAR — similar contrast fix */
+  html[data-theme="light"] .text-cyan-300 {
+    color: #155e75; /* cyan-800, 7:1 */
+  }
+  html[data-theme="light"] .bg-cyan-400 {
+    background-color: #0e7490; /* cyan-700, 5.1:1 */
+  }
+  html[data-theme="light"] .bg-cyan-500 {
+    background-color: #155e75; /* cyan-800, 7:1 */
+  }
+  html[data-theme="light"] .bg-cyan-500\/10 {
+    background-color: color-mix(in srgb, #0e7490 14%, transparent);
+  }
+  html[data-theme="light"] .border-cyan-500\/15 {
+    border-color: color-mix(in srgb, #0e7490 24%, transparent);
+  }
   /* Badge backgrounds that were 10% wash – boost visibility in light */
   html[data-theme="light"] .bg-violet-500\/10 {
     background-color: color-mix(in srgb, #7c3aed 14%, transparent);

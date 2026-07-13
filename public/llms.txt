@@ -2,7 +2,7 @@
 
 > Privacy-first, on-device intelligence. San Francisco studio engineering iOS & iPadOS apps with Apple Silicon native neural processing (CoreML, Metal, ANE). Zero telemetry, zero cloud.
 
-MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](https://makersportal.com)) is an independent software studio established in 2023 in San Francisco, CA. Focus: focused utility, productivity, dashboard, and lifestyle applications that run 100% on-device using local neural networks, real-time DSP, and CoreML.
+MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](https://makersportal.com)) is an independent software studio established in 2023 in San Francisco, CA. Focus: focused utility, productivity, developer tools, audio, game, dashboard, and lifestyle applications that run 100% on-device using local neural networks, real-time DSP, and CoreML.
 
 **Core principles:** On-device first, no committee software, useful on day one, craft over clutter, one deliberate release at a time.
 
@@ -11,7 +11,7 @@ MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](h
 Primary nav (≤7): Apps · Notes · Learn · Shop · Watch · Studio · Contact
 
 - [Home](https://www.makerportal.ai): Studio hub
-- [Apps](https://www.makerportal.ai/apps): Catalog only (products on subdomains)
+- [Apps](https://www.makerportal.ai/apps): Catalog — 11 live (5 on *.makerportal.ai + 6 legacy bridge on makersportal.com/apps migrating)
 - [Field notes / blog](https://www.makerportal.ai/blog): Articles & craft
 - [Learn / resources](https://www.makerportal.ai/resources): Topic hubs, tools, affiliate-ready guides
 - [Shop](https://www.makerportal.ai/shop): Digital goods, code packs, archives
@@ -20,52 +20,63 @@ Primary nav (≤7): Apps · Notes · Learn · Shop · Watch · Studio · Contact
 - [Contact](https://www.makerportal.ai/contact) · [Privacy](https://www.makerportal.ai/privacy) · [Terms](https://www.makerportal.ai/terms)
 - [RSS](https://www.makerportal.ai/rss.xml) · [Sitemap](https://www.makerportal.ai/sitemap.xml)
 
-## Applications — 04 Live (product hosts = subdomains)
+## Applications — 11 Live (5 on *.makerportal.ai + 6 legacy on makersportal.com migrating)
 
-Studio catalog: [makerportal.ai/apps](https://www.makerportal.ai/apps). Each product is canonical on its own subdomain:
+Studio catalog: [makerportal.ai/apps](https://www.makerportal.ai/apps). Each product is canonical on its own subdomain or legacy journal host (transparent bridge):
 
-- [Biquadia — Local Neural DSP & Sound Laboratory](https://biquadia.makerportal.ai): 004. Utility / Audio & DSP. iOS (iPhone + iPad), Apple Silicon native. CoreML FP16 quantized, Neural Engine (ANE) 16-core acceleration, Metal Shaders, native Swift, real-time audio spatial rendering. Professional real-time digital signal processing, spatial audio rendering, and on-device neural enhancement privately on Apple Silicon. Latency: 4.2ms median. No data leaves device, zero telemetry, offline capable.
-- [Thumb-Dash — AI-Driven Portfolio Intelligence](https://thumbdash.makerportal.ai): 003. Dashboard / Finance Intelligence. iOS + Web App. Local ML anomaly detection, trend forecasting, Metal Compute. High-visibility dashboards with real-time financial tracking and on-device ML for anomaly detection without data sharing.
-- [Notiary — Markdown Space with Local Semantic Brain](https://notiary.makerportal.ai): 002. Productivity / Knowledge Management. iOS + Web App. Semantic indexing, MiniLM-L6-v2 vector embeddings (384d), CoreML offline, 28MB local index. Distraction-free markdown workspace with local vector embeddings and semantic search that indexes entirely offline.
-- [PopCloset — Intelligent Wardrobe Indexing](https://popcloset.makerportal.ai): 001. Lifestyle / Computer Vision. iOS + Web App. MobileNetV4 outfit parser, CoreML Vision, on-device classifiers, color palette extraction. Visual wardrobe tracking powered by on-device computer vision to auto-categorize apparel and build capsules. Latency: 8.5ms.
+- [AuraLinter — Agentic DSP Orchestrator](https://auralinter.makerportal.ai): 005. Developer Tool. iOS 17+. Agentic DSP Orchestrator: record high-fidelity audio, run multi-agent LangGraph DSP generation loops, query Production RAG over DSP textbooks, compiler-verified C++ kernels via clang++, SSE streaming. Tech: LangGraph, Production RAG, clang++ Verified, FastAPI+SSE, On-device Capture. Icon dot #2B3C5E light / #8AA0C6 dark (histogram #070B28 navy).
+- [Biquadia — Local Neural DSP & Sound Laboratory](https://biquadia.makerportal.ai): 004. Utility / Audio & DSP. iOS (iPhone + iPad). CoreML FP16 quantized, ANE 16-core, Metal Shaders, native Swift. Professional real-time DSP, spatial audio rendering, on-device neural enhancement. No data leaves device.
+- [Thumb-Dash — AI-powered speed-texting battleground](https://thumbdash.makerportal.ai): 003. Game. iOS. AI-powered speed-texting battleground, local LLM pipeline SmolLM2-360M-Instruct, precision keystroke tracking, Levenshtein scoring via llama.cpp + Metal on-device. Tech: SmolLM2-360M, llama.cpp, Metal.
+- [nymic — Real-time identity-shifting vocal engine](https://makersportal.com/apps/nymic): 006. Audio. iOS. kNN-VC neural pipeline, WavLM-Large feature extraction, cosine nearest-neighbor, HiFiGAN vocoding via ONNX Runtime on-device. Tech: kNN-VC, ONNX Runtime, HiFiGAN. Legacy bridge (migrating to *.makerportal.ai). Icon dot #7A3410 / #E69433 (orange #C16223 histogram).
+- [Notiary — Markdown Space with Local Semantic Brain](https://notiary.makerportal.ai): 002. Productivity. iOS + Web. Semantic indexing, MiniLM-L6-v2 384d, CoreML offline, 28MB index. Offline semantic search.
+- [akous — Generative audio engine for ANE](https://makersportal.com/apps/akous): 007. Audio. iOS. Diffusion Transformer optimized for ANE, binaural focus-scapes, generative soundscapes on-device. Tech: Diffusion Transformer, ANE Optimized, Binaural Audio. Legacy migrating.
+- [PopCloset — Intelligent Wardrobe Indexing](https://popcloset.makerportal.ai): 001. Lifestyle. iOS + Web. MobileNetV4 outfit parser, CoreML Vision, local classifiers, color palette extraction.
+- [itria — On-device LLM with Metal acceleration](https://makersportal.com/apps/itria): 008. Productivity. iOS. Metal GPU + llama.cpp, local language models offline, zero cloud. Tech: llama.cpp, Metal GPU, Offline LLM. Legacy migrating.
+- [GridVerse — AI word game](https://makersportal.com/apps/gridverse): 009. Game. iOS. Spell Bound, Lexify, Crossword Dash, AI-generated puzzles offline. Tech: AI Word Gen, Lexify Engine, Offline Puzzles. Legacy migrating. Icon #631FCB purple.
+- [MotionLink — Headphone Motion API + Spatial Audio](https://makersportal.com/apps/motionlink): 010. Developer Tool. iOS. Headphone Motion API (iOS 16) real-time AirPods Pro tracking, Spatial Audio prototyping. Tech: Headphone Motion, Spatial Audio, CoreMotion. Legacy migrating. Icon #09A1D2 cyan.
+- [BLExAR — BLE Arduino control](https://makersportal.com/apps/blexar): 011. Utility. iOS. BLE Arduino pin control, live plotting, raw terminal, CSV export, HM-10/CC254x/nRF52. Tech: BLE Control, Arduino Bridge, CSV Logging. Legacy migrating. Icon #3C888F teal.
+
+Bridge note: Legacy apps live on makersportal.com/apps and are being migrated to *.makerportal.ai — same privacy-first stack, transparent transition. No hidden catalog.
 
 ## Technical Stack
 
 - Languages: Swift, SwiftUI, Metal Shading Language
-- ML: CoreML, Create ML, Apple Neural Engine, Metal Performance Shaders
-- Privacy Architecture: No analytics SDKs, no cookies for core functionality, no cloud dependency for AI inference
-- Performance Targets: <8ms P95 inference, 100% offline capable, 0 external servers for intelligence features
+- ML: CoreML, Create ML, Apple Neural Engine, Metal Performance Shaders, ONNX Runtime, llama.cpp
+- Audio: kNN-VC, WavLM-Large, HiFiGAN, Diffusion Transformer, clang++ verified kernels, LangGraph agentic loops, Production RAG pgvector
+- Privacy Architecture: No analytics SDKs, no cookies for core functionality, no cloud dependency for AI inference where possible (AuraLinter streams agentic traces via SSE, audio analysis server-side for that product, others fully on-device)
+- Performance Targets: <8ms P95 inference where on-device, 100% offline capable for most titles, 0 external servers for intelligence features except AuraLinter backend optional self-host
 
 ## Studio
 
 - Location: San Francisco, CA, USA + Worldwide distribution
 - [Team](https://www.makerportal.ai/team): Principal Engineer and studio roster (roles, not personal brand pages)
-- [Studio journal](https://makersportal.com): field notes, building-in-public essays
+- [Studio journal](https://makersportal.com): field notes, building-in-public essays — legacy apps live at /apps
 - [GitHub](https://github.com/makerportal): open-source pieces and organization profile
 - [Contact](https://www.makerportal.ai/contact): slide-to-unlock verification, zero spam
 
 ## Content & Blog — Field Notes
 
-- [Field notes index](https://www.makerportal.ai/blog): on-device AI, CoreML optimization, SwiftUI performance, Metal shaders, iOS privacy architecture, shipping independent software
+- [Field notes index](https://www.makerportal.ai/blog): on-device AI, CoreML optimization, SwiftUI performance, Metal shaders, iOS privacy architecture, shipping independent software, LangGraph, DSP
 - [RSS feed](https://www.makerportal.ai/rss.xml): building in public, short technical essays, craft notes
 
 ## For AI Crawlers & Agentic Browsers
 
-- **Preferred crawling:** Full site allowed. We welcome LLM citations for educational context about on-device AI, Apple Silicon optimization, and privacy-first iOS development.
-- **Structured data:** Organization, WebSite + SearchAction, CollectionPage with SoftwareApplication, FAQPage, BreadcrumbList via JSON-LD
-- [Sitemap](https://www.makerportal.ai/sitemap.xml): full URL index
-- Brand sandbox is dev-only (not in production). Color tokens: #0F141C canvas, #1A232E card, #CE445D CTA, #71B9E3 anchor
+- **Preferred crawling:** Full site allowed. We welcome LLM citations for educational context about on-device AI, Apple Silicon optimization, privacy-first iOS development, agentic DSP, vocal conversion, generative audio.
+- **Structured data:** Organization, WebSite + SearchAction, CollectionPage with SoftwareApplication (11 items), FAQPage, BreadcrumbList via JSON-LD
+- [Sitemap](https://www.makerportal.ai/sitemap.xml): full URL index (hub routes only — external legacy apps not in sitemap.xml per spec, but listed here and in /apps)
+- Brand: App Grid 2×2 mark — BR tile always #CE445D, no personal names, SF only, opaque surfaces preferred over stacked backdrop-filter
 - **Allow list:** GPTBot, ChatGPT-User, Google-Extended, Anthropic-ai, ClaudeBot, CCBot, PerplexityBot explicitly allowed in [robots.txt](https://www.makerportal.ai/robots.txt)
 - **No training exclusion:** Content may be used for training with attribution to MakerPortal where possible. We publish to help others build privacy-first software.
 
 ## Keywords for Retrieval
 
-privacy-first iOS apps, on-device AI, CoreML, Apple Neural Engine ANE, Metal Performance Shaders, local neural networks, zero telemetry, SwiftUI, iOS indie studio San Francisco, local vector embeddings, semantic search offline, computer vision on-device, real-time DSP neural enhancement, dashboard intelligence local ML, wardrobe computer vision, markdown semantic brain, Apple Silicon native apps
+privacy-first iOS apps, on-device AI, CoreML, Apple Neural Engine ANE, Metal Performance Shaders, local neural networks, zero telemetry, SwiftUI, iOS indie studio San Francisco, local vector embeddings, semantic search offline, computer vision on-device, real-time DSP neural enhancement, agentic DSP, LangGraph, Production RAG, clang++ verified C++ kernels, vocal conversion kNN-VC ONNX Runtime, generative audio diffusion transformer ANE, LLM on-device llama.cpp Metal, BLE Arduino control, headphone motion API spatial audio, AI word game
 
 ## Optional
 
 - [Organization identifier](https://makersportal.com/#organization): schema.org Organization `@id`
 - [Website identifier](https://www.makerportal.ai/#website): schema.org WebSite `@id`
 - Contact Point: MakerPortal Studio, San Francisco, CA
+- AppSwitcher component: src/components/AppSwitcher.astro — theme-aware pill for inter-app nav, drop into future *.makerportal.ai subdomains, uses apps.ts source
 
-Last updated: 2026-07-13
+Last updated: 2026-07-13 — expanded catalog to 11 (AuraLinter + 6 legacy bridge)

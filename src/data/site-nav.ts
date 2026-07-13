@@ -49,11 +49,23 @@ export const socials: NavLink[] = [
   { label: 'RSS', href: '/rss.xml' },
 ];
 
+/**
+ * Product links — now 11 live. Keep in sync with src/data/apps.ts.
+ * Future: generate dynamically from apps.ts import (requires Astro asset handling).
+ * For now manual to keep site-nav.ts pure (no ImageMetadata deps).
+ */
 export const productLinks: NavLink[] = [
+  { label: 'AuraLinter', href: 'https://auralinter.makerportal.ai', description: 'Agentic DSP Orchestrator', external: true },
   { label: 'Biquadia', href: 'https://biquadia.makerportal.ai', description: 'Neural DSP lab', external: true },
-  { label: 'Thumb-Dash', href: 'https://thumbdash.makerportal.ai', description: 'Portfolio intelligence', external: true },
+  { label: 'Thumb-Dash', href: 'https://thumbdash.makerportal.ai', description: 'Speed-texting battleground', external: true },
+  { label: 'nymic', href: 'https://makersportal.com/apps/nymic', description: 'Vocal engine • kNN-VC', external: true },
   { label: 'Notiary', href: 'https://notiary.makerportal.ai', description: 'Semantic notes', external: true },
+  { label: 'akous', href: 'https://makersportal.com/apps/akous', description: 'Generative audio • ANE', external: true },
   { label: 'PopCloset', href: 'https://popcloset.makerportal.ai', description: 'Vision wardrobe', external: true },
+  { label: 'itria', href: 'https://makersportal.com/apps/itria', description: 'On-device LLM • Metal', external: true },
+  { label: 'GridVerse', href: 'https://makersportal.com/apps/gridverse', description: 'AI word game', external: true },
+  { label: 'MotionLink', href: 'https://makersportal.com/apps/motionlink', description: 'Head tracking • Spatial', external: true },
+  { label: 'BLExAR', href: 'https://makersportal.com/apps/blexar', description: 'BLE Arduino • CSV export', external: true },
 ];
 
 /** Top bar — keep ≤7 for scanability (NN/g + 2025–26 mega-menu research). */
@@ -76,11 +88,11 @@ export const primaryNav: PrimaryNavItem[] = [
       },
     ],
     featured: {
-      kicker: 'Products live on subdomains',
+      kicker: '11 products • Subdomains + legacy',
       title: 'Open the matrix',
-      description: 'Hub indexes the studio. Each app owns its subdomain for store, privacy, and deep product story.',
+      description: 'Hub indexes the studio. New products live on *.makerportal.ai, legacy apps on makersportal.com are migrating — transparent bridge, no hidden catalog.',
       href: '/apps',
-      cta: 'View catalog →',
+      cta: 'View 11 apps →',
     },
   },
   {
