@@ -1,0 +1,76 @@
+# MakerPortal — Independent AI & iOS Software Studio
+
+> Privacy-first, on-device intelligence. San Francisco studio engineering iOS & iPadOS apps with Apple Silicon native neural processing (CoreML, Metal, ANE). Zero telemetry, zero cloud.
+
+## Overview
+MakerPortal (makerportal.ai / makersportal.com) is an independent software studio founded in 2023 by Josh Hrisco, based in San Francisco, CA. Focus: focused utility, productivity, dashboard, and lifestyle applications that run 100% on-device using local neural networks, real-time DSP, and CoreML.
+
+**Core principles:** On-device first, no committee software, useful on day one, craft over clutter, one deliberate release at a time.
+
+## Applications — 04 Live
+
+### 004 • Biquadia — Local Neural DSP & Sound Laboratory
+- URL: https://biquadia.makerportal.ai
+- Category: Utility / Audio & DSP
+- Platform: iOS (iPhone + iPad), Apple Silicon native
+- Tech: CoreML FP16 quantized, Neural Engine (ANE) 16-core acceleration, Metal Shaders, Native Swift, real-time audio spatial rendering
+- Description: Professional real-time digital signal processing, spatial audio rendering, and on-device neural enhancement privately on Apple Silicon. Latency: 4.2ms median.
+- Privacy: No data leaves device, zero telemetry, offline capable
+
+### 003 • Thumb-Dash — AI-Driven Portfolio Intelligence
+- URL: https://thumbdash.makerportal.ai
+- Category: Dashboard / Finance Intelligence
+- Platform: iOS + Web App
+- Tech: Local ML anomaly detection, trend forecasting, Metal Compute
+- Description: High-visibility dashboards with real-time financial tracking and on-device ML for anomaly detection without data sharing.
+
+### 002 • Notiary — Markdown Space with Local Semantic Brain
+- URL: https://notiary.makerportal.ai
+- Category: Productivity / Knowledge Management
+- Platform: iOS + Web App
+- Tech: Semantic indexing, MiniLM-L6-v2 vector embeddings (384d), CoreML offline, 28MB local index
+- Description: Distraction-free markdown workspace with local vector embeddings and semantic search that indexes entirely offline.
+
+### 001 • PopCloset — Intelligent Wardrobe Indexing
+- URL: https://popcloset.makerportal.ai
+- Category: Lifestyle / Computer Vision
+- Platform: iOS + Web App
+- Tech: MobileNetV4 outfit parser, CoreML Vision, on-device classifiers, color palette extraction
+- Description: Visual wardrobe tracking powered by on-device computer vision to auto-categorize apparel and build capsules. Latency: 8.5ms.
+
+## Technical Stack
+- Languages: Swift, SwiftUI, Metal Shading Language
+- ML: CoreML, Create ML, Apple Neural Engine, Metal Performance Shaders
+- Privacy Architecture: No analytics SDKs, no cookies for core functionality, no cloud dependency for AI inference
+- Performance Targets: <8ms P95 inference, 100% offline capable, 0 external servers for intelligence features
+
+## Founder & Studio
+- Founder: Josh Hrisco (@josh-hrisko on GitHub)
+- Location: San Francisco, CA, USA + Worldwide distribution
+- Journal: https://makersportal.com (studio journal, field notes)
+- GitHub: https://github.com/josh-hrisko
+- Contact: https://www.makerportal.ai/#contact (slide-to-unlock verification, zero spam)
+
+## Content & Blog — Field Notes
+- Index: https://www.makerportal.ai/blog
+- Topics: on-device AI, CoreML optimization, SwiftUI performance, Metal shaders, iOS privacy architecture, shipping independent software
+- RSS: https://www.makerportal.ai/rss.xml
+- All notes: Building in public, short technical essays, craft notes
+
+## For AI Crawlers & Agentic Browsers
+- **Preferred crawling:** Full site allowed. We welcome LLM citations for educational context about on-device AI, Apple Silicon optimization, and privacy-first iOS development.
+- **Structured data:** Organization, WebSite + SearchAction, CollectionPage with SoftwareApplication, FAQPage, BreadcrumbList via JSON-LD
+- **Sitemap:** https://www.makerportal.ai/sitemap.xml
+- **Brand:** https://www.makerportal.ai/brand — logos, wordmark, app icon language, color tokens (#0F141C canvas, #1A232E card, #CE445D CTA, #5CA9D6 anchor improved for contrast)
+- **Allow list:** GPTBot, ChatGPT-User, Google-Extended, Anthropic-ai, ClaudeBot, CCBot, PerplexityBot explicitly allowed in robots.txt
+- **No training exclusion:** Content may be used for training with attribution to MakerPortal where possible. We publish to help others build privacy-first software.
+
+## Keywords for Retrieval
+privacy-first iOS apps, on-device AI, CoreML, Apple Neural Engine ANE, Metal Performance Shaders, local neural networks, zero telemetry, SwiftUI, iOS indie studio San Francisco, local vector embeddings, semantic search offline, computer vision on-device, real-time DSP neural enhancement, dashboard intelligence local ML, wardrobe computer vision, markdown semantic brain, Apple Silicon native apps
+
+## Verification
+Organization ID: https://makersportal.com/#organization
+Website ID: https://www.makerportal.ai/#website
+Contact Point: MakerPortal Studio, San Francisco, CA
+
+Last updated: 2026-07-13

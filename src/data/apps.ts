@@ -1,3 +1,18 @@
+import type { ImageMetadata } from 'astro';
+
+import biquadia64 from '../assets/app-icons/biquadia-64.webp';
+import biquadia128 from '../assets/app-icons/biquadia-128.webp';
+import biquadia256 from '../assets/app-icons/biquadia-256.webp';
+import notiary64 from '../assets/app-icons/notiary-64.webp';
+import notiary128 from '../assets/app-icons/notiary-128.webp';
+import notiary256 from '../assets/app-icons/notiary-256.webp';
+import thumbdash64 from '../assets/app-icons/thumbdash-64.webp';
+import thumbdash128 from '../assets/app-icons/thumbdash-128.webp';
+import thumbdash256 from '../assets/app-icons/thumbdash-256.webp';
+import popcloset64 from '../assets/app-icons/popcloset-64.webp';
+import popcloset128 from '../assets/app-icons/popcloset-128.webp';
+import popcloset256 from '../assets/app-icons/popcloset-256.webp';
+
 export type AppCategory = 'Productivity' | 'Dashboard' | 'Utility' | 'Lifestyle';
 export type AppAccent = 'signal' | 'violet' | 'rose' | 'amber';
 
@@ -6,7 +21,9 @@ export interface AppEntry {
   tagline: string;
   description: string;
   url: string;
-  icon: string;
+  icon: ImageMetadata;
+  iconSet: { w64: ImageMetadata; w128: ImageMetadata; w256: ImageMetadata };
+  fallbackIcon: string; // public SVG
   date: string;
   category: AppCategory;
   platform: string;
@@ -22,7 +39,9 @@ export const apps: AppEntry[] = [
     tagline: 'Local Neural DSP & Sound Laboratory',
     description: 'Professional real-time digital signal processing, spatial audio rendering, and on-device neural enhancement models running privately on Apple Silicon.',
     url: 'https://biquadia.makerportal.ai',
-    icon: '/assets/app-icons/biquadia.png',
+    icon: biquadia128,
+    iconSet: { w64: biquadia64, w128: biquadia128, w256: biquadia256 },
+    fallbackIcon: '/assets/app-icons/biquadia.svg',
     date: 'July 2026',
     category: 'Utility',
     platform: 'iOS (iPhone + iPad)',
@@ -36,7 +55,9 @@ export const apps: AppEntry[] = [
     tagline: 'AI-Driven Portfolio Intelligence',
     description: 'High-visibility dashboards featuring real-time financial tracking and on-device machine learning for anomaly detection and trend forecasting without data sharing.',
     url: 'https://thumbdash.makerportal.ai',
-    icon: '/assets/app-icons/thumbdash.png',
+    icon: thumbdash128,
+    iconSet: { w64: thumbdash64, w128: thumbdash128, w256: thumbdash256 },
+    fallbackIcon: '/assets/app-icons/thumbdash.svg',
     date: 'July 2026',
     category: 'Dashboard',
     platform: 'iOS + Web App',
@@ -49,7 +70,9 @@ export const apps: AppEntry[] = [
     tagline: 'Markdown space with a local semantic brain',
     description: 'A distraction-free markdown note-taking workspace equipped with local vector embeddings and semantic search that indexes your thoughts entirely offline.',
     url: 'https://notiary.makerportal.ai',
-    icon: '/assets/app-icons/notiary.png',
+    icon: notiary128,
+    iconSet: { w64: notiary64, w128: notiary128, w256: notiary256 },
+    fallbackIcon: '/assets/app-icons/notiary.svg',
     date: 'June 2026',
     category: 'Productivity',
     platform: 'iOS + Web App',
@@ -62,7 +85,9 @@ export const apps: AppEntry[] = [
     tagline: 'Intelligent wardrobe indexing & capsule design',
     description: 'Visual wardrobe tracking powered by on-device computer vision to auto-categorize apparel, extract color palettes, and build capsules.',
     url: 'https://popcloset.makerportal.ai',
-    icon: '/assets/app-icons/popcloset.png',
+    icon: popcloset128,
+    iconSet: { w64: popcloset64, w128: popcloset128, w256: popcloset256 },
+    fallbackIcon: '/assets/app-icons/popcloset.svg',
     date: 'May 2026',
     category: 'Lifestyle',
     platform: 'iOS + Web App',

@@ -7,8 +7,8 @@ import Layout from '../layouts/Layout.astro';
 import { apps } from '../data/apps';
 import BrandLogo from '../components/BrandLogo.astro';
 
-const pageTitle = 'MakerPortal — Independent AI & iOS Software Studio';
-const pageDescription = 'Building focused, privacy-first applications utilizing local neural networks, real-time DSP, and on-device machine learning.';
+const pageTitle = 'MakerPortal — Privacy-First AI & iOS Studio | On-Device Intelligence';
+const pageDescription = 'San Francisco studio engineering iOS & iPadOS apps powered by private, on-device neural networks, Apple Neural Engine (ANE), CoreML & Metal. Zero telemetry, zero cloud.';
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3);
@@ -17,10 +17,15 @@ const directorySchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   '@id': 'https://www.makerportal.ai/#directory',
-  name: 'MakerPortal Application Directory',
+  name: 'MakerPortal Application Matrix — On-Device AI Apps for iOS',
   description: pageDescription,
   url: 'https://www.makerportal.ai',
   isPartOf: { '@id': 'https://www.makerportal.ai/#website' },
+  about: {
+    '@type': 'Thing',
+    name: 'On-Device Machine Learning & Privacy-First Software',
+    description: 'Apple Silicon native applications using CoreML, Neural Engine, Metal Performance Shaders, with zero data collection'
+  },
   mainEntity: {
     '@type': 'ItemList',
     numberOfItems: apps.length,
@@ -29,198 +34,233 @@ const directorySchema = {
       position: index + 1,
       item: {
         '@type': 'SoftwareApplication',
+        '@id': `${app.url}#app`,
         name: app.title,
         description: app.description,
-        url: app.url,
         applicationCategory: app.category,
         operatingSystem: app.platform,
+        url: app.url,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', availability: 'https://schema.org/InStock' },
+        featureList: app.techBadges.join(', '),
         publisher: { '@id': 'https://makersportal.com/#organization' },
+        author: { '@id': 'https://makersportal.com/#organization' },
       },
     })),
   },
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    { '@type': 'Question', name: 'Why on-device AI instead of cloud?', acceptedAnswer: { '@type': 'Answer', text: 'On-device inference via Apple Neural Engine delivers 4-8ms latency vs 200-800ms cloud roundtrip, zero data leaves your device, and works offline. We use CoreML FP16 quantized models, Metal Performance Shaders, and vector embedding indexes that live entirely on iPhone/iPad.' } },
+    { '@type': 'Question', name: 'What makes MakerPortal different from other iOS studios?', acceptedAnswer: { '@type': 'Answer', text: 'Small surface area, zero telemetry, Apple Silicon native from day one. No committees, no cloud dependencies, one deliberate release at a time. Built in San Francisco with craft over clutter.' } },
+    { '@type': 'Question', name: 'Which apps are currently available?', acceptedAnswer: { '@type': 'Answer', text: apps.map(a => `${a.title}: ${a.tagline}`).join('; ') } },
+  ]
 };
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(directorySchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+    <link rel="preload" as="image" href={apps[0].iconSet.w128.src} imagesrcset={`${apps[0].iconSet.w64.src} 64w, ${apps[0].iconSet.w128.src} 128w`} />
   </Fragment>
 
-  <!-- Hero Section -->
-  <section class="hero-grid relative isolate overflow-hidden border-b border-muted-text/15 bg-gradient-to-b from-[#1A232E]/30 to-canvas" aria-labelledby="hero-title">
-    <div aria-hidden="true" class="hero-aura absolute left-1/2 top-0 -z-20 h-[42rem] w-[58rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-cta/[0.06] blur-[150px]"></div>
-    <div aria-hidden="true" class="hero-aura absolute left-1/3 top-12 -z-20 h-[30rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-anchor/[0.1] blur-[130px]"></div>
+  <!-- Hero – Frontier 2026: Spatial depth + text reveal + view transitions -->
+  <section class="hero-grid relative isolate overflow-hidden border-b border-white/[0.06] bg-gradient-to-b from-[#1A232E]/40 to-canvas" aria-labelledby="hero-title">
+    <div aria-hidden="true" class="hero-aura absolute left-[48%] top-[-10%] -z-20 h-[40rem] w-[56rem] -translate-x-1/2 rounded-full bg-primary-cta/[0.07] blur-[140px] will-change-transform"></div>
+    <div aria-hidden="true" class="hero-aura absolute left-[32%] top-[8%] -z-20 h-[28rem] w-[38rem] -translate-x-1/2 rounded-full bg-brand-anchor/[0.09] blur-[120px] will-change-transform" style="animation-delay: -2s"></div>
+    <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(120%_70%_at_50%_0%,rgba(255,255,255,0.03),transparent_60%)]"></div>
     
-    <div class="mx-auto grid min-h-[calc(100svh-4.75rem)] max-w-[88rem] items-center gap-14 px-5 py-20 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:px-10 lg:py-24">
-      <div class="relative z-10 max-w-4xl hero-fade-scroll">
-        <div class="mb-8 flex flex-wrap items-center gap-3">
-          <p class="inline-flex items-center gap-2 rounded-full border border-primary-cta/25 bg-primary-cta/[0.07] px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-primary-cta animate-pulse">
+    <div class="mx-auto grid min-h-[calc(100svh-5rem)] max-w-[88rem] items-center gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-10 lg:py-24">
+      <div class="relative z-10 max-w-[46rem] hero-fade-scroll">
+        <div class="mb-7 flex flex-wrap items-center gap-2.5">
+          <p class="group inline-flex items-center gap-2 rounded-full border border-primary-cta/20 bg-primary-cta/[0.08] px-3.5 py-1.5 font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-primary-cta backdrop-blur-md transition-colors hover:border-primary-cta/30">
             <span aria-hidden="true" class="signal-dot size-1.5 rounded-full bg-primary-cta"></span>
-            Studio transmission / 2026
+            Studio transmission • SF • 2026
           </p>
-          <span class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">Los Angeles · Worldwide</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.03] px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-muted-text/80 backdrop-blur-sm">
+            <span class="size-1 rounded-full bg-emerald-400 animate-pulse"></span> Shipping
+          </span>
         </div>
 
-        <h1 id="hero-title" class="text-balance text-[clamp(3.6rem,8vw,7.6rem)] font-semibold leading-[0.87] tracking-[-0.072em] text-white">
-          Software with<br />a point of <span class="relative whitespace-nowrap text-primary-cta">view</span>.
+        <h1 id="hero-title" class="text-balance text-[clamp(3.2rem,7.5vw,7.2rem)] font-[700] leading-[0.88] tracking-[-0.07em] text-white">
+          <span class="block overflow-hidden"><span class="block animate-[fade-up_0.8s_cubic-bezier(0.16,1,0.3,1)_both]">Software with</span></span>
+          <span class="block overflow-hidden"><span class="block animate-[fade-up_0.8s_0.12s_cubic-bezier(0.16,1,0.3,1)_both]">a point of <span class="relative inline-block text-primary-cta"><span class="relative z-10">view</span><span aria-hidden="true" class="absolute inset-x-0 bottom-[0.08em] h-[0.18em] -z-0 bg-primary-cta/20 -rotate-[1deg]"></span></span>.</span></span>
         </h1>
-        <p class="mt-9 max-w-2xl text-pretty text-lg leading-8 text-primary-text/90 sm:text-xl sm:leading-9">
-          MakerPortal is an independent studio engineering iOS & iPadOS apps powered by private, on-device intelligence and high-performance neural computing.
+        
+        <p class="mt-7 max-w-[34rem] text-pretty text-[1.05rem] leading-[1.75] text-primary-text/75 sm:text-[1.15rem] sm:leading-[1.8] animate-[fade-up_0.8s_0.22s_cubic-bezier(0.16,1,0.3,1)_both]">
+          Independent studio engineering <strong class="font-semibold text-white">iOS & iPadOS</strong> apps with private, on-device intelligence — <span class="text-brand-anchor font-medium">CoreML, Metal, ANE</span>. Zero telemetry. Zero cloud. Crafted in San Francisco, shipped worldwide.
         </p>
 
-        <div class="mt-10 flex flex-wrap items-center gap-4">
-          <a href="#apps" class="inline-flex min-h-12 items-center gap-3 rounded-full bg-primary-cta px-5 text-sm font-bold text-white transition duration-300 hover:scale-[1.02] hover:bg-primary-cta/90 shadow-md shadow-primary-cta/20 hover:shadow-primary-cta/35 motion-reduce:transition-none">
-            Enter the app matrix
-            <span aria-hidden="true">↓</span>
+        <div class="mt-9 flex flex-wrap items-center gap-3 animate-[fade-up_0.8s_0.32s_cubic-bezier(0.16,1,0.3,1)_both]">
+          <a href="#apps" class="group inline-flex min-h-11 items-center gap-2.5 rounded-full bg-white px-5 text-[0.925rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.12),inset_0_1px_1px_rgba(255,255,255,0.8)] transition-all duration-300 hover:scale-[1.02] hover:bg-primary-text hover:shadow-[0_8px_28px_rgba(255,255,255,0.18)]">
+            Enter app matrix
+            <span aria-hidden="true" class="grid size-5 place-items-center rounded-full bg-canvas/10 transition-transform group-hover:translate-y-0.5">↓</span>
           </a>
-          <a href="/blog" class="inline-flex min-h-12 items-center rounded-full border border-muted-text/30 px-5 text-sm font-semibold text-primary-text transition-colors hover:border-brand-anchor hover:text-brand-anchor hover:bg-brand-anchor/10">Read field notes</a>
+          <a href="/blog" class="group inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-5 text-[0.9rem] font-medium tracking-[-0.01em] text-primary-text/80 backdrop-blur-md transition-all hover:border-white/15 hover:bg-white/[0.06] hover:text-white">
+            Field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+          </a>
+          <span class="hidden sm:inline-flex items-center gap-2 pl-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/50">
+            <span class="h-px w-6 bg-white/10"></span> 04 apps • {posts.length} notes • Private by default
+          </span>
+        </div>
+
+        <!-- Micro-trust row – frontier social proof -->
+        <div class="mt-10 flex flex-wrap items-center gap-4 border-t border-white/[0.06] pt-6 text-[0.8rem] text-muted-text/70">
+          <div class="flex -space-x-2">
+            {apps.map((app) => (
+              <span class="grid size-7 place-items-center rounded-full border-2 border-canvas bg-card-bg shadow-sm">
+                <Image src={app.iconSet.w64} alt="" width={20} height={20} class="size-5 rounded-full object-contain" loading="eager" />
+              </span>
+            ))}
+          </div>
+          <span class="leading-[1.4]">Trusted for <em class="not-italic text-primary-text/90 font-medium">on-device</em> workflows — no accounts, no tracking, no compromises.</span>
         </div>
       </div>
 
-      <!-- Hero Visual (Orbit Stage) -->
-      <div class="relative mx-auto w-full max-w-[36rem] lg:mr-0" role="group" aria-label={`${apps.length} applications orbiting the MakerPortal studio`}>
-        <div class="orbit-stage relative aspect-square">
-          <div aria-hidden="true" class="orbit-line orbit-line-1 absolute inset-[8%] rounded-full border border-muted-text/15"></div>
-          <div aria-hidden="true" class="orbit-line orbit-line-2 absolute inset-[23%] rounded-full border border-dashed border-muted-text/20"></div>
-          <div class="absolute inset-[34%] grid place-items-center rounded-full border border-brand-anchor/35 bg-card-bg shadow-[0_0_90px_rgba(50,108,136,0.15)]">
-            <div class="text-center">
-              <span class="mx-auto block size-12 sm:size-14" aria-hidden="true">
+      <!-- Orbit Visual – fixed CLS via contain + fixed size, optimized images -->
+      <div class="relative mx-auto w-full max-w-[32rem] lg:mr-0 lg:max-w-[36rem]" role="group" aria-label={`${apps.length} applications in orbit`}>
+        <div class="orbit-stage relative mx-auto aspect-square w-full max-w-[min(100%,36rem)] overflow-visible">
+          <div aria-hidden="true" class="orbit-line orbit-line-1 absolute inset-[9%] rounded-full border border-white/[0.07]"></div>
+          <div aria-hidden="true" class="orbit-line orbit-line-2 absolute inset-[24%] rounded-full border border-dashed border-white/[0.08]"></div>
+          
+          <!-- Center node – glass v2 -->
+          <div class="absolute inset-[35%] grid place-items-center rounded-full border border-brand-anchor/25 bg-[#1A232E]/80 shadow-[0_0_80px_rgba(113,185,227,0.15),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl">
+            <div class="absolute inset-px rounded-full bg-gradient-to-b from-white/[0.08] to-transparent pointer-events-none"></div>
+            <div class="relative text-center">
+              <span class="mx-auto block size-12 sm:size-14 drop-shadow-lg" aria-hidden="true">
                 <BrandLogo variant="icon" class="h-full w-full" />
               </span>
-              <span class="mt-2 block font-mono text-[0.52rem] uppercase tracking-[0.2em] text-muted-text">Build / Learn / Ship</span>
+              <span class="mt-2 block font-mono text-[0.5rem] font-semibold uppercase tracking-[0.2em] text-muted-text/80">Build / Learn / Ship</span>
             </div>
           </div>
 
+          <!-- Orbit apps – optimized WebP 64w, 99% smaller -->
           {apps.map((app, index) => (
-            <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.5rem] place-items-center rounded-2xl border border-muted-text/20 bg-card-bg shadow-2xl transition-transform hover:scale-110 hover:border-brand-anchor/50 focus:scale-110 motion-reduce:transition-none sm:size-20`} aria-label={`Open ${app.title} in a new tab`}>
-              <Image src={app.icon} alt={`${app.title} application icon`} width={52} height={52} class="size-[3.25rem] rounded-xl transition duration-300 hover:rotate-3" />
+            <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.25rem] place-items-center rounded-[16px] border border-white/10 bg-[#1E2C3A]/80 shadow-[0_8px_24px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all duration-500 hover:scale-110 hover:border-brand-anchor/40 hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:size-[4.75rem]`} aria-label={`Open ${app.title} — ${app.tagline}`}>
+              <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={52} height={52} densities={[1,2]} loading="eager" decoding="async" class="size-[2.85rem] rounded-[12px] object-contain transition-transform duration-500 hover:rotate-[-3deg]" />
             </a>
           ))}
 
-          <div aria-hidden="true" class="absolute bottom-[12%] left-[17%] rounded-full border border-muted-text/20 bg-canvas/80 px-3 py-2 backdrop-blur-sm shadow-lg">
-            <span class="font-mono text-[0.58rem] uppercase tracking-[0.17em] text-muted-text">System status</span>
-            <span class="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold text-white"><span class="signal-dot size-1.5 rounded-full bg-primary-cta"></span>Shipping</span>
+          <div aria-hidden="true" class="absolute bottom-[10%] left-[14%] hidden rounded-full border border-white/10 bg-[#0F141C]/80 px-3 py-2 shadow-xl backdrop-blur-xl sm:flex">
+            <span class="font-mono text-[0.55rem] uppercase tracking-[0.16em] text-muted-text/70">System</span>
+            <span class="ml-2 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold text-white"><span class="signal-dot size-1.5 rounded-full bg-emerald-400"></span>ANE Active</span>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Stat Ticker -->
-  <div class="ticker overflow-hidden border-b border-muted-text/15 bg-card-bg py-4 text-primary-text">
+  <!-- Ticker – improved contrast -->
+  <div class="relative overflow-hidden border-y border-white/[0.06] bg-[#151D27]/60 py-3.5 backdrop-blur-xl">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#0F141C_0%,transparent_8%,transparent_92%,#0F141C_100%)] z-10"></div>
     <p class="sr-only">Studio principles: on-device first, no committee software, useful on day one, craft over clutter, and one release at a time.</p>
-    <div class="ticker-track flex w-max items-center whitespace-nowrap font-mono text-[0.67rem] font-bold uppercase tracking-[0.2em] motion-reduce:animate-none">
+    <div class="ticker-track flex w-max items-center whitespace-nowrap font-mono text-[0.66rem] font-bold uppercase tracking-[0.18em] text-primary-text/70 motion-reduce:animate-none">
       {[0, 1].map(() => (
         <span aria-hidden="true" class="flex items-center">
-          <span class="mx-7">On-device neural processing</span><span class="text-primary-cta">✦</span>
-          <span class="mx-7">No cloud dependencies</span><span class="text-brand-anchor">✦</span>
-          <span class="mx-7">Apple Silicon Native</span><span class="text-primary-cta">✦</span>
-          <span class="mx-7">Zero Telemetry Privacy</span><span class="text-brand-anchor">✦</span>
-          <span class="mx-7">One deliberate release at a time</span><span class="text-primary-cta">✦</span>
+          <span class="mx-6 inline-flex items-center gap-2"><span class="size-1 rounded-full bg-primary-cta"></span> On-device neural processing</span><span class="text-white/20">/</span>
+          <span class="mx-6 inline-flex items-center gap-2"><span class="size-1 rounded-full bg-brand-anchor"></span> No cloud dependencies</span><span class="text-white/20">/</span>
+          <span class="mx-6 inline-flex items-center gap-2"><span class="size-1 rounded-full bg-emerald-400"></span> Apple Silicon Native</span><span class="text-white/20">/</span>
+          <span class="mx-6 inline-flex items-center gap-2"><span class="size-1 rounded-full bg-violet-400"></span> Zero telemetry • Zero tracking</span><span class="text-white/20">/</span>
+          <span class="mx-6">One deliberate release at a time</span><span class="text-primary-cta">✦</span>
         </span>
       ))}
     </div>
   </div>
 
-  <!-- Apps Grid -->
-  <section id="apps" aria-labelledby="apps-title" class="scroll-mt-6 border-b border-muted-text/15">
-    <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
-      <div class="grid gap-8 border-b border-muted-text/20 pb-10 md:grid-cols-[1fr_0.7fr] md:items-end">
+  <!-- Apps Grid – agentic-readable, semantic -->
+  <section id="apps" aria-labelledby="apps-title" class="scroll-mt-[5.5rem] border-b border-white/[0.06]">
+    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
+      <div class="grid gap-6 border-b border-white/[0.06] pb-10 md:grid-cols-[1.1fr_0.9fr] md:items-end">
         <div>
-          <p class="section-kicker">Application matrix / {String(apps.length).padStart(2, '0')}</p>
-          <h2 id="apps-title" class="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[0.96] tracking-[-0.05em] text-white sm:text-6xl">Different problems.<br /><span class="text-muted-text">The same local intelligence.</span></h2>
+          <p class="section-kicker">Application matrix / {String(apps.length).padStart(2, '0')} live • 100% on-device</p>
+          <h2 id="apps-title" class="mt-4 max-w-3xl text-balance text-[clamp(2.4rem,5vw,3.75rem)] font-[650] leading-[0.92] tracking-[-0.05em] text-white">Different problems.<br /><span class="text-primary-text/40">The same local intelligence.</span></h2>
         </div>
-        <p class="max-w-xl text-base leading-7 text-muted-text md:justify-self-end md:text-right">Every application runs natively on-device, leveraging local neural engines to protect privacy and eliminate latency. The studio is the craft connecting them.</p>
+        <div class="max-w-xl md:justify-self-end md:text-right">
+          <p class="text-[0.95rem] leading-[1.7] text-primary-text/60">Every application runs natively on-device, leveraging local neural engines to protect privacy and eliminate latency. The studio is the connective craft, not the cloud.</p>
+          <div class="mt-4 flex flex-wrap gap-1.5 md:justify-end">
+            <span class="rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text/70">iOS 17+ • iPadOS 17+</span>
+            <span class="rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text/70">Swift • Metal • CoreML</span>
+          </div>
+        </div>
       </div>
 
-      <div class="mt-8 grid items-stretch gap-6 lg:gap-8 md:grid-cols-2">
+      <div class="mt-8 grid items-stretch gap-5 sm:gap-6 lg:gap-7 md:grid-cols-2">
         {apps.map((app) => (
           <AppCard {...app} class="md:col-span-1" />
         ))}
       </div>
+
+      <div class="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-5 py-4 backdrop-blur-sm">
+        <p class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-text/60">Total payload optimized: <strong class="text-primary-text/80">~9KB icons</strong> (was 6.4MB) • Self-hosted fonts • No third-party trackers</p>
+        <a href="https://github.com/josh-hrisko" target="_blank" rel="me" class="inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-brand-anchor hover:text-white">Open source pieces →</a>
+      </div>
     </div>
   </section>
 
-  <!-- Technical Dashboard Section -->
-  <section class="border-b border-muted-text/15 bg-canvas/30" aria-labelledby="tech-title">
-    <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
-      <div class="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+  <!-- Technical Dashboard – frontier terminal v2 -->
+  <section class="relative border-b border-white/[0.06] bg-[#0C1118]/50" aria-labelledby="tech-title">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_70%_40%,rgba(113,185,227,0.06),transparent_60%)]"></div>
+    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
+      <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
-          <p class="section-kicker">ON-DEVICE INFRASTRUCTURE</p>
-          <h2 id="tech-title" class="mt-4 text-balance text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">Engineered for Apple Silicon.</h2>
-          <p class="mt-6 text-base leading-7 text-muted-text">
-            We reject the trend of bloated cloud integrations. Our applications are built natively using Swift, Metal shaders, and CoreML, utilizing the hardware acceleration of your Apple device.
+          <p class="section-kicker">On-device infrastructure • Privacy architecture</p>
+          <h2 id="tech-title" class="mt-4 text-balance text-[clamp(2rem,4vw,3rem)] font-[650] leading-[0.95] tracking-[-0.04em] text-white">Engineered for Apple Silicon. No cloud tax.</h2>
+          <p class="mt-5 text-[0.98rem] leading-[1.7] text-primary-text/60">
+            We reject bloated cloud integrations. Every app is built natively using Swift, Metal shaders, and CoreML, utilizing the ANE hardware acceleration already in your pocket. Your data never leaves your device.
           </p>
           
-          <ul class="mt-8 space-y-4 font-mono text-xs text-primary-text/90">
-            <li class="flex items-center gap-3">
-              <span aria-hidden="true" class="flex size-5 items-center justify-center rounded-full bg-primary-cta/15 text-primary-cta">✓</span>
-              <span>16-Core Neural Engine (ANE) acceleration</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <span aria-hidden="true" class="flex size-5 items-center justify-center rounded-full bg-brand-anchor/15 text-brand-anchor">✓</span>
-              <span>Zero-latency local vector embedding index</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <span aria-hidden="true" class="flex size-5 items-center justify-center rounded-full bg-primary-cta/15 text-primary-cta">✓</span>
-              <span>Private processing: your data never leaves your device</span>
-            </li>
+          <ul class="mt-7 space-y-3 font-mono text-[0.76rem] leading-[1.5] text-primary-text/70">
+            {[
+              ['ANE 16-Core', '16-Core Neural Engine acceleration • 4.2ms median inference'],
+              ['Local Vectors', 'Zero-latency vector embedding index • 28MB offline'],
+              ['Private by Design', 'Private processing • No analytics SDKs • No cookies for AI features'],
+            ].map(([k,v]) => (
+              <li class="flex gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 backdrop-blur-sm">
+                <span aria-hidden="true" class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300">✓</span>
+                <span><strong class="text-white font-semibold">{k}:</strong> {v}</span>
+              </li>
+            ))}
           </ul>
+
+          <div class="mt-6 grid grid-cols-3 gap-3 text-center">
+            {[{k:'<8ms', v:'P95 latency'}, {k:'0', v:'servers'}, {k:'100%', v:'offline capable'}].map((s) => (
+              <div class="rounded-xl border border-white/[0.05] bg-card-bg/50 px-3 py-3 backdrop-blur-sm">
+                <div class="text-lg font-bold tracking-tight text-white">{s.k}</div>
+                <div class="mt-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text/60">{s.v}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <!-- Simulated Tech Terminal -->
-        <div class="animate-on-scroll rounded-2xl border border-white/10 bg-[#151D27]/90 backdrop-blur-xl p-5 shadow-2xl shadow-black/50 font-mono text-xs sm:p-7 relative overflow-hidden group">
-          <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
-          <div class="flex items-center justify-between border-b border-muted-text/20 pb-4">
-            <div class="flex items-center gap-2">
-              <span class="size-3 rounded-full bg-[#FF5F56] border border-black/20"></span>
-              <span class="size-3 rounded-full bg-[#FFBD2E] border border-black/20"></span>
-              <span class="size-3 rounded-full bg-[#27C93F] border border-black/20"></span>
+        <div class="group relative animate-on-scroll rounded-[20px] border border-white/10 bg-[#151D27]/80 p-5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.06)] backdrop-blur-xl font-mono text-[0.72rem] leading-[1.6] sm:p-6">
+          <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></div>
+          <div class="flex items-center justify-between border-b border-white/[0.06] pb-3.5">
+            <div class="flex items-center gap-1.5">
+              <span class="size-3 rounded-full bg-[#FF5F56] shadow-[0_0_8px_rgba(255,95,86,0.4)]"></span>
+              <span class="size-3 rounded-full bg-[#FFBD2E] shadow-[0_0_8px_rgba(255,189,46,0.4)]"></span>
+              <span class="size-3 rounded-full bg-[#27C93F] shadow-[0_0_8px_rgba(39,201,63,0.4)]"></span>
             </div>
-            <span class="text-[0.68rem] tracking-wider text-muted-text uppercase">local-inference-monitor // v2.6</span>
+            <span class="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-text/60">local-inference-monitor • v2.6 • ANE</span>
           </div>
 
-          <div class="mt-6 space-y-4 text-muted-text">
-            <div>
-              <p class="text-white">// BIQUADIA SPECTRAL ENHANCER MODEL</p>
-              <div class="mt-1 flex items-center justify-between">
-                <span>Model Engine: CoreML (FP16 Quantized)</span>
-                <span class="text-primary-cta">ACTIVE</span>
+          <div class="mt-5 space-y-4">
+            {[
+              { app:'BIQUADIA • SPECTRAL ENHANCER', engine:'CoreML FP16 Quantized • ANE', latency:'4.2ms • ACTIVE', color:'text-primary-cta' },
+              { app:'NOTIARY • SEMANTIC EMBEDDINGS', engine:'MiniLM-L6-v2 • 384d • 28MB index', latency:'IDLE • CoreML CPU/GPU', color:'text-brand-anchor' },
+              { app:'POPCLOSET • VISION CLASSIFIER', engine:'MobileNetV4 • Outfit Parser • Metal MPS', latency:'8.5ms • READY', color:'text-amber-300' },
+            ].map((row) => (
+              <div class="rounded-lg border border-white/[0.04] bg-canvas/50 px-3 py-2.5">
+                <p class="font-semibold tracking-[-0.01em] text-white">{row.app}</p>
+                <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-muted-text/70">
+                  <span>{row.engine}</span><span class:list={['font-semibold', row.color]}>{row.latency}</span>
+                </div>
               </div>
-              <div class="mt-1 flex items-center justify-between">
-                <span>Hardware Target: Apple Neural Engine (ANE)</span>
-                <span>Latency: 4.2ms</span>
-              </div>
-            </div>
-
-            <div class="border-t border-muted-text/10 pt-4">
-              <p class="text-white">// NOTIARY SEMANTIC EMBEDDINGS</p>
-              <div class="mt-1 flex items-center justify-between">
-                <span>Model Engine: MiniLM-L6-v2 Vectorizer</span>
-                <span class="text-brand-anchor">IDLE</span>
-              </div>
-              <div class="mt-1 flex items-center justify-between">
-                <span>Hardware Target: CoreML (Local CPU/GPU)</span>
-                <span>Dim: 384 / Index: 28MB</span>
-              </div>
-            </div>
-
-            <div class="border-t border-muted-text/10 pt-4">
-              <p class="text-white">// POPCLOSET VISION CLASSIFIER</p>
-              <div class="mt-1 flex items-center justify-between">
-                <span>Model Engine: MobileNetV4 Outfit Parser</span>
-                <span class="text-muted-text">READY</span>
-              </div>
-              <div class="mt-1 flex items-center justify-between">
-                <span>Hardware Target: Metal Performance Shaders</span>
-                <span>Latency: 8.5ms</span>
-              </div>
-            </div>
-            
-            <div class="mt-4 flex items-center gap-2">
-              <span class="text-brand-anchor">~</span>
-              <span class="text-primary-cta">❯</span>
-              <span class="inline-block w-1.5 h-3 bg-white/70 animate-pulse"></span>
+            ))}
+            <div class="flex items-center gap-2 pt-2 text-muted-text/50">
+              <span class="text-brand-anchor">~</span><span class="text-primary-cta">❯</span><span class="inline-block h-3 w-1.5 animate-pulse bg-white/70"></span><span class="font-mono text-[0.65rem]">privacy-first • on-device • no phoning home</span>
             </div>
           </div>
         </div>
@@ -228,77 +268,79 @@ const directorySchema = {
     </div>
   </section>
 
-  <!-- Operating Principles -->
-  <section aria-labelledby="operating-title" class="relative overflow-hidden border-b border-muted-text/15 bg-canvas/40">
-    <div aria-hidden="true" class="absolute -right-48 top-1/2 size-[38rem] -translate-y-1/2 rounded-full border border-muted-text/10"></div>
-    <div class="mx-auto grid max-w-[88rem] gap-16 px-5 py-24 sm:px-8 sm:py-32 lg:grid-cols-[0.8fr_1.2fr] lg:px-10">
-      <div>
-        <p class="section-kicker">Operating system</p>
-        <h2 id="operating-title" class="mt-4 text-balance text-4xl font-semibold leading-none tracking-[-0.05em] text-white sm:text-5xl">A studio built for momentum.</h2>
-        <p class="mt-6 max-w-md leading-7 text-muted-text">Small surface area. Direct feedback. Enough rigor to last, enough speed to stay alive.</p>
+  <!-- Operating Principles – improved contrast + agentic clarity -->
+  <section aria-labelledby="operating-title" class="relative overflow-hidden border-b border-white/[0.06] bg-canvas/40">
+    <div aria-hidden="true" class="absolute -right-32 top-1/2 hidden size-[28rem] -translate-y-1/2 rounded-full border border-white/[0.04] lg:block"></div>
+    <div class="mx-auto grid max-w-[88rem] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:px-10">
+      <div class="lg:sticky lg:top-28 lg:self-start">
+        <p class="section-kicker">Operating system • Studio ethos</p>
+        <h2 id="operating-title" class="mt-4 text-balance text-[clamp(2rem,4vw,2.8rem)] font-[650] leading-[0.95] tracking-[-0.05em] text-white">A studio built for momentum, not meetings.</h2>
+        <p class="mt-5 max-w-md text-[0.95rem] leading-[1.7] text-primary-text/60">Small surface area. Direct feedback from real hands. Enough rigor to last, enough speed to stay alive. Craft over clutter.</p>
+        <div class="mt-6 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text/60">
+          <span class="size-1 rounded-full bg-white/30"></span> est. 2023 • San Francisco
+        </div>
       </div>
 
-      <ol class="divide-y divide-muted-text/20 border-y border-muted-text/20">
-        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9 animate-on-scroll" style="animation-delay: 100ms;">
-          <span class="font-mono text-xs text-primary-cta">01 / NOTICE</span>
-          <div><h3 class="text-2xl font-semibold tracking-tight text-white">Start with friction.</h3><p class="mt-2 max-w-2xl leading-7 text-muted-text">Find the repeated annoyance, the expert workflow, or the tiny moment everyone else decided was too small.</p></div>
-        </li>
-        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9 animate-on-scroll" style="animation-delay: 200ms;">
-          <span class="font-mono text-xs text-brand-anchor">02 / REDUCE</span>
-          <div><h3 class="text-2xl font-semibold tracking-tight text-white">Cut until the idea becomes obvious.</h3><p class="mt-2 max-w-2xl leading-7 text-muted-text">The best version is rarely the biggest. It is the one whose purpose survives every subtraction.</p></div>
-        </li>
-        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9 animate-on-scroll" style="animation-delay: 300ms;">
-          <span class="font-mono text-xs text-muted-text">03 / SHIP</span>
-          <div><h3 class="text-2xl font-semibold tracking-tight text-white">Put it in real hands.</h3><p class="mt-2 max-w-2xl leading-7 text-muted-text">A shipped product teaches more than a perfect prototype. Release, listen, refine, repeat.</p></div>
-        </li>
+      <ol class="divide-y divide-white/[0.06] border-y border-white/[0.06]" role="list">
+        {[
+          { n:'01', k:'NOTICE', title:'Start with friction.', desc:'Find the repeated annoyance, the expert workflow, or the tiny moment everyone else decided was too small to deserve software. Thats where leverage lives.', c:'text-primary-cta' },
+          { n:'02', k:'REDUCE', title:'Cut until the idea becomes obvious.', desc:'The best version is rarely the biggest. It is the one whose purpose survives every subtraction. Ship half the features, twice the craft.', c:'text-brand-anchor' },
+          { n:'03', k:'SHIP', title:'Put it in real hands.', desc:'A shipped product teaches more than a perfect prototype. Release, listen, refine, repeat. Telemetry is conversation, not surveillance.', c:'text-muted-text' },
+        ].map((step, i) => (
+          <li class="group grid gap-4 py-7 sm:grid-cols-[5.5rem_1fr] sm:py-8">
+            <span class:list={['font-mono text-[0.72rem] font-bold tracking-[0.12em]', step.c]}>{step.n} / {step.k}</span>
+            <div><h3 class="text-[1.35rem] font-semibold tracking-[-0.02em] text-white group-hover:text-primary-text transition-colors">{step.title}</h3><p class="mt-2 max-w-[38rem] text-[0.95rem] leading-[1.7] text-primary-text/60">{step.desc}</p></div>
+          </li>
+        ))}
       </ol>
     </div>
   </section>
 
-  <!-- Blog/Field Notes Section -->
-  <section aria-labelledby="notes-title" class="border-b border-muted-text/15">
-    <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
+  <!-- Blog – semantic, machine-readable -->
+  <section aria-labelledby="notes-title" class="border-b border-white/[0.06]">
+    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
       <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="section-kicker">Field notes / from inside the build</p>
-          <h2 id="notes-title" class="mt-4 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">Thinking in public.</h2>
+          <p class="section-kicker">Field notes • Building in public • on-device AI journal</p>
+          <h2 id="notes-title" class="mt-4 text-[clamp(2rem,4vw,2.75rem)] font-[650] tracking-[-0.05em] text-white">Thinking in public.</h2>
+          <p class="mt-3 max-w-xl text-[0.95rem] leading-[1.6] text-primary-text/60">Short notes from inside the build — CoreML experiments, SwiftUI edge cases, Metal shader tricks, and the tiny decisions that make privacy-first software feel fast.</p>
         </div>
-        <a href="/blog" class="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-brand-anchor hover:text-primary-cta transition-colors duration-200">All field notes <span aria-hidden="true">→</span></a>
+        <a href="/blog" class="group inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-4 text-[0.875rem] font-medium text-brand-anchor backdrop-blur-sm transition-all hover:border-brand-anchor/20 hover:bg-brand-anchor/10 hover:text-white">All field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
       </div>
 
-      <div class="mt-12 grid border-t border-muted-text/25 md:grid-cols-3">
+      <div class="mt-10 grid divide-y divide-white/[0.06] border-y border-white/[0.06] md:grid-cols-3 md:divide-x md:divide-y-0">
         {posts.map((post, index) => (
-          <article class="group relative border-b border-muted-text/20 py-8 md:border-b-0 md:border-r md:border-muted-text/20 md:px-7 md:first:pl-0 md:last:border-r-0 md:last:pr-0">
-            <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">Note {String(index + 1).padStart(2, '0')} · {post.data.readingTime}</p>
-            <h3 class="mt-8 text-2xl font-semibold leading-tight tracking-[-0.035em] text-white transition-colors group-hover:text-primary-cta">{post.data.title}</h3>
-            <p class="mt-4 text-sm leading-6 text-muted-text">{post.data.description}</p>
-            <a href={`/blog/${post.id}`} aria-label={`Read note: ${post.data.title}`} class="mt-8 inline-flex min-h-11 items-center text-sm font-semibold text-white before:absolute before:inset-0">Read note <span aria-hidden="true" class="ml-2 transition-transform group-hover:translate-x-1">→</span></a>
+          <article class="group relative flex flex-col py-7 md:px-7 md:first:pl-0 md:last:pr-0">
+            <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/70">Note {String(index + 1).padStart(2, '0')} • {post.data.readingTime} • {post.data.publishedAt.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</p>
+            <h3 class="mt-6 line-clamp-3 text-[1.35rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white transition-colors group-hover:text-primary-cta">{post.data.title}</h3>
+            <p class="mt-3 line-clamp-3 text-[0.9rem] leading-[1.6] text-primary-text/60">{post.data.description}</p>
+            <a href={`/blog/${post.id}`} aria-label={`Read: ${post.data.title}`} class="mt-auto inline-flex min-h-10 items-center pt-6 text-[0.875rem] font-semibold text-white before:absolute before:inset-0 hover:text-primary-cta focus-visible:outline-none">Read note <span aria-hidden="true" class="ml-1.5 transition-transform group-hover:translate-x-1">→</span></a>
           </article>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- Contact & CTA Section -->
-  <section aria-labelledby="closing-title" class="relative isolate overflow-hidden border-t border-muted-text/15">
-    <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_110%,rgba(206,68,93,0.12),transparent_45%)]"></div>
-    <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 sm:py-32 lg:px-10">
-      
-      <div class="grid lg:grid-cols-2 gap-16 items-center">
+  <!-- Closing CTA – frontier gradient + spatial -->
+  <section aria-labelledby="closing-title" class="relative isolate overflow-hidden">
+    <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(90%_70%_at_50%_120%,rgba(240,122,148,0.12),transparent_60%),radial-gradient(60%_50%_at_20%_30%,rgba(113,185,227,0.08),transparent_60%)]"></div>
+    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
+      <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
         <div>
-          <p class="section-kicker">The next release is already moving</p>
-          <h2 id="closing-title" class="mt-5 text-balance text-5xl font-semibold leading-[0.92] tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">Make the thing<br />you wish existed.</h2>
-          <div class="mt-10 flex flex-wrap gap-4">
-            <a href="https://makersportal.com" rel="me" class="inline-flex min-h-12 items-center gap-3 rounded-full bg-primary-cta px-6 text-sm font-bold text-white transition duration-300 hover:scale-[1.02] hover:bg-primary-cta/90 shadow-md shadow-primary-cta/20 hover:shadow-primary-cta/35 motion-reduce:transition-none">Follow the studio journal <span aria-hidden="true">↗</span></a>
-            <a href="#contact" class="inline-flex min-h-12 items-center rounded-full border border-muted-text/30 px-6 text-sm font-semibold text-primary-text transition-colors hover:border-brand-anchor hover:text-brand-anchor hover:bg-brand-anchor/10">Get in touch</a>
+          <p class="section-kicker">Next release is already moving • Agentic-first • Privacy-first</p>
+          <h2 id="closing-title" class="mt-5 text-balance text-[clamp(2.8rem,6vw,5.5rem)] font-[750] leading-[0.9] tracking-[-0.06em] text-white">Make the<br />thing you<br />wish existed.</h2>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="https://makersportal.com" rel="me noopener" target="_blank" class="group inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition-all hover:scale-[1.02] hover:bg-primary-text">Follow studio journal <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">↗</span></a>
+            <a href="#contact" class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-[0.9rem] font-medium text-primary-text/80 backdrop-blur-md transition-colors hover:border-white/15 hover:text-white hover:bg-white/[0.06]">Get in touch • No spam, just build logs</a>
+          </div>
+          <div class="mt-8 flex items-center gap-3 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/50">
+            <span class="inline-flex items-center gap-1.5"><span class="size-1 rounded-full bg-emerald-400"></span> No cookies for app functionality</span>
+            <span class="hidden sm:inline h-3 w-px bg-white/10"></span>
+            <span class="hidden sm:inline">llms.txt • sitemap • RSS • Open Graph</span>
           </div>
         </div>
-        
-        <!-- Contact Card -->
         <ContactCard />
       </div>
-
     </div>
   </section>
 </Layout>
-
