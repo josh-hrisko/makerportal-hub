@@ -8,9 +8,9 @@
   --color-canvas: #0F141C;
   --color-card-bg: #1A232E;
   --color-primary-text: #E2E8F0;
-  --color-muted-text: #5C6E7A;
-  --color-brand-anchor: #326C88;
-  --color-primary-cta: #CE445D;
+  --color-muted-text: #94A3B8; /* Improved contrast */
+  --color-brand-anchor: #5CA9D6; /* Improved contrast */
+  --color-primary-cta: #ED6B86; /* Improved contrast */
 }
 
 @layer base {
@@ -34,6 +34,23 @@
     position: relative;
   }
 
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0F141C;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1A232E;
+    border-radius: 5px;
+    border: 2px solid #0F141C;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #5C6E7A;
+  }
+
   /* Global background grid */
   body::before {
     position: fixed;
@@ -53,8 +70,10 @@
   }
 
   :focus-visible {
-    outline: 2px solid #CE445D;
-    outline-offset: 4px;
+    outline: 2px solid rgb(206 68 93 / 0.7);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgb(206 68 93 / 0.2);
+    transition: outline-offset 0.2s ease, box-shadow 0.2s ease;
   }
 }
 
@@ -87,7 +106,17 @@
   }
 
   .signal-dot {
-    box-shadow: 0 0 0 0 rgb(206 68 93 / 0.45);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .signal-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--color-primary-cta);
+    z-index: -1;
     animation: signal-pulse 2.4s ease-out infinite;
   }
 
@@ -164,8 +193,8 @@
 }
 
 @keyframes signal-pulse {
-  0% { box-shadow: 0 0 0 0 rgb(206 68 93 / 0.5); }
-  65%, 100% { box-shadow: 0 0 0 0.55rem rgb(206 68 93 / 0); }
+  0% { transform: scale(1); opacity: 0.6; }
+  65%, 100% { transform: scale(3.5); opacity: 0; }
 }
 
 @keyframes orbit-spin {
@@ -174,6 +203,36 @@
 
 @keyframes ticker-scroll {
   to { transform: translateX(-50%); }
+}
+
+/* Entry Animations */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Scroll-driven utilties */
+@supports (animation-timeline: view()) {
+  .animate-on-scroll {
+    animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 30%;
+  }
+  
+  .hero-fade-scroll {
+    animation: hero-fade linear both;
+    animation-timeline: scroll();
+    animation-range: 0 400px;
+  }
+}
+
+@keyframes hero-fade {
+  to { opacity: 0; transform: translateY(50px) scale(0.95); }
 }
 
 @media (max-width: 639px) {

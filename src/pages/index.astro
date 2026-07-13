@@ -47,12 +47,12 @@ const directorySchema = {
   </Fragment>
 
   <!-- Hero Section -->
-  <section class="hero-grid relative isolate overflow-hidden border-b border-muted-text/15" aria-labelledby="hero-title">
+  <section class="hero-grid relative isolate overflow-hidden border-b border-muted-text/15 bg-gradient-to-b from-[#1A232E]/30 to-canvas" aria-labelledby="hero-title">
     <div aria-hidden="true" class="hero-aura absolute left-1/2 top-0 -z-20 h-[42rem] w-[58rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-cta/[0.06] blur-[150px]"></div>
     <div aria-hidden="true" class="hero-aura absolute left-1/3 top-12 -z-20 h-[30rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-anchor/[0.1] blur-[130px]"></div>
     
     <div class="mx-auto grid min-h-[calc(100svh-4.75rem)] max-w-[88rem] items-center gap-14 px-5 py-20 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:px-10 lg:py-24">
-      <div class="relative z-10 max-w-4xl">
+      <div class="relative z-10 max-w-4xl hero-fade-scroll">
         <div class="mb-8 flex flex-wrap items-center gap-3">
           <p class="inline-flex items-center gap-2 rounded-full border border-primary-cta/25 bg-primary-cta/[0.07] px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-primary-cta animate-pulse">
             <span aria-hidden="true" class="signal-dot size-1.5 rounded-full bg-primary-cta"></span>
@@ -62,7 +62,7 @@ const directorySchema = {
         </div>
 
         <h1 id="hero-title" class="text-balance text-[clamp(3.6rem,8vw,7.6rem)] font-semibold leading-[0.87] tracking-[-0.072em] text-white">
-          Software with<br />a point of <span class="relative whitespace-nowrap text-primary-cta">view<span aria-hidden="true" class="absolute -right-4 top-0 size-2 rounded-full bg-brand-anchor animate-bounce"></span></span>.
+          Software with<br />a point of <span class="relative whitespace-nowrap text-primary-cta">view</span>.
         </h1>
         <p class="mt-9 max-w-2xl text-pretty text-lg leading-8 text-primary-text/90 sm:text-xl sm:leading-9">
           MakerPortal is an independent studio engineering iOS & iPadOS apps powered by private, on-device intelligence and high-performance neural computing.
@@ -133,8 +133,10 @@ const directorySchema = {
         <p class="max-w-xl text-base leading-7 text-muted-text md:justify-self-end md:text-right">Every application runs natively on-device, leveraging local neural engines to protect privacy and eliminate latency. The studio is the craft connecting them.</p>
       </div>
 
-      <div class="mt-8 grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {apps.map((app) => <AppCard {...app} />)}
+      <div class="mt-8 grid items-stretch gap-6 lg:gap-8 md:grid-cols-2">
+        {apps.map((app) => (
+          <AppCard {...app} class="md:col-span-1" />
+        ))}
       </div>
     </div>
   </section>
@@ -167,12 +169,13 @@ const directorySchema = {
         </div>
 
         <!-- Simulated Tech Terminal -->
-        <div class="rounded-2xl border border-muted-text/25 bg-card-bg p-5 shadow-2xl font-mono text-xs sm:p-7">
+        <div class="animate-on-scroll rounded-2xl border border-white/10 bg-[#151D27]/90 backdrop-blur-xl p-5 shadow-2xl shadow-black/50 font-mono text-xs sm:p-7 relative overflow-hidden group">
+          <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
           <div class="flex items-center justify-between border-b border-muted-text/20 pb-4">
             <div class="flex items-center gap-2">
-              <span class="size-3 rounded-full bg-[#CE445D]/70"></span>
-              <span class="size-3 rounded-full bg-[#326C88]/70"></span>
-              <span class="size-3 rounded-full bg-[#5C6E7A]/70"></span>
+              <span class="size-3 rounded-full bg-[#FF5F56] border border-black/20"></span>
+              <span class="size-3 rounded-full bg-[#FFBD2E] border border-black/20"></span>
+              <span class="size-3 rounded-full bg-[#27C93F] border border-black/20"></span>
             </div>
             <span class="text-[0.68rem] tracking-wider text-muted-text uppercase">local-inference-monitor // v2.6</span>
           </div>
@@ -213,6 +216,12 @@ const directorySchema = {
                 <span>Latency: 8.5ms</span>
               </div>
             </div>
+            
+            <div class="mt-4 flex items-center gap-2">
+              <span class="text-brand-anchor">~</span>
+              <span class="text-primary-cta">❯</span>
+              <span class="inline-block w-1.5 h-3 bg-white/70 animate-pulse"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -230,15 +239,15 @@ const directorySchema = {
       </div>
 
       <ol class="divide-y divide-muted-text/20 border-y border-muted-text/20">
-        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9">
+        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9 animate-on-scroll" style="animation-delay: 100ms;">
           <span class="font-mono text-xs text-primary-cta">01 / NOTICE</span>
           <div><h3 class="text-2xl font-semibold tracking-tight text-white">Start with friction.</h3><p class="mt-2 max-w-2xl leading-7 text-muted-text">Find the repeated annoyance, the expert workflow, or the tiny moment everyone else decided was too small.</p></div>
         </li>
-        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9">
+        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9 animate-on-scroll" style="animation-delay: 200ms;">
           <span class="font-mono text-xs text-brand-anchor">02 / REDUCE</span>
           <div><h3 class="text-2xl font-semibold tracking-tight text-white">Cut until the idea becomes obvious.</h3><p class="mt-2 max-w-2xl leading-7 text-muted-text">The best version is rarely the biggest. It is the one whose purpose survives every subtraction.</p></div>
         </li>
-        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9">
+        <li class="group grid gap-4 py-7 sm:grid-cols-[5rem_1fr] sm:py-9 animate-on-scroll" style="animation-delay: 300ms;">
           <span class="font-mono text-xs text-muted-text">03 / SHIP</span>
           <div><h3 class="text-2xl font-semibold tracking-tight text-white">Put it in real hands.</h3><p class="mt-2 max-w-2xl leading-7 text-muted-text">A shipped product teaches more than a perfect prototype. Release, listen, refine, repeat.</p></div>
         </li>
@@ -263,7 +272,7 @@ const directorySchema = {
             <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">Note {String(index + 1).padStart(2, '0')} · {post.data.readingTime}</p>
             <h3 class="mt-8 text-2xl font-semibold leading-tight tracking-[-0.035em] text-white transition-colors group-hover:text-primary-cta">{post.data.title}</h3>
             <p class="mt-4 text-sm leading-6 text-muted-text">{post.data.description}</p>
-            <a href={`/blog/${post.id}`} class="mt-8 inline-flex min-h-11 items-center text-sm font-semibold text-white before:absolute before:inset-0">Read note <span aria-hidden="true" class="ml-2 transition-transform group-hover:translate-x-1">→</span></a>
+            <a href={`/blog/${post.id}`} aria-label={`Read note: ${post.data.title}`} class="mt-8 inline-flex min-h-11 items-center text-sm font-semibold text-white before:absolute before:inset-0">Read note <span aria-hidden="true" class="ml-2 transition-transform group-hover:translate-x-1">→</span></a>
           </article>
         ))}
       </div>

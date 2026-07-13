@@ -1,6 +1,6 @@
 ---
 ---
-<div class="relative isolate scroll-mt-24 overflow-hidden rounded-3xl border border-muted-text/20 bg-card-bg shadow-2xl p-8 sm:p-12" id="contact">
+<div class="relative isolate scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-white/5 bg-[#1A232E]/80 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_25px_50px_-12px_rgba(0,0,0,0.5)] p-8 sm:p-12 animate-on-scroll" id="contact">
   <div aria-hidden="true" class="absolute -right-20 -top-20 -z-10 size-64 rounded-full opacity-20 blur-[90px] bg-primary-cta"></div>
   
   <div class="max-w-xl">
@@ -59,8 +59,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <span class="unlock-label pointer-events-none z-10 text-[0.95rem] font-medium text-muted-text select-none transition-opacity" id="unlock-label">Slide to Unlock Verification</span>
-        <input type="range" min="0" max="100" value="0" class="unlock-slider absolute left-0 top-0 m-0 h-full w-full cursor-pointer appearance-none outline-none z-20 opacity-0" id="unlock-slider" style="touch-action: none;">
+        <span class="unlock-label pointer-events-none z-10 text-[0.95rem] font-medium text-muted-text select-none transition-opacity" id="unlock-label" aria-hidden="true">Slide to Unlock Verification</span>
+        <input type="range" min="0" max="100" value="0" aria-label="Slide to unlock contact form" class="unlock-slider absolute left-0 top-0 m-0 h-full w-full cursor-pointer appearance-none outline-none z-20 opacity-0" id="unlock-slider" style="touch-action: none;">
       </div>
 
       <button type="submit" id="submit-btn" class="inline-flex min-h-12 w-full sm:w-auto items-center justify-center gap-3 rounded-full bg-primary-cta px-8 text-sm font-bold text-white transition duration-300 hover:scale-[1.02] hover:bg-primary-cta/90 shadow-md shadow-primary-cta/20 hover:shadow-primary-cta/35 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none" disabled>
@@ -145,10 +145,10 @@
       slider.disabled = true;
       slider.style.pointerEvents = 'none';
 
-      container.classList.add('border-primary-cta');
+      container.classList.add('border-primary-cta', 'shadow-[0_0_20px_rgba(206,68,93,0.3)]');
       
       handle.innerHTML = `
-        <svg viewBox="0 0 24 24" class="size-5 fill-none stroke-white stroke-2">
+        <svg viewBox="0 0 24 24" class="size-5 fill-none stroke-white stroke-2 animate-[scale-in_0.3s_ease-out]">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
         </svg>
       `;
