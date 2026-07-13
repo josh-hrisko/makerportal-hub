@@ -121,9 +121,9 @@ const organizationSchema = {
     <a href="#main-content" class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-brand-anchor px-4 py-2.5 font-semibold text-canvas shadow-lg transition-transform duration-300 focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Skip to main content</a>
 
     <header class="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-[88rem] px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
-      <nav aria-label="Primary" class="pointer-events-auto relative flex h-[3.875rem] items-center justify-between rounded-full border border-white/[0.08] bg-[#1A232E]/70 px-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-500 hover:border-white/[0.12] hover:bg-[#1A232E]/80 hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.1)] sm:px-6" data-nav>
-        <!-- Subtle grain -->
-        <div aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-full opacity-[0.03] mix-blend-soft-light" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22/></filter><rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/></svg>')"></div>
+      <!-- Opaque pill nav (no backdrop-filter) — live backdrop-blur on a fixed
+           header is a known iOS Safari compositor tax during scroll. -->
+      <nav aria-label="Primary" class="pointer-events-auto relative flex h-[3.875rem] items-center justify-between rounded-full border border-white/[0.08] bg-[#151D27]/95 px-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:border-white/[0.12] hover:bg-[#1A232E] hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.7)] sm:px-6" data-nav>
         
         <a href="/" class="group/logo relative inline-flex items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-canvas" aria-label="MakerPortal — Home">
           <BrandLogo variant="lockup" size="md" />
@@ -133,7 +133,7 @@ const organizationSchema = {
           <a href="/#apps" class="relative inline-flex min-h-9 items-center rounded-full px-3.5 text-[0.875rem] font-[500] tracking-[-0.01em] text-primary-text/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3.5 after:right-3.5 after:h-px after:origin-center after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100">Apps</a>
           <a href="/blog" class="relative inline-flex min-h-9 items-center rounded-full px-3.5 text-[0.875rem] font-[500] tracking-[-0.01em] text-primary-text/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3.5 after:right-3.5 after:h-px after:origin-center after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100">Field notes</a>
           <a href="/#contact" class="relative inline-flex min-h-9 items-center rounded-full px-3.5 text-[0.875rem] font-[500] tracking-[-0.01em] text-primary-text/70 transition-colors hover:text-white">Contact</a>
-          <a href="https://makersportal.com" rel="me noopener" target="_blank" class="ml-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 text-[0.84rem] font-semibold tracking-[-0.01em] text-white backdrop-blur-md transition-all hover:border-white/15 hover:bg-white/[0.08] hover:shadow-[0_2px_12px_rgba(255,255,255,0.06)]">
+          <a href="https://makersportal.com" rel="me noopener" target="_blank" class="ml-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3.5 text-[0.84rem] font-semibold tracking-[-0.01em] text-white transition-colors hover:border-white/15 hover:bg-white/[0.10]">
             Studio <span aria-hidden="true" class="opacity-60 transition-transform group-hover:translate-x-0.5">↗</span>
           </a>
         </div>
@@ -143,7 +143,7 @@ const organizationSchema = {
           <button
             id="mobile-menu-toggle"
             type="button"
-            class="relative z-[60] grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.06] text-white backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/[0.10]"
+            class="relative z-[60] grid size-10 place-items-center rounded-full border border-white/10 bg-white/[0.08] text-white transition-colors hover:border-white/20 hover:bg-white/[0.12]"
             aria-expanded="false"
             aria-controls="mobile-menu"
             aria-label="Open navigation"
@@ -158,11 +158,13 @@ const organizationSchema = {
       </nav>
     </header>
 
-    <div id="mobile-menu-backdrop" class="fixed inset-0 z-40 hidden bg-[#0A0E14]/80 opacity-0 backdrop-blur-[12px] transition-opacity duration-300 md:hidden" aria-hidden="true"></div>
+    <!-- Solid dimmer + solid drawer (no backdrop-filter). Stacked full-viewport
+         blurs with the fixed nav was the main iOS Safari menu/open lag source. -->
+    <div id="mobile-menu-backdrop" class="fixed inset-0 z-40 hidden bg-[#0A0E14]/72 opacity-0 transition-opacity duration-200 md:hidden" aria-hidden="true"></div>
 
     <div
       id="mobile-menu"
-      class="fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l border-white/[0.06] bg-[#151D27]/90 shadow-[-24px_0_64px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] md:hidden"
+      class="fixed inset-y-0 right-0 z-50 flex w-[88vw] max-w-[22rem] translate-x-full flex-col border-l border-white/[0.08] bg-[#121A24] shadow-[-24px_0_64px_rgba(0,0,0,0.55)] transition-transform duration-250 ease-[cubic-bezier(0.25,1,0.5,1)] md:hidden"
       role="dialog"
       aria-modal="true"
       aria-label="Navigation"
@@ -183,7 +185,7 @@ const organizationSchema = {
         </ul>
 
         <div class="mt-auto pt-6">
-          <div class="rounded-[20px] border border-white/[0.06] bg-[#1A232E]/70 p-5 backdrop-blur-sm">
+          <div class="rounded-[20px] border border-white/[0.06] bg-[#1A232E] p-5">
             <p class="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted-text/70">Studio Journal • makersportal.com</p>
             <a href="https://makersportal.com" rel="me" class="mt-3 inline-flex w-full items-center justify-between rounded-full bg-white px-4 py-3 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas transition hover:bg-primary-text"><span>Open journal</span><span aria-hidden="true">↗</span></a>
             <div class="mt-4 flex items-center gap-3 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text/70">
@@ -199,7 +201,7 @@ const organizationSchema = {
       id="back-to-top"
       type="button"
       aria-label="Back to top"
-      class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-40 grid size-11 translate-y-2 place-items-center rounded-full border border-white/10 bg-[#1A232E] text-primary-text opacity-0 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-all duration-300 pointer-events-none hover:border-brand-anchor/40 hover:bg-[#212D3A] hover:text-white focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:right-8 lg:right-10"
+      class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-40 grid size-11 translate-y-2 place-items-center rounded-full border border-white/10 bg-[#1A232E] text-primary-text opacity-0 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-[opacity,transform] duration-250 pointer-events-none hover:border-brand-anchor/40 hover:bg-[#212D3A] hover:text-white focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:right-8 lg:right-10"
     >
       <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" class="size-4"><path d="M10 16V4M10 4L4.5 9.5M10 4l5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
     </button>
@@ -227,14 +229,13 @@ const organizationSchema = {
           menu.removeAttribute('inert');
           menu.setAttribute('aria-hidden', 'false');
           backdrop.classList.remove('hidden');
-          // Use rAF instead of offsetWidth forced reflow – frontier perf
+          // Single rAF so the browser paints the un-hidden backdrop before the
+          // opacity/transform transition — avoids double-rAF (~32ms) open lag.
           rafId = requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              backdrop.classList.remove('opacity-0');
-              backdrop.classList.add('opacity-100');
-              menu.classList.remove('translate-x-full');
-              menu.classList.add('translate-x-0');
-            });
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            menu.classList.remove('translate-x-full');
+            menu.classList.add('translate-x-0');
           });
           document.body.style.overflow = 'hidden';
           line1.classList.add('translate-y-[3px]', 'rotate-45');
@@ -242,7 +243,7 @@ const organizationSchema = {
           setTimeout(() => {
             const first = menu.querySelector('a');
             if (first) first.focus();
-          }, 80);
+          }, 60);
         };
 
         const closeMenu = () => {
@@ -263,7 +264,7 @@ const organizationSchema = {
             backdrop.classList.add('hidden');
             try { menu.setAttribute('inert', ''); } catch {}
             if (lastFocus && lastFocus.focus) lastFocus.focus();
-          }, 320);
+          }, 260);
         };
 
         toggle.addEventListener('click', () => { isOpen ? closeMenu() : openMenu(); });
@@ -308,7 +309,7 @@ const organizationSchema = {
             setTimeout(() => {
               menu.style.translate = '';
               backdrop.style.opacity = '';
-            }, 520);
+            }, 280);
           } else {
             menu.style.translate = '';
             backdrop.style.opacity = '';
@@ -356,53 +357,40 @@ const organizationSchema = {
         });
         menu.addEventListener('pointercancel', () => endDrag(false));
 
-        // Nav shrink on scroll – spatial UI 2026
+        // Single scroll rAF: nav shadow + back-to-top visibility (avoids two
+        // competing scroll listeners thrashing style under the fixed header).
         const nav = document.querySelector('[data-nav]');
+        const backToTop = document.getElementById('back-to-top');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let lastY = 0;
         let ticking = false;
+        let btVisible = false;
         window.addEventListener('scroll', () => {
           if (ticking) return;
           ticking = true;
           requestAnimationFrame(() => {
             const y = window.scrollY;
             if (nav) {
-              if (y > 24 && y > lastY) {
-                nav.classList.add('translate-y-[-4px]', 'scale-[0.99]');
-              } else {
-                nav.classList.remove('translate-y-[-4px]', 'scale-[0.99]');
-              }
-              if (y > 12) {
-                nav.classList.add('shadow-[0_12px_48px_-12px_rgba(0,0,0,0.8)]');
-              } else {
-                nav.classList.remove('shadow-[0_12px_48px_-12px_rgba(0,0,0,0.8)]');
+              nav.classList.toggle('translate-y-[-4px]', y > 24 && y > lastY);
+              nav.classList.toggle('scale-[0.99]', y > 24 && y > lastY);
+              nav.classList.toggle('shadow-[0_12px_48px_-12px_rgba(0,0,0,0.8)]', y > 12);
+            }
+            if (backToTop) {
+              const show = y > 480;
+              if (show !== btVisible) {
+                btVisible = show;
+                backToTop.classList.toggle('opacity-0', !show);
+                backToTop.classList.toggle('pointer-events-none', !show);
+                backToTop.classList.toggle('translate-y-2', !show);
+                backToTop.classList.toggle('opacity-100', show);
+                backToTop.classList.toggle('translate-y-0', show);
               }
             }
             lastY = y;
             ticking = false;
           });
         }, { passive: true });
-
-        // Back-to-top affordance – fades/slides in (transform + opacity only)
-        // once the user has scrolled past the hero, scrolls smoothly on click.
-        const backToTop = document.getElementById('back-to-top');
         if (backToTop) {
-          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          let btTicking = false;
-          const setVisible = (visible) => {
-            backToTop.classList.toggle('opacity-0', !visible);
-            backToTop.classList.toggle('pointer-events-none', !visible);
-            backToTop.classList.toggle('translate-y-2', !visible);
-            backToTop.classList.toggle('opacity-100', visible);
-            backToTop.classList.toggle('translate-y-0', visible);
-          };
-          window.addEventListener('scroll', () => {
-            if (btTicking) return;
-            btTicking = true;
-            requestAnimationFrame(() => {
-              setVisible(window.scrollY > 480);
-              btTicking = false;
-            });
-          }, { passive: true });
           backToTop.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
           });
@@ -441,10 +429,10 @@ const organizationSchema = {
           </div>
         </div>
       </div>
-      <div class="border-t border-white/[0.06] bg-[#0A0E14]/80 backdrop-blur-xl">
+      <div class="border-t border-white/[0.06] bg-[#0A0E14]">
         <div class="mx-auto flex max-w-[88rem] flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <div class="flex flex-wrap items-center gap-3">
-            <div class="inline-flex items-center gap-2.5 rounded-full border border-white/[0.06] bg-[#1A232E]/80 px-3.5 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
+            <div class="inline-flex items-center gap-2.5 rounded-full border border-white/[0.06] bg-[#1A232E] px-3.5 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
               <span class="relative flex size-1.5">
                 <span class="absolute inline-flex h-full w-full rounded-full bg-brand-anchor opacity-60 motion-safe:animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></span>
                 <span class="relative inline-flex size-1.5 rounded-full bg-brand-anchor"></span>

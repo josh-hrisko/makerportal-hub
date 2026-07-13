@@ -18,7 +18,7 @@ const colors = accentMap[accent as AppAccent];
 
 <article 
   class:list={[
-    'app-card group relative isolate flex flex-col overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#1A232E]/80 backdrop-blur-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.06)] p-7 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] hover:border-white/10 will-change-transform motion-reduce:transform-none motion-reduce:transition-none',
+    'app-card group relative isolate flex flex-col overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#1A232E] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.06)] p-7 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] hover:border-white/10 motion-reduce:transform-none motion-reduce:transition-none',
     colors.border,
     className
   ]}
@@ -50,7 +50,7 @@ const colors = accentMap[accent as AppAccent];
     </div>
 
     <div class="flex items-center gap-2">
-      <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-1 font-mono text-[0.58rem] uppercase tracking-[0.14em] text-primary-text/70 backdrop-blur-sm">
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-1 font-mono text-[0.58rem] uppercase tracking-[0.14em] text-primary-text/70 ">
         <span class:list={['size-1 rounded-full animate-pulse', colors.dot]}></span>
         Live
       </span>
@@ -59,7 +59,7 @@ const colors = accentMap[accent as AppAccent];
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`Open ${title} – ${tagline} (external)`}
-        class="group/link relative z-10 flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-text backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-white/20 hover:bg-white/[0.08] hover:text-white before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-0 hover:before:opacity-100"
+        class="group/link relative z-10 flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-text  transition-all duration-300 hover:scale-110 hover:border-white/20 hover:bg-white/[0.08] hover:text-white before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-0 hover:before:opacity-100"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4 transition-transform duration-300 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5">
           <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -92,7 +92,7 @@ const colors = accentMap[accent as AppAccent];
       {techBadges && techBadges.length > 0 && (
         <div class="flex flex-wrap gap-1.5">
           {techBadges.map((badge: string) => (
-            <span class:list={['inline-flex items-center rounded-full border px-2.5 py-1 font-mono text-[0.6rem] font-medium uppercase tracking-[0.1em] backdrop-blur-sm transition-colors', colors.bg, colors.text]}>
+            <span class:list={['inline-flex items-center rounded-full border px-2.5 py-1 font-mono text-[0.6rem] font-medium uppercase tracking-[0.1em]  transition-colors', colors.bg, colors.text]}>
               {badge}
             </span>
           ))}
@@ -106,33 +106,30 @@ const colors = accentMap[accent as AppAccent];
 </article>
 
 <script is:inline>
-  // Spotlight effect – frontier 2026
-  // Perf: cache the bounding rect instead of calling getBoundingClientRect() on
-  // every pointermove (which can fire far more often than 60fps and forces a
-  // synchronous layout read each time). The rect is only re-measured on
-  // pointerenter/resize, and style writes are batched to one per animation
-  // frame using the latest pointer position.
-  document.querySelectorAll('[data-app-card]').forEach((card) => {
-    let rect = null;
-    let pending = false;
-    let lastX = 0;
-    let lastY = 0;
-    const measure = () => { rect = card.getBoundingClientRect(); };
-    card.addEventListener('pointerenter', measure, { passive: true });
-    window.addEventListener('resize', measure, { passive: true });
-    card.addEventListener('pointermove', (e) => {
-      lastX = e.clientX;
-      lastY = e.clientY;
-      if (!rect) measure();
-      if (pending) return;
-      pending = true;
-      requestAnimationFrame(() => {
-        const x = ((lastX - rect.left) / rect.width) * 100;
-        const y = ((lastY - rect.top) / rect.height) * 100;
-        card.style.setProperty('--mouse-x', x + '%');
-        card.style.setProperty('--mouse-y', y + '%');
-        pending = false;
-      });
-    }, { passive: true });
-  });
+  // Spotlight – fine pointers only (skip touch devices; no hover value there).
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.querySelectorAll('[data-app-card]').forEach((card) => {
+      let rect = null;
+      let pending = false;
+      let lastX = 0;
+      let lastY = 0;
+      const measure = () => { rect = card.getBoundingClientRect(); };
+      card.addEventListener('pointerenter', measure, { passive: true });
+      window.addEventListener('resize', measure, { passive: true });
+      card.addEventListener('pointermove', (e) => {
+        lastX = e.clientX;
+        lastY = e.clientY;
+        if (!rect) measure();
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(() => {
+          const x = ((lastX - rect.left) / rect.width) * 100;
+          const y = ((lastY - rect.top) / rect.height) * 100;
+          card.style.setProperty('--mouse-x', x + '%');
+          card.style.setProperty('--mouse-y', y + '%');
+          pending = false;
+        });
+      }, { passive: true });
+    });
+  }
 </script>

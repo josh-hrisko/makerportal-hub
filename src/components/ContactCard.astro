@@ -1,8 +1,7 @@
 ---
 ---
-<div class="relative isolate scroll-mt-28 overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#1A232E]/75 p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_64px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-10" id="contact">
-  <div aria-hidden="true" class="absolute -right-20 -top-20 -z-10 size-64 rounded-full opacity-[0.08] blur-[70px] bg-primary-cta"></div>
-  <div aria-hidden="true" class="absolute -left-16 -bottom-16 -z-10 size-56 rounded-full opacity-[0.06] blur-[60px] bg-brand-anchor"></div>
+<div class="relative isolate scroll-mt-28 overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#1A232E] p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06),0_24px_64px_-20px_rgba(0,0,0,0.6)] sm:p-10" id="contact">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(20rem_20rem_at_100%_0%,rgba(206,68,93,0.10),transparent_60%),radial-gradient(18rem_18rem_at_0%_100%,rgba(113,185,227,0.08),transparent_55%)]"></div>
   
   <div class="max-w-xl">
     <p class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary-cta">Connect • Zero spam • SF → Worldwide</p>
@@ -34,27 +33,27 @@
     </div>
 
     <div class="relative">
-      <input type="text" id="name" name="name" required autocomplete="name" class="peer block w-full rounded-[14px] border border-white/10 bg-[#0F141C]/70 px-4 pb-2.5 pt-6 text-[0.95rem] text-white placeholder-transparent backdrop-blur-sm transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Name" />
+      <input type="text" id="name" name="name" required autocomplete="name" class="peer block w-full rounded-[14px] border border-white/10 bg-[#0F141C] px-4 pb-2.5 pt-6 text-[0.95rem] text-white placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Name" />
       <label for="name" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text/80 transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">Name</label>
     </div>
 
     <div class="relative">
-      <input type="email" id="email" name="email" required autocomplete="email" class="peer block w-full rounded-[14px] border border-white/10 bg-[#0F141C]/70 px-4 pb-2.5 pt-6 text-[0.95rem] text-white placeholder-transparent backdrop-blur-sm transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Email" />
+      <input type="email" id="email" name="email" required autocomplete="email" class="peer block w-full rounded-[14px] border border-white/10 bg-[#0F141C] px-4 pb-2.5 pt-6 text-[0.95rem] text-white placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" placeholder="Email" />
       <label for="email" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text/80 transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">Email Address</label>
     </div>
 
     <div class="relative sm:col-span-2">
-      <textarea id="message" name="message" rows="4" required placeholder="Message" class="peer block w-full resize-none rounded-[14px] border border-white/10 bg-[#0F141C]/70 px-4 pb-3 pt-6 text-[0.95rem] leading-[1.5] text-white placeholder-transparent backdrop-blur-sm transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20"></textarea>
+      <textarea id="message" name="message" rows="4" required placeholder="Message" class="peer block w-full resize-none rounded-[14px] border border-white/10 bg-[#0F141C] px-4 pb-3 pt-6 text-[0.95rem] leading-[1.5] text-white placeholder-transparent transition-colors focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20"></textarea>
       <label for="message" class="absolute left-4 top-2 text-[0.7rem] font-medium text-muted-text/80 transition-all peer-placeholder-shown:top-[1.05rem] peer-placeholder-shown:text-[0.9rem] peer-focus:top-2 peer-focus:text-[0.7rem] peer-focus:text-brand-anchor">How can we help? Keep it brief.</label>
     </div>
 
     <div class="sm:col-span-2 space-y-4">
-      <div class="unlock-container relative flex h-[3.75rem] items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#0F141C]/60 backdrop-blur-sm" id="unlock-container">
-        <div class="unlock-bg absolute left-0 top-0 h-full rounded-full bg-primary-cta/10 pointer-events-none w-0 transition-all duration-100 will-change-[width]" id="unlock-bg"></div>
-        <div class="unlock-handle absolute left-1 top-1 flex size-[2.75rem] items-center justify-center rounded-full bg-white text-canvas shadow-[0_4px_16px_rgba(255,255,255,0.15)] pointer-events-none transition-all will-change-[left]" id="unlock-handle" aria-hidden="true">
+      <div class="unlock-container relative flex h-[3.75rem] items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#0F141C]" id="unlock-container">
+        <div class="unlock-bg absolute left-0 top-0 h-full rounded-full bg-primary-cta/10 pointer-events-none w-0 transition-[width] duration-100" id="unlock-bg"></div>
+        <div class="unlock-handle absolute left-1 top-1 flex size-[2.75rem] items-center justify-center rounded-full bg-white text-canvas shadow-[0_4px_16px_rgba(255,255,255,0.15)] pointer-events-none transition-[left]" id="unlock-handle" aria-hidden="true">
           <svg viewBox="0 0 24 24" class="size-4 fill-none stroke-canvas stroke-[2.2]"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
         </div>
-        <span class="unlock-label pointer-events-none z-10 select-none text-[0.88rem] font-medium text-primary-text/70 transition-opacity will-change-[opacity]" id="unlock-label">Slide to verify • Human check</span>
+        <span class="unlock-label pointer-events-none z-10 select-none text-[0.88rem] font-medium text-primary-text/70 transition-opacity" id="unlock-label">Slide to verify • Human check</span>
         <input type="range" min="0" max="100" value="0" aria-label="Slide to unlock contact form" class="unlock-slider absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none opacity-0" id="unlock-slider" style="touch-action: none;" />
       </div>
 
@@ -65,7 +64,7 @@
         </button>
         <span class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text/70">Avg reply • 4h • No newsletter, ever</span>
       </div>
-      <p id="form-status" class="hidden rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-[0.875rem] font-medium backdrop-blur-sm"></p>
+      <p id="form-status" class="hidden rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 text-[0.875rem] font-medium"></p>
     </div>
   </form>
 </div>

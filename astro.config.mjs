@@ -11,8 +11,10 @@ export default defineConfig({
   }),
   trailingSlash: 'never',
   prefetch: {
-    prefetchAll: true,
-    defaultStrategy: 'viewport',
+    // Hover/tap only — viewport prefetchAll was adding main-thread + network
+    // work right after load on mobile Safari (page.*.js critical-path noise).
+    prefetchAll: false,
+    defaultStrategy: 'hover',
   },
   build: {
     inlineStylesheets: 'always',

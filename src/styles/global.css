@@ -114,7 +114,6 @@
   .signal-dot {
     position: relative;
     z-index: 1;
-    will-change: transform, opacity;
   }
   .signal-dot::after {
     content: "";
@@ -148,12 +147,11 @@
   .orbit-stage::before { width: 100%; height: 1px; }
   .orbit-stage::after { width: 1px; height: 100%; }
 
-  .orbit-line-1 { animation: orbit-spin 42s linear infinite; will-change: transform; }
-  .orbit-line-2 { animation: orbit-spin 32s linear infinite reverse; will-change: transform; }
+  .orbit-line-1 { animation: orbit-spin 42s linear infinite; }
+  .orbit-line-2 { animation: orbit-spin 32s linear infinite reverse; }
 
   .orbit-app {
     z-index: 2;
-    will-change: transform;
     contain: layout;
   }
   .orbit-app-1 { left: 8%; top: 14%; transform: rotate(-4deg); }
@@ -163,10 +161,7 @@
 
   .ticker-track {
     animation: ticker-scroll 36s linear infinite;
-    will-change: transform;
   }
-
-  .app-card { will-change: transform; }
   .app-card::after {
     position: absolute;
     inset: 0;
@@ -193,17 +188,14 @@
   .prose-studio blockquote { border-left: 2px solid var(--color-primary-cta); padding-left: 1.5rem; color: #FFFFFF; font-size: 1.25rem; line-height: 1.6; }
   .prose-studio code { border: 1px solid rgba(168,185,204,0.15); border-radius: 0.35rem; background: var(--color-card-bg); padding: 0.15rem 0.35rem; color: #fff; font-family: var(--font-mono); font-size: 0.88em; }
 
-  /* Frontier glass + grain */
+  /* Opaque “glass” substitutes — real backdrop-filter is too expensive on iOS
+     Safari when stacked with fixed chrome and animated ATF layers. */
   .glass {
-    background: rgba(26,35,46,0.72);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(26,35,46,0.94);
     border: 1px solid rgba(255,255,255,0.06);
   }
   .glass-strong {
-    background: rgba(21,29,39,0.88);
-    backdrop-filter: blur(24px) saturate(200%);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    background: rgba(21,29,39,0.97);
   }
 }
 
@@ -228,11 +220,6 @@
      state never actually changes. */
   to { scale: 1 1; }
 }
-@keyframes hero-aura-float {
-  0%,100% { transform: translate(-50%,-50%) scale(1) translateY(0); }
-  50% { transform: translate(-50%,-50%) scale(1.05) translateY(-8px); }
-}
-
 /* Scroll-driven – with containment */
 @supports (animation-timeline: view()) {
   .animate-on-scroll {
@@ -247,10 +234,10 @@
   }
 }
 @keyframes hero-fade {
-  to { opacity: 0; transform: translateY(40px) scale(0.98); filter: blur(8px); }
+  /* Transform/opacity only — filter:blur on the hero column was promoting a
+     filtered layer over the LCP text and inflating Element Render Delay. */
+  to { opacity: 0; transform: translateY(40px) scale(0.98); }
 }
-
-.hero-aura { animation: hero-aura-float 8s ease-in-out infinite; will-change: transform; }
 
 @media (max-width: 640px) {
   .hero-grid { background-size: 3rem 3rem; }
@@ -259,6 +246,20 @@
   .orbit-app-2 { right: 0; top: 18%; }
   .orbit-app-3 { bottom: 2%; right: 15%; }
   .orbit-app-4 { bottom: 19%; left: 0; }
+}
+
+/* Coarse pointers / phones: pause continuous ATF motion so Safari isn't
+   compositing infinite layers under the fixed header during scroll/tap. */
+@media (hover: none), (pointer: coarse) {
+  .orbit-line-1,
+  .orbit-line-2,
+  .ticker-track,
+  .signal-dot::after {
+    animation: none !important;
+  }
+  .hero-fade-scroll {
+    animation: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

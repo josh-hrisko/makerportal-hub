@@ -71,37 +71,40 @@ const faqSchema = {
   <section class="hero-grid relative isolate overflow-hidden border-b border-white/[0.06] bg-gradient-to-b from-[#1A232E]/40 to-canvas" aria-labelledby="hero-title">
     <!-- CLS fix: top offset uses vh (viewport-relative) instead of % (parent-relative) so web-font swap reflow of the
          hero heading cannot change this element's computed position — eliminates the 0.667 CLS regression. -->
-    <div aria-hidden="true" class="hero-aura absolute left-[48%] top-[-10vh] -z-20 h-[40rem] w-[56rem] -translate-x-1/2 rounded-full bg-primary-cta/[0.07] blur-[140px] will-change-transform contain-layout"></div>
-    <div aria-hidden="true" class="hero-aura absolute left-[32%] top-[8vh] -z-20 h-[28rem] w-[38rem] -translate-x-1/2 rounded-full bg-brand-anchor/[0.09] blur-[120px] will-change-transform contain-layout" style="animation-delay: -2s"></div>
+    <!-- Soft auras via radial-gradient only (no filter:blur) — huge CSS blurs
+         on ATF are a major iOS Safari paint cost and LCP render-delay driver. -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-20 bg-[radial-gradient(56rem_40rem_at_48%_-10vh,rgba(206,68,93,0.09),transparent_60%),radial-gradient(38rem_28rem_at_32%_12vh,rgba(113,185,227,0.10),transparent_55%)]"></div>
     <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(120%_70%_at_50%_0%,rgba(255,255,255,0.03),transparent_60%)]"></div>
     
     <div class="mx-auto grid min-h-[calc(100svh-5rem)] max-w-[88rem] items-center gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-10 lg:py-24">
       <div class="relative z-10 max-w-[46rem] hero-fade-scroll">
         <div class="mb-7 flex flex-wrap items-center gap-2.5">
-          <p class="group inline-flex items-center gap-2 rounded-full border border-primary-cta/20 bg-primary-cta/[0.08] px-3.5 py-1.5 font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-primary-cta backdrop-blur-md transition-colors hover:border-primary-cta/30">
+          <p class="group inline-flex items-center gap-2 rounded-full border border-primary-cta/20 bg-primary-cta/[0.10] px-3.5 py-1.5 font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-primary-cta transition-colors hover:border-primary-cta/30">
             <span aria-hidden="true" class="signal-dot size-1.5 rounded-full bg-primary-cta"></span>
             Studio transmission • SF • 2026
           </p>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.03] px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-muted-text/80 backdrop-blur-sm">
-            <span class="size-1 rounded-full bg-emerald-400 animate-pulse"></span> Shipping
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/5 bg-white/[0.04] px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-muted-text/80">
+            <span class="size-1 rounded-full bg-emerald-400"></span> Shipping
           </span>
         </div>
 
+        <!-- No opacity-from-0 hero animation: LCP text must paint immediately.
+             Underline still draws; motion-sensitive users get reduced-motion CSS. -->
         <h1 id="hero-title" class="text-balance text-[clamp(3.2rem,7.5vw,7.2rem)] font-[700] leading-[0.88] tracking-[-0.07em] text-white">
-          <span class="block overflow-hidden"><span class="block animate-[fade-up_0.8s_cubic-bezier(0.16,1,0.3,1)_both]">Software with</span></span>
-          <span class="block overflow-hidden"><span class="block animate-[fade-up_0.8s_0.12s_cubic-bezier(0.16,1,0.3,1)_both]">a point of <span class="relative inline-block text-primary-cta">view<span aria-hidden="true" class="absolute inset-x-0 bottom-[0.03em] h-[2px] origin-left scale-x-0 animate-[underline-draw_0.6s_0.7s_cubic-bezier(0.16,1,0.3,1)_forwards] bg-gradient-to-r from-primary-cta/0 via-primary-cta to-primary-cta/0"></span></span>.</span></span>
+          <span class="block">Software with</span>
+          <span class="block">a point of <span class="relative inline-block text-primary-cta">view<span aria-hidden="true" class="absolute inset-x-0 bottom-[0.03em] h-[2px] origin-left scale-x-0 animate-[underline-draw_0.6s_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards] bg-gradient-to-r from-primary-cta/0 via-primary-cta to-primary-cta/0"></span></span>.</span>
         </h1>
         
-        <p class="mt-7 max-w-[34rem] text-pretty text-[1.05rem] leading-[1.75] text-primary-text/75 sm:text-[1.15rem] sm:leading-[1.8] animate-[fade-up_0.8s_0.22s_cubic-bezier(0.16,1,0.3,1)_both]">
+        <p class="mt-7 max-w-[34rem] text-pretty text-[1.05rem] leading-[1.75] text-primary-text/75 sm:text-[1.15rem] sm:leading-[1.8]">
           Independent studio engineering <strong class="font-semibold text-white">iOS & iPadOS</strong> apps with private, on-device intelligence — <span class="text-brand-anchor font-medium">CoreML, Metal, ANE</span>. Zero telemetry. Zero cloud. Crafted in San Francisco, shipped worldwide.
         </p>
 
-        <div class="mt-9 flex flex-wrap items-center gap-3 animate-[fade-up_0.8s_0.32s_cubic-bezier(0.16,1,0.3,1)_both]">
-          <a href="#apps" class="group inline-flex min-h-11 items-center gap-2.5 rounded-full bg-white px-5 text-[0.925rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.12),inset_0_1px_1px_rgba(255,255,255,0.8)] transition-all duration-300 hover:scale-[1.02] hover:bg-primary-text hover:shadow-[0_8px_28px_rgba(255,255,255,0.18)]">
+        <div class="mt-9 flex flex-wrap items-center gap-3">
+          <a href="#apps" class="group inline-flex min-h-11 items-center gap-2.5 rounded-full bg-white px-5 text-[0.925rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.12),inset_0_1px_1px_rgba(255,255,255,0.8)] transition-[transform,background-color,box-shadow] duration-300 hover:scale-[1.02] hover:bg-primary-text hover:shadow-[0_8px_28px_rgba(255,255,255,0.18)]">
             Enter app matrix
             <span aria-hidden="true" class="grid size-5 place-items-center rounded-full bg-canvas/10 transition-transform group-hover:translate-y-0.5">↓</span>
           </a>
-          <a href="/blog" class="group inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-5 text-[0.9rem] font-medium tracking-[-0.01em] text-primary-text/80 backdrop-blur-md transition-all hover:border-white/15 hover:bg-white/[0.06] hover:text-white">
+          <a href="/blog" class="group inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-5 text-[0.9rem] font-medium tracking-[-0.01em] text-primary-text/80 transition-colors hover:border-white/15 hover:bg-white/[0.08] hover:text-white">
             Field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
           </a>
           <span class="hidden sm:inline-flex items-center gap-2 pl-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/70">
@@ -114,7 +117,7 @@ const faqSchema = {
           <div class="flex -space-x-2">
             {apps.map((app) => (
               <span class="grid size-7 place-items-center rounded-full border-2 border-canvas bg-card-bg shadow-sm">
-                <Image src={app.iconSet.w64} alt="" width={20} height={20} class="size-5 rounded-full object-contain" loading="eager" />
+                <Image src={app.iconSet.w64} alt="" width={20} height={20} class="size-5 rounded-full object-contain" loading="lazy" decoding="async" />
               </span>
             ))}
           </div>
@@ -129,7 +132,7 @@ const faqSchema = {
           <div aria-hidden="true" class="orbit-line orbit-line-2 absolute inset-[24%] rounded-full border border-dashed border-white/[0.08]"></div>
           
           <!-- Center node – glass v2 -->
-          <div class="absolute inset-[35%] grid place-items-center rounded-full border border-brand-anchor/25 bg-[#1A232E]/80 shadow-[0_0_80px_rgba(113,185,227,0.15),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl">
+          <div class="absolute inset-[35%] grid place-items-center rounded-full border border-brand-anchor/25 bg-[#1A232E] shadow-[0_0_80px_rgba(113,185,227,0.15),inset_0_1px_1px_rgba(255,255,255,0.1)]">
             <div class="absolute inset-px rounded-full bg-gradient-to-b from-white/[0.08] to-transparent pointer-events-none"></div>
             <div class="relative text-center">
               <span class="mx-auto block size-12 sm:size-14 drop-shadow-lg" aria-hidden="true">
@@ -141,12 +144,12 @@ const faqSchema = {
 
           <!-- Orbit apps – optimized WebP 64w, 99% smaller -->
           {apps.map((app, index) => (
-            <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.25rem] place-items-center rounded-[16px] border border-white/10 bg-[#1E2C3A]/80 shadow-[0_8px_24px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all duration-500 hover:scale-110 hover:border-brand-anchor/40 hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:size-[4.75rem]`} aria-label={`Open ${app.title} — ${app.tagline}`}>
-              <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={52} height={52} densities={[1,2]} loading="eager" decoding="async" class="size-[2.85rem] rounded-[12px] object-contain transition-transform duration-500 hover:rotate-[-3deg]" />
+            <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.25rem] place-items-center rounded-[16px] border border-white/10 bg-[#1E2C3A] shadow-[0_8px_24px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] transition-[transform,border-color,box-shadow] duration-500 hover:scale-110 hover:border-brand-anchor/40 hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:size-[4.75rem]`} aria-label={`Open ${app.title} — ${app.tagline}`}>
+              <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={52} height={52} densities={[1,2]} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" class="size-[2.85rem] rounded-[12px] object-contain transition-transform duration-500 hover:rotate-[-3deg]" />
             </a>
           ))}
 
-          <div aria-hidden="true" class="absolute bottom-[10%] left-[14%] hidden rounded-full border border-white/10 bg-[#0F141C]/80 px-3 py-2 shadow-xl backdrop-blur-xl sm:flex">
+          <div aria-hidden="true" class="absolute bottom-[10%] left-[14%] hidden rounded-full border border-white/10 bg-[#0F141C] px-3 py-2 shadow-xl sm:flex">
             <span class="font-mono text-[0.55rem] uppercase tracking-[0.16em] text-muted-text/70">System</span>
             <span class="ml-2 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold text-white"><span class="signal-dot size-1.5 rounded-full bg-emerald-400"></span>ANE Active</span>
           </div>
@@ -156,7 +159,7 @@ const faqSchema = {
   </section>
 
   <!-- Ticker – improved contrast -->
-  <div class="relative overflow-hidden border-y border-white/[0.06] bg-[#151D27]/60 py-3.5 backdrop-blur-xl">
+  <div class="relative overflow-hidden border-y border-white/[0.06] bg-[#151D27] py-3.5">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#0F141C_0%,transparent_8%,transparent_92%,#0F141C_100%)] z-10"></div>
     <p class="sr-only">Studio principles: on-device first, no committee software, useful on day one, craft over clutter, and one release at a time.</p>
     <div class="ticker-track flex w-max items-center whitespace-nowrap font-mono text-[0.66rem] font-bold uppercase tracking-[0.18em] text-primary-text/70 motion-reduce:animate-none">
@@ -195,7 +198,7 @@ const faqSchema = {
         ))}
       </div>
 
-      <div class="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-5 py-4 backdrop-blur-sm">
+      <div class="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-5 py-4 ">
         <p class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-text/70">Total payload optimized: <strong class="text-primary-text/80">~9KB icons</strong> (was 6.4MB) • Self-hosted fonts • No third-party trackers</p>
         <a href="https://github.com/josh-hrisko" target="_blank" rel="me" class="inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-brand-anchor hover:text-white">Open source pieces →</a>
       </div>
@@ -220,7 +223,7 @@ const faqSchema = {
               ['Local Vectors', 'Zero-latency vector embedding index • 28MB offline'],
               ['Private by Design', 'Private processing • No analytics SDKs • No cookies for AI features'],
             ].map(([k,v]) => (
-              <li class="flex gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 backdrop-blur-sm">
+              <li class="flex gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-3 py-2.5 ">
                 <span aria-hidden="true" class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300">✓</span>
                 <span><strong class="text-white font-semibold">{k}:</strong> {v}</span>
               </li>
@@ -229,7 +232,7 @@ const faqSchema = {
 
           <div class="mt-6 grid grid-cols-3 gap-3 text-center">
             {[{k:'<8ms', v:'P95 latency'}, {k:'0', v:'servers'}, {k:'100%', v:'offline capable'}].map((s) => (
-              <div class="rounded-xl border border-white/[0.05] bg-card-bg/50 px-3 py-3 backdrop-blur-sm">
+              <div class="rounded-xl border border-white/[0.05] bg-card-bg/50 px-3 py-3 ">
                 <div class="text-lg font-bold tracking-tight text-white">{s.k}</div>
                 <div class="mt-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text/70">{s.v}</div>
               </div>
@@ -237,7 +240,7 @@ const faqSchema = {
           </div>
         </div>
 
-        <div class="group relative animate-on-scroll rounded-[20px] border border-white/10 bg-[#151D27]/80 p-5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.06)] backdrop-blur-xl font-mono text-[0.72rem] leading-[1.6] sm:p-6">
+        <div class="group relative animate-on-scroll rounded-[20px] border border-white/10 bg-[#151D27]/80 p-5 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.06)]  font-mono text-[0.72rem] leading-[1.6] sm:p-6">
           <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></div>
           <div class="flex items-center justify-between border-b border-white/[0.06] pb-3.5">
             <div class="flex items-center gap-1.5">
@@ -307,7 +310,7 @@ const faqSchema = {
           <h2 id="notes-title" class="mt-4 text-[clamp(2rem,4vw,2.75rem)] font-[650] tracking-[-0.05em] text-white">Thinking in public.</h2>
           <p class="mt-3 max-w-xl text-[0.95rem] leading-[1.6] text-primary-text/60">Short notes from inside the build — CoreML experiments, SwiftUI edge cases, Metal shader tricks, and the tiny decisions that make privacy-first software feel fast.</p>
         </div>
-        <a href="/blog" class="group inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-4 text-[0.875rem] font-medium text-brand-anchor backdrop-blur-sm transition-all hover:border-brand-anchor/20 hover:bg-brand-anchor/10 hover:text-white">All field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
+        <a href="/blog" class="group inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-4 text-[0.875rem] font-medium text-brand-anchor  transition-all hover:border-brand-anchor/20 hover:bg-brand-anchor/10 hover:text-white">All field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
       </div>
 
       <div class="mt-10 grid divide-y divide-white/[0.06] border-y border-white/[0.06] md:grid-cols-3 md:divide-x md:divide-y-0">
@@ -333,7 +336,7 @@ const faqSchema = {
           <h2 id="closing-title" class="mt-5 text-balance text-[clamp(2.8rem,6vw,5.5rem)] font-[750] leading-[0.9] tracking-[-0.06em] text-white">Make the<br />thing you<br />wish existed.</h2>
           <div class="mt-8 flex flex-wrap gap-3">
             <a href="https://makersportal.com" rel="me noopener" target="_blank" class="group inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition-all hover:scale-[1.02] hover:bg-primary-text">Follow studio journal <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">↗</span></a>
-            <a href="#contact" class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-[0.9rem] font-medium text-primary-text/80 backdrop-blur-md transition-colors hover:border-white/15 hover:text-white hover:bg-white/[0.06]">Get in touch • No spam, just build logs</a>
+            <a href="#contact" class="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-[0.9rem] font-medium text-primary-text/80  transition-colors hover:border-white/15 hover:text-white hover:bg-white/[0.06]">Get in touch • No spam, just build logs</a>
           </div>
           <div class="mt-8 flex items-center gap-3 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/70">
             <span class="inline-flex items-center gap-1.5"><span class="size-1 rounded-full bg-emerald-400"></span> No cookies for app functionality</span>
