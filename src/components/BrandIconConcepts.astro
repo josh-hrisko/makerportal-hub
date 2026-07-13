@@ -1,21 +1,18 @@
 ---
 /**
- * BrandIconConcepts – Bottom-left dots, high contrast, single unified finale
- * - 3 cards with red mark at bottom-left corner, reasonable size
- * - Dots move to top card bottom-left on hover while cards collapse
+ * BrandIconConcepts – App Grid
+ * 2x2 grid of app tiles. The bottom-right tile is the accent cell: shown
+ * crimson wherever the icon stands alone (showCore), or neutral in the
+ * lockup so the wordmark's dot can visibly "deliver" its color there on hover
+ * (see .grid-cell-br / .lockup-dot in BrandLogo.astro).
  */
 interface Props { mono?: boolean; showCore?: boolean; activeConcept?: string; }
 const { mono = false, showCore = false, activeConcept = 'agm' } = Astro.props as Props;
-const ink = mono ? 'currentColor' : '#D7E3F2';
 const accent = mono ? 'currentColor' : '#CE445D';
+const brFill = mono ? 'currentColor' : (showCore ? accent : '#2A4A6B');
 
 function svgFor(key: string): string {
-  // Bottom-left dots: each card has dot at bottom-left corner
-  // Front (top) card: rect 12,4 16x16 -> bottom-left ~15,18
-  // Mid: 7,6 14x14 -> bottom-left ~9,18
-  // Back: 4,12 14x13 -> bottom-left ~6,23
-  // On hover all move to front card bottom-left 15,18
-  const agm = `<g class="agm-stack"><g class="pre-mark middot-stack"><g class="agm-card-back"><rect x="4" y="12" width="14" height="13" rx="3" fill="#1E354E" stroke="#2C4A67" stroke-width="0.6" /><line x1="7" y1="16" x2="14" y2="16" stroke="${ink}" stroke-width="1.1" stroke-opacity="0.7" /><circle class="agm-dot" data-agm-dot="far" cx="6.5" cy="23" r="1" fill="#CE445D" stroke="none" /></g><g class="agm-card-mid"><rect x="7" y="6" width="14" height="14" rx="3" fill="#253E58" stroke="#345775" stroke-width="0.7" /><line x1="10" y1="10" x2="18" y2="10" stroke="${ink}" stroke-width="1.2" stroke-opacity="0.85" /><circle class="agm-dot" data-agm-dot="mid" cx="9.5" cy="18.5" r="1.1" fill="#CE445D" stroke="none" /></g><g class="agm-card-front"><rect x="12" y="4" width="16" height="16" rx="3" fill="#2C4A67" stroke="#3E6689" stroke-width="0.8" /><line x1="15" y1="9" x2="24" y2="9" stroke="${ink}" stroke-width="1.3" stroke-opacity="1" /><circle class="agm-dot" data-agm-dot="near" cx="14.8" cy="18.2" r="1.25" fill="#CE445D" stroke="none" /></g></g></g>`;
+  const agm = `<g class="grid-stack"><rect class="grid-cell" x="3" y="3" width="12" height="12" rx="3" fill="${mono ? 'currentColor' : '#2A4A6B'}" /><rect class="grid-cell" x="17" y="3" width="12" height="12" rx="3" fill="${mono ? 'currentColor' : '#345E86'}" /><rect class="grid-cell" x="3" y="17" width="12" height="12" rx="3" fill="${mono ? 'currentColor' : '#3E6C99'}" /><rect class="grid-cell grid-cell-br" x="17" y="17" width="12" height="12" rx="3" fill="${brFill}" /></g>`;
   const map: Record<string,string> = { agm };
   return map[key] || map['agm'];
 }

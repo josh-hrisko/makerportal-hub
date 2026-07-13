@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import BrandLogo from '../components/BrandLogo.astro';
 
 const title = 'Brand & Assets — MakerPortal.ai';
-const description = 'Official brand system: Mid-Card Dot — three angled cards with bottom-left crimson marks that converge to the top card. Unified across all surfaces.';
+const description = 'Official brand system: App Grid — a 2×2 collection of app tiles with a crimson accent cell. Unified across all surfaces.';
 ---
 
 <Layout title={title} description={description} noindex>
@@ -16,7 +16,7 @@ const description = 'Official brand system: Mid-Card Dot — three angled cards 
         makerportal.ai brand system.
       </h1>
       <p class="mt-6 max-w-2xl text-lg leading-8 text-primary-text/70">
-        <strong class="text-white">Mid-Card Dot — final.</strong> Three angled cards with crimson marks at bottom-left. On hover cards collapse slightly into each other, dots keep exact size and slide to bottom-left of top card. In lockup, the period between <code class="rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm">makerportal</code> and <code class="rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm">ai</code> shrinks from r2.4→r1.25 and moves into that same bottom-left spot. No size change for per-card dots. Single unified finale.
+        <strong class="text-white">App Grid — final.</strong> A 2×2 collection of app tiles; the bottom-right tile is the crimson accent cell. Standing alone (icon, favicon, app icons) it's always fully accented. In the lockup, the accent cell starts neutral and the period between <code class="rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm">makerportal</code> and <code class="rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm">ai</code> travels into that cell on hover, delivering its crimson color and fading out as it arrives — the studio's signature dot literally becomes part of the app collection.
       </p>
       <div class="mt-6 flex flex-wrap gap-2">
         <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">SF • Built 2023 → 2026</span>
@@ -32,16 +32,16 @@ const description = 'Official brand system: Mid-Card Dot — three angled cards 
       <div class="grid gap-6 lg:grid-cols-3">
         <div class="rounded-[24px] border border-white/[0.06] bg-[#151D27]/60 p-8 flex flex-col justify-between hover:border-[#CE445D]/20 transition duration-300 backdrop-blur-sm">
           <div>
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Icon / agm • Final</p>
-            <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">Mid-Card Dot</h3>
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Icon / App Grid • Final</p>
+            <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">App Grid</h3>
             <p class="mt-3 text-sm leading-6 text-primary-text/60">
-              3 cards: back <code class="text-white/70">#1E354E</code> dot <code>r1.0 at 6.5,23</code>, mid <code>#253E58</code> dot <code>r1.1 at 9.5,18.5</code>, front <code>#2C4A67</code> dot <code>r1.25 at 14.8,18.2</code> bottom-left. On hover cards collapse <code>-14/-7 → -8/-4deg</code>, dots slide to <code>14.8,18.2</code> with <strong class="text-white">no size change</strong>, far/mid fade → single dot.
+              2×2 tiles, <code>12px</code> each, <code>2px</code> gap, <code>3px</code> margin, <code>rx3</code>: top-left <code class="text-white/70">#2A4A6B</code>, top-right <code>#345E86</code>, bottom-left <code>#3E6C99</code>, bottom-right <code>#CE445D</code> (the accent). Standalone icon always shows the accent. On hover, all four tiles settle with a slight staggered scale.
             </p>
           </div>
           <div class="mt-8 flex min-h-[11rem] items-center justify-center rounded-2xl bg-canvas border border-white/[0.04] p-6">
             <BrandLogo variant="icon" size="lg" />
           </div>
-          <p class="mt-4 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text/70">Hover to see: dots → top card bottom-left, no growth</p>
+          <p class="mt-4 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text/70">Hover to see: tiles settle with a slight stagger</p>
         </div>
 
         <div class="rounded-[24px] border border-white/[0.06] bg-[#151D27]/60 p-8 flex flex-col justify-between hover:border-white/10 transition duration-300 backdrop-blur-sm">
@@ -60,16 +60,16 @@ const description = 'Official brand system: Mid-Card Dot — three angled cards 
 
         <div class="rounded-[24px] border border-[#CE445D]/20 bg-[#1A232E]/80 p-8 flex flex-col justify-between shadow-[0_0_32px_rgba(206,68,93,0.08)] backdrop-blur-sm">
           <div>
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Lockup / Primary • Beloved animation</p>
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Lockup / Primary • Dot delivery</p>
             <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">Icon + Wordmark</h3>
             <p class="mt-3 text-sm leading-6 text-primary-text/60">
-              Single SVG: icon at <code>0,0</code>, wordmark <code>translate(38,0)</code>, dot at <code>184.2,19.1 r2.4</code> (between words). On hover dot slides to <code>14.8,18.2 r1.25</code> — <strong class="text-white">shrinks to card dot size</strong>, same bottom-left of main card. Per-card dots keep size, far/mid fade, near stays as target → wordmark dot merges into it. No double-size smudge.
+              Single SVG: icon at <code>0,0</code>, wordmark <code>translate(38,0)</code>, dot at <code>184.2,19.1 r2.4</code> (between words). Icon's bottom-right tile starts neutral <code>#2A4A6B</code>. On hover the dot travels to <code>23,23 r0.9</code> — the grid cell's bottom-right corner in icon space — <strong class="text-white">fading out as it arrives</strong> while that tile turns crimson, so the period visibly becomes the grid's accent.
             </p>
           </div>
           <div class="mt-8 flex min-h-[11rem] items-center justify-center rounded-2xl bg-canvas border border-white/[0.04] p-6">
             <BrandLogo variant="lockup" size="lg" />
           </div>
-          <p class="mt-4 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-[#CE445D]">Hover: period shrinks r2.4→r1.25 into main card dot</p>
+          <p class="mt-4 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-[#CE445D]">Hover: period travels into the bottom-right tile and fades</p>
         </div>
       </div>
     </div>
@@ -82,10 +82,10 @@ const description = 'Official brand system: Mid-Card Dot — three angled cards 
         <div>
           <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text">Motion Spec</p>
           <div class="mt-6 rounded-2xl border border-white/[0.06] bg-canvas p-6 space-y-4 text-sm">
-            <div><span class="font-bold text-white block">Cards</span><code class="text-xs">rotate -14deg/-7deg → -8deg/-4deg, translate -3/-1.5px → -1.5/-0.8px, 0.6s cubic-bezier(0.25,1,0.5,1)</code></div>
-            <div><span class="font-bold text-white block">Dots (icon-only)</span><code class="text-xs">cx,cy 0.52s bezier(0.25,1,0.4,1), NO r change, far 6.5,23→14.8,18.2, mid 9.5,18.5→14.8,18.2, near stays 14.8,18.2. Fade 0.48/0.52s → single r1.25</code></div>
-            <div><span class="font-bold text-white block">Lockup dot (beloved)</span><code class="text-xs">cx 184.2→14.8, cy 19.1→18.2, r 2.4→1.25 (shrinks to card size), 0.58s bezier(0.25,1,0.4,1). Per-card far/mid fade 0.28/0.32s, near stays as target.</code></div>
-            <div><span class="font-bold text-white block">Contrast</span>Back <code>#1E354E</code> 2.8:1, Mid <code>#253E58</code> 3.2:1, Front <code>#2C4A67</code> 3.8:1 on <code>#0F141C</code> — no eye strain.</div>
+            <div><span class="font-bold text-white block">Grid tiles</span><code class="text-xs">scale 1 → 1.06 per tile, staggered 0.04s each, 0.45s cubic-bezier(0.25,1,0.5,1)</code></div>
+            <div><span class="font-bold text-white block">Bottom-right tile (lockup only)</span><code class="text-xs">fill #2A4A6B → #CE445D, 0.3s ease, 0.3s delay so the color change lands as the dot arrives</code></div>
+            <div><span class="font-bold text-white block">Lockup dot</span><code class="text-xs">cx 184.2→23, cy 19.1→23, r 2.4→0.9, 0.58s bezier(0.25,1,0.4,1); opacity 1→0 over the final 0.2s, 0.4s delay — fades out right as it lands.</code></div>
+            <div><span class="font-bold text-white block">Contrast</span>Grid tiles <code>#2A4A6B</code>/<code>#345E86</code>/<code>#3E6C99</code> ≥ 2:1 on white favicon bg; accent <code>#CE445D</code> ≥ 4:1 on <code>#0F141C</code>.</div>
           </div>
         </div>
         <div>
@@ -93,14 +93,14 @@ const description = 'Official brand system: Mid-Card Dot — three angled cards 
           <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#0F141C] border border-white/10"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Canvas #0F141C</p></div>
             <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#1A232E]"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Card #1A232E</p></div>
-            <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#1E354E] border border-white/10"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Back #1E354E</p></div>
-            <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#253E58]"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Mid #253E58</p></div>
-            <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#2C4A67]"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Front #2C4A67</p></div>
+            <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#2A4A6B] border border-white/10"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Tile TL #2A4A6B</p></div>
+            <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#345E86]"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Tile TR #345E86</p></div>
+            <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#3E6C99]"></div><p class="mt-3 font-mono text-[0.68rem] text-white">Tile BL #3E6C99</p></div>
             <div class="rounded-2xl border border-white/[0.06] bg-canvas p-4"><div class="size-8 rounded-full bg-[#CE445D]"></div><p class="mt-3 font-mono text-[0.68rem] text-white">CTA #CE445D</p></div>
           </div>
           <div class="mt-6 rounded-2xl border border-white/[0.06] bg-canvas p-6 space-y-3 text-sm text-primary-text/60">
             <div><span class="font-bold text-white block">Clearspace</span>0.5H around lockup, min 16px favicon, 32px wordmark</div>
-            <div><span class="font-bold text-white block">Single brand rule</span>Only <code>agm</code> mid-card dot is official. No variant playground — uniformity across nav, footer, app, social.</div>
+            <div><span class="font-bold text-white block">Single brand rule</span>Only the App Grid mark is official. No variant playground — uniformity across nav, footer, app, social.</div>
             <div><span class="font-bold text-white block">Location</span>San Francisco, CA — all apps engineered in SF (not LA)</div>
           </div>
         </div>
@@ -112,10 +112,10 @@ const description = 'Official brand system: Mid-Card Dot — three angled cards 
   <section class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 lg:px-10">
     <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-muted-text">Files • Single source</p>
     <div class="mt-6 grid gap-3 grid-cols-2 sm:grid-cols-4 font-mono text-xs">
-      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">BrandLogo.astro</p><p class="mt-1 text-muted-text/70">179 lines, 13KB, single agm, beloved slide</p></div>
-      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">BrandIconConcepts.astro</p><p class="mt-1 text-muted-text/70">36 lines, bottom-left dots only</p></div>
-      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">Icon contrast</p><p class="mt-1 text-muted-text/70">#1E354E → #2C4A67, stroke #D7E3F2</p></div>
-      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">Motion</p><p class="mt-1 text-muted-text/70">No size change per-card, wordmark r2.4→r1.25</p></div>
+      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">BrandLogo.astro</p><p class="mt-1 text-muted-text/70">wordmark path data + lockup dot travel</p></div>
+      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">BrandIconConcepts.astro</p><p class="mt-1 text-muted-text/70">2×2 app grid, accent cell logic</p></div>
+      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">Icon contrast</p><p class="mt-1 text-muted-text/70">#2A4A6B → #3E6C99, accent #CE445D</p></div>
+      <div class="rounded-xl border border-white/5 bg-card-bg/20 p-4"><p class="text-white font-semibold">Motion</p><p class="mt-1 text-muted-text/70">Staggered tile scale, dot travels + fades into grid</p></div>
     </div>
   </section>
 </Layout>

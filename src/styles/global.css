@@ -126,12 +126,15 @@
     animation: signal-pulse 2.4s ease-out infinite;
   }
 
-  /* Orbit – fixed CLS via contain: layout paint, explicit aspect */
+  /* Orbit – fixed CLS via contain: layout, explicit aspect.
+     No content-visibility here: this element is always inside the hero
+     (above the fold on every viewport), so it never gets the skip-rendering
+     benefit content-visibility:auto exists for, and its reserved
+     contain-intrinsic-size box was clipping the orbit apps' hover-scale
+     overflow on the left/right edges even while on-screen. */
   .orbit-stage {
-    contain: layout paint style;
+    contain: layout style;
     aspect-ratio: 1 / 1;
-    content-visibility: auto;
-    contain-intrinsic-size: 576px 576px;
   }
   .orbit-stage::before,
   .orbit-stage::after {
@@ -218,6 +221,12 @@
 @keyframes scale-in {
   from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
+}
+@keyframes underline-draw {
+  /* Tailwind v4's scale-x-* utilities set the independent `scale` CSS property
+     (not `transform`) — animate that same property or the utility's initial
+     state never actually changes. */
+  to { scale: 1 1; }
 }
 @keyframes hero-aura-float {
   0%,100% { transform: translate(-50%,-50%) scale(1) translateY(0); }

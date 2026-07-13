@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * MakerPortal brand asset generator — Mid-Card Dot (agm)
+ * MakerPortal brand asset generator — App Grid
  *
  * Regenerates every static, non-Astro-processed brand asset in `public/` so they
  * match the single current brand identity implemented in:
- *   - src/components/BrandIconConcepts.astro (3-card icon, resting/default state)
+ *   - src/components/BrandIconConcepts.astro (2x2 app grid, resting/default state)
  *   - src/components/BrandLogo.astro (wordmark path data + lockup dot)
  *   - src/styles/global.css (color tokens)
  *
@@ -19,7 +19,7 @@
  *   public/social-card.png        (1200x630 Open Graph / Twitter card)
  *
  * If the mark's geometry ever changes in BrandIconConcepts.astro/BrandLogo.astro,
- * update AGM_CARDS / MAKER_PATH / AI_PATH below to match, then re-run this script.
+ * update GRID_CELLS / MAKER_PATH / AI_PATH below to match, then re-run this script.
  */
 import { Resvg } from '@resvg/resvg-js';
 import fs from 'node:fs';
@@ -57,66 +57,27 @@ function renderPng(svg, { width, height } = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// agm mark — resting (default, non-hover) state, copied 1:1 from
-// src/components/BrandIconConcepts.astro so every static asset matches the
-// live, interactive icon exactly. Native 32x32 grid.
+// App Grid mark — resting (default, non-hover, fully-accented) state, copied
+// 1:1 from src/components/BrandIconConcepts.astro (showCore=true colors) so
+// every static asset matches the live, interactive icon exactly. Native 32x32
+// grid: 2x2 tiles, 12px each, 2px gap, 3px margin — no rotation, unlike the
+// old card mark, so its bounding box is just the flat 3..29 square below.
 // ---------------------------------------------------------------------------
-function agmMarkGroup({ mono = false } = {}) {
-  const ink = mono ? 'currentColor' : COLORS.ink;
+function gridMarkGroup({ mono = false } = {}) {
   const dot = mono ? 'currentColor' : COLORS.brandDot;
+  const c1 = mono ? 'currentColor' : '#2A4A6B';
+  const c2 = mono ? 'currentColor' : '#345E86';
+  const c3 = mono ? 'currentColor' : '#3E6C99';
   return `
-    <g transform="rotate(-14 16 15) translate(-3 4)">
-      <rect x="4" y="12" width="14" height="13" rx="3" fill="#1E354E" stroke="#2C4A67" stroke-width="0.6" />
-      <line x1="7" y1="16" x2="14" y2="16" stroke="${ink}" stroke-width="1.1" stroke-opacity="0.7" />
-      <circle cx="6.5" cy="23" r="1" fill="${dot}" />
-    </g>
-    <g transform="rotate(-7 16 15) translate(-1.5 2)">
-      <rect x="7" y="6" width="14" height="14" rx="3" fill="#253E58" stroke="#345775" stroke-width="0.7" />
-      <line x1="10" y1="10" x2="18" y2="10" stroke="${ink}" stroke-width="1.2" stroke-opacity="0.85" />
-      <circle cx="9.5" cy="18.5" r="1.1" fill="${dot}" />
-    </g>
-    <g>
-      <rect x="12" y="4" width="16" height="16" rx="3" fill="#2C4A67" stroke="#3E6689" stroke-width="0.8" />
-      <line x1="15" y1="9" x2="24" y2="9" stroke="${ink}" stroke-width="1.3" />
-      <circle cx="14.8" cy="18.2" r="1.25" fill="${dot}" />
-    </g>`;
+    <rect x="3" y="3" width="12" height="12" rx="3" fill="${c1}" />
+    <rect x="17" y="3" width="12" height="12" rx="3" fill="${c2}" />
+    <rect x="3" y="17" width="12" height="12" rx="3" fill="${c3}" />
+    <rect x="17" y="17" width="12" height="12" rx="3" fill="${dot}" />`;
 }
 
-// Bounding box of the mark above, computed by applying the same rotate+translate
-// math the browser applies for `transform-origin:16px 15px; transform: rotate() translate();`
-// so every raster target can be centered/padded precisely without hand-tuned magic numbers.
-function rotatePoint([x, y], deg, [cx, cy]) {
-  const rad = (deg * Math.PI) / 180;
-  const dx = x - cx;
-  const dy = y - cy;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos];
-}
-function translatePoint([x, y], [tx, ty]) {
-  return [x + tx, y + ty];
-}
-function rectCorners(x, y, w, h) {
-  return [
-    [x, y],
-    [x + w, y],
-    [x, y + h],
-    [x + w, y + h],
-  ];
-}
+const markBBox = { minX: 3, maxX: 29, minY: 3, maxY: 29 };
 
-const backCorners = rectCorners(4, 12, 14, 13).map((p) => rotatePoint(translatePoint(p, [-3, 4]), -14, [16, 15]));
-const midCorners = rectCorners(7, 6, 14, 14).map((p) => rotatePoint(translatePoint(p, [-1.5, 2]), -7, [16, 15]));
-const frontCorners = rectCorners(12, 4, 16, 16);
-const allPts = [...backCorners, ...midCorners, ...frontCorners];
-const markBBox = {
-  minX: Math.min(...allPts.map((p) => p[0])),
-  maxX: Math.max(...allPts.map((p) => p[0])),
-  minY: Math.min(...allPts.map((p) => p[1])),
-  maxY: Math.max(...allPts.map((p) => p[1])),
-};
-
-/** Returns an SVG transform string that centers the agm mark's bbox within a
+/** Returns an SVG transform string that centers the grid mark's bbox within a
  * `canvasSize` square, leaving `paddingFraction` of empty space on each side. */
 function centeredMarkTransform(canvasSize, paddingFraction) {
   const bw = markBBox.maxX - markBBox.minX;
@@ -140,32 +101,19 @@ const AI_PATH =
   'M 162.14 22.29 L 162.14 22.29 Q 160.1 22.29 158.87 21.28 Q 157.65 20.27 157.65 18.54 L 157.65 18.54 Q 157.65 16.91 158.75 15.83 Q 159.86 14.75 162.16 14.37 L 162.16 14.37 L 166.05 13.74 L 166.05 13.31 Q 166.05 12.47 165.39 11.91 Q 164.73 11.34 163.65 11.34 L 163.65 11.34 Q 162.62 11.34 161.85 11.88 Q 161.08 12.42 160.72 13.31 L 160.72 13.31 L 158.15 12.06 Q 158.73 10.53 160.26 9.59 Q 161.8 8.66 163.77 8.66 L 163.77 8.66 Q 165.38 8.66 166.59 9.26 Q 167.8 9.86 168.5 10.9 Q 169.19 11.94 169.19 13.31 L 169.19 13.31 L 169.19 22 L 166.22 22 L 166.22 20.63 Q 164.68 22.29 162.14 22.29 M 160.91 18.42 L 160.91 18.42 Q 160.91 19.1 161.42 19.49 Q 161.92 19.89 162.71 19.89 L 162.71 19.89 Q 164.2 19.89 165.12 18.96 Q 166.05 18.04 166.05 16.67 L 166.05 16.67 L 166.05 16.14 L 162.76 16.7 Q 160.91 17.03 160.91 18.42 M 175.24 7.48 L 172.1 7.48 L 172.1 4.12 L 175.24 4.12 L 175.24 7.48 M 175.24 22 L 172.1 22 L 172.1 8.94 L 175.24 8.94 L 175.24 22';
 const WORDMARK_DOT = { x: 146.2, y: 19.1, r: 2.4 };
 
-/** Icon (32x32) + gap(38) + wordmark, matching BrandLogo.astro's `lockup`/`full`
- * variant default (non-hover) markup exactly — dot resting between the words. */
-function lockupSVG({ height = 32 } = {}) {
-  const totalWidth = 210;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} 32" width="${(totalWidth / 32) * height}" height="${height}" fill="none">
-    <circle cx="16" cy="16" r="12" fill="${COLORS.brandDot}" opacity="0.22" style="filter:blur(5px)" />
-    ${agmMarkGroup()}
-    <g transform="translate(38 0)" fill="white" fill-rule="evenodd">
-      <path d="${MAKER_PATH}" />
-      <g transform="translate(-8 0)"><path d="${AI_PATH}" /></g>
-    </g>
-    <circle cx="${WORDMARK_DOT.x}" cy="${WORDMARK_DOT.y}" r="${WORDMARK_DOT.r}" fill="${COLORS.brandDot}" />
-  </svg>`;
-}
-
 // ---------------------------------------------------------------------------
 // 1. favicon.svg — scalable, keeps the rounded-card + glow "app tile" framing
 // ---------------------------------------------------------------------------
 function buildFavicon() {
+  // White background (instead of the near-black canvas used elsewhere) so the
+  // app grid + crimson accent keep definition at 16-32px browser-tab sizes,
+  // across both light and dark tab bar chrome.
   const size = 64;
   const { transform } = centeredMarkTransform(size, 0.17);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" fill="none" role="img" aria-label="MakerPortal favicon">
-  <rect width="${size}" height="${size}" rx="16" fill="${COLORS.canvas}" />
-  <rect x="0.5" y="0.5" width="${size - 1}" height="${size - 1}" rx="15.5" fill="none" stroke="white" stroke-opacity="0.08" />
-  <circle cx="${size / 2}" cy="${size / 2 - 2}" r="16" fill="${COLORS.brandDot}" opacity="0.22" style="filter:blur(6px)" />
-  <g transform="${transform}">${agmMarkGroup()}</g>
+  <rect width="${size}" height="${size}" rx="16" fill="#FFFFFF" />
+  <rect x="0.5" y="0.5" width="${size - 1}" height="${size - 1}" rx="15.5" fill="none" stroke="#0F141C" stroke-opacity="0.08" />
+  <g transform="${transform}">${gridMarkGroup()}</g>
 </svg>`;
 }
 
@@ -179,7 +127,7 @@ function buildSquareIcon(size) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" fill="none">
   <rect width="${size}" height="${size}" fill="${COLORS.canvas}" />
   <circle cx="${size / 2}" cy="${size / 2 - size * 0.03}" r="${glowR}" fill="${COLORS.brandDot}" opacity="0.2" style="filter:blur(${size * 0.05}px)" />
-  <g transform="${transform}">${agmMarkGroup()}</g>
+  <g transform="${transform}">${gridMarkGroup()}</g>
 </svg>`;
 }
 
@@ -216,12 +164,12 @@ function buildSocialCard() {
   <rect width="${W}" height="${H}" fill="url(#augCta)" />
 
   <!-- decorative oversized mark, bleeding off the top-right corner -->
-  <g opacity="0.05" transform="translate(${decorTx.toFixed(1)} ${decorTy.toFixed(1)}) scale(${decorScale})">${agmMarkGroup()}</g>
+  <g opacity="0.05" transform="translate(${decorTx.toFixed(1)} ${decorTy.toFixed(1)}) scale(${decorScale})">${gridMarkGroup()}</g>
 
   <!-- lockup: icon + wordmark, matching the live header exactly -->
   <g transform="translate(100 240)">
     <circle cx="${iconSize / 2}" cy="${iconSize / 2 - 2}" r="24" fill="${COLORS.brandDot}" opacity="0.18" style="filter:blur(12px)" />
-    <g transform="${iconTransform}">${agmMarkGroup()}</g>
+    <g transform="${iconTransform}">${gridMarkGroup()}</g>
   </g>
   <g transform="translate(180 230) scale(2.05)" fill="white" fill-rule="evenodd">
     <path d="${MAKER_PATH}" />
@@ -245,7 +193,7 @@ function buildSocialCard() {
 // Run
 // ---------------------------------------------------------------------------
 function main() {
-  console.log('Generating MakerPortal brand assets (agm — Mid-Card Dot)...\n');
+  console.log('Generating MakerPortal brand assets (App Grid)...\n');
 
   const faviconSvg = buildFavicon();
   fs.writeFileSync(pub('favicon.svg'), faviconSvg);

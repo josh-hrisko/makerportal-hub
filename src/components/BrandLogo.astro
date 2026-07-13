@@ -1,7 +1,8 @@
 ---
 import BrandIconConcepts from './BrandIconConcepts.astro';
-// BrandLogo v0.9 restored exact beloved animation
-// Dot at 146.2 internal (184.2 absolute after translate 38) sits BETWEEN makerportal and ai, slides to icon core 16,16 on hover
+// App Grid identity. Dot at 146.2 internal (184.2 absolute after translate 38)
+// sits BETWEEN makerportal and ai at rest, slides into the icon's bottom-right
+// grid cell (23,23) on hover, delivering that cell's crimson accent.
 interface Props {
   variant?: 'full' | 'icon' | 'lockup' | 'lowercase' | 'wordmark' | 'mp';
   size?: 'sm' | 'md' | 'lg';
@@ -26,95 +27,64 @@ const dotRadius = 2.4;
 ---
 
 <style is:global>
-  @keyframes app-orbit-expand-settle {
-    0% { transform: rotate(0deg) scale(1); }
-    52% { transform: rotate(210deg) scale(1.16); }
-    80% { transform: rotate(350deg) scale(0.96); }
-    100% { transform: rotate(360deg) scale(1); }
-  }
   @keyframes lockup-dot-mobile-settle {
-    0% { cx: 184.2px; cy: 19.1px; r: 2.4px; }
-    100% { cx: 14.8px; cy: 18.2px; r: 1.25px; }
+    0% { cx: 184.2px; cy: 19.1px; r: 2.4px; opacity: 1; }
+    75% { opacity: 1; }
+    100% { cx: 23px; cy: 23px; r: 0.9px; opacity: 0; }
   }
   @keyframes portal-glow-pulse {
     0%,100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
     50% { opacity: 0.72; transform: translate(-50%, -50%) scale(1.1); }
   }
 
-  /* Mid-card dot - exact original */
-  .middot-stack g, .agm-stack g {
-    transform-box: view-box;
-    transform-origin: 16px 16px;
-    will-change: transform, opacity;
+  /* App Grid — each tile settles with a slight stagger on hover; the
+     bottom-right tile is the accent (see BrandIconConcepts.astro for its
+     resting fill, which depends on showCore). */
+  .grid-cell {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: transform;
   }
-  .agm-card-back, .agm-card-mid, .agm-card-front {
-    transform-box: view-box;
-    transform-origin: 16px 15px;
-    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
-    will-change: transform, opacity;
+  .group\/icon:hover .grid-cell, .group\/logo:hover .grid-cell {
+    transform: scale(1.06);
   }
-  .agm-card-back { transform: rotate(-14deg) translate(-3px, 4px); opacity: 0.9; }
-  .agm-card-mid { transform: rotate(-7deg) translate(-1.5px, 2px); opacity: 0.95; }
-  .agm-dot {
-    transition: cx 0.55s cubic-bezier(0.25, 1, 0.4, 1), cy 0.55s cubic-bezier(0.25, 1, 0.4, 1), r 0.45s ease, fill-opacity 0.4s ease, opacity 0.35s ease;
-    will-change: cx, cy, r, fill-opacity, opacity;
+  .grid-cell:nth-of-type(1) { transition-delay: 0s; }
+  .grid-cell:nth-of-type(2) { transition-delay: 0.04s; }
+  .grid-cell:nth-of-type(3) { transition-delay: 0.08s; }
+  .grid-cell:nth-of-type(4) { transition-delay: 0.12s; }
+  /* Lockup only: bottom-right tile starts neutral and turns crimson as the
+     wordmark's dot arrives (delay roughly matches the dot's travel time). */
+  .group\/logo:hover .grid-cell-br {
+    fill: #CE445D;
+    transition: fill 0.3s ease 0.3s, transform 0.45s cubic-bezier(0.25, 1, 0.5, 1) 0.12s;
   }
-  /* BELOVED: bottom-left dots, NO size change for per-card dots, wordmark dot shrinks to card size */
-  .middot-stack g, .agm-stack g {
-    transform-box: view-box;
-    transform-origin: 16px 16px;
-    will-change: transform, opacity;
-  }
-  .agm-card-back, .agm-card-mid, .agm-card-front {
-    transform-box: view-box;
-    transform-origin: 16px 15px;
-    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
-    will-change: transform, opacity;
-  }
-  .agm-card-back { transform: rotate(-14deg) translate(-3px, 4px); opacity: 0.9; }
-  .agm-card-mid { transform: rotate(-7deg) translate(-1.5px, 2px); opacity: 0.95; }
-  .agm-dot {
-    transition: cx 0.52s cubic-bezier(0.25, 1, 0.4, 1), cy 0.52s cubic-bezier(0.25, 1, 0.4, 1), opacity 0.32s ease, fill-opacity 0.32s ease;
-    will-change: cx, cy, opacity, fill-opacity;
-  }
-  /* Icon-only: dots keep exact size, only move to top card bottom-left */
-  .group\/icon:hover .agm-card-back { transform: rotate(-8deg) translate(-1.5px, 2px); opacity: 0.9; }
-  .group\/icon:hover .agm-card-mid { transform: rotate(-4deg) translate(-0.8px, 1px); opacity: 0.95; }
-  .group\/icon:hover .agm-card-front { transform: translate(-1px, 0) scale(1.02); }
-  .group\/icon:hover [data-agm-dot="far"] { cx: 14.8; cy: 18.2; }
-  .group\/icon:hover [data-agm-dot="mid"] { cx: 14.8; cy: 18.2; }
-  .group\/icon:hover [data-agm-dot="near"] { cx: 14.8; cy: 18.2; }
-  .group\/icon:hover [data-agm-dot="far"] { animation: agm-fade 0.18s 0.52s forwards; }
-  .group\/icon:hover [data-agm-dot="mid"] { animation: agm-fade 0.18s 0.48s forwards; }
-  @keyframes agm-fade { to { opacity: 0; fill-opacity: 0; } }
-  @keyframes agm-dot-fade { to { opacity: 0; fill-opacity: 0; } }
-  /* Lockup: same collapse + dot move no size change, then fade, wordmark dot shrinks */
-  .group\/logo:hover .agm-card-back { transform: rotate(-8deg) translate(-1.5px, 2px); opacity: 0.9; }
-  .group\/logo:hover .agm-card-mid { transform: rotate(-4deg) translate(-0.8px, 1px); opacity: 0.95; }
-  .group\/logo:hover .agm-card-front { transform: translate(-1px, 0) scale(1.02); }
-  .group\/logo:hover [data-agm-dot="far"] { cx: 14.8; cy: 18.2; opacity: 0; fill-opacity: 0; transition: cx 0.5s, cy 0.5s, opacity 0.18s 0.32s, fill-opacity 0.18s 0.32s; }
-  .group\/logo:hover [data-agm-dot="mid"] { cx: 14.8; cy: 18.2; opacity: 0; fill-opacity: 0; transition: cx 0.5s, cy 0.5s, opacity 0.18s 0.28s, fill-opacity 0.18s 0.28s; }
-  .group\/logo:hover [data-agm-dot="near"] { cx: 14.8; cy: 18.2; opacity: 1; fill-opacity: 1; } /* KEEP visible as target for wordmark dot to merge into */
 
-    /* BELOVED: dot sits BETWEEN makerportal and ai (146.2 internal, 184.2 absolute after translate 38) then slides to main card dot (16,16) - same final size as icon's unified dot */
+  /* Dot sits BETWEEN makerportal and ai (146.2 internal, 184.2 absolute after
+     translate 38) at rest. On hover it travels into the icon's bottom-right
+     grid cell and fades out right as it arrives — the cell's color change
+     (above) reads as the dot "delivering" its accent into the grid. */
   .lockup-dot {
     cx: 184.2px;
     cy: 19.1px;
     r: 2.4px;
-    transition: cx 0.58s cubic-bezier(0.25, 1, 0.4, 1), cy 0.58s cubic-bezier(0.25, 1, 0.4, 1), r 0.45s cubic-bezier(0.25, 1, 0.4, 1);
-    will-change: cx, cy, r;
+    opacity: 1;
+    transition: cx 0.58s cubic-bezier(0.25, 1, 0.4, 1), cy 0.58s cubic-bezier(0.25, 1, 0.4, 1), r 0.45s cubic-bezier(0.25, 1, 0.4, 1), opacity 0.2s ease 0.4s;
+    will-change: cx, cy, r, opacity;
   }
   .group\/logo:hover .lockup-dot {
-    cx: 14.8px;
-    cy: 18.2px;
-    r: 1.25px; /* same as icon's unified dot - no size smudge */
+    cx: 23px;
+    cy: 23px;
+    r: 0.9px;
+    opacity: 0;
   }
   @media (hover: none), (pointer: coarse) {
     .lockup-dot { animation: lockup-dot-mobile-settle 0.7s 0.18s cubic-bezier(0.25, 1, 0.4, 1) forwards; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .agm-card-back, .agm-card-mid, .agm-card-front, .agm-dot, .lockup-dot { transition: none !important; animation: none !important; }
-    .lockup-dot { cx: 14.8px; cy: 18.2px; r: 1.25px; }
+    .grid-cell, .lockup-dot { transition: none !important; animation: none !important; }
+    .lockup-dot { cx: 23px; cy: 23px; r: 0.9px; opacity: 0; }
+    .grid-cell-br { fill: #CE445D; }
   }
 </style>
 
@@ -163,7 +133,7 @@ const dotRadius = 2.4;
       <svg viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible" aria-hidden="true">
         {/* Icon glow */}
         {!mono && <circle cx="16" cy="16" r="12" fill="#CE445D" opacity="0.22" style="filter: blur(5px)" />}
-        {/* Mid-card dot icon at 0,0 */}
+        {/* App Grid icon at 0,0 — bottom-right cell starts neutral, filled by the traveling dot below */}
         <BrandIconConcepts mono={mono} showCore={false} activeConcept={concept} />
 
         {/* Wordmark shifted 38px right, ai shifted left 8px for perfect kerning, dot centered in gap */}
@@ -176,7 +146,7 @@ const dotRadius = 2.4;
           </g>
         </g>
 
-        {/* BELOVED DOT: by default at 184.2 (146.2+38) which is BETWEEN makerportal and ai, on hover slides to 16,16 icon core */}
+        {/* By default at 184.2 (146.2+38), BETWEEN makerportal and ai; on hover slides into the icon's bottom-right grid cell (23,23) and fades */}
         <circle class="lockup-dot" fill={mono ? 'currentColor' : '#CE445D'} stroke="none" />
       </svg>
       <span class="portal-glow-el pointer-events-none absolute left-[14px] top-1/2 -translate-y-1/2 size-8 rounded-full bg-[#CE445D]/20 blur-[8px] transition-all duration-500 group-hover/logo:bg-[#CE445D]/35 group-hover/logo:blur-[10px]" aria-hidden="true" style={animated ? 'animation: portal-glow-pulse 3.2s ease-in-out infinite' : undefined}></span>
