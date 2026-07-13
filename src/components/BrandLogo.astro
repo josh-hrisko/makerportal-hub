@@ -4,7 +4,8 @@ import BrandIconConcepts from './BrandIconConcepts.astro';
 // bottom-right tile AND the wordmark period-dot between makerportal and ai.
 // On hover: dot travels wordmark → grid, BR shrinks to its center then expands,
 // then the dot fades back in at home (no reverse travel).
-// Standalone icon hover: same BR center shrink → restore pulse.
+// Standalone icon: BR center shrink → restore pulse on hover (desktop), or
+// once when scrolled into view if pulseOnView (used by the hero orbit mark).
 interface Props {
   variant?: 'full' | 'icon' | 'lockup' | 'lowercase' | 'wordmark' | 'mp';
   size?: 'sm' | 'md' | 'lg';
@@ -12,8 +13,10 @@ interface Props {
   mono?: boolean;
   animated?: boolean;
   concept?: string;
+  /** Play the BR pulse once when this icon enters the viewport (not on hover). */
+  pulseOnView?: boolean;
 }
-const { variant = 'full', size = 'md', mono = false, animated = true, class: className = '', concept = 'agm' } = Astro.props as Props;
+const { variant = 'full', size = 'md', mono = false, animated = true, class: className = '', concept = 'agm', pulseOnView = false } = Astro.props as Props;
 
 const sizes = {
   sm: { iconHeight: 'h-6 w-6', wordmarkHeight: 'h-4 w-[85px]', lockupGap: 'gap-2', lockupWidth: 'w-[105px]', textLower: 'text-base', badgeText: 'text-[0.55rem]', mpSize: 'h-6 w-6 rounded-md' },
@@ -53,8 +56,8 @@ const dotRadius = 2.4;
     .grid-cell:nth-of-type(2) { transition-delay: 0.04s; }
     .grid-cell:nth-of-type(3) { transition-delay: 0.08s; }
 
-    /* Standalone: one quick BR center pulse (no loop, no hold). */
-    .group\/icon:hover .grid-cell-br {
+    /* Standalone hover pulse — skipped when pulseOnView (scroll-once instead). */
+    .group\/icon:not([data-pulse-on-view]):hover .grid-cell-br {
       animation: grid-br-pulse 0.65s cubic-bezier(0.25, 1, 0.4, 1) 1 forwards;
     }
 
@@ -77,6 +80,20 @@ const dotRadius = 2.4;
     0% { transform: scale(1); }
     45% { transform: scale(0.28); }
     100% { transform: scale(1); }
+  }
+  /* Scroll-into-view trigger (class added once by IntersectionObserver). */
+  .group\/icon[data-pulse-on-view].is-pulsing .grid-cell-br {
+    animation: grid-br-pulse 0.7s cubic-bezier(0.25, 1, 0.4, 1) 1 forwards;
+  }
+  .group\/icon[data-pulse-on-view].is-pulsing .grid-cell:not(.grid-cell-br) {
+    animation: grid-cell-nudge 0.7s cubic-bezier(0.25, 1, 0.4, 1) 1 forwards;
+  }
+  .group\/icon[data-pulse-on-view].is-pulsing .grid-cell-tl { animation-delay: 0s; }
+  .group\/icon[data-pulse-on-view].is-pulsing .grid-cell-tr { animation-delay: 0.04s; }
+  .group\/icon[data-pulse-on-view].is-pulsing .grid-cell-bl { animation-delay: 0.08s; }
+  @keyframes grid-cell-nudge {
+    0%, 100% { transform: scale(1); }
+    45% { transform: scale(1.06); }
   }
 
   /* Lockup dot: rest BETWEEN makerportal and ai (181.8 abs after translate 38).
@@ -113,7 +130,13 @@ const dotRadius = 2.4;
 {/* ICON - standalone */}
 {
   variant === 'icon' && (
-    <span data-brand-logo data-concept={concept} class:list={['group/icon relative inline-flex items-center justify-center overflow-visible', sizes.iconHeight, className]} aria-hidden="true">
+    <span
+      data-brand-logo
+      data-concept={concept}
+      data-pulse-on-view={pulseOnView ? '' : undefined}
+      class:list={['group/icon relative inline-flex items-center justify-center overflow-visible', sizes.iconHeight, className]}
+      aria-hidden="true"
+    >
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
         {!mono && <circle cx="16" cy="16" r="12" fill="#CE445D" opacity="0.14" />}
         <BrandIconConcepts mono={mono} activeConcept={concept} />
@@ -121,6 +144,55 @@ const dotRadius = 2.4;
     </span>
   )
 }
+
+{pulseOnView && (
+  <script is:inline>
+    (() => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const nodes = Array.from(document.querySelectorAll('[data-pulse-on-view]:not([data-pulse-wired])'));
+      if (!nodes.length) return;
+
+      // Fire once when the mark's center crosses the middle band of the viewport.
+      // ±12% of viewport height around the centerline so it feels intentional on
+      // both short mobile and tall desktop scrolls, without needing a min scrollY
+      // (on mobile the orbit often starts below the fold and only hits mid later).
+      const tryPulse = (el) => {
+        if (el.classList.contains('is-pulsing')) return true;
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight || 1;
+        const mid = rect.top + rect.height / 2;
+        const band = vh * 0.12;
+        const center = vh * 0.5;
+        if (mid < center - band || mid > center + band) return false;
+        el.classList.add('is-pulsing');
+        return true;
+      };
+
+      const pending = new Set(nodes);
+      nodes.forEach((el) => el.setAttribute('data-pulse-wired', ''));
+
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          for (const el of [...pending]) {
+            if (tryPulse(el)) pending.delete(el);
+          }
+          if (!pending.size) {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onScroll);
+          }
+          ticking = false;
+        });
+      };
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+)}
 
 {/* WORDMARK - dot static between makerportal and ai */}
 {

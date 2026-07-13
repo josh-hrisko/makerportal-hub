@@ -2,6 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import BrandLogo from '../components/BrandLogo.astro';
 
+// Internal brand sandbox — available in `astro dev` only. Production builds
+// omit the static page so /brand is a real 404 (not linked from nav either).
+if (import.meta.env.PROD) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
 const title = 'Brand & Assets — MakerPortal.ai';
 const description = 'Official brand system: App Grid — a 2×2 collection of app tiles with a crimson accent cell. Unified across all surfaces.';
 ---
