@@ -1,4 +1,5 @@
 ---
+import BrandIconConcepts from './BrandIconConcepts.astro';
 // BrandLogo — makerportal.ai identity system v0.9
 // Rebuilt for perfect typography spacing + custom outlined wordmark
 // Dot moves ONLY inside lockup variants (sliding transition) and stays 100% static in wordmark-only layouts
@@ -9,7 +10,7 @@ interface Props {
   class?: string;
   mono?: boolean;
   animated?: boolean;
-  concept?: 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n';
+  concept?: string;
 }
 const { variant = 'full', size = 'md', mono = false, animated = true, class: className = '', concept } = Astro.props as Props;
 
@@ -66,6 +67,31 @@ const dotRadius = 2.4;
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+  @keyframes app-orbit-expand-settle {
+    0% { transform: rotate(0deg) scale(1); }
+    52% { transform: rotate(210deg) scale(1.16); }
+    80% { transform: rotate(350deg) scale(0.96); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  @keyframes lockup-dot-mobile-settle {
+    0% { cx: 184.2px; cy: 19.1px; r: 2.4px; }
+    100% { cx: 16px; cy: 16px; r: 3.2px; }
+  }
+  @keyframes lockup-dot-toggle-settle {
+    0% { cx: 184.2px; cy: 19.1px; r: 2.4px; }
+    100% { cx: 17px; cy: 21px; r: 2.35px; }
+  }
+  @keyframes toggle-lever-mobile-on {
+    0% { transform: rotate(-50deg); }
+    100% { transform: rotate(0deg); }
+  }
+  @keyframes bus-route { 0%,100% { transform: translate(0); } 45% { transform: translate(1.5px,1.5px); } 70% { transform: translate(-.5px,-.5px); } }
+  @keyframes patch-cable-live { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.78); } }
+  @keyframes chassis-lock { 0%,100% { transform: scale(1); } 35% { transform: scale(.86) rotate(-4deg); } 65% { transform: scale(1.08) rotate(2deg); } }
+  @keyframes engine-cycle { 0%,100% { stroke-dashoffset: 0; } 50% { stroke-dashoffset: -18; } }
+  @keyframes kernel-pulse { 0%,100% { transform: scale(1); } 45% { transform: scale(.9); } 70% { transform: scale(1.08); } }
+  @keyframes foundry-dock { 0%,100% { transform: translateX(0); } 45% { transform: translateX(var(--dock)); } 72% { transform: translateX(0); } }
+  @keyframes switchboard-signal { 0%,100% { stroke-dashoffset: 0; } 55% { stroke-dashoffset: -32; } }
 
   /* Concept Switching Styles */
   .concept-path { display: none !important; }
@@ -85,30 +111,415 @@ const dotRadius = 2.4;
   [data-concept="l"] .concept-l-path { display: block !important; }
   [data-concept="m"] .concept-m-path { display: block !important; }
   [data-concept="n"] .concept-n-path { display: block !important; }
+  [data-concept="o"] .concept-o-path { display: block !important; }
+  [data-concept="p"] .concept-p-path { display: block !important; }
+  [data-concept="q"] .concept-q-path { display: block !important; }
+  [data-concept="r"] .concept-r-path { display: block !important; }
+  [data-concept="s"] .concept-s-path { display: block !important; }
+  [data-concept="t"] .concept-t-path { display: block !important; }
+  [data-concept="u"] .concept-u-path { display: block !important; }
+  [data-concept="v"] .concept-v-path { display: block !important; }
+  [data-concept="w"] .concept-w-path { display: block !important; }
+  [data-concept="x"] .concept-x-path { display: block !important; }
+  [data-concept="y"] .concept-y-path { display: block !important; }
+  [data-concept="z"] .concept-z-path { display: block !important; }
+  [data-concept="aa"] .concept-aa-path { display: block !important; }
+  [data-concept="ab"] .concept-ab-path { display: block !important; }
+  [data-concept="ac"] .concept-ac-path { display: block !important; }
+  [data-concept="ad"] .concept-ad-path { display: block !important; }
+  [data-concept="ae"] .concept-ae-path, [data-concept="af"] .concept-af-path,
+  [data-concept="ag"] .concept-ag-path, [data-concept="ah"] .concept-ah-path,
+  [data-concept="ai"] .concept-ai-path, [data-concept="aj"] .concept-aj-path,
+  [data-concept="ak"] .concept-ak-path, [data-concept="al"] .concept-al-path,
+  [data-concept="am"] .concept-am-path, [data-concept="an"] .concept-an-path,
+  [data-concept="ao"] .concept-ao-path, [data-concept="ap"] .concept-ap-path,
+  [data-concept="aq"] .concept-aq-path, [data-concept="ar"] .concept-ar-path,
+  [data-concept="as"] .concept-as-path, [data-concept="at"] .concept-at-path,
+  [data-concept="au"] .concept-au-path { display: block !important; }
+  [data-concept="av"] .concept-av-path, [data-concept="aw"] .concept-aw-path,
+  [data-concept="ax"] .concept-ax-path, [data-concept="ay"] .concept-ay-path,
+  [data-concept="az"] .concept-az-path, [data-concept="ba"] .concept-ba-path { display: block !important; }
+  [data-concept="bb"] .concept-bb-path, [data-concept="bc"] .concept-bc-path,
+  [data-concept="bd"] .concept-bd-path, [data-concept="be"] .concept-be-path,
+  [data-concept="bf"] .concept-bf-path, [data-concept="bg"] .concept-bg-path,
+  [data-concept="bh"] .concept-bh-path, [data-concept="bi"] .concept-bi-path,
+  [data-concept="bj"] .concept-bj-path, [data-concept="bk"] .concept-bk-path { display: block !important; }
+  [data-concept="bl"] .concept-bl-path, [data-concept="bm"] .concept-bm-path,
+  [data-concept="bn"] .concept-bn-path, [data-concept="bo"] .concept-bo-path,
+  [data-concept="bp"] .concept-bp-path, [data-concept="bq"] .concept-bq-path,
+  [data-concept="br"] .concept-br-path, [data-concept="bs"] .concept-bs-path,
+  [data-concept="bt"] .concept-bt-path, [data-concept="bu"] .concept-bu-path { display: block !important; }
+  [data-concept="bv"] .concept-bv-path, [data-concept="bw"] .concept-bw-path,
+  [data-concept="bx"] .concept-bx-path, [data-concept="by"] .concept-by-path,
+  [data-concept="bz"] .concept-bz-path, [data-concept="ca"] .concept-ca-path,
+  [data-concept="cb"] .concept-cb-path, [data-concept="cc"] .concept-cc-path,
+  [data-concept="cd"] .concept-cd-path, [data-concept="ce"] .concept-ce-path { display: block !important; }
+  [data-concept="cf"] .concept-cf-path, [data-concept="cg"] .concept-cg-path,
+  [data-concept="ch"] .concept-ch-path, [data-concept="ci"] .concept-ci-path,
+  [data-concept="cj"] .concept-cj-path, [data-concept="ck"] .concept-ck-path,
+  [data-concept="cl"] .concept-cl-path, [data-concept="cm"] .concept-cm-path,
+  [data-concept="cn"] .concept-cn-path, [data-concept="co"] .concept-co-path,
+  [data-concept="cp"] .concept-cp-path, [data-concept="cq"] .concept-cq-path { display: block !important; }
+  [data-concept="cr"] .concept-cr-path, [data-concept="cs"] .concept-cs-path,
+  [data-concept="ct"] .concept-ct-path, [data-concept="cu"] .concept-cu-path,
+  [data-concept="cv"] .concept-cv-path, [data-concept="cw"] .concept-cw-path,
+  [data-concept="cx"] .concept-cx-path, [data-concept="cy"] .concept-cy-path,
+  [data-concept="cz"] .concept-cz-path, [data-concept="da"] .concept-da-path { display: block !important; }
+  [data-concept="db"] .concept-db-path, [data-concept="dc"] .concept-dc-path,
+  [data-concept="dd"] .concept-dd-path, [data-concept="de"] .concept-de-path,
+  [data-concept="df"] .concept-df-path, [data-concept="dg"] .concept-dg-path,
+  [data-concept="dh"] .concept-dh-path, [data-concept="di"] .concept-di-path,
+  [data-concept="dj"] .concept-dj-path, [data-concept="dk"] .concept-dk-path { display: block !important; }
+  [data-concept="dl"] .concept-dl-path, [data-concept="dm"] .concept-dm-path,
+  [data-concept="dn"] .concept-dn-path, [data-concept="do"] .concept-do-path,
+  [data-concept="dp"] .concept-dp-path, [data-concept="dq"] .concept-dq-path,
+  [data-concept="dr"] .concept-dr-path, [data-concept="ds"] .concept-ds-path,
+  [data-concept="dt"] .concept-dt-path, [data-concept="du"] .concept-du-path { display: block !important; }
+  [data-concept="dv"] .concept-dv-path, [data-concept="dw"] .concept-dw-path,
+  [data-concept="dx"] .concept-dx-path, [data-concept="dy"] .concept-dy-path,
+  [data-concept="dz"] .concept-dz-path, [data-concept="ea"] .concept-ea-path,
+  [data-concept="eb"] .concept-eb-path, [data-concept="ec"] .concept-ec-path,
+  [data-concept="ed"] .concept-ed-path, [data-concept="ee"] .concept-ee-path { display: block !important; }
+  [data-concept="ef"] .concept-ef-path, [data-concept="eg"] .concept-eg-path,
+  [data-concept="eh"] .concept-eh-path, [data-concept="ei"] .concept-ei-path,
+  [data-concept="ej"] .concept-ej-path, [data-concept="ek"] .concept-ek-path,
+  [data-concept="el"] .concept-el-path, [data-concept="em"] .concept-em-path,
+  [data-concept="en"] .concept-en-path, [data-concept="eo"] .concept-eo-path { display: block !important; }
+  [data-concept="ep"] .concept-ep-path, [data-concept="eq"] .concept-eq-path,
+  [data-concept="er"] .concept-er-path, [data-concept="es"] .concept-es-path,
+  [data-concept="et"] .concept-et-path, [data-concept="eu"] .concept-eu-path,
+  [data-concept="ev"] .concept-ev-path, [data-concept="ew"] .concept-ew-path,
+  [data-concept="ex"] .concept-ex-path, [data-concept="ey"] .concept-ey-path { display: block !important; }
+  [data-concept="ez"] .concept-ez-path, [data-concept="fa"] .concept-fa-path,
+  [data-concept="fb"] .concept-fb-path, [data-concept="fc"] .concept-fc-path,
+  [data-concept="fd"] .concept-fd-path, [data-concept="fe"] .concept-fe-path,
+  [data-concept="ff"] .concept-ff-path, [data-concept="fg"] .concept-fg-path,
+  [data-concept="fh"] .concept-fh-path, [data-concept="fi"] .concept-fi-path { display: block !important; }
+  [data-concept="fj"] .concept-fj-path, [data-concept="fk"] .concept-fk-path,
+  [data-concept="fl"] .concept-fl-path, [data-concept="fm"] .concept-fm-path,
+  [data-concept="fn"] .concept-fn-path, [data-concept="fo"] .concept-fo-path,
+  [data-concept="fp"] .concept-fp-path, [data-concept="fq"] .concept-fq-path,
+  [data-concept="fr"] .concept-fr-path, [data-concept="fs"] .concept-fs-path { display: block !important; }
+  [data-concept="ft"] .concept-ft-path, [data-concept="fu"] .concept-fu-path,
+  [data-concept="fv"] .concept-fv-path, [data-concept="fw"] .concept-fw-path,
+  [data-concept="fx"] .concept-fx-path, [data-concept="fy"] .concept-fy-path,
+  [data-concept="fz"] .concept-fz-path, [data-concept="ga"] .concept-ga-path,
+  [data-concept="gb"] .concept-gb-path, [data-concept="gc"] .concept-gc-path { display: block !important; }
+  [data-concept="gd"] .concept-gd-path, [data-concept="ge"] .concept-ge-path,
+  [data-concept="gf"] .concept-gf-path, [data-concept="gg"] .concept-gg-path,
+  [data-concept="gh"] .concept-gh-path, [data-concept="gi"] .concept-gi-path,
+  [data-concept="gj"] .concept-gj-path, [data-concept="gk"] .concept-gk-path,
+  [data-concept="gl"] .concept-gl-path, [data-concept="gm"] .concept-gm-path,
+  [data-concept="gn"] .concept-gn-path, [data-concept="go"] .concept-go-path { display: block !important; }
+  [data-concept="gp"] .concept-gp-path, [data-concept="gq"] .concept-gq-path,
+  [data-concept="gr"] .concept-gr-path, [data-concept="gs"] .concept-gs-path,
+  [data-concept="gt"] .concept-gt-path, [data-concept="gu"] .concept-gu-path,
+  [data-concept="gv"] .concept-gv-path, [data-concept="gw"] .concept-gw-path,
+  [data-concept="gx"] .concept-gx-path, [data-concept="gy"] .concept-gy-path,
+  [data-concept="gz"] .concept-gz-path, [data-concept="ha"] .concept-ha-path { display: block !important; }
+  [data-concept="hb"] .concept-hb-path, [data-concept="hc"] .concept-hc-path,
+  [data-concept="hd"] .concept-hd-path, [data-concept="he"] .concept-he-path,
+  [data-concept="hf"] .concept-hf-path, [data-concept="hg"] .concept-hg-path,
+  [data-concept="hh"] .concept-hh-path, [data-concept="hi"] .concept-hi-path,
+  [data-concept="hj"] .concept-hj-path, [data-concept="hk"] .concept-hk-path,
+  [data-concept="hl"] .concept-hl-path, [data-concept="hm"] .concept-hm-path { display: block !important; }
+  [data-concept="hn"] .concept-hn-path, [data-concept="ho"] .concept-ho-path,
+  [data-concept="hp"] .concept-hp-path, [data-concept="hq"] .concept-hq-path,
+  [data-concept="hr"] .concept-hr-path, [data-concept="hs"] .concept-hs-path,
+  [data-concept="ht"] .concept-ht-path, [data-concept="hu"] .concept-hu-path,
+  [data-concept="hv"] .concept-hv-path, [data-concept="hw"] .concept-hw-path,
+  [data-concept="hx"] .concept-hx-path, [data-concept="hy"] .concept-hy-path,
+  [data-concept="hz"] .concept-hz-path, [data-concept="ia"] .concept-ia-path,
+  [data-concept="ib"] .concept-ib-path, [data-concept="ic"] .concept-ic-path,
+  [data-concept="id"] .concept-id-path, [data-concept="ie"] .concept-ie-path,
+  [data-concept="if"] .concept-if-path, [data-concept="ig"] .concept-ig-path,
+  [data-concept="cnc"] .concept-cnc-path, [data-concept="via"] .concept-via-path,
+  [data-concept="gen"] .concept-gen-path, [data-concept="stp"] .concept-stp-path,
+  [data-concept="agl"] .concept-agl-path, [data-concept="agw"] .concept-agw-path,
+  [data-concept="agp"] .concept-agp-path, [data-concept="agh"] .concept-agh-path,
+  [data-concept="agf"] .concept-agf-path, [data-concept="ago"] .concept-ago-path,
+  [data-concept="ags"] .concept-ags-path, [data-concept="agc"] .concept-agc-path,
+  [data-concept="agm"] .concept-agm-path, [data-concept="agn"] .concept-agn-path,
+  [data-concept="agr"] .concept-agr-path { display: block !important; }
 
   /* Body-level switcher fallbacks */
-  body:not([data-brand-concept]) :not([data-concept]) .concept-g-path { display: block !important; }
-  body[data-brand-concept="a"] :not([data-concept]) .concept-a-path { display: block !important; }
-  body[data-brand-concept="b"] :not([data-concept]) .concept-b-path { display: block !important; }
-  body[data-brand-concept="c"] :not([data-concept]) .concept-c-path { display: block !important; }
-  body[data-brand-concept="d"] :not([data-concept]) .concept-d-path { display: block !important; }
-  body[data-brand-concept="e"] :not([data-concept]) .concept-e-path { display: block !important; }
-  body[data-brand-concept="f"] :not([data-concept]) .concept-f-path { display: block !important; }
-  body[data-brand-concept="g"] :not([data-concept]) .concept-g-path { display: block !important; }
-  body[data-brand-concept="h"] :not([data-concept]) .concept-h-path { display: block !important; }
-  body[data-brand-concept="i"] :not([data-concept]) .concept-i-path { display: block !important; }
-  body[data-brand-concept="j"] :not([data-concept]) .concept-j-path { display: block !important; }
-  body[data-brand-concept="k"] :not([data-concept]) .concept-k-path { display: block !important; }
-  body[data-brand-concept="l"] :not([data-concept]) .concept-l-path { display: block !important; }
-  body[data-brand-concept="m"] :not([data-concept]) .concept-m-path { display: block !important; }
-  body[data-brand-concept="n"] :not([data-concept]) .concept-n-path { display: block !important; }
+  body:not([data-brand-concept]) [data-brand-logo]:not([data-concept]) .concept-agm-path { display: block !important; }
+  body[data-brand-concept="a"] [data-brand-logo]:not([data-concept]) .concept-a-path { display: block !important; }
+  body[data-brand-concept="b"] [data-brand-logo]:not([data-concept]) .concept-b-path { display: block !important; }
+  body[data-brand-concept="c"] [data-brand-logo]:not([data-concept]) .concept-c-path { display: block !important; }
+  body[data-brand-concept="d"] [data-brand-logo]:not([data-concept]) .concept-d-path { display: block !important; }
+  body[data-brand-concept="e"] [data-brand-logo]:not([data-concept]) .concept-e-path { display: block !important; }
+  body[data-brand-concept="f"] [data-brand-logo]:not([data-concept]) .concept-f-path { display: block !important; }
+  body[data-brand-concept="g"] [data-brand-logo]:not([data-concept]) .concept-g-path { display: block !important; }
+  body[data-brand-concept="h"] [data-brand-logo]:not([data-concept]) .concept-h-path { display: block !important; }
+  body[data-brand-concept="i"] [data-brand-logo]:not([data-concept]) .concept-i-path { display: block !important; }
+  body[data-brand-concept="j"] [data-brand-logo]:not([data-concept]) .concept-j-path { display: block !important; }
+  body[data-brand-concept="k"] [data-brand-logo]:not([data-concept]) .concept-k-path { display: block !important; }
+  body[data-brand-concept="l"] [data-brand-logo]:not([data-concept]) .concept-l-path { display: block !important; }
+  body[data-brand-concept="m"] [data-brand-logo]:not([data-concept]) .concept-m-path { display: block !important; }
+  body[data-brand-concept="n"] [data-brand-logo]:not([data-concept]) .concept-n-path { display: block !important; }
+  body[data-brand-concept="o"] [data-brand-logo]:not([data-concept]) .concept-o-path { display: block !important; }
+  body[data-brand-concept="p"] [data-brand-logo]:not([data-concept]) .concept-p-path { display: block !important; }
+  body[data-brand-concept="q"] [data-brand-logo]:not([data-concept]) .concept-q-path { display: block !important; }
+  body[data-brand-concept="r"] [data-brand-logo]:not([data-concept]) .concept-r-path { display: block !important; }
+  body[data-brand-concept="s"] [data-brand-logo]:not([data-concept]) .concept-s-path { display: block !important; }
+  body[data-brand-concept="t"] [data-brand-logo]:not([data-concept]) .concept-t-path { display: block !important; }
+  body[data-brand-concept="u"] [data-brand-logo]:not([data-concept]) .concept-u-path { display: block !important; }
+  body[data-brand-concept="v"] [data-brand-logo]:not([data-concept]) .concept-v-path { display: block !important; }
+  body[data-brand-concept="w"] [data-brand-logo]:not([data-concept]) .concept-w-path { display: block !important; }
+  body[data-brand-concept="x"] [data-brand-logo]:not([data-concept]) .concept-x-path { display: block !important; }
+  body[data-brand-concept="y"] [data-brand-logo]:not([data-concept]) .concept-y-path { display: block !important; }
+  body[data-brand-concept="z"] [data-brand-logo]:not([data-concept]) .concept-z-path { display: block !important; }
+  body[data-brand-concept="aa"] [data-brand-logo]:not([data-concept]) .concept-aa-path { display: block !important; }
+  body[data-brand-concept="ab"] [data-brand-logo]:not([data-concept]) .concept-ab-path { display: block !important; }
+  body[data-brand-concept="ac"] [data-brand-logo]:not([data-concept]) .concept-ac-path { display: block !important; }
+  body[data-brand-concept="ad"] [data-brand-logo]:not([data-concept]) .concept-ad-path { display: block !important; }
+  body[data-brand-concept="ae"] [data-brand-logo]:not([data-concept]) .concept-ae-path,
+  body[data-brand-concept="af"] [data-brand-logo]:not([data-concept]) .concept-af-path,
+  body[data-brand-concept="ag"] [data-brand-logo]:not([data-concept]) .concept-ag-path,
+  body[data-brand-concept="ah"] [data-brand-logo]:not([data-concept]) .concept-ah-path,
+  body[data-brand-concept="ai"] [data-brand-logo]:not([data-concept]) .concept-ai-path,
+  body[data-brand-concept="aj"] [data-brand-logo]:not([data-concept]) .concept-aj-path,
+  body[data-brand-concept="ak"] [data-brand-logo]:not([data-concept]) .concept-ak-path,
+  body[data-brand-concept="al"] [data-brand-logo]:not([data-concept]) .concept-al-path,
+  body[data-brand-concept="am"] [data-brand-logo]:not([data-concept]) .concept-am-path,
+  body[data-brand-concept="an"] [data-brand-logo]:not([data-concept]) .concept-an-path,
+  body[data-brand-concept="ao"] [data-brand-logo]:not([data-concept]) .concept-ao-path,
+  body[data-brand-concept="ap"] [data-brand-logo]:not([data-concept]) .concept-ap-path,
+  body[data-brand-concept="aq"] [data-brand-logo]:not([data-concept]) .concept-aq-path,
+  body[data-brand-concept="ar"] [data-brand-logo]:not([data-concept]) .concept-ar-path,
+  body[data-brand-concept="as"] [data-brand-logo]:not([data-concept]) .concept-as-path,
+  body[data-brand-concept="at"] [data-brand-logo]:not([data-concept]) .concept-at-path,
+  body[data-brand-concept="au"] [data-brand-logo]:not([data-concept]) .concept-au-path { display: block !important; }
+  body[data-brand-concept="av"] [data-brand-logo]:not([data-concept]) .concept-av-path,
+  body[data-brand-concept="aw"] [data-brand-logo]:not([data-concept]) .concept-aw-path,
+  body[data-brand-concept="ax"] [data-brand-logo]:not([data-concept]) .concept-ax-path,
+  body[data-brand-concept="ay"] [data-brand-logo]:not([data-concept]) .concept-ay-path,
+  body[data-brand-concept="az"] [data-brand-logo]:not([data-concept]) .concept-az-path,
+  body[data-brand-concept="ba"] [data-brand-logo]:not([data-concept]) .concept-ba-path { display: block !important; }
+  body[data-brand-concept="bb"] [data-brand-logo]:not([data-concept]) .concept-bb-path,
+  body[data-brand-concept="bc"] [data-brand-logo]:not([data-concept]) .concept-bc-path,
+  body[data-brand-concept="bd"] [data-brand-logo]:not([data-concept]) .concept-bd-path,
+  body[data-brand-concept="be"] [data-brand-logo]:not([data-concept]) .concept-be-path,
+  body[data-brand-concept="bf"] [data-brand-logo]:not([data-concept]) .concept-bf-path,
+  body[data-brand-concept="bg"] [data-brand-logo]:not([data-concept]) .concept-bg-path,
+  body[data-brand-concept="bh"] [data-brand-logo]:not([data-concept]) .concept-bh-path,
+  body[data-brand-concept="bi"] [data-brand-logo]:not([data-concept]) .concept-bi-path,
+  body[data-brand-concept="bj"] [data-brand-logo]:not([data-concept]) .concept-bj-path,
+  body[data-brand-concept="bk"] [data-brand-logo]:not([data-concept]) .concept-bk-path { display: block !important; }
+  body[data-brand-concept="bl"] [data-brand-logo]:not([data-concept]) .concept-bl-path,
+  body[data-brand-concept="bm"] [data-brand-logo]:not([data-concept]) .concept-bm-path,
+  body[data-brand-concept="bn"] [data-brand-logo]:not([data-concept]) .concept-bn-path,
+  body[data-brand-concept="bo"] [data-brand-logo]:not([data-concept]) .concept-bo-path,
+  body[data-brand-concept="bp"] [data-brand-logo]:not([data-concept]) .concept-bp-path,
+  body[data-brand-concept="bq"] [data-brand-logo]:not([data-concept]) .concept-bq-path,
+  body[data-brand-concept="br"] [data-brand-logo]:not([data-concept]) .concept-br-path,
+  body[data-brand-concept="bs"] [data-brand-logo]:not([data-concept]) .concept-bs-path,
+  body[data-brand-concept="bt"] [data-brand-logo]:not([data-concept]) .concept-bt-path,
+  body[data-brand-concept="bu"] [data-brand-logo]:not([data-concept]) .concept-bu-path { display: block !important; }
+  body[data-brand-concept="bv"] [data-brand-logo]:not([data-concept]) .concept-bv-path,
+  body[data-brand-concept="bw"] [data-brand-logo]:not([data-concept]) .concept-bw-path,
+  body[data-brand-concept="bx"] [data-brand-logo]:not([data-concept]) .concept-bx-path,
+  body[data-brand-concept="by"] [data-brand-logo]:not([data-concept]) .concept-by-path,
+  body[data-brand-concept="bz"] [data-brand-logo]:not([data-concept]) .concept-bz-path,
+  body[data-brand-concept="ca"] [data-brand-logo]:not([data-concept]) .concept-ca-path,
+  body[data-brand-concept="cb"] [data-brand-logo]:not([data-concept]) .concept-cb-path,
+  body[data-brand-concept="cc"] [data-brand-logo]:not([data-concept]) .concept-cc-path,
+  body[data-brand-concept="cd"] [data-brand-logo]:not([data-concept]) .concept-cd-path,
+  body[data-brand-concept="ce"] [data-brand-logo]:not([data-concept]) .concept-ce-path { display: block !important; }
+  body[data-brand-concept="cf"] [data-brand-logo]:not([data-concept]) .concept-cf-path,
+  body[data-brand-concept="cg"] [data-brand-logo]:not([data-concept]) .concept-cg-path,
+  body[data-brand-concept="ch"] [data-brand-logo]:not([data-concept]) .concept-ch-path,
+  body[data-brand-concept="ci"] [data-brand-logo]:not([data-concept]) .concept-ci-path,
+  body[data-brand-concept="cj"] [data-brand-logo]:not([data-concept]) .concept-cj-path,
+  body[data-brand-concept="ck"] [data-brand-logo]:not([data-concept]) .concept-ck-path,
+  body[data-brand-concept="cl"] [data-brand-logo]:not([data-concept]) .concept-cl-path,
+  body[data-brand-concept="cm"] [data-brand-logo]:not([data-concept]) .concept-cm-path,
+  body[data-brand-concept="cn"] [data-brand-logo]:not([data-concept]) .concept-cn-path,
+  body[data-brand-concept="co"] [data-brand-logo]:not([data-concept]) .concept-co-path,
+  body[data-brand-concept="cp"] [data-brand-logo]:not([data-concept]) .concept-cp-path,
+  body[data-brand-concept="cq"] [data-brand-logo]:not([data-concept]) .concept-cq-path { display: block !important; }
+  body[data-brand-concept="cr"] [data-brand-logo]:not([data-concept]) .concept-cr-path,
+  body[data-brand-concept="cs"] [data-brand-logo]:not([data-concept]) .concept-cs-path,
+  body[data-brand-concept="ct"] [data-brand-logo]:not([data-concept]) .concept-ct-path,
+  body[data-brand-concept="cu"] [data-brand-logo]:not([data-concept]) .concept-cu-path,
+  body[data-brand-concept="cv"] [data-brand-logo]:not([data-concept]) .concept-cv-path,
+  body[data-brand-concept="cw"] [data-brand-logo]:not([data-concept]) .concept-cw-path,
+  body[data-brand-concept="cx"] [data-brand-logo]:not([data-concept]) .concept-cx-path,
+  body[data-brand-concept="cy"] [data-brand-logo]:not([data-concept]) .concept-cy-path,
+  body[data-brand-concept="cz"] [data-brand-logo]:not([data-concept]) .concept-cz-path,
+  body[data-brand-concept="da"] [data-brand-logo]:not([data-concept]) .concept-da-path { display: block !important; }
+  body[data-brand-concept="db"] [data-brand-logo]:not([data-concept]) .concept-db-path,
+  body[data-brand-concept="dc"] [data-brand-logo]:not([data-concept]) .concept-dc-path,
+  body[data-brand-concept="dd"] [data-brand-logo]:not([data-concept]) .concept-dd-path,
+  body[data-brand-concept="de"] [data-brand-logo]:not([data-concept]) .concept-de-path,
+  body[data-brand-concept="df"] [data-brand-logo]:not([data-concept]) .concept-df-path,
+  body[data-brand-concept="dg"] [data-brand-logo]:not([data-concept]) .concept-dg-path,
+  body[data-brand-concept="dh"] [data-brand-logo]:not([data-concept]) .concept-dh-path,
+  body[data-brand-concept="di"] [data-brand-logo]:not([data-concept]) .concept-di-path,
+  body[data-brand-concept="dj"] [data-brand-logo]:not([data-concept]) .concept-dj-path,
+  body[data-brand-concept="dk"] [data-brand-logo]:not([data-concept]) .concept-dk-path { display: block !important; }
+  body[data-brand-concept="dl"] [data-brand-logo]:not([data-concept]) .concept-dl-path,
+  body[data-brand-concept="dm"] [data-brand-logo]:not([data-concept]) .concept-dm-path,
+  body[data-brand-concept="dn"] [data-brand-logo]:not([data-concept]) .concept-dn-path,
+  body[data-brand-concept="do"] [data-brand-logo]:not([data-concept]) .concept-do-path,
+  body[data-brand-concept="dp"] [data-brand-logo]:not([data-concept]) .concept-dp-path,
+  body[data-brand-concept="dq"] [data-brand-logo]:not([data-concept]) .concept-dq-path,
+  body[data-brand-concept="dr"] [data-brand-logo]:not([data-concept]) .concept-dr-path,
+  body[data-brand-concept="ds"] [data-brand-logo]:not([data-concept]) .concept-ds-path,
+  body[data-brand-concept="dt"] [data-brand-logo]:not([data-concept]) .concept-dt-path,
+  body[data-brand-concept="du"] [data-brand-logo]:not([data-concept]) .concept-du-path { display: block !important; }
+  body[data-brand-concept="dv"] [data-brand-logo]:not([data-concept]) .concept-dv-path,
+  body[data-brand-concept="dw"] [data-brand-logo]:not([data-concept]) .concept-dw-path,
+  body[data-brand-concept="dx"] [data-brand-logo]:not([data-concept]) .concept-dx-path,
+  body[data-brand-concept="dy"] [data-brand-logo]:not([data-concept]) .concept-dy-path,
+  body[data-brand-concept="dz"] [data-brand-logo]:not([data-concept]) .concept-dz-path,
+  body[data-brand-concept="ea"] [data-brand-logo]:not([data-concept]) .concept-ea-path,
+  body[data-brand-concept="eb"] [data-brand-logo]:not([data-concept]) .concept-eb-path,
+  body[data-brand-concept="ec"] [data-brand-logo]:not([data-concept]) .concept-ec-path,
+  body[data-brand-concept="ed"] [data-brand-logo]:not([data-concept]) .concept-ed-path,
+  body[data-brand-concept="ee"] [data-brand-logo]:not([data-concept]) .concept-ee-path { display: block !important; }
+  body[data-brand-concept="ef"] [data-brand-logo]:not([data-concept]) .concept-ef-path,
+  body[data-brand-concept="eg"] [data-brand-logo]:not([data-concept]) .concept-eg-path,
+  body[data-brand-concept="eh"] [data-brand-logo]:not([data-concept]) .concept-eh-path,
+  body[data-brand-concept="ei"] [data-brand-logo]:not([data-concept]) .concept-ei-path,
+  body[data-brand-concept="ej"] [data-brand-logo]:not([data-concept]) .concept-ej-path,
+  body[data-brand-concept="ek"] [data-brand-logo]:not([data-concept]) .concept-ek-path,
+  body[data-brand-concept="el"] [data-brand-logo]:not([data-concept]) .concept-el-path,
+  body[data-brand-concept="em"] [data-brand-logo]:not([data-concept]) .concept-em-path,
+  body[data-brand-concept="en"] [data-brand-logo]:not([data-concept]) .concept-en-path,
+  body[data-brand-concept="eo"] [data-brand-logo]:not([data-concept]) .concept-eo-path { display: block !important; }
+  body[data-brand-concept="ep"] [data-brand-logo]:not([data-concept]) .concept-ep-path,
+  body[data-brand-concept="eq"] [data-brand-logo]:not([data-concept]) .concept-eq-path,
+  body[data-brand-concept="er"] [data-brand-logo]:not([data-concept]) .concept-er-path,
+  body[data-brand-concept="es"] [data-brand-logo]:not([data-concept]) .concept-es-path,
+  body[data-brand-concept="et"] [data-brand-logo]:not([data-concept]) .concept-et-path,
+  body[data-brand-concept="eu"] [data-brand-logo]:not([data-concept]) .concept-eu-path,
+  body[data-brand-concept="ev"] [data-brand-logo]:not([data-concept]) .concept-ev-path,
+  body[data-brand-concept="ew"] [data-brand-logo]:not([data-concept]) .concept-ew-path,
+  body[data-brand-concept="ex"] [data-brand-logo]:not([data-concept]) .concept-ex-path,
+  body[data-brand-concept="ey"] [data-brand-logo]:not([data-concept]) .concept-ey-path { display: block !important; }
+  body[data-brand-concept="ez"] [data-brand-logo]:not([data-concept]) .concept-ez-path,
+  body[data-brand-concept="fa"] [data-brand-logo]:not([data-concept]) .concept-fa-path,
+  body[data-brand-concept="fb"] [data-brand-logo]:not([data-concept]) .concept-fb-path,
+  body[data-brand-concept="fc"] [data-brand-logo]:not([data-concept]) .concept-fc-path,
+  body[data-brand-concept="fd"] [data-brand-logo]:not([data-concept]) .concept-fd-path,
+  body[data-brand-concept="fe"] [data-brand-logo]:not([data-concept]) .concept-fe-path,
+  body[data-brand-concept="ff"] [data-brand-logo]:not([data-concept]) .concept-ff-path,
+  body[data-brand-concept="fg"] [data-brand-logo]:not([data-concept]) .concept-fg-path,
+  body[data-brand-concept="fh"] [data-brand-logo]:not([data-concept]) .concept-fh-path,
+  body[data-brand-concept="fi"] [data-brand-logo]:not([data-concept]) .concept-fi-path { display: block !important; }
+  body[data-brand-concept="fj"] [data-brand-logo]:not([data-concept]) .concept-fj-path,
+  body[data-brand-concept="fk"] [data-brand-logo]:not([data-concept]) .concept-fk-path,
+  body[data-brand-concept="fl"] [data-brand-logo]:not([data-concept]) .concept-fl-path,
+  body[data-brand-concept="fm"] [data-brand-logo]:not([data-concept]) .concept-fm-path,
+  body[data-brand-concept="fn"] [data-brand-logo]:not([data-concept]) .concept-fn-path,
+  body[data-brand-concept="fo"] [data-brand-logo]:not([data-concept]) .concept-fo-path,
+  body[data-brand-concept="fp"] [data-brand-logo]:not([data-concept]) .concept-fp-path,
+  body[data-brand-concept="fq"] [data-brand-logo]:not([data-concept]) .concept-fq-path,
+  body[data-brand-concept="fr"] [data-brand-logo]:not([data-concept]) .concept-fr-path,
+  body[data-brand-concept="fs"] [data-brand-logo]:not([data-concept]) .concept-fs-path { display: block !important; }
+  body[data-brand-concept="ft"] [data-brand-logo]:not([data-concept]) .concept-ft-path,
+  body[data-brand-concept="fu"] [data-brand-logo]:not([data-concept]) .concept-fu-path,
+  body[data-brand-concept="fv"] [data-brand-logo]:not([data-concept]) .concept-fv-path,
+  body[data-brand-concept="fw"] [data-brand-logo]:not([data-concept]) .concept-fw-path,
+  body[data-brand-concept="fx"] [data-brand-logo]:not([data-concept]) .concept-fx-path,
+  body[data-brand-concept="fy"] [data-brand-logo]:not([data-concept]) .concept-fy-path,
+  body[data-brand-concept="fz"] [data-brand-logo]:not([data-concept]) .concept-fz-path,
+  body[data-brand-concept="ga"] [data-brand-logo]:not([data-concept]) .concept-ga-path,
+  body[data-brand-concept="gb"] [data-brand-logo]:not([data-concept]) .concept-gb-path,
+  body[data-brand-concept="gc"] [data-brand-logo]:not([data-concept]) .concept-gc-path { display: block !important; }
+  body[data-brand-concept="gd"] [data-brand-logo]:not([data-concept]) .concept-gd-path,
+  body[data-brand-concept="ge"] [data-brand-logo]:not([data-concept]) .concept-ge-path,
+  body[data-brand-concept="gf"] [data-brand-logo]:not([data-concept]) .concept-gf-path,
+  body[data-brand-concept="gg"] [data-brand-logo]:not([data-concept]) .concept-gg-path,
+  body[data-brand-concept="gh"] [data-brand-logo]:not([data-concept]) .concept-gh-path,
+  body[data-brand-concept="gi"] [data-brand-logo]:not([data-concept]) .concept-gi-path,
+  body[data-brand-concept="gj"] [data-brand-logo]:not([data-concept]) .concept-gj-path,
+  body[data-brand-concept="gk"] [data-brand-logo]:not([data-concept]) .concept-gk-path,
+  body[data-brand-concept="gl"] [data-brand-logo]:not([data-concept]) .concept-gl-path,
+  body[data-brand-concept="gm"] [data-brand-logo]:not([data-concept]) .concept-gm-path,
+  body[data-brand-concept="gn"] [data-brand-logo]:not([data-concept]) .concept-gn-path,
+  body[data-brand-concept="go"] [data-brand-logo]:not([data-concept]) .concept-go-path { display: block !important; }
+  body[data-brand-concept="gp"] [data-brand-logo]:not([data-concept]) .concept-gp-path,
+  body[data-brand-concept="gq"] [data-brand-logo]:not([data-concept]) .concept-gq-path,
+  body[data-brand-concept="gr"] [data-brand-logo]:not([data-concept]) .concept-gr-path,
+  body[data-brand-concept="gs"] [data-brand-logo]:not([data-concept]) .concept-gs-path,
+  body[data-brand-concept="gt"] [data-brand-logo]:not([data-concept]) .concept-gt-path,
+  body[data-brand-concept="gu"] [data-brand-logo]:not([data-concept]) .concept-gu-path,
+  body[data-brand-concept="gv"] [data-brand-logo]:not([data-concept]) .concept-gv-path,
+  body[data-brand-concept="gw"] [data-brand-logo]:not([data-concept]) .concept-gw-path,
+  body[data-brand-concept="gx"] [data-brand-logo]:not([data-concept]) .concept-gx-path,
+  body[data-brand-concept="gy"] [data-brand-logo]:not([data-concept]) .concept-gy-path,
+  body[data-brand-concept="gz"] [data-brand-logo]:not([data-concept]) .concept-gz-path,
+  body[data-brand-concept="ha"] [data-brand-logo]:not([data-concept]) .concept-ha-path { display: block !important; }
+  body[data-brand-concept="hb"] [data-brand-logo]:not([data-concept]) .concept-hb-path,
+  body[data-brand-concept="hc"] [data-brand-logo]:not([data-concept]) .concept-hc-path,
+  body[data-brand-concept="hd"] [data-brand-logo]:not([data-concept]) .concept-hd-path,
+  body[data-brand-concept="he"] [data-brand-logo]:not([data-concept]) .concept-he-path,
+  body[data-brand-concept="hf"] [data-brand-logo]:not([data-concept]) .concept-hf-path,
+  body[data-brand-concept="hg"] [data-brand-logo]:not([data-concept]) .concept-hg-path,
+  body[data-brand-concept="hh"] [data-brand-logo]:not([data-concept]) .concept-hh-path,
+  body[data-brand-concept="hi"] [data-brand-logo]:not([data-concept]) .concept-hi-path,
+  body[data-brand-concept="hj"] [data-brand-logo]:not([data-concept]) .concept-hj-path,
+  body[data-brand-concept="hk"] [data-brand-logo]:not([data-concept]) .concept-hk-path,
+  body[data-brand-concept="hl"] [data-brand-logo]:not([data-concept]) .concept-hl-path,
+  body[data-brand-concept="hm"] [data-brand-logo]:not([data-concept]) .concept-hm-path { display: block !important; }
+  body[data-brand-concept="hn"] [data-brand-logo]:not([data-concept]) .concept-hn-path,
+  body[data-brand-concept="ho"] [data-brand-logo]:not([data-concept]) .concept-ho-path,
+  body[data-brand-concept="hp"] [data-brand-logo]:not([data-concept]) .concept-hp-path,
+  body[data-brand-concept="hq"] [data-brand-logo]:not([data-concept]) .concept-hq-path,
+  body[data-brand-concept="hr"] [data-brand-logo]:not([data-concept]) .concept-hr-path,
+  body[data-brand-concept="hs"] [data-brand-logo]:not([data-concept]) .concept-hs-path,
+  body[data-brand-concept="ht"] [data-brand-logo]:not([data-concept]) .concept-ht-path,
+  body[data-brand-concept="hu"] [data-brand-logo]:not([data-concept]) .concept-hu-path,
+  body[data-brand-concept="hv"] [data-brand-logo]:not([data-concept]) .concept-hv-path,
+  body[data-brand-concept="hw"] [data-brand-logo]:not([data-concept]) .concept-hw-path,
+  body[data-brand-concept="hx"] [data-brand-logo]:not([data-concept]) .concept-hx-path,
+  body[data-brand-concept="hy"] [data-brand-logo]:not([data-concept]) .concept-hy-path,
+  body[data-brand-concept="hz"] [data-brand-logo]:not([data-concept]) .concept-hz-path,
+  body[data-brand-concept="ia"] [data-brand-logo]:not([data-concept]) .concept-ia-path,
+  body[data-brand-concept="ib"] [data-brand-logo]:not([data-concept]) .concept-ib-path,
+  body[data-brand-concept="ic"] [data-brand-logo]:not([data-concept]) .concept-ic-path,
+  body[data-brand-concept="id"] [data-brand-logo]:not([data-concept]) .concept-id-path,
+  body[data-brand-concept="ie"] [data-brand-logo]:not([data-concept]) .concept-ie-path,
+  body[data-brand-concept="if"] [data-brand-logo]:not([data-concept]) .concept-if-path,
+  body[data-brand-concept="ig"] [data-brand-logo]:not([data-concept]) .concept-ig-path,
+  body[data-brand-concept="cnc"] [data-brand-logo]:not([data-concept]) .concept-cnc-path,
+  body[data-brand-concept="via"] [data-brand-logo]:not([data-concept]) .concept-via-path,
+  body[data-brand-concept="gen"] [data-brand-logo]:not([data-concept]) .concept-gen-path,
+  body[data-brand-concept="stp"] [data-brand-logo]:not([data-concept]) .concept-stp-path,
+  body[data-brand-concept="agl"] [data-brand-logo]:not([data-concept]) .concept-agl-path,
+  body[data-brand-concept="agw"] [data-brand-logo]:not([data-concept]) .concept-agw-path,
+  body[data-brand-concept="agp"] [data-brand-logo]:not([data-concept]) .concept-agp-path,
+  body[data-brand-concept="agh"] [data-brand-logo]:not([data-concept]) .concept-agh-path,
+  body[data-brand-concept="agf"] [data-brand-logo]:not([data-concept]) .concept-agf-path,
+  body[data-brand-concept="ago"] [data-brand-logo]:not([data-concept]) .concept-ago-path,
+  body[data-brand-concept="ags"] [data-brand-logo]:not([data-concept]) .concept-ags-path,
+  body[data-brand-concept="agc"] [data-brand-logo]:not([data-concept]) .concept-agc-path,
+  body[data-brand-concept="agm"] [data-brand-logo]:not([data-concept]) .concept-agm-path,
+  body[data-brand-concept="agn"] [data-brand-logo]:not([data-concept]) .concept-agn-path,
+  body[data-brand-concept="agr"] [data-brand-logo]:not([data-concept]) .concept-agr-path { display: block !important; }
 
   /* Shared static core dot visibility */
   .concept-core-dot { display: block; }
   [data-concept="a"] .concept-core-dot,
-  [data-concept="n"] .concept-core-dot { display: none !important; }
-  body[data-brand-concept="a"] :not([data-concept]) .concept-core-dot { display: none !important; }
-  body[data-brand-concept="n"] :not([data-concept]) .concept-core-dot { display: none !important; }
+  [data-concept="n"] .concept-core-dot,
+  [data-concept="agm"] .concept-core-dot { display: none !important; }
+  body[data-brand-concept="a"] [data-brand-logo]:not([data-concept]) .concept-core-dot { display: none !important; }
+  body[data-brand-concept="n"] [data-brand-logo]:not([data-concept]) .concept-core-dot { display: none !important; }
+  body[data-brand-concept="agm"] [data-brand-logo]:not([data-concept]) .concept-core-dot { display: none !important; }
+  [data-concept="cq"] .concept-core-dot,
+  body[data-brand-concept="cq"] [data-brand-logo]:not([data-concept]) .concept-core-dot { display: none !important; }
+
+  .toggle-lever {
+    transform-box: view-box;
+    transform-origin: 7px 21px;
+    transform: rotate(-50deg);
+    transition: transform 0.58s cubic-bezier(0.25, 1, 0.4, 1);
+  }
+  .group\/logo .toggle-static-dot { display: none; }
+  [data-toggle-on] .toggle-lever { transform: rotate(0deg); }
 
   /* Micro-animations */
   .portal-sparkle-path { transform-origin: 16px 16px; }
@@ -180,6 +591,585 @@ const dotRadius = 2.4;
   .neural-orbits { transform-origin: 16px 16px; }
   .group\/logo:hover .neural-orbits, .group\/icon:hover .neural-orbits { animation: neural-orbit 4s linear infinite; }
 
+  .iris-blades { transform-origin: 16px 16px; transition: transform 0.55s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .iris-blades, .group\/icon:hover .iris-blades { transform: rotate(60deg) scale(0.94); }
+
+  .gate-near, .gate-far { transform-origin: 16px 16px; transition: transform 0.5s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .gate-near, .group\/icon:hover .gate-near { transform: translateX(1.5px); }
+  .group\/logo:hover .gate-far, .group\/icon:hover .gate-far { transform: translateX(-1.5px); }
+
+  .tri-orbit { transform-origin: 16px 16px; transition: transform 0.65s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .tri-orbit, .group\/icon:hover .tri-orbit { transform: rotate(120deg); }
+
+  .maker-fold-left, .maker-fold-right { transition: transform 0.45s cubic-bezier(0.25, 1, 0.4, 1); }
+  .maker-fold-left { transform-origin: 10px 16px; }
+  .maker-fold-right { transform-origin: 22px 16px; }
+  .group\/logo:hover .maker-fold-left, .group\/icon:hover .maker-fold-left { transform: translateX(-1px) rotate(-4deg); }
+  .group\/logo:hover .maker-fold-right, .group\/icon:hover .maker-fold-right { transform: translateX(1px) rotate(4deg); }
+
+  .signal-prism { transform-origin: 16px 16px; transition: transform 0.55s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .signal-prism, .group\/icon:hover .signal-prism { transform: rotate(120deg); }
+
+  .terminal-left, .terminal-right { transition: transform 0.4s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .terminal-left, .group\/icon:hover .terminal-left { transform: translateX(2px); }
+  .group\/logo:hover .terminal-right, .group\/icon:hover .terminal-right { transform: translateX(-2px); }
+
+  .weave-a, .weave-b { transform-origin: 16px 16px; transition: transform 0.55s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .weave-a, .group\/icon:hover .weave-a { transform: rotate(12deg); }
+  .group\/logo:hover .weave-b, .group\/icon:hover .weave-b { transform: rotate(-12deg); }
+
+  .wire-cube { transform-origin: 16px 16px; transition: transform 0.6s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .wire-cube, .group\/icon:hover .wire-cube { transform: rotate(60deg) scale(1.04); }
+
+  .radial-petals { transform-origin: 16px 16px; transition: transform 0.6s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .radial-petals, .group\/icon:hover .radial-petals { transform: rotate(45deg) scale(0.92); }
+
+  .diamond-top, .diamond-bottom { transform-origin: 16px 16px; transition: transform 0.45s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .diamond-top, .group\/icon:hover .diamond-top { transform: translateY(-1.5px); }
+  .group\/logo:hover .diamond-bottom, .group\/icon:hover .diamond-bottom { transform: translateY(1.5px); }
+
+  .wave-halo { transform-origin: 16px 16px; transition: transform 0.6s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .wave-halo, .group\/icon:hover .wave-halo { transform: rotate(180deg); }
+
+  .forge-cursor { transform-origin: 16px 16px; transition: transform 0.45s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .forge-cursor, .group\/icon:hover .forge-cursor { transform: translate(-1px, -1px) rotate(-8deg); }
+
+  .iso-aperture { transform-origin: 16px 16px; transition: transform 0.6s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .iso-aperture, .group\/icon:hover .iso-aperture { transform: rotate(-60deg); }
+
+  .link-left, .link-right { transition: transform 0.4s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .link-left, .group\/icon:hover .link-left { transform: translateX(1.5px); }
+  .group\/logo:hover .link-right, .group\/icon:hover .link-right { transform: translateX(-1.5px); }
+
+  .stack-bloom { transform-origin: 16px 16px; transition: transform 0.55s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .stack-bloom, .group\/icon:hover .stack-bloom { transform: scaleY(1.12); }
+
+  .compass-shards { transform-origin: 16px 16px; transition: transform 0.65s cubic-bezier(0.25, 1, 0.4, 1); }
+  .group\/logo:hover .compass-shards, .group\/icon:hover .compass-shards { transform: rotate(90deg); }
+
+  .neural-socket, .model-token, .circuit-iris, .app-orbit, .agent-swarm, .infinity-circuit {
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.4, 1);
+  }
+  .group\/logo:hover .neural-socket, .group\/icon:hover .neural-socket { transform: rotate(90deg) scale(0.95); }
+  .group\/logo:hover .model-token, .group\/icon:hover .model-token { transform: rotate(60deg); }
+  .group\/logo:hover .circuit-iris, .group\/icon:hover .circuit-iris { transform: rotate(-90deg) scale(0.94); }
+  .group\/logo:hover .app-orbit, .group\/icon:hover .app-orbit { transform: rotate(90deg); }
+  .group\/logo:hover .agent-swarm, .group\/icon:hover .agent-swarm { transform: rotate(60deg); }
+  .group\/logo:hover .infinity-circuit, .group\/icon:hover .infinity-circuit { transform: rotate(180deg); }
+
+  .pcb-portal, .solder-spark, .breadboard-core, .voxel-portal, .fab-nozzle, .app-stack {
+    transform-origin: 16px 16px;
+    transition: transform 0.45s cubic-bezier(0.25, 1, 0.4, 1);
+  }
+  .group\/logo:hover .pcb-portal, .group\/icon:hover .pcb-portal { transform: scale(0.9); }
+  .group\/logo:hover .solder-spark, .group\/icon:hover .solder-spark { transform: translateY(-1.5px); }
+  .group\/logo:hover .breadboard-core, .group\/icon:hover .breadboard-core { transform: scaleX(0.88); }
+  .group\/logo:hover .voxel-portal, .group\/icon:hover .voxel-portal { transform: rotate(45deg); }
+  .group\/logo:hover .fab-nozzle, .group\/icon:hover .fab-nozzle { transform: translateY(1.5px); }
+  .group\/logo:hover .app-stack, .group\/icon:hover .app-stack { transform: scaleY(1.1); }
+
+  .maker-jaw-left, .maker-jaw-right, .flux-left, .flux-right, .prompt-in, .prompt-out,
+  .logic-left, .logic-right, .systems-link-left, .systems-link-right {
+    transition: transform 0.45s cubic-bezier(0.25, 1, 0.4, 1);
+  }
+  .group\/logo:hover .maker-jaw-left, .group\/icon:hover .maker-jaw-left,
+  .group\/logo:hover .flux-left, .group\/icon:hover .flux-left,
+  .group\/logo:hover .prompt-in, .group\/icon:hover .prompt-in,
+  .group\/logo:hover .logic-left, .group\/icon:hover .logic-left { transform: translateX(1.5px); }
+  .group\/logo:hover .maker-jaw-right, .group\/icon:hover .maker-jaw-right,
+  .group\/logo:hover .flux-right, .group\/icon:hover .flux-right,
+  .group\/logo:hover .prompt-out, .group\/icon:hover .prompt-out,
+  .group\/logo:hover .logic-right, .group\/icon:hover .logic-right { transform: translateX(-1.5px); }
+  .group\/logo:hover .systems-link-left, .group\/icon:hover .systems-link-left { transform: translateX(1.5px); }
+  .group\/logo:hover .systems-link-right, .group\/icon:hover .systems-link-right { transform: translateX(-1.5px); }
+
+  .orbit-riff, .app-orbit, .unique-riff, .hardware-riff, .orchestration-riff, .signature-riff { transform-origin: 16px 16px; }
+  .group\/logo:hover .orbit-riff, .group\/icon:hover .orbit-riff,
+  .group\/logo:hover .app-orbit, .group\/icon:hover .app-orbit,
+  .group\/logo:hover .unique-riff, .group\/icon:hover .unique-riff,
+  .group\/logo:hover .hardware-riff, .group\/icon:hover .hardware-riff,
+  .group\/logo:hover .orchestration-riff, .group\/icon:hover .orchestration-riff {
+    animation: app-orbit-expand-settle 0.82s cubic-bezier(0.25, 1, 0.4, 1) both;
+  }
+  .group\/logo:hover .signature-riff, .group\/icon:hover .signature-riff {
+    animation: app-orbit-expand-settle 0.82s cubic-bezier(0.25, 1, 0.4, 1) both;
+  }
+
+  /* Bespoke motion language for the proprietary glyph set. */
+  .makers-knot path:first-child, .toolpath-ligature path { stroke-dasharray: 70; stroke-dashoffset: 0; transition: stroke-dashoffset .9s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .makers-knot path:first-child, .group\/icon:hover .makers-knot path:first-child,
+  .group\/logo:hover .toolpath-ligature path, .group\/icon:hover .toolpath-ligature path { stroke-dashoffset: -70; }
+
+  .portal-bus { transform-origin: 16px 16px; }
+  .group\/logo:hover .portal-bus, .group\/icon:hover .portal-bus { animation: bus-route .75s cubic-bezier(.25,1,.4,1); }
+
+  .patchbay-m path:last-child { transform-origin: 16px 16px; }
+  .group\/logo:hover .patchbay-m path:last-child, .group\/icon:hover .patchbay-m path:last-child { animation: patch-cable-live .7s cubic-bezier(.25,1,.4,1); }
+
+  .splice-mark path { transition: transform .6s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .splice-mark path:first-child, .group\/icon:hover .splice-mark path:first-child { transform: translate(2px,2px); }
+  .group\/logo:hover .splice-mark path:nth-child(2), .group\/icon:hover .splice-mark path:nth-child(2) { transform: translate(-2px,-2px); }
+
+  .app-chassis { transform-origin: 16px 16px; }
+  .group\/logo:hover .app-chassis, .group\/icon:hover .app-chassis { animation: chassis-lock .75s cubic-bezier(.25,1,.4,1); }
+
+  .period-engine path:first-child { stroke-dasharray: 8 4; }
+  .group\/logo:hover .period-engine path:first-child, .group\/icon:hover .period-engine path:first-child { animation: engine-cycle .8s ease-in-out; }
+
+  .relay-monogram path { transition: transform .6s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .relay-monogram path:first-child, .group\/icon:hover .relay-monogram path:first-child { transform: translateX(2px); }
+  .group\/logo:hover .relay-monogram path:last-child, .group\/icon:hover .relay-monogram path:last-child { transform: translateX(-2px); }
+
+  .fabrication-signature path { transform-origin: 16px 16px; transition: transform .65s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .fabrication-signature path:first-child, .group\/icon:hover .fabrication-signature path:first-child { transform: rotate(90deg); }
+  .group\/logo:hover .fabrication-signature path:last-child, .group\/icon:hover .fabrication-signature path:last-child { transform: scale(1.12); }
+
+  .maker-kernel { transform-origin: 16px 16px; }
+  .group\/logo:hover .maker-kernel, .group\/icon:hover .maker-kernel { animation: kernel-pulse .75s cubic-bezier(.25,1,.4,1); }
+
+  .mp-ribbon-stroke, .circuit-mp-trace, .switchboard-route { stroke-dasharray: 90; transition: stroke-dashoffset .9s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .mp-ribbon-stroke, .group\/icon:hover .mp-ribbon-stroke { stroke-dashoffset: -90; }
+
+  .hinged-mp path { transform-origin: 16px 16px; transition: transform .65s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .hinged-mp .hinge-left, .group\/icon:hover .hinged-mp .hinge-left { transform: rotate(-12deg) translateX(-1px); }
+  .group\/logo:hover .hinged-mp .hinge-right, .group\/icon:hover .hinged-mp .hinge-right { transform: rotate(12deg) translateX(1px); }
+
+  .group\/logo:hover .circuit-mp-trace, .group\/icon:hover .circuit-mp-trace { stroke-dashoffset: -45; }
+
+  .period-loom path { transition: transform .6s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .loom-horizontal, .group\/icon:hover .loom-horizontal { transform: scaleX(1.12); }
+  .group\/logo:hover .loom-vertical, .group\/icon:hover .loom-vertical { transform: scaleY(.78); }
+
+  .foundry-block { transform-origin: 16px 16px; }
+  .block-a { --dock: 3px; } .block-b { --dock: 0px; } .block-c { --dock: -3px; }
+  .group\/logo:hover .foundry-block, .group\/icon:hover .foundry-block { animation: foundry-dock .75s cubic-bezier(.25,1,.4,1); }
+
+  .origami-mp path { transform-origin: 16px 16px; transition: transform .65s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .origami-left, .group\/icon:hover .origami-left { transform: skewY(8deg) scaleX(.92); }
+  .group\/logo:hover .origami-right, .group\/icon:hover .origami-right { transform: skewY(-8deg) scaleX(.92); }
+
+  .portal-rails path { transition: transform .65s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .rail-one, .group\/icon:hover .rail-one { transform: translateX(3px); }
+  .group\/logo:hover .rail-two, .group\/icon:hover .rail-two { transform: translateX(-3px); }
+
+  .maker-pulse path { transform-origin: 16px 16px; transition: transform .65s cubic-bezier(.25,1,.4,1), opacity .65s ease; }
+  .group\/logo:hover .pulse-inner, .group\/icon:hover .pulse-inner { transform: scale(1.2); }
+  .group\/logo:hover .pulse-outer, .group\/icon:hover .pulse-outer { transform: scale(.88); opacity: .8; }
+
+  .portal-splice path { transform-origin: 16px 16px; transition: transform .7s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .splice-left-half, .group\/icon:hover .splice-left-half { transform: translateX(2px) rotate(8deg); }
+  .group\/logo:hover .splice-right-half, .group\/icon:hover .splice-right-half { transform: translateX(-2px) rotate(-8deg); }
+
+  .switchboard-route { stroke-dasharray: 8 4; }
+  .group\/logo:hover .switchboard-route, .group\/icon:hover .switchboard-route { animation: switchboard-signal .8s ease-in-out; }
+  .mp-switchboard circle { transform-origin: center; transition: transform .5s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .mp-switchboard circle, .group\/icon:hover .mp-switchboard circle { transform: scale(1.35); }
+
+  /* Latent MP set: abstract at rest, legible only after the hover reveal. */
+  .latent-mp path { transform-box: view-box; transform-origin: 16px 16px; transition: transform .72s cubic-bezier(.25,1,.4,1), opacity .55s ease, stroke-dashoffset .8s cubic-bezier(.25,1,.4,1); }
+
+  .shutter-mp .latent-m { transform: rotate(48deg) scale(.82); }
+  .shutter-mp .latent-p { transform: rotate(-48deg) scale(.82); }
+  .group\/logo:hover .shutter-mp path, .group\/icon:hover .shutter-mp path { transform: rotate(0) scale(1); }
+
+  .scatter-mp .s1 { transform: translate(10px,-2px) rotate(90deg); }
+  .scatter-mp .s2 { transform: translate(5px,8px) rotate(-55deg); }
+  .scatter-mp .s3 { transform: translate(-4px,-7px) rotate(40deg); }
+  .scatter-mp .s4 { transform: translate(-10px,2px) rotate(90deg); }
+  .scatter-mp .s5 { transform: translate(-7px,-7px) rotate(-70deg); }
+  .scatter-mp .s6 { transform: translate(-8px,7px) rotate(55deg); }
+  .group\/logo:hover .scatter-mp path, .group\/icon:hover .scatter-mp path { transform: translate(0) rotate(0); }
+
+  .folded-mp .fold-m { transform: scaleX(.14) rotate(-18deg); }
+  .folded-mp .fold-p { transform: scaleX(.14) rotate(18deg); }
+  .group\/logo:hover .folded-mp path, .group\/icon:hover .folded-mp path { transform: scaleX(1) rotate(0); }
+
+  .orbital-mp .orbit-m { transform: rotate(115deg) scale(.58); }
+  .orbital-mp .orbit-p { transform: rotate(-115deg) scale(.58); }
+  .orbital-mp .orbit-guide { transition: opacity .5s ease; }
+  .group\/logo:hover .orbital-mp .orbit-m, .group\/icon:hover .orbital-mp .orbit-m,
+  .group\/logo:hover .orbital-mp .orbit-p, .group\/icon:hover .orbital-mp .orbit-p { transform: rotate(0) scale(1); }
+  .group\/logo:hover .orbit-guide, .group\/icon:hover .orbit-guide { opacity: 0; }
+
+  .cipher-mp .cipher-m { transform: translateX(7px) rotate(90deg) scaleY(.55); }
+  .cipher-mp .cipher-p { transform: translateX(-7px) rotate(-90deg) scaleY(.55); }
+  .group\/logo:hover .cipher-mp path, .group\/icon:hover .cipher-mp path { transform: translateX(0) rotate(0) scaleY(1); }
+
+  .stacked-mp .stack-m, .stacked-mp .stack-p { transform: scaleY(.12); opacity: .35; }
+  .stacked-mp .stack-line { transition: opacity .45s ease, transform .65s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .stacked-mp .stack-m, .group\/icon:hover .stacked-mp .stack-m,
+  .group\/logo:hover .stacked-mp .stack-p, .group\/icon:hover .stacked-mp .stack-p { transform: scaleY(1); opacity: 1; }
+  .group\/logo:hover .stack-line, .group\/icon:hover .stack-line { opacity: 0; transform: scaleX(.5); }
+
+  .mirror-mp .mirror-m { transform: scaleX(-1) translateX(-7px); }
+  .mirror-mp .mirror-p { transform: scaleX(-1) translateX(7px); }
+  .group\/logo:hover .mirror-mp path, .group\/icon:hover .mirror-mp path { transform: scaleX(1) translateX(0); }
+
+  .blueprint-letter { stroke-dasharray: 100; stroke-dashoffset: 78; opacity: .3; }
+  .blueprint-guides { transition: opacity .6s ease; }
+  .group\/logo:hover .blueprint-letter, .group\/icon:hover .blueprint-letter { stroke-dashoffset: 0; opacity: 1; }
+  .group\/logo:hover .blueprint-guides, .group\/icon:hover .blueprint-guides { opacity: 0; }
+
+  .magnetic-mp .magnetic-m { transform: translateX(7px) rotate(28deg); }
+  .magnetic-mp .magnetic-p { transform: translateX(-7px) rotate(-28deg); }
+  .group\/logo:hover .magnetic-mp path, .group\/icon:hover .magnetic-mp path { transform: translateX(0) rotate(0); }
+
+  .portal-mp .portal-m { transform: rotate(90deg) scale(.68); }
+  .portal-mp .portal-p { transform: rotate(-90deg) scale(.68); }
+  .group\/logo:hover .portal-mp path, .group\/icon:hover .portal-mp path { transform: rotate(0) scale(1); }
+
+  /* Symmetric emblem → MP reveal set. */
+  .symmetry-reveal .pre-mark {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform .72s cubic-bezier(.25,1,.4,1), opacity .48s ease;
+  }
+  .symmetry-reveal .reveal-mp {
+    opacity: 0;
+    stroke-dasharray: 110;
+    stroke-dashoffset: 88;
+    transition: stroke-dashoffset .72s .08s cubic-bezier(.25,1,.4,1), opacity .35s .1s ease;
+  }
+  .group\/logo:hover .symmetry-reveal .reveal-mp, .group\/icon:hover .symmetry-reveal .reveal-mp { opacity: 1; stroke-dashoffset: 0; }
+
+  .group\/logo:hover .woven-seal .pre-mark, .group\/icon:hover .woven-seal .pre-mark { transform: rotate(135deg) scale(.25); opacity: 0; }
+  .group\/logo:hover .quad-knot .pre-mark, .group\/icon:hover .quad-knot .pre-mark { transform: rotate(-90deg) scale(1.35); opacity: 0; }
+  .group\/logo:hover .twin-arch .pre-mark, .group\/icon:hover .twin-arch .pre-mark { transform: scaleX(1.45) scaleY(.35); opacity: 0; }
+  .group\/logo:hover .faceted-eye .pre-mark, .group\/icon:hover .faceted-eye .pre-mark { transform: rotate(45deg) scale(.4); opacity: 0; }
+  .group\/logo:hover .hourglass-gate .pre-mark, .group\/icon:hover .hourglass-gate .pre-mark { transform: rotate(90deg) scaleX(.2); opacity: 0; }
+  .group\/logo:hover .coil-crest .pre-mark, .group\/icon:hover .coil-crest .pre-mark { transform: scaleY(.08) scaleX(1.25); opacity: 0; }
+  .group\/logo:hover .crosslink-seal .pre-mark, .group\/icon:hover .crosslink-seal .pre-mark { transform: rotate(180deg) scale(.3); opacity: 0; }
+  .group\/logo:hover .hex-weave .pre-mark, .group\/icon:hover .hex-weave .pre-mark { transform: rotate(-120deg) scale(.3); opacity: 0; }
+  .group\/logo:hover .wave-vault .pre-mark, .group\/icon:hover .wave-vault .pre-mark { transform: scaleX(.2) scaleY(1.2); opacity: 0; }
+  .group\/logo:hover .circuit-rosette .pre-mark, .group\/icon:hover .circuit-rosette .pre-mark { transform: rotate(225deg) scale(.2); opacity: 0; }
+  /* Isometric App Stack animation */
+  .iso-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .group\/logo:hover .iso-stack .card-bottom, .group\/icon:hover .iso-stack .card-bottom {
+    transform: translateY(-6px);
+  }
+  .group\/logo:hover .iso-stack .card-middle, .group\/icon:hover .iso-stack .card-middle {
+    transform: translateY(0px);
+  }
+  .group\/logo:hover .iso-stack .card-top, .group\/icon:hover .iso-stack .card-top {
+    transform: translateY(6px);
+  }
+
+  /* Shuffled Fan animation */
+  .fan-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s;
+  }
+  .fan-stack .card-left {
+    transform: rotate(-15deg) translate(-3px, -1px);
+  }
+  .fan-stack .card-right {
+    transform: rotate(15deg) translate(3px, -1px);
+  }
+  .fan-stack .card-center {
+    transform: translate(0, 1px);
+  }
+  .group\/logo:hover .fan-stack .card-left, .group\/icon:hover .fan-stack .card-left {
+    transform: rotate(0deg) translate(0, 1px);
+    opacity: 0.9;
+  }
+  .group\/logo:hover .fan-stack .card-right, .group\/icon:hover .fan-stack .card-right {
+    transform: rotate(0deg) translate(0, 1px);
+    opacity: 0.9;
+  }
+  .group\/logo:hover .fan-stack .card-center, .group\/icon:hover .fan-stack .card-center {
+    transform: translate(0, 1px) scale(1.05);
+  }
+
+  /* Intersecting App Frames animation */
+  .frame-stack rect, .frame-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .group\/logo:hover .frame-stack .frame-1, .group\/icon:hover .frame-stack .frame-1 {
+    transform: translate(3px, 3px);
+  }
+  .group\/logo:hover .frame-stack .frame-2-g, .group\/icon:hover .frame-stack .frame-2-g {
+    transform: translate(-3px, -3px);
+  }
+
+  /* Cascading Cards animation */
+  .cascade-stack rect, .cascade-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .group\/logo:hover .cascade-stack .card-1, .group\/icon:hover .cascade-stack .card-1 {
+    transform: translate(5.5px, 5.5px);
+  }
+  .group\/logo:hover .cascade-stack .card-2, .group\/icon:hover .cascade-stack .card-2 {
+    transform: scale(1.05);
+  }
+  .group\/logo:hover .cascade-stack .card-3-g, .group\/icon:hover .cascade-stack .card-3-g {
+    transform: translate(-5.5px, -5.5px);
+  }
+
+  /* Angled Layers — cards tilt to align */
+  .angled-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s;
+  }
+  .agl-card-back { transform: rotate(-14deg) translate(-3px, 4px); }
+  .agl-card-mid { transform: rotate(-7deg) translate(-1.5px, 2px); }
+  .group\/logo:hover .agl-card-back, .group\/icon:hover .agl-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.82; }
+  .group\/logo:hover .agl-card-mid, .group\/icon:hover .agl-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.9; }
+  .group\/logo:hover .agl-card-front, .group\/icon:hover .agl-card-front { transform: translate(-3px, 0) scale(1.05); }
+
+  /* Wide Tilt — more dramatic angles align */
+  .wide-tilt-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s;
+  }
+  .agw-card-back { transform: rotate(-22deg) translate(-4px, 6px); }
+  .agw-card-mid { transform: rotate(-11deg) translate(-2px, 3px); }
+  .group\/logo:hover .agw-card-back, .group\/icon:hover .agw-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.78; }
+  .group\/logo:hover .agw-card-mid, .group\/icon:hover .agw-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.88; }
+  .group\/logo:hover .agw-card-front, .group\/icon:hover .agw-card-front { transform: translate(-4px, 0) scale(1.05); }
+
+  /* Perspective Tilt — smaller cards recede, align on hover */
+  .persp-tilt-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
+  }
+  .agp-card-far { transform: rotate(-16deg) translate(-3px, 6px); }
+  .agp-card-mid { transform: rotate(-8deg) translate(-1.5px, 3px); }
+  .group\/logo:hover .agp-card-far, .group\/icon:hover .agp-card-far { transform: rotate(0deg) translate(1px, -1px); opacity: 0.55; }
+  .group\/logo:hover .agp-card-mid, .group\/icon:hover .agp-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.75; }
+  .group\/logo:hover .agp-card-front, .group\/icon:hover .agp-card-front { transform: translate(-3px, -1px) scale(1.05); }
+
+  /* Horizontal Fan — cards spread horizontally, converge to center */
+  .horiz-fan-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
+  }
+  .agh-card-left { transform: rotate(-12deg) translate(-4px, 2px); }
+  .agh-card-center { transform: translate(0, 0); }
+  .agh-card-right { transform: rotate(12deg) translate(4px, 2px); }
+  .group\/logo:hover .agh-card-left, .group\/icon:hover .agh-card-left { transform: rotate(0deg) translate(1px, 1px); opacity: 0.6; }
+  .group\/logo:hover .agh-card-right, .group\/icon:hover .agh-card-right { transform: rotate(0deg) translate(-1px, 1px); opacity: 0.6; }
+  .group\/logo:hover .agh-card-center, .group\/icon:hover .agh-card-center { transform: translate(0, 0); opacity: 0.85; }
+  .group\/logo:hover .agh-card-front, .group\/icon:hover .agh-card-front { transform: scale(1.05); }
+
+  /* Four-Card Tilt — 4 cards at progressive angles */
+  .fourcard-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
+  }
+  .agf-card-back { transform: rotate(-20deg) translate(-4px, 5px); }
+  .agf-card-mid-back { transform: rotate(-12deg) translate(-3px, 3px); }
+  .agf-card-mid-front { transform: rotate(-6deg) translate(-1.5px, 1.5px); }
+  .group\/logo:hover .agf-card-back, .group\/icon:hover .agf-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.55; }
+  .group\/logo:hover .agf-card-mid-back, .group\/icon:hover .agf-card-mid-back { transform: rotate(0deg) translate(0, 0); opacity: 0.7; }
+  .group\/logo:hover .agf-card-mid-front, .group\/icon:hover .agf-card-mid-front { transform: rotate(0deg) translate(0, 0); opacity: 0.85; }
+  .group\/logo:hover .agf-card-front, .group\/icon:hover .agf-card-front { transform: translate(-4px, 0) scale(1.04); }
+
+  /* Offset Overlap — cards spread in X and Y, shift and align */
+  .offset-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
+  }
+  .ago-card-back { transform: rotate(-10deg) translate(-3px, 3px); }
+  .ago-card-mid { transform: rotate(0deg) translate(0, 1px); }
+  .ago-card-front { transform: rotate(10deg) translate(3px, -2px); }
+  .group\/logo:hover .ago-card-back, .group\/icon:hover .ago-card-back { transform: rotate(0deg) translate(2px, 0); opacity: 0.7; }
+  .group\/logo:hover .ago-card-mid, .group\/icon:hover .ago-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.85; }
+  .group\/logo:hover .ago-card-front, .group\/icon:hover .ago-card-front { transform: rotate(0deg) translate(-2px, 0) scale(1.04); }
+
+  /* Steep Tilt — nearly sideways cards snap to alignment */
+  .steep-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.65s cubic-bezier(0.25, 1, 0.4, 1), opacity 0.55s;
+  }
+  .ags-card-back { transform: rotate(-28deg) translate(-5px, 7px); }
+  .ags-card-mid { transform: rotate(-14deg) translate(-2.5px, 3.5px); }
+  .group\/logo:hover .ags-card-back, .group\/icon:hover .ags-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.7; }
+  .group\/logo:hover .ags-card-mid, .group\/icon:hover .ags-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.82; }
+  .group\/logo:hover .ags-card-front, .group\/icon:hover .ags-card-front { transform: translate(-4px, 0) scale(1.06); }
+
+  /* Center-Anchored — dot at (16,16) overlaps lockup-dot transition target */
+  .center-dot-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s;
+  }
+  .agc-card-back { transform: rotate(-14deg) translate(-3px, 4px); }
+  .agc-card-mid { transform: rotate(-7deg) translate(-1.5px, 2px); }
+  .group\/logo:hover .agc-card-back, .group\/icon:hover .agc-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.78; }
+  .group\/logo:hover .agc-card-mid, .group\/icon:hover .agc-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.88; }
+  .group\/logo:hover .agc-card-front, .group\/icon:hover .agc-card-front { transform: translate(-3px, 0) scale(1.05); }
+
+  /* Mid-Card Dot — three card-dots trail right→center, all merge at (16,16) on hover */
+  .middot-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
+  }
+  .agm-card-back { transform: rotate(-14deg) translate(-3px, 4px); }
+  .agm-card-mid { transform: rotate(-7deg) translate(-1.5px, 2px); }
+  .agm-dot {
+    transition: cx 0.6s cubic-bezier(0.25, 1, 0.4, 1), cy 0.6s cubic-bezier(0.25, 1, 0.4, 1), r 0.55s ease, fill-opacity 0.5s ease;
+  }
+  .group\/logo:hover .agm-card-back, .group\/icon:hover .agm-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.78; }
+  .group\/logo:hover .agm-card-mid, .group\/icon:hover .agm-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.88; }
+  .group\/logo:hover .agm-card-front, .group\/icon:hover .agm-card-front { transform: translate(-3px, 0) scale(1.05); }
+  .group\/logo:hover [data-agm-dot="far"], .group\/icon:hover [data-agm-dot="far"] { cx: 16; cy: 16; r: 1.3; fill-opacity: 1; }
+  .group\/logo:hover [data-agm-dot="mid"], .group\/icon:hover [data-agm-dot="mid"] { cx: 16; cy: 16; r: 1.3; fill-opacity: 1; }
+  .group\/logo:hover [data-agm-dot="near"], .group\/icon:hover [data-agm-dot="near"] { cx: 16; cy: 16; r: 1.3; fill-opacity: 1; }
+
+  /* Dot Trail — three stacked dots cascade to center */
+  .dottrail-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.55s;
+  }
+  .agn-card-back { transform: rotate(-14deg) translate(-3px, 4px); }
+  .agn-card-mid { transform: rotate(-7deg) translate(-1.5px, 2px); }
+  .agn-dots circle {
+    transition: cx 0.65s cubic-bezier(0.25, 1, 0.4, 1), cy 0.65s cubic-bezier(0.25, 1, 0.4, 1), r 0.55s ease, fill-opacity 0.5s ease;
+  }
+  .group\/logo:hover .agn-card-back, .group\/icon:hover .agn-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.78; }
+  .group\/logo:hover .agn-card-mid, .group\/icon:hover .agn-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.88; }
+  .group\/logo:hover .agn-card-front, .group\/icon:hover .agn-card-front { transform: translate(-3px, 0) scale(1.05); }
+  .group\/logo:hover .agn-dot-far, .group\/icon:hover .agn-dot-far { cx: 16; cy: 16; r: 1.3; fill-opacity: 1; }
+  .group\/logo:hover .agn-dot-mid, .group\/icon:hover .agn-dot-mid { cx: 16; cy: 16; r: 1.3; fill-opacity: 1; }
+  .group\/logo:hover .agn-dot-near, .group\/icon:hover .agn-dot-near { cx: 16; cy: 16; r: 1.3; fill-opacity: 1; }
+
+  /* Rounded Cards — pill-soft rx=5, wider aspect, center dot */
+  .round-stack g {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s;
+  }
+  .agr-card-back { transform: rotate(-14deg) translate(-3px, 4px); }
+  .agr-card-mid { transform: rotate(-7deg) translate(-1.5px, 2px); }
+  .group\/logo:hover .agr-card-back, .group\/icon:hover .agr-card-back { transform: rotate(0deg) translate(0, 0); opacity: 0.78; }
+  .group\/logo:hover .agr-card-mid, .group\/icon:hover .agr-card-mid { transform: rotate(0deg) translate(0, 0); opacity: 0.88; }
+  .group\/logo:hover .agr-card-front, .group\/icon:hover .agr-card-front { transform: translate(-3px, 0) scale(1.05); }
+
+
+  /* Arranged MP: only the real M/P strokes move between emblem and wordmark. */
+  .arranged-mp path {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: transform .78s cubic-bezier(.25,1,.4,1);
+  }
+  .counter-knot .arranged-m { transform: rotate(90deg) scale(.76); }
+  .counter-knot .arranged-p { transform: rotate(-90deg) scale(.76); }
+  .diamond-lock .arranged-m { transform: rotate(45deg) translate(3px,-1px) scale(.72); }
+  .diamond-lock .arranged-p { transform: rotate(-135deg) translate(-3px,1px) scale(.72); }
+  .compression-seal .arranged-m { transform: translateX(6px) scaleX(.58); }
+  .compression-seal .arranged-p { transform: translateX(-6px) scaleX(-.58); }
+  .inverse-hinge .arranged-m { transform: rotate(180deg) translateX(-2px) scale(.7); }
+  .inverse-hinge .arranged-p { transform: translateX(-4px) scale(.7); }
+  .tri-axis-lock .arranged-m { transform: rotate(60deg) translateX(2px) scale(.72); }
+  .tri-axis-lock .arranged-p { transform: rotate(-60deg) translateX(-2px) scale(.72); }
+  .mirror-capsule .arranged-m { transform: translateX(7px) scaleX(.5) scaleY(.82); }
+  .mirror-capsule .arranged-p { transform: translateX(-7px) scaleX(-.5) scaleY(.82); }
+  .diagonal-cipher .arranged-m { transform: rotate(135deg) scale(.68); }
+  .diagonal-cipher .arranged-p { transform: rotate(-45deg) scale(.68); }
+  .layered-bars .arranged-m { transform: translateY(-5px) rotate(90deg) scaleY(.38); }
+  .layered-bars .arranged-p { transform: translateY(5px) rotate(-90deg) scaleY(.38); }
+  .woven-axis .arranged-m { transform: rotate(30deg) skewX(18deg) scale(.7); }
+  .woven-axis .arranged-p { transform: rotate(-30deg) skewX(-18deg) scale(.7); }
+  .rotor-lock .arranged-m { transform: rotate(120deg) scale(.68); }
+  .rotor-lock .arranged-p { transform: rotate(-120deg) scale(.68); }
+  .group\/logo:hover .arranged-mp path, .group\/icon:hover .arranged-mp path { transform: none; }
+
+  /* Eight-stroke system: exact symmetric emblems morph into geometric MP. */
+  .true-symmetry-mp .mp-segment { transition: d .82s cubic-bezier(.25,1,.4,1); }
+  .group\/logo:hover .true-symmetry-mp .segment-1, .group\/icon:hover .true-symmetry-mp .segment-1 { d: path('M 3 25 L 3 7'); }
+  .group\/logo:hover .true-symmetry-mp .segment-2, .group\/icon:hover .true-symmetry-mp .segment-2 { d: path('M 3 7 L 8 14'); }
+  .group\/logo:hover .true-symmetry-mp .segment-3, .group\/icon:hover .true-symmetry-mp .segment-3 { d: path('M 8 14 L 13 7'); }
+  .group\/logo:hover .true-symmetry-mp .segment-4, .group\/icon:hover .true-symmetry-mp .segment-4 { d: path('M 13 7 L 13 25'); }
+  .group\/logo:hover .true-symmetry-mp .segment-5, .group\/icon:hover .true-symmetry-mp .segment-5 { d: path('M 18 25 L 18 7'); }
+  .group\/logo:hover .true-symmetry-mp .segment-6, .group\/icon:hover .true-symmetry-mp .segment-6 { d: path('M 18 7 L 27 7'); }
+  .group\/logo:hover .true-symmetry-mp .segment-7, .group\/icon:hover .true-symmetry-mp .segment-7 { d: path('M 27 7 L 27 16'); }
+  .group\/logo:hover .true-symmetry-mp .segment-8, .group\/icon:hover .true-symmetry-mp .segment-8 { d: path('M 27 16 L 18 16'); }
+
+  /* Two-wire system: one continuous M and one continuous P unfurl into a seal.
+     Resting uses same 5-point topology as MP so d interpolation is smooth slide, not jump.
+     Added physical transform so emblem feels like a fixture opening into letters. */
+  .unfurled-mp path {
+    transform-box: view-box;
+    transform-origin: 16px 16px;
+    transition: d .9s cubic-bezier(.25,1,.4,1), transform .9s cubic-bezier(.25,1,.4,1);
+  }
+  .unfurled-mp .unfurled-p { transition-delay: .06s; }
+  .group\/logo:hover .unfurled-mp .unfurled-m, .group\/icon:hover .unfurled-mp .unfurled-m {
+    d: path('M 3 25 L 3 7 L 8 14 L 13 7 L 13 25');
+    transform: none;
+  }
+  .group\/logo:hover .unfurled-mp .unfurled-p, .group\/icon:hover .unfurled-mp .unfurled-p {
+    d: path('M 18 25 L 18 7 L 27 7 L 27 16 L 18 16');
+    transform: none;
+  }
+  /* Attempt 4: maker-object seals — light transform so the object reads at rest, then opens into MP */
+  .concept-gd-path .unfurled-m { transform: rotate(-12deg) translateX(1px); }
+  .concept-gd-path .unfurled-p { transform: rotate(12deg) translateX(-1px); }
+  .concept-ge-path .unfurled-m { transform: rotate(-38deg) scale(.88); }
+  .concept-ge-path .unfurled-p { transform: rotate(38deg) scale(.88); }
+  .concept-gf-path .unfurled-m { transform: rotate(-20deg) translateY(1px); }
+  .concept-gf-path .unfurled-p { transform: rotate(20deg) translateY(1px); }
+  .concept-gg-path .unfurled-m { transform: rotate(-42deg) scale(.86); }
+  .concept-gg-path .unfurled-p { transform: rotate(42deg) scale(.86); }
+  .concept-gh-path .unfurled-m { transform: translateX(2px) scaleX(.92); }
+  .concept-gh-path .unfurled-p { transform: translateX(-2px) scaleX(.92); }
+  .concept-gi-path .unfurled-m { transform: rotate(-28deg) scale(.9); }
+  .concept-gi-path .unfurled-p { transform: rotate(28deg) scale(.9); }
+  .concept-gj-path .unfurled-m { transform: rotate(-15deg) translateX(1px); }
+  .concept-gj-path .unfurled-p { transform: rotate(15deg) translateX(-1px); }
+  .concept-gk-path .unfurled-m { transform: rotate(-60deg) scale(.82); }
+  .concept-gk-path .unfurled-p { transform: rotate(60deg) scale(.82); }
+  .concept-gl-path .unfurled-m { transform: rotate(-50deg) scale(.84); }
+  .concept-gl-path .unfurled-p { transform: rotate(50deg) scale(.84); }
+  .concept-gm-path .unfurled-m { transform: translateX(1px) scale(.9); }
+  .concept-gm-path .unfurled-p { transform: translateX(-1px) scale(.9); }
+  .concept-gn-path .unfurled-m { transform: rotate(-25deg) scale(.88); }
+  .concept-gn-path .unfurled-p { transform: rotate(25deg) scale(.88); }
+  .concept-go-path .unfurled-m { transform: rotate(-55deg) scale(.85); }
+  .concept-go-path .unfurled-p { transform: rotate(55deg) scale(.85); }
+  /* Legacy ft-gc + fj-fs keep transforms if revisited */
+  .concept-ft-path .unfurled-m { transform: rotate(-35deg) scale(.75); }
+  .concept-ft-path .unfurled-p { transform: rotate(35deg) scale(.75); }
+  .concept-fu-path .unfurled-m { transform: rotate(-90deg) scale(.7); }
+  .concept-fu-path .unfurled-p { transform: rotate(90deg) scale(.7); }
+  .concept-fv-path .unfurled-m { transform: rotate(-45deg) scale(.68); }
+  .concept-fv-path .unfurled-p { transform: rotate(45deg) scale(.68); }
+  .concept-fw-path .unfurled-m { transform: rotate(-65deg) translateX(-2px); }
+  .concept-fw-path .unfurled-p { transform: rotate(65deg) translateX(2px); }
+  .concept-fx-path .unfurled-m { transform: rotate(-30deg) skewY(12deg) scale(.75); }
+  .concept-fx-path .unfurled-p { transform: rotate(30deg) skewY(-12deg) scale(.75); }
+  .concept-fy-path .unfurled-m { transform: rotate(-75deg) translateY(2px); }
+  .concept-fy-path .unfurled-p { transform: rotate(75deg) translateY(2px); }
+  .concept-fz-path .unfurled-m { transform: scale(.6) translateX(-3px); }
+  .concept-fz-path .unfurled-p { transform: scale(.6) translateX(3px); }
+  .concept-ga-path .unfurled-m { transform: rotate(-50deg) scale(.7); }
+  .concept-ga-path .unfurled-p { transform: rotate(50deg) scale(.7); }
+  .concept-gb-path .unfurled-m { transform: rotate(-110deg) scale(.65); }
+  .concept-gb-path .unfurled-p { transform: rotate(110deg) scale(.65); }
+  .concept-gc-path .unfurled-m { transform: rotate(-90deg) scale(.65) translateY(-1px); }
+  .concept-gc-path .unfurled-p { transform: rotate(90deg) scale(.65) translateY(-1px); }
+  .concept-fj-path .unfurled-m, .concept-fk-path .unfurled-m, .concept-fl-path .unfurled-m, .concept-fm-path .unfurled-m, .concept-fn-path .unfurled-m, .concept-fo-path .unfurled-m, .concept-fp-path .unfurled-m, .concept-fq-path .unfurled-m, .concept-fr-path .unfurled-m, .concept-fs-path .unfurled-m { transform: rotate(-8deg); }
+  .concept-fj-path .unfurled-p, .concept-fk-path .unfurled-p, .concept-fl-path .unfurled-p, .concept-fm-path .unfurled-p, .concept-fn-path .unfurled-p, .concept-fo-path .unfurled-p, .concept-fp-path .unfurled-p, .concept-fq-path .unfurled-p, .concept-fr-path .unfurled-p, .concept-fs-path .unfurled-p { transform: rotate(8deg); }
+
   /* Sliding Lockup Dot Transition Animation (Dot moves from period to icon on hover) */
   .lockup-dot {
     cx: 184.2px; /* 146.2 + 38 translation */
@@ -192,15 +1182,112 @@ const dotRadius = 2.4;
     cy: 16px;
     r: 3.2px;
   }
+
+  /* Toggle Pivot: the period becomes the switch cap in its ON position. */
+  [data-toggle-on].group\/logo .lockup-dot {
+    cx: 17px;
+    cy: 21px;
+    r: 2.35px;
+  }
+  [data-concept="cq"].group\/logo:not([data-toggle-on]) .lockup-dot,
+  body[data-brand-concept="cq"] [data-brand-logo]:not([data-toggle-on]).group\/logo .lockup-dot {
+    cx: 184.2px;
+    cy: 19.1px;
+    r: 2.4px;
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .lockup-dot {
+      animation: lockup-dot-mobile-settle 0.7s 0.18s cubic-bezier(0.25, 1, 0.4, 1) forwards;
+    }
+    [data-concept="cq"].group\/logo .lockup-dot,
+    body:not([data-brand-concept]) [data-brand-logo]:not([data-concept]).group\/logo .lockup-dot,
+    body[data-brand-concept="cq"] [data-brand-logo].group\/logo .lockup-dot {
+      animation: none;
+    }
+    [data-concept="cq"] .toggle-lever,
+    body[data-brand-concept="cq"] [data-brand-logo] .toggle-lever {
+      animation: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orbit-riff, .app-orbit, .unique-riff, .hardware-riff, .orchestration-riff, .signature-riff { animation: none !important; }
+    .makers-knot *, .portal-bus, .patchbay-m *, .splice-mark *, .toolpath-ligature *,
+    .app-chassis, .period-engine *, .relay-monogram *, .fabrication-signature *, .maker-kernel {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+      stroke-dashoffset: 0 !important;
+    }
+    .mp-ribbon *, .hinged-mp *, .circuit-mp *, .period-loom *, .app-foundry *,
+    .origami-mp *, .portal-rails *, .maker-pulse *, .portal-splice *, .mp-switchboard * {
+      animation: none !important; transition: none !important; transform: none !important; stroke-dashoffset: 0 !important;
+    }
+    .latent-mp * { transition: none !important; transform: none !important; opacity: 1 !important; stroke-dashoffset: 0 !important; }
+    .symmetry-reveal .pre-mark { display: none; }
+    .symmetry-reveal .reveal-mp { opacity: 1 !important; stroke-dashoffset: 0 !important; transition: none !important; }
+    .arranged-mp path { transform: none !important; transition: none !important; }
+    .true-symmetry-mp .mp-segment { transition: none !important; }
+    .unfurled-mp path { transition: none !important; }
+    .lockup-dot { animation: none !important; cx: 16px; cy: 16px; r: 3.2px; }
+    [data-toggle-on].group\/logo .lockup-dot { cx: 17px; cy: 21px; r: 2.35px; }
+    [data-concept="cq"].group\/logo:not([data-toggle-on]) .lockup-dot,
+    body[data-brand-concept="cq"] [data-brand-logo]:not([data-toggle-on]).group\/logo .lockup-dot { cx: 184.2px; cy: 19.1px; r: 2.4px; }
+  }
 </style>
+
+<script>
+  const toggleStateKey = 'makerportal-toggle-on';
+
+  const isToggleLogo = (logo: HTMLElement) => {
+    const concept = logo.dataset.concept;
+    return concept === 'cq';
+  };
+
+  const setToggleState = (logos: NodeListOf<HTMLElement>, on: boolean, persist = true) => {
+    logos.forEach((logo) => {
+      if (!isToggleLogo(logo)) return;
+      logo.toggleAttribute('data-toggle-on', on);
+    });
+    if (persist) sessionStorage.setItem(toggleStateKey, on ? '1' : '0');
+  };
+
+  const initializeToggleLogos = () => {
+    const logos = document.querySelectorAll<HTMLElement>('[data-brand-logo]');
+    const alreadyOn = sessionStorage.getItem(toggleStateKey) === '1';
+    const touchFirst = matchMedia('(hover: none), (pointer: coarse)').matches;
+    let isOn = alreadyOn;
+
+    setToggleState(logos, isOn, false);
+
+    const toggleAll = () => {
+      isOn = !isOn;
+      setToggleState(logos, isOn);
+    };
+
+    logos.forEach((logo) => {
+      if (!isToggleLogo(logo)) return;
+      if (touchFirst) {
+        logo.addEventListener('click', toggleAll);
+      } else {
+        logo.addEventListener('pointerenter', toggleAll);
+        logo.addEventListener('focusin', toggleAll);
+      }
+    });
+  };
+
+  initializeToggleLogos();
+</script>
 
 {/* ICON - Standalone Portal Icon */}
 {
   variant === 'icon' && (
-    <span data-concept={concept} class:list={['group/icon relative inline-flex items-center justify-center overflow-visible', sizes.iconHeight, className]} aria-hidden="true">
+    <span data-brand-logo data-concept={concept} class:list={['group/icon relative inline-flex items-center justify-center overflow-visible', sizes.iconHeight, className]} aria-hidden="true">
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
         {/* Glow */}
         <circle cx="16" cy="16" r="12" fill={mono ? 'none' : '#CE445D'} opacity={mono ? 0 : 0.22} style="filter: blur(5px)"/>
+        <BrandIconConcepts mono={mono} showCore={true} activeConcept={concept} />
         
         {/* Concept A: AI Sparkle Portal */}
         <path class="concept-path concept-a-path portal-sparkle-path" d="M 16,2 C 16,10 10,16 2,16 C 10,16 16,22 16,30 C 16,22 22,16 30,16 C 22,16 16,10 16,2 Z M 16,11 A 5,5 0 1 0 16,21 A 5,5 0 1 0 16,11 Z" fill={mono ? 'currentColor' : '#CE445D'} fill-rule="evenodd" />
@@ -291,6 +1378,109 @@ const dotRadius = 2.4;
           <circle cx="16" cy="16" r="3.2" fill={mono ? 'currentColor' : '#CE445D'} />
         </g>
 
+        {/* Concept O: Kinetic Iris */}
+        <g class="concept-path concept-o-path iris-blades" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none">
+          <path d="M 15 4 A 12 12 0 0 1 26 13" />
+          <path d="M 27 17 A 12 12 0 0 1 17 28" />
+          <path d="M 13 27 A 12 12 0 0 1 4 17" />
+          <path d="M 5 13 A 12 12 0 0 1 15 4" />
+        </g>
+
+        {/* Concept P: Dimensional Gate */}
+        <g class="concept-path concept-p-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="gate-far" d="M 8 9 L 4 16 L 8 23 M 24 9 L 28 16 L 24 23" opacity="0.45" />
+          <path class="gate-near" d="M 13 7 L 8 16 L 13 25 M 19 7 L 24 16 L 19 25" />
+        </g>
+
+        {/* Concept Q: Tri-Lane Orbit */}
+        <g class="concept-path concept-q-path tri-orbit" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none">
+          <path d="M 16 4 A 12 12 0 0 1 26.4 10" />
+          <path d="M 26.4 22 A 12 12 0 0 1 16 28" />
+          <path d="M 5.6 22 A 12 12 0 0 1 5.6 10" />
+        </g>
+
+        {/* Concept R: Maker Fold */}
+        <g class="concept-path concept-r-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="maker-fold-left" d="M 5 24 L 8 7 L 16 13" />
+          <path class="maker-fold-right" d="M 16 13 L 24 7 L 27 24" />
+        </g>
+
+        {/* Concept S: Signal Prism */}
+        <g class="concept-path concept-s-path signal-prism" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 4 L 27 23 M 27 23 L 5 23 M 5 23 L 16 4" />
+          <path d="M 16 9 L 20 16 M 12 16 L 16 9" opacity="0.45" />
+        </g>
+
+        {/* Concept T: Terminal Portal */}
+        <g class="concept-path concept-t-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="terminal-left" d="M 12 7 L 5 16 L 12 25" />
+          <path class="terminal-right" d="M 20 7 L 27 16 L 20 25" />
+        </g>
+
+        {/* Concept U: Data Weave */}
+        <g class="concept-path concept-u-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" fill="none">
+          <path class="weave-a" d="M 5 10 C 10 4 22 4 27 10 C 22 16 10 16 5 22 C 10 28 22 28 27 22" />
+          <path class="weave-b" d="M 5 22 C 10 16 22 16 27 10" opacity="0.5" />
+        </g>
+
+        {/* Concept V: Wireframe Cube */}
+        <g class="concept-path concept-v-path wire-cube" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 3 L 27 9.5 L 27 22.5 L 16 29 L 5 22.5 L 5 9.5 Z" />
+          <path d="M 5 9.5 L 12 13.5 M 27 9.5 L 20 13.5 M 16 29 L 16 21" opacity="0.5" />
+        </g>
+
+        {/* Concept W: Radial Bloom */}
+        <g class="concept-path concept-w-path radial-petals" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.2" stroke-linecap="round" fill="none">
+          <path d="M 16 4 C 20 7 20 11 16 13 C 12 11 12 7 16 4" />
+          <path d="M 28 16 C 25 20 21 20 19 16 C 21 12 25 12 28 16" />
+          <path d="M 16 28 C 12 25 12 21 16 19 C 20 21 20 25 16 28" />
+          <path d="M 4 16 C 7 12 11 12 13 16 C 11 20 7 20 4 16" />
+        </g>
+
+        {/* Concept X: Split Diamond */}
+        <g class="concept-path concept-x-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="diamond-top" d="M 5 14 L 16 4 L 27 14 L 21 14" />
+          <path class="diamond-bottom" d="M 27 18 L 16 28 L 5 18 L 11 18" />
+        </g>
+
+        {/* Concept Y: Wave Halo */}
+        <g class="concept-path concept-y-path wave-halo" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" fill="none">
+          <path d="M 4 16 C 7 7 12 7 16 16 C 20 25 25 25 28 16" />
+          <path d="M 7 9 A 12 12 0 0 1 25 9 M 25 23 A 12 12 0 0 1 7 23" opacity="0.45" />
+        </g>
+
+        {/* Concept Z: Forge Cursor */}
+        <g class="concept-path concept-z-path forge-cursor" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 6 4 L 13.5 24 L 17 17 L 24 13.5 Z" />
+          <path d="M 20 20 L 27 27" />
+        </g>
+
+        {/* Concept AA: Isometric Aperture */}
+        <g class="concept-path concept-aa-path iso-aperture" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 4 L 26 10 L 21 13 M 26 10 L 26 22 L 21 19 M 26 22 L 16 28 L 16 22 M 16 28 L 6 22 L 11 19 M 6 22 L 6 10 L 11 13 M 6 10 L 16 4 L 16 10" />
+        </g>
+
+        {/* Concept AB: Interlocking Links */}
+        <g class="concept-path concept-ab-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.5" stroke-linecap="round" fill="none">
+          <path class="link-left" d="M 14 11 L 11 8 C 8 5 3 8 5 12 L 10 20 C 12 23 15 22 17 20" />
+          <path class="link-right" d="M 18 21 L 21 24 C 24 27 29 24 27 20 L 22 12 C 20 9 17 10 15 12" />
+        </g>
+
+        {/* Concept AC: Stack Bloom */}
+        <g class="concept-path concept-ac-path stack-bloom" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 4 L 27 10 L 22 13 M 16 4 L 5 10 L 10 13" />
+          <path d="M 5 16 L 10 19 M 27 16 L 22 19" />
+          <path d="M 5 22 L 16 28 L 27 22" />
+        </g>
+
+        {/* Concept AD: Compass Shards */}
+        <g class="concept-path concept-ad-path compass-shards" fill={mono ? 'currentColor' : '#E2E8F0'}>
+          <path d="M 14.5 3 L 17.5 3 L 19 12 L 16 10 L 13 12 Z" />
+          <path d="M 29 14.5 L 29 17.5 L 20 19 L 22 16 L 20 13 Z" />
+          <path d="M 17.5 29 L 14.5 29 L 13 20 L 16 22 L 19 20 Z" />
+          <path d="M 3 17.5 L 3 14.5 L 12 13 L 10 16 L 12 19 Z" />
+        </g>
+
         {/* Shared Core Dot - Hidden for A and N */}
         <circle cx="16" cy="16" r="3.2" fill={mono ? 'currentColor' : '#CE445D'} class="concept-core-dot" />
       </svg>
@@ -322,10 +1512,11 @@ const dotRadius = 2.4;
 {/* LOCKUP - Single SVG with dot translation animation */}
 {
   variant === 'lockup' && (
-    <span data-concept={concept} class:list={['group/logo relative inline-flex items-center overflow-visible', sizes.lockupWidth, className]}>
+    <span data-brand-logo data-concept={concept} class:list={['group/logo relative inline-flex items-center overflow-visible', sizes.lockupWidth, className]}>
       <svg viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-full w-full overflow-visible">
         {/* Icon Glow */}
         <circle cx="16" cy="16" r="12" fill={mono ? 'none' : '#CE445D'} opacity={mono ? 0 : 0.22} style="filter: blur(5px)"/>
+        <BrandIconConcepts mono={mono} activeConcept={concept} />
 
         {/* --- ICON CONCEPTS (A to N) at x=0 --- */}
         
@@ -416,6 +1607,109 @@ const dotRadius = 2.4;
           <circle cx="24" cy="22" r="2" fill={mono ? 'currentColor' : 'white'} />
           <path d="M 16 6 L 16 13 M 8 22 L 13 18 M 24 22 L 19 18" stroke={mono ? 'currentColor' : 'white'} opacity="0.3" stroke-width="1.5" />
           <circle cx="16" cy="16" r="3.2" fill={mono ? 'currentColor' : '#CE445D'} />
+        </g>
+
+        {/* Concept O: Kinetic Iris */}
+        <g class="concept-path concept-o-path iris-blades" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none">
+          <path d="M 15 4 A 12 12 0 0 1 26 13" />
+          <path d="M 27 17 A 12 12 0 0 1 17 28" />
+          <path d="M 13 27 A 12 12 0 0 1 4 17" />
+          <path d="M 5 13 A 12 12 0 0 1 15 4" />
+        </g>
+
+        {/* Concept P: Dimensional Gate */}
+        <g class="concept-path concept-p-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="gate-far" d="M 8 9 L 4 16 L 8 23 M 24 9 L 28 16 L 24 23" opacity="0.45" />
+          <path class="gate-near" d="M 13 7 L 8 16 L 13 25 M 19 7 L 24 16 L 19 25" />
+        </g>
+
+        {/* Concept Q: Tri-Lane Orbit */}
+        <g class="concept-path concept-q-path tri-orbit" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" fill="none">
+          <path d="M 16 4 A 12 12 0 0 1 26.4 10" />
+          <path d="M 26.4 22 A 12 12 0 0 1 16 28" />
+          <path d="M 5.6 22 A 12 12 0 0 1 5.6 10" />
+        </g>
+
+        {/* Concept R: Maker Fold */}
+        <g class="concept-path concept-r-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="maker-fold-left" d="M 5 24 L 8 7 L 16 13" />
+          <path class="maker-fold-right" d="M 16 13 L 24 7 L 27 24" />
+        </g>
+
+        {/* Concept S: Signal Prism */}
+        <g class="concept-path concept-s-path signal-prism" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 4 L 27 23 M 27 23 L 5 23 M 5 23 L 16 4" />
+          <path d="M 16 9 L 20 16 M 12 16 L 16 9" opacity="0.45" />
+        </g>
+
+        {/* Concept T: Terminal Portal */}
+        <g class="concept-path concept-t-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="terminal-left" d="M 12 7 L 5 16 L 12 25" />
+          <path class="terminal-right" d="M 20 7 L 27 16 L 20 25" />
+        </g>
+
+        {/* Concept U: Data Weave */}
+        <g class="concept-path concept-u-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" fill="none">
+          <path class="weave-a" d="M 5 10 C 10 4 22 4 27 10 C 22 16 10 16 5 22 C 10 28 22 28 27 22" />
+          <path class="weave-b" d="M 5 22 C 10 16 22 16 27 10" opacity="0.5" />
+        </g>
+
+        {/* Concept V: Wireframe Cube */}
+        <g class="concept-path concept-v-path wire-cube" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 3 L 27 9.5 L 27 22.5 L 16 29 L 5 22.5 L 5 9.5 Z" />
+          <path d="M 5 9.5 L 12 13.5 M 27 9.5 L 20 13.5 M 16 29 L 16 21" opacity="0.5" />
+        </g>
+
+        {/* Concept W: Radial Bloom */}
+        <g class="concept-path concept-w-path radial-petals" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.2" stroke-linecap="round" fill="none">
+          <path d="M 16 4 C 20 7 20 11 16 13 C 12 11 12 7 16 4" />
+          <path d="M 28 16 C 25 20 21 20 19 16 C 21 12 25 12 28 16" />
+          <path d="M 16 28 C 12 25 12 21 16 19 C 20 21 20 25 16 28" />
+          <path d="M 4 16 C 7 12 11 12 13 16 C 11 20 7 20 4 16" />
+        </g>
+
+        {/* Concept X: Split Diamond */}
+        <g class="concept-path concept-x-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path class="diamond-top" d="M 5 14 L 16 4 L 27 14 L 21 14" />
+          <path class="diamond-bottom" d="M 27 18 L 16 28 L 5 18 L 11 18" />
+        </g>
+
+        {/* Concept Y: Wave Halo */}
+        <g class="concept-path concept-y-path wave-halo" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" fill="none">
+          <path d="M 4 16 C 7 7 12 7 16 16 C 20 25 25 25 28 16" />
+          <path d="M 7 9 A 12 12 0 0 1 25 9 M 25 23 A 12 12 0 0 1 7 23" opacity="0.45" />
+        </g>
+
+        {/* Concept Z: Forge Cursor */}
+        <g class="concept-path concept-z-path forge-cursor" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 6 4 L 13.5 24 L 17 17 L 24 13.5 Z" />
+          <path d="M 20 20 L 27 27" />
+        </g>
+
+        {/* Concept AA: Isometric Aperture */}
+        <g class="concept-path concept-aa-path iso-aperture" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 4 L 26 10 L 21 13 M 26 10 L 26 22 L 21 19 M 26 22 L 16 28 L 16 22 M 16 28 L 6 22 L 11 19 M 6 22 L 6 10 L 11 13 M 6 10 L 16 4 L 16 10" />
+        </g>
+
+        {/* Concept AB: Interlocking Links */}
+        <g class="concept-path concept-ab-path" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.5" stroke-linecap="round" fill="none">
+          <path class="link-left" d="M 14 11 L 11 8 C 8 5 3 8 5 12 L 10 20 C 12 23 15 22 17 20" />
+          <path class="link-right" d="M 18 21 L 21 24 C 24 27 29 24 27 20 L 22 12 C 20 9 17 10 15 12" />
+        </g>
+
+        {/* Concept AC: Stack Bloom */}
+        <g class="concept-path concept-ac-path stack-bloom" stroke={mono ? 'currentColor' : '#E2E8F0'} stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M 16 4 L 27 10 L 22 13 M 16 4 L 5 10 L 10 13" />
+          <path d="M 5 16 L 10 19 M 27 16 L 22 19" />
+          <path d="M 5 22 L 16 28 L 27 22" />
+        </g>
+
+        {/* Concept AD: Compass Shards */}
+        <g class="concept-path concept-ad-path compass-shards" fill={mono ? 'currentColor' : '#E2E8F0'}>
+          <path d="M 14.5 3 L 17.5 3 L 19 12 L 16 10 L 13 12 Z" />
+          <path d="M 29 14.5 L 29 17.5 L 20 19 L 22 16 L 20 13 Z" />
+          <path d="M 17.5 29 L 14.5 29 L 13 20 L 16 22 L 19 20 Z" />
+          <path d="M 3 17.5 L 3 14.5 L 12 13 L 10 16 L 12 19 Z" />
         </g>
 
         {/* --- WORDMARK (Shifted by x=38, and inside shifted ai path by -8px for perfect kerning) --- */}

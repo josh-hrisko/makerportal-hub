@@ -4,6 +4,23 @@ import BrandLogo from '../components/BrandLogo.astro';
 
 const title = 'Brand & Assets — MakerPortal.ai';
 const description = 'Official brand assets, custom typographic wordmark, standalone portal icon, and app icon system for makerportal.ai';
+const newConcepts = [
+  { key: 'cnc', label: 'A: Isometric Stack', note: '3D Layered Apps → MP' },
+  { key: 'via', label: 'B: Shuffled Fan', note: 'Card Shuffle → MP' },
+  { key: 'gen', label: 'C: Intersecting Frames', note: 'App Grid → MP' },
+  { key: 'stp', label: 'D: Cascading Cards', note: 'Diagonal Cascade → MP' },
+  { key: 'agl', label: 'E: Angled Layers', note: 'Three Cards · 14°/7° → MP' },
+  { key: 'agw', label: 'F: Wide Tilt', note: 'Wider Spread · 22°/11° → MP' },
+  { key: 'agp', label: 'G: Perspective', note: 'Receding Depth → MP' },
+  { key: 'agh', label: 'H: Horizontal Fan', note: 'Side-to-Side Fan → MP' },
+  { key: 'agf', label: 'I: Four-Card Tilt', note: 'Four Layers · Deeper → MP' },
+  { key: 'ago', label: 'J: Offset Overlap', note: 'XY Offset + Tilt → MP' },
+  { key: 'ags', label: 'K: Steep Tilt', note: 'Near-Sideways · 28°/14° → MP' },
+  { key: 'agc', label: 'L: Center-Anchored', note: 'Dot at Core (16,16) → MP' },
+  { key: 'agm', label: 'M: Mid-Card Dot', note: 'Per-card Dots → Center → MP' },
+  { key: 'agn', label: 'N: Dot Trail', note: '3 Dots Cascade → MP' },
+  { key: 'agr', label: 'O: Rounded Cards', note: 'Pill-Soft Corners → MP' },
+] as const;
 ---
 
 <Layout title={title} description={description} noindex>
@@ -12,12 +29,12 @@ const description = 'Official brand assets, custom typographic wordmark, standal
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(206,68,93,0.08),rgba(15,20,28,0))] pointer-events-none"></div>
     <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 lg:px-10 relative z-10">
       <p class="section-kicker text-[#CE445D]">Identity / Specifications</p>
-      <h1 class="mt-6 max-w-4xl text-balance text-5xl font-bold leading-[0.95] tracking-[-0.05em] text-white sm:text-7xl">
-        makerportal.ai brand system.
-      </h1>
-      <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-text">
-        Bespoke software studio identity evolved from legacy hardware roots. Engineered for 2026.
-      </p>
+        <h1 class="mt-6 max-w-4xl text-balance text-5xl font-bold leading-[0.95] tracking-[-0.05em] text-white sm:text-7xl">
+          makerportal.ai brand system.
+        </h1>
+        <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-text">
+          Mid-Card Dot — three angled cards with per-card crimson indicators that converge to center, mirroring the lockup period transition. Engineered for 2026.
+        </p>
     </div>
   </section>
 
@@ -28,10 +45,10 @@ const description = 'Official brand assets, custom typographic wordmark, standal
         <!-- 1. Standalone Icon -->
         <div class="rounded-3xl border border-muted-text/10 bg-[#151D27]/40 p-8 flex flex-col justify-between hover:border-[#CE445D]/30 transition duration-300">
           <div>
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Icon / Gateway</p>
-            <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">AI Sparkle Portal</h3>
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Icon / Mid-Card Dot</p>
+            <h3 class="mt-2 text-2xl font-bold text-white tracking-tight">Mid-Card Dot</h3>
             <p class="mt-3 text-sm leading-6 text-muted-text">
-              A custom 4-pointed sparkle representing AI/intelligence, merged with a hollow core portal gateway. Highly balanced, geometric, and modern.
+              Three angled app cards with per-card crimson indicator dots that trail from the right edge toward center. On hover, all three dots converge to a single unified crimson period at the core — mirroring the lockup transition.
             </p>
           </div>
           <div class="mt-8 flex min-h-[10rem] items-center justify-center rounded-2xl bg-canvas border border-white/[0.04] p-6">
@@ -75,14 +92,16 @@ const description = 'Official brand assets, custom typographic wordmark, standal
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(206,68,93,0.02),transparent)] pointer-events-none"></div>
     <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10 relative z-10">
       <div class="max-w-2xl">
-        <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Interactive Playground</p>
-        <h2 class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white sm:text-4xl">Riffing on Icon Concepts</h2>
+        <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Chosen Concept — Angled Layers Family</p>
+        <h2 class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white sm:text-4xl">Mid-Card Dot · 3 angled cards, 3 converging dots</h2>
         <p class="mt-4 text-sm leading-6 text-muted-text">
-          We have generated four distinct candidates representing different combinations of your maker heritage and the AI landscape. Click any card below to swap the icon system-wide across this entire page and see it in action.
+          The Mid-Card Dot concept is the new brand identity. Three layered cards tilted at progressive angles, each carrying a crimson indicator dot that trails from the right edge toward center — mirroring the lockup period transition from wordmark to icon. Click any variant below to explore the angled-layers family and watch the dots converge.
         </p>
       </div>
 
       <div class="mt-10 grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7" id="concept-selector">
+        {false && (
+        <div>
         <!-- Candidate A: AI Sparkle Portal -->
         <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="a">
           <div class="pointer-events-none">
@@ -236,6 +255,64 @@ const description = 'Official brand assets, custom typographic wordmark, standal
             <BrandLogo variant="icon" size="sm" concept="n" animated={false} />
           </div>
         </button>
+
+        <!-- Candidate O: Kinetic Iris -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="o">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">O: Kinetic Iris</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Focus Aperture</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="o" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate P: Dimensional Gate -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="p">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">P: Dimensional Gate</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Spatial Portal</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="p" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate Q: Tri-Lane Orbit -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="q">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">Q: Tri-Lane Orbit</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Compute Layers</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="q" animated={false} />
+          </div>
+        </button>
+
+        <!-- Candidate R: Maker Fold -->
+        <button class="concept-card flex flex-col items-center justify-between rounded-2xl border border-white/[0.06] bg-[#1A232E]/40 p-5 text-center cursor-pointer transition hover:border-white/10 focus:outline-none w-full" data-set-concept="r">
+          <div class="pointer-events-none">
+            <h4 class="font-bold text-white text-xs">R: Maker Fold</h4>
+            <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">Hidden M</p>
+          </div>
+          <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+            <BrandLogo variant="icon" size="sm" concept="r" animated={false} />
+          </div>
+        </button>
+        </div>
+        )}
+
+        {newConcepts.map(({ key, label, note }) => (
+          <button class:list={['concept-card flex flex-col items-center justify-between rounded-2xl border p-5 text-center cursor-pointer transition focus:outline-none w-full', key === 'agm' ? 'active border-[#CE445D]/50 bg-[#1A232E]/70 hover:border-[#CE445D]' : 'border-white/[0.06] bg-[#1A232E]/40 hover:border-white/10']} data-set-concept={key}>
+            <div class="pointer-events-none">
+              <h4 class="font-bold text-white text-xs">{label}</h4>
+              <p class="mt-1 font-mono text-[0.55rem] text-muted-text uppercase tracking-wider">{note}</p>
+            </div>
+            <div class="mt-5 pointer-events-none flex size-14 items-center justify-center rounded-xl bg-canvas border border-white/[0.04]">
+              <BrandLogo variant="icon" size="sm" concept={key} animated={false} />
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   </section>
@@ -243,12 +320,20 @@ const description = 'Official brand assets, custom typographic wordmark, standal
   <script is:inline>
     document.addEventListener('DOMContentLoaded', () => {
       const cards = document.querySelectorAll('.concept-card');
+      // Capture system logos once. Preview logos already have a fixed data-concept
+      // and must not change when another candidate is selected.
+      const systemLogos = Array.from(document.querySelectorAll('[data-brand-logo]:not([data-concept])'));
       cards.forEach(card => {
         card.addEventListener('click', () => {
           const concept = card.getAttribute('data-set-concept');
+          if (!concept) return;
           
           // Set body attribute to trigger global logo concept switch
           document.body.setAttribute('data-brand-concept', concept);
+
+          // Set the concept directly on live logos. This avoids relying on a
+          // deep body selector and keeps fixed playground previews untouched.
+          systemLogos.forEach(logo => logo.setAttribute('data-concept', concept));
           
           // Update card active classes
           cards.forEach(c => {
@@ -280,7 +365,7 @@ const description = 'Official brand assets, custom typographic wordmark, standal
         <p class="font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#CE445D]">Application Suite</p>
         <h2 class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white sm:text-4xl">Unified App Icon Language</h2>
         <p class="mt-4 text-sm leading-6 text-muted-text">
-          All apps share a common architectural base: a 64x64 canvas, custom blurred background glow matching the app accent, and the AI Sparkle Portal with a custom white glyph centered inside.
+          All apps share a common architectural base: a 64x64 canvas, custom blurred background glow matching the app accent, and the Mid-Card Dot portal icon with a custom white glyph centered inside.
         </p>
       </div>
 
@@ -364,10 +449,10 @@ const description = 'Official brand assets, custom typographic wordmark, standal
               16px for favicon, 32px height for wordmark legibility.
             </div>
             <div>
-              <span class="font-bold text-white block">Monogram & MP monogram</span>
+              <span class="font-bold text-white block">Mid-Card Dot & Lockup</span>
               <div class="mt-2 flex items-center gap-4">
                 <BrandLogo variant="mp" size="sm" />
-                <span class="text-xs">Monogram avatar used for secondary app icon container borders.</span>
+                <span class="text-xs">Three per-card crimson dots converge to the center period — the lockup dot slides from the wordmark into the icon core.</span>
               </div>
             </div>
           </div>
