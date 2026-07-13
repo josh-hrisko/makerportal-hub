@@ -57,11 +57,10 @@ function renderPng(svg, { width, height } = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// App Grid mark — resting (default, non-hover, fully-accented) state, copied
-// 1:1 from src/components/BrandIconConcepts.astro (showCore=true colors) so
-// every static asset matches the live, interactive icon exactly. Native 32x32
-// grid: 2x2 tiles, 12px each, 2px gap, 3px margin — no rotation, unlike the
-// old card mark, so its bounding box is just the flat 3..29 square below.
+// App Grid mark — resting (default, non-hover) state, copied 1:1 from
+// src/components/BrandIconConcepts.astro. BR is always crimson at rest
+// (standalone + lockup). Native 32x32 grid: 2x2 tiles, 12px each, 2px gap,
+// 3px margin — no rotation; bounding box is the flat 3..29 square below.
 // ---------------------------------------------------------------------------
 function gridMarkGroup({ mono = false } = {}) {
   const dot = mono ? 'currentColor' : COLORS.brandDot;
