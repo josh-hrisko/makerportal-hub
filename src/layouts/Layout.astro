@@ -118,30 +118,40 @@ const organizationSchema = {
 ---
 
 <!doctype html>
-<html lang="en" class="bg-canvas scroll-smooth" data-theme="dark">
+<html lang="en" class="bg-canvas scroll-smooth" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0F141C" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#F4F1EB" media="(prefers-color-scheme: light)" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0F141C" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" href="/sitemap.xml" />
-    <!-- FOUC-free theme: stored preference → system → dark default (studio brand).
-         Light chrome still needs contrast audit (docs/OPEN-ITEMS.md, docs/THEME-SYSTEM.md). -->
+    <!-- FOUC-free theme: light default (was dark studio brand).
+         Stored preference wins, otherwise ?theme= param, otherwise light.
+         Toggle UI is now hidden — secret triggers: triple-click logo, Shift+T, double-click footer pill.
+         See global.css .theme-toggle {display:none} + JS below for easter-egg. -->
     <script is:inline>
       (() => {
         try {
+          const params = new URLSearchParams(window.location.search);
+          const paramTheme = params.get('theme');
           const stored = localStorage.getItem('mp-theme');
-          const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-          const theme = stored === 'light' || stored === 'dark' ? stored : systemLight ? 'light' : 'dark';
+          // Light default — was dark studio, now light for broader appeal.
+          // Only switch to dark if stored=dark or ?theme=dark or paramTheme.
+          let theme = 'light';
+          if (paramTheme === 'dark' || paramTheme === 'light') {
+            theme = paramTheme;
+          } else if (stored === 'light' || stored === 'dark') {
+            theme = stored;
+          }
           document.documentElement.setAttribute('data-theme', theme);
           document.documentElement.style.colorScheme = theme;
         } catch (_) {
-          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.setAttribute('data-theme', 'light');
         }
       })();
     </script>
@@ -709,7 +719,13 @@ const organizationSchema = {
           });
         });
 
-        // Theme toggle — dark default (studio brand); light optional; persists.
+        // Theme toggle — now LIGHT default, UI hidden, secret triggers.
+        // Visible toggle buttons are hidden via CSS (.theme-toggle {display:none}), but logic stays.
+        // Secret triggers:
+        //   • Triple-click logo (data-brand-logo) within 1.2s
+        //   • Shift+T keyboard shortcut
+        //   • Double-click footer status pill [data-theme-easter-egg]
+        //   • ?theme=dark|light URL param (handled in head script, also persisted)
         const applyTheme = (theme) => {
           const next = theme === 'light' ? 'light' : 'dark';
           document.documentElement.setAttribute('data-theme', next);
@@ -717,25 +733,90 @@ const organizationSchema = {
           try { localStorage.setItem('mp-theme', next); } catch (_) {}
           document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
             btn.setAttribute('aria-label', next === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
-            btn.setAttribute('title', next === 'light' ? 'Dark theme' : 'Light theme');
+            btn.setAttribute('title', next === 'light' ? 'Dark theme (hidden: Shift+T or triple-click logo)' : 'Light theme (hidden: Shift+T or triple-click logo)');
           });
-          const meta = document.querySelector('meta[name="theme-color"]:not([media])');
-          if (meta) meta.setAttribute('content', next === 'light' ? '#F4F1EB' : '#0F141C');
+          const metas = document.querySelectorAll('meta[name="theme-color"]');
+          metas.forEach((m) => {
+            // Keep both media-tagged metas, but also update non-media one if present
+            if (!m.getAttribute('media')) {
+              m.setAttribute('content', next === 'light' ? '#F4F1EB' : '#0F141C');
+            }
+          });
+          // Optional: dispatch event for other components
+          try { window.dispatchEvent(new CustomEvent('mp:theme', { detail: { theme: next } })); } catch (_) {}
         };
+
+        const toggleTheme = () => {
+          const current = document.documentElement.getAttribute('data-theme') || 'light';
+          applyTheme(current === 'dark' ? 'light' : 'dark');
+        };
+
+        // Keep existing (now hidden) toggle buttons functional
         document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const current = document.documentElement.getAttribute('data-theme') || 'dark';
-            applyTheme(current === 'dark' ? 'light' : 'dark');
+            toggleTheme();
           });
         });
-        // Keep in sync if OS preference changes and user has no stored choice
-        try {
-          const mq = window.matchMedia('(prefers-color-scheme: light)');
-          mq.addEventListener('change', (e) => {
-            if (localStorage.getItem('mp-theme')) return;
-            applyTheme(e.matches ? 'light' : 'dark');
+
+        // Secret 1: Triple-click logo within 1.2s
+        (() => {
+          let clicks = 0;
+          let last = 0;
+          const logos = document.querySelectorAll('[data-brand-logo]');
+          logos.forEach((logo) => {
+            logo.style.cursor = 'pointer';
+            logo.addEventListener('click', () => {
+              const now = Date.now();
+              if (now - last > 1200) clicks = 0;
+              clicks++;
+              last = now;
+              if (clicks >= 3) {
+                clicks = 0;
+                toggleTheme();
+                // Tiny haptic/feedback: brief scale
+                logo.style.transition = 'transform 0.12s ease';
+                logo.style.transform = 'scale(0.96)';
+                setTimeout(() => { logo.style.transform = ''; }, 140);
+              }
+            });
           });
+        })();
+
+        // Secret 2: Keyboard Shift+T
+        document.addEventListener('keydown', (e) => {
+          if (e.shiftKey && (e.key === 'T' || e.key === 't') && !e.metaKey && !e.ctrlKey) {
+            // Don't trigger when typing in input/textarea
+            const tag = document.activeElement && document.activeElement.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+            e.preventDefault();
+            toggleTheme();
+          }
+        });
+
+        // Secret 3: Double-click footer status pill
+        (() => {
+          const eggs = document.querySelectorAll('[data-theme-easter-egg]');
+          eggs.forEach((el) => {
+            el.title = 'Double-click to toggle dark / light (also Shift+T or triple-click logo)';
+            el.style.cursor = 'pointer';
+            el.addEventListener('dblclick', (e) => {
+              e.preventDefault();
+              toggleTheme();
+            });
+          });
+        })();
+
+        // Optional: respect ?theme= in URL on client nav (already handled in head, but keep sync for SPA nav)
+        // No OS sync anymore — light default intentional. Only stored or param wins.
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const paramTheme = params.get('theme');
+          if (paramTheme === 'dark' || paramTheme === 'light') {
+            // Apply param if no stored yet, or always respect param for explicit link sharing
+            const stored = localStorage.getItem('mp-theme');
+            if (!stored) applyTheme(paramTheme);
+          }
         } catch (_) {}
       })();
     </script>
@@ -781,14 +862,14 @@ const organizationSchema = {
       <div class="border-t border-border bg-canvas/80">
         <div class="mx-auto flex max-w-[88rem] flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <div class="flex flex-wrap items-center gap-3">
-            <div class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card-bg px-3.5 py-1.5">
+            <div data-theme-easter-egg class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card-bg px-3.5 py-1.5 select-none">
               <span class="relative flex size-1.5">
                 <span class="absolute inline-flex h-full w-full rounded-full bg-brand-anchor opacity-60 motion-safe:animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></span>
                 <span class="relative inline-flex size-1.5 rounded-full bg-brand-anchor"></span>
               </span>
               <span class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-primary-text">MakerPortal © {year}</span>
             </div>
-            <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">SF · Worldwide · 11 apps</span>
+            <span data-theme-easter-egg class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text select-none">SF · Worldwide · 11 apps</span>
           </div>
           <div class="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">
             <a href="/privacy" class="hover:text-primary-text">Privacy</a>

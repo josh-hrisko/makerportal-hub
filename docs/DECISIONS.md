@@ -12,12 +12,12 @@
 **Why:** Research on scanability; mega menus for density.  
 **Code:** `src/data/site-nav.ts`, `Layout.astro`.
 
-## D-003 — Dark default, hybrid light, reading paper
+## D-003 — Dark default, hybrid light, reading paper (superseded by D-010)
 
-**Decision:** Dark brand default; toggle for light chrome; paper for long-form.  
+**Decision:** Originally dark brand default; toggle for light chrome; paper for long-form.  
 **Why:** ICP + brand vs long-read polarity research.  
 **Code:** `global.css`, `Layout.astro` theme script.  
-**Status:** Light chrome contrast incomplete (see OPEN-ITEMS).
+**Status:** Light chrome contrast DONE 2026-07-13; default flipped to light in D-010 2026-07-14.
 
 ## D-004 — Studio brand, not personal name
 
@@ -60,3 +60,18 @@
 <footer>… <a href="https://www.makerportal.ai">MakerPortal</a> <a href="https://www.makerportal.ai/apps">11 Apps</a> <a href="https://github.com/makerportal" target="_blank" rel="noopener noreferrer">GitHub</a> …</footer>
 ```  
 **Standard:** Every subdomain must have at least 1 link back to hub in nav + 1 in footer, both same-tab; App Store links can be new-tab, GitHub new-tab.
+
+## D-010 — Light default + invisible toggle (hidden easter-egg)
+
+**Decision:** Flip default from dark studio to **light** (`#F4F1EB` canvas, white cards) — broader appeal, a11y-verified 6.8:1 muted, 5.9:1 anchor. Hide visible `.theme-toggle` buttons via `display:none !important`. Keep dark available via hidden triggers only.  
+**Why:** User request to move/hide toggle, cleaner chrome, light default for first-time visitors. Power users still get dark via secret.  
+**Code:**  
+- `src/layouts/Layout.astro`: `html[data-theme="light"]` default; head inline script light fallback + `?theme=dark|light` param support; removed OS sync; `applyTheme` persists; `toggleTheme()` helper; secret listeners: triple-click `[data-brand-logo]` within 1200ms (with scale feedback), `Shift+T` keyboard (ignores INPUT/TEXTAREA/contentEditable), double-click `[data-theme-easter-egg]` footer pills (MakerPortal © + SF·Worldwide·11 apps). Footer pills get `data-theme-easter-egg` + title + `select-none` + hover scale.  
+- `src/styles/global.css`: `.theme-toggle {display:none !important}` + comment for restore; added `[data-theme-easter-egg]` hover/active transitions.  
+- `docs/THEME-SYSTEM.md` updated: Goals light default, Mechanism hidden toggle table.  
+**Hidden triggers (documented for team, not public UI):**  
+- Triple-click logo (top-left BrandLogo lockup)  
+- `Shift+T` (keyboard)  
+- Double-click footer status: `MakerPortal © {year}` or `SF · Worldwide · 11 apps`  
+- URL param `?theme=dark` or `?theme=light` (persists)  
+**Restore:** Comment out `display:none` in global.css and add back toggle buttons in nav if visible toggle needed again. Dark still fully functional — tokens, shadows, AA all preserved.

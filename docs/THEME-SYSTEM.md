@@ -2,19 +2,19 @@
 
 ## Goals
 
-1. **Dark studio default** — matches on-device / privacy-first / App Grid brand.  
-2. **Optional light chrome** — system preference + manual toggle.  
-3. **Reading paper** — warm light for long-form (blog, legal) for dwell/readability research.  
-4. **No pure `#000` / pure white glare** — near-black canvas, warm paper.
+1. **Light default (as of 2026-07-14)** — was dark studio brand (on-device / privacy), now light for broader appeal + a11y-verified contrast 6.8:1 / 5.9:1 / 5.82:1. Dark still available via hidden triggers.  
+2. **Hidden toggle** — no visible chrome; secret triggers for power users (see D-010).  
+3. **Reading paper** — warm light for long-form (blog, legal) for dwell/readability research — stays independent of chrome theme.  
+4. **No pure `#000` / pure white glare** — near-black canvas `#0F141C`, warm paper `#F4F1EB`.
 
-## Mechanism
+## Mechanism (2026-07-14 — light default + invisible toggle)
 
 | Piece | Implementation |
 |-------|----------------|
-| Attribute | `html[data-theme="dark" \| "light"]` |
-| Persistence | `localStorage['mp-theme']` |
-| FOUC prevention | Inline script in `Layout.astro` `<head>` before CSS paint |
-| Toggle UI | `.theme-toggle` + `[data-theme-toggle]` (nav + mobile drawer) |
+| Attribute | `html[data-theme="light" \| "dark"]` — now `light` default |
+| Persistence | `localStorage['mp-theme']` + `?theme=dark|light` URL param |
+| FOUC prevention | Inline script in `Layout.astro` `<head>` — light fallback, param-aware |
+| Toggle UI | `.theme-toggle {display:none !important}` — hidden; secret triggers: triple-click `[data-brand-logo]` within 1.2s, `Shift+T` keyboard (ignores inputs), double-click `[data-theme-easter-egg]` footer pill, `?theme=` param. Original toggle kept in DOM for JS but hidden; easy restore via commenting out display:none |
 | Tokens | CSS variables `--mp-*` in `src/styles/global.css` |
 | Tailwind bridge | `@theme { --color-canvas: var(--mp-canvas); ... }` |
 

@@ -502,8 +502,14 @@
     background: color-mix(in srgb, var(--mp-nav) 97%, transparent);
   }
 
-  /* Theme toggle */
+  /* Theme toggle — now HIDDEN by default (light default).
+     Visible UI removed per request to keep chrome clean.
+     Hidden triggers remain: triple-click logo, Shift+T, double-click footer pill, ?theme= param.
+     If you need to re-enable visible toggle, comment out the display:none below
+     and restore the original block (see git history). */
   .theme-toggle {
+    display: none !important;
+    /* Keep original styling for easter-egg restore:
     display: inline-grid;
     place-items: center;
     width: 2.5rem;
@@ -512,10 +518,8 @@
     border: 1px solid var(--mp-border);
     background: color-mix(in srgb, var(--mp-elevated) 80%, transparent);
     color: var(--mp-text);
-    transition:
-      background-color 0.2s,
-      border-color 0.2s,
-      color 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    */
   }
   .theme-toggle:hover {
     border-color: color-mix(in srgb, var(--mp-anchor) 40%, var(--mp-border));
@@ -532,6 +536,18 @@
   }
   html[data-theme="light"] .theme-toggle .icon-moon {
     display: none;
+  }
+
+  /* Easter-egg hint: footer pill subtly scales on hover to hint clickability when hidden toggle active */
+  [data-theme-easter-egg] {
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  [data-theme-easter-egg]:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+  [data-theme-easter-egg]:active {
+    transform: scale(0.98);
   }
 
   /* Wordmark ink follows theme text (paths use currentColor) */
