@@ -1,0 +1,12 @@
+---
+import { AMAZON_ASSOCIATE_TAG } from '../data/affiliate-links';
+
+export interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<p class={`text-[0.8rem] leading-[1.6] text-muted-text ${className}`}>
+  <strong class="font-semibold text-primary-text">Affiliate disclosure:</strong> Some links below are Amazon Associate links (tag <code>{AMAZON_ASSOCIATE_TAG}</code>). If you buy through them we may earn a commission at no extra cost to you — we only recommend gear we actually use. Full policy in our <a href="/privacy#affiliates" class="text-brand-anchor hover:text-primary-text">disclosure</a>.
+</p>

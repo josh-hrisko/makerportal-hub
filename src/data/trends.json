@@ -1,0 +1,477 @@
+{
+  "generatedAt": "2026-07-14T14:41:05.496Z",
+  "items": [
+    {
+      "id": "hackernews-48805598",
+      "source": "hackernews",
+      "title": "Apple Silicon Exec Explains Mac Mini AI Demand and On-Device Future",
+      "url": "https://www.macrumors.com/2026/07/06/apple-silicon-exec-explains-mac-mini-ai-demand/",
+      "author": "tosh",
+      "publishedAt": "2026-07-06T14:59:21Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 6
+    },
+    {
+      "id": "hackernews-48898478",
+      "source": "hackernews",
+      "title": "Open source on-device AI apps (and counting), no cloud, works offline",
+      "url": "https://github.com/zetic-ai/awesome-on-device-ai-apps",
+      "author": "rishabh121108",
+      "publishedAt": "2026-07-13T20:36:54Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 2
+    },
+    {
+      "id": "hackernews-48822627",
+      "source": "hackernews",
+      "title": "Squish, a local LLM inference server for Apple Silicon",
+      "url": "https://squish.run/blog/local-llm-fast-enough/",
+      "author": "wscholl",
+      "publishedAt": "2026-07-07T19:35:56Z",
+      "tags": [
+        "metal-ane",
+        "local-llm"
+      ],
+      "score": 2
+    },
+    {
+      "id": "hackernews-48819513",
+      "source": "hackernews",
+      "title": "GPU-accelerated context memory for on-device AI agents on Apple Silicon",
+      "url": "https://github.com/christopherkarani/ContextCore",
+      "author": "christkarani",
+      "publishedAt": "2026-07-07T15:52:23Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 2
+    },
+    {
+      "id": "hackernews-48906841",
+      "source": "hackernews",
+      "title": "Show HN: Libargus:Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://news.ycombinator.com/item?id=48906841",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-14T13:49:13Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48898224",
+      "source": "hackernews",
+      "title": "I gave a local LLM a \"delete production\" button and watched what it did",
+      "url": "https://medium.com/@dhanushg295/my-local-35b-avoids-every-trap-tool-1d2d2f1850cc",
+      "author": "_dhanush_",
+      "publishedAt": "2026-07-13T20:18:27Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48897545",
+      "source": "hackernews",
+      "title": "Attention is all they want – blocking content in websites with local LLMs",
+      "url": "https://sourcediver.org/posts/260713_attention_is_all_they_want/",
+      "author": "sourcediver",
+      "publishedAt": "2026-07-13T19:25:45Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48894351",
+      "source": "hackernews",
+      "title": "Show HN: Biscotti – on-device meeting transcription for macOS",
+      "url": "https://news.ycombinator.com/item?id=48894351",
+      "author": "scosman",
+      "publishedAt": "2026-07-13T15:38:26Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48883349",
+      "source": "hackernews",
+      "title": "Dari AI – An all-in-one AI assistant for macOS that runs on-device",
+      "url": "https://apps.apple.com/kz/app/dari-ai/id6779357765?mt=12",
+      "author": "KZ_AI",
+      "publishedAt": "2026-07-12T18:32:44Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48880594",
+      "source": "hackernews",
+      "title": "Ollama vs. Llama.cpp – Quick Benchmark",
+      "url": "https://blawg.pages.dev/ollama-vs-llama-server",
+      "author": "caveman23",
+      "publishedAt": "2026-07-12T12:22:17Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48874905",
+      "source": "hackernews",
+      "title": "Show HN: Catch your local LLM falling back to CPU",
+      "url": "https://github.com/logxio/picchio",
+      "author": "logickkk1",
+      "publishedAt": "2026-07-11T19:17:35Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48864459",
+      "source": "hackernews",
+      "title": "Show HN: Cactus v2 – On-device AI with cloud fallback",
+      "url": "https://news.ycombinator.com/item?id=48864459",
+      "author": "rshemet",
+      "publishedAt": "2026-07-10T19:57:18Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48863722",
+      "source": "hackernews",
+      "title": "Show HN: Local Motion – Use Cursor Agents and Chat with a Local LLM",
+      "url": "https://github.com/mattmireles/local-motion",
+      "author": "MediaSquirrel",
+      "publishedAt": "2026-07-10T18:50:24Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48855960",
+      "source": "hackernews",
+      "title": "Ask HN: Recommend a Local LLM Setup (M2 Max, 9GB)",
+      "url": "https://news.ycombinator.com/item?id=48855960",
+      "author": "balivandi",
+      "publishedAt": "2026-07-10T05:11:14Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48855138",
+      "source": "hackernews",
+      "title": "Show HN: TensorSharp: Open-Source Local LLM Inference Engine",
+      "url": "https://tensorsharp.ai/",
+      "author": "zhongkaifu",
+      "publishedAt": "2026-07-10T02:42:07Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48844268",
+      "source": "hackernews",
+      "title": "LLama.cpp Got Screwd",
+      "url": "https://github.com/ggml-org/llama.cpp/discussions/25482",
+      "author": "trilogic",
+      "publishedAt": "2026-07-09T11:40:16Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48843409",
+      "source": "hackernews",
+      "title": "Relm – local LLMs as base-R objects, with interpretability",
+      "url": "https://github.com/Vadale/R-ebirth",
+      "author": "grauk",
+      "publishedAt": "2026-07-09T09:58:28Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48833442",
+      "source": "hackernews",
+      "title": "On-Device Intelligence – shipping local AI on Apple platforms, compiler-verified",
+      "url": "https://digital-foundry-eight.vercel.app/book/",
+      "author": "aligutierrez",
+      "publishedAt": "2026-07-08T15:43:37Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48833200",
+      "source": "hackernews",
+      "title": "Show HN: I ported llama.cpp to Apple Watch and ran a 0.8B LLM locally",
+      "url": "https://news.ycombinator.com/item?id=48833200",
+      "author": "Eric-Terminal",
+      "publishedAt": "2026-07-08T15:26:12Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48818823",
+      "source": "hackernews",
+      "title": "PrivAiTe, a local LLM proxy that redacts PII in tool-call arguments",
+      "url": "https://github.com/crp4222/PrivAiTe",
+      "author": "crp4222",
+      "publishedAt": "2026-07-07T15:02:53Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48817727",
+      "source": "hackernews",
+      "title": "Show HN: Savva – Health Superapp powered by on-device AI",
+      "url": "https://www.savva.ai",
+      "author": "shahamitj",
+      "publishedAt": "2026-07-07T13:41:48Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48809994",
+      "source": "hackernews",
+      "title": "DGX Spark Local LLM Benchmark: Administrative Tasks",
+      "url": "https://www.aai-labs.com/en/research/local-llm-benchmark-administrative-tasks",
+      "author": "tasubotadas",
+      "publishedAt": "2026-07-06T20:23:00Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48808848",
+      "source": "hackernews",
+      "title": "Show HN: Arda Translate, free private on-device (iOS) translation",
+      "url": "https://apps.apple.com/us/app/arda-translate/id6778970560",
+      "author": "cjjuice",
+      "publishedAt": "2026-07-06T18:49:50Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48804448",
+      "source": "hackernews",
+      "title": "Show HN: BurstyRouter: local LLM first then burst to end-to-end encrypted LLM",
+      "url": "https://github.com/Lore-Hex/BurstyRouter",
+      "author": "ljlolel",
+      "publishedAt": "2026-07-06T13:41:18Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48796042",
+      "source": "hackernews",
+      "title": "Show HN: Goldseam – heal broken Cypress selectors with a local LLM",
+      "url": "https://github.com/adam-s/goldseam",
+      "author": "dataviz1000",
+      "publishedAt": "2026-07-05T17:27:15Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48790887",
+      "source": "hackernews",
+      "title": "Show HN: Local MCP – Claude/ChatGPT read your iMessage, Teams, files on-device",
+      "url": "https://www.local-mcp.com/en",
+      "author": "lanchuske",
+      "publishedAt": "2026-07-05T02:49:58Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48787415",
+      "source": "hackernews",
+      "title": "EyesOff Spots Shoulder Surfers Using a Privacy-First Approach",
+      "url": "https://www.eyesoff.app/blog/how-eyesoff-spots-shoulder-surfers/",
+      "author": "Two_hands",
+      "publishedAt": "2026-07-04T18:02:56Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48784211",
+      "source": "hackernews",
+      "title": "Show HN: Psycurate – Curated place for privacy-first, free psychological tools",
+      "url": "https://psycurate.com",
+      "author": "mursu",
+      "publishedAt": "2026-07-04T10:01:15Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48782406",
+      "source": "hackernews",
+      "title": "Show HN: Local privacy-first Microsoft Recall alternative with Gemma 4",
+      "url": "https://github.com/ayushh0110/ScreenMind/blob/main/README.md",
+      "author": "skye0110",
+      "publishedAt": "2026-07-04T03:30:43Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48769635",
+      "source": "hackernews",
+      "title": "Ask HN: Best Local LLM Setup for a 128GB M4 Max Mac Studio?",
+      "url": "https://news.ycombinator.com/item?id=48769635",
+      "author": "linzhangrun",
+      "publishedAt": "2026-07-03T01:36:51Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48760089",
+      "source": "hackernews",
+      "title": "Buy or wait on local LLM hardware during the memory crunch",
+      "url": "https://thefrontierlab.ai/buy-or-wait-local-llm-hardware/",
+      "author": "thefrontierlab",
+      "publishedAt": "2026-07-02T12:01:22Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48755380",
+      "source": "hackernews",
+      "title": "Ask HN: Is anyone running local LLMs in their organization?",
+      "url": "https://news.ycombinator.com/item?id=48755380",
+      "author": "harry8",
+      "publishedAt": "2026-07-02T01:38:39Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48745429",
+      "source": "hackernews",
+      "title": "Show HN: Bookmarker is now a macOS app  On-device AI. Local. Private",
+      "url": "https://bookmarker.cc",
+      "author": "kaizenb",
+      "publishedAt": "2026-07-01T12:10:22Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48743123",
+      "source": "hackernews",
+      "title": "Ragit – chat with any folder of documents using a local LLM",
+      "url": "https://github.com/ats4321/ragit",
+      "author": "atshu21",
+      "publishedAt": "2026-07-01T06:50:52Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48736860",
+      "source": "hackernews",
+      "title": "Show HN: Makes local LLMs faster and more reliable by optimizing for your device",
+      "url": "https://www.autotunellm.com/",
+      "author": "tanavc",
+      "publishedAt": "2026-06-30T18:13:49Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48735264",
+      "source": "hackernews",
+      "title": "Local LLMs on a Ryzen 8700G iGPU: 13-15 tok/s on gemma4, 9-12 on qwen3.6",
+      "url": "https://loomcycle.dev/blog/local-llms-on-truenas-and-the-frontend-i-had-to-build",
+      "author": "denn-gubsky",
+      "publishedAt": "2026-06-30T16:37:10Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48735191",
+      "source": "hackernews",
+      "title": "Show HN: Vanta – Markdown notes for iPhone with on-device AI",
+      "url": "https://vanta.shanev.ai",
+      "author": "shanev",
+      "publishedAt": "2026-06-30T16:32:50Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48733651",
+      "source": "hackernews",
+      "title": "Show HN: Rampart on CoreML",
+      "url": "https://github.com/narner/Rampart-CoreML",
+      "author": "narner",
+      "publishedAt": "2026-06-30T14:58:31Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    },
+    {
+      "id": "hackernews-48733618",
+      "source": "hackernews",
+      "title": "Show HN: Anvit – Offline AI to chat with your PDFs on Android on-device",
+      "url": "https://play.google.com/store/apps/details?id=com.likhith.anvit&hl=en_US",
+      "author": "likhithv02",
+      "publishedAt": "2026-06-30T14:57:07Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 1
+    }
+  ]
+}

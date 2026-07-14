@@ -92,6 +92,12 @@ See `docs/THEME-SYSTEM.md` for full fix list + QA checklist.
 
 ## P1 — Next (post-expansion)
 
+- [x] **Amazon Associates:** `makerportal.ai` registered as an additional site under `engineersport-20` in Associates Central (2026-07-14)
+- [x] First real gear pick added — Behringer UMC1820 (`B01EXI8Y9S`), related to `inside-biquadia`, live in `src/data/affiliate-links.ts`. `/resources#gear` now renders.
+- [ ] More gear picks — ideas by app pending owner's actual-use confirmation (only ship what's genuinely used, per existing disclosure copy): Biquadia/AuraLinter → studio mic or monitors if used; nymic → USB condenser mic; akous → reference headphones for binaural; MotionLink → AirPods Pro (literal Headphone Motion API dependency); BLExAR → Arduino Nano 33 BLE / HM-10 module / nRF52 dev board. Thumb-Dash, PopCloset, GridVerse, itria don't have an obvious authentic gear tie-in — skip unless a real one surfaces.
+- [ ] **Reddit source blocked:** self-service app registration at reddit.com/prefs/apps closed in 2026, replaced by the Responsible Builder Policy — access now requires a request via the contact form linked from the Reddit Data API Wiki (category: developer, read-only, describe use case: public post titles from r/iOSProgramming, r/LocalLLaMA, r/DSP, r/apple for editorial trend research, weekly, no PII stored). Approval timeline unknown. Digest currently runs on Bluesky + HN only — `fetch-reddit.mjs` skips cleanly without credentials. **Deferred by owner** until this + Bluesky verification are resolved together.
+- [ ] Verify `.github/workflows/trends-digest.yml` actually reaches Bluesky's search endpoint from GitHub Actions IPs (403'd from the dev sandbox — see D-011 known gap) — run `workflow_dispatch` manually and check the PR before trusting the weekly schedule. **Deferred by owner**, pick up alongside the Reddit access request above.
+- [ ] Google Trends signal: apply to the official Trends API alpha waitlist (free); until approved, spot-check manually rather than automate — see D-011 for why disposable/rotating scrape infra was declined
 - [ ] Migrate legacy makersportal.com/apps/* to *.makerportal.ai subdomains on Vercel (need 302s + new standalone Astro sites)
 - [ ] Real shop inventory + YouTube embeds on /watch
 - [ ] More field notes + internal links (AuraLinter launch note, nymic technical deep dive)

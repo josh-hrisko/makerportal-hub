@@ -1,0 +1,49 @@
+name: Trend digest
+
+on:
+  schedule:
+    - cron: '0 14 * * 1' # Mondays 14:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build trend digest
+        run: node scripts/trends/build-digest.mjs
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+
+      - name: Open review PR if trends changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- src/data/trends.json; then
+            echo "No trend changes — skipping PR."
+            exit 0
+          fi
+
+          branch="trends/digest-$(date +%Y-%m-%d)"
+          git checkout -b "$branch"
+          git config user.name "makerportal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/data/trends.json
+          git commit -m "Trend digest: $(date +%Y-%m-%d)"
+          git push origin "$branch"
+
+          gh pr create \
+            --title "Trend digest — $(date +%Y-%m-%d)" \
+            --body "Automated weekly trend scan (Bluesky, Hacker News, Reddit). Review before merging — this data feeds /blog and /resources topic selection, nothing publishes automatically." \
+            --base main \
+            --head "$branch"
