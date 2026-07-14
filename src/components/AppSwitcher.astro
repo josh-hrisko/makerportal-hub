@@ -1,85 +1,161 @@
 ---
 /**
- * AppSwitcher — small pill for inter-app navigation.
- * Designed to be dropped into future *.makerportal.ai subdomain sites.
- * Theme-aware, no backdrop-filter, opaque surfaces, AA contrast.
+ * AppSwitcher — inter-app navigation pill / card for studio.
+ * Frontier-level: opaque surfaces, theme-aware, no backdrop-filter, AA contrast,
+ * graceful handling of 11+ items, legacy badges, dot colors from magick histogram.
  *
- * Usage in subdomain:
- *   import AppSwitcher from '@makerportal-hub/components/AppSwitcher.astro'
- *   <AppSwitcher current="Biquadia" compact />
+ * Variants:
+ * - default (card): surface-card rounded-[20px] with header + wrap grid — use in /apps, /about, footers
+ * - compact pill: inline-flex rounded-full, horizontal scroll, max 4-6 visible — use in nav bars or subdomain headers
  *
- * Props:
- * - current: title of current app to exclude/highlight
- * - compact: show only dot + title in minimal pill
- * - showLegacyBadge: show "Legacy" for makersportal.com links
+ * Usage:
+ *   <AppSwitcher /> // card, 6 featured
+ *   <AppSwitcher limit={11} showLegacyBadge />
+ *   <AppSwitcher variant="pill" limit={4} compact />
+ *   <AppSwitcher current="Biquadia" />
  */
 import { apps } from '../data/apps';
 import { getRelatedApps, getAppNavLinks } from '../data/app-nav';
 
 interface Props {
   current?: string;
-  compact?: boolean;
+  compact?: boolean; // legacy alias for pill style
+  variant?: 'card' | 'pill';
   showLegacyBadge?: boolean;
   class?: string;
   limit?: number;
+  title?: string;
 }
 
 const {
   current,
   compact = false,
-  showLegacyBadge = true,
+  variant = compact ? 'pill' : 'card',
+  showLegacyBadge = false,
   class: className,
   limit = 6,
+  title = 'Studio catalog',
 } = Astro.props as Props;
 
 const navLinks = getAppNavLinks();
 const related = current ? getRelatedApps(current, limit) : apps.slice(0, limit);
-const displayList = current ? related : navLinks.slice(0, limit).map((l) => apps.find((a) => a.title === l.title)!).filter(Boolean);
+// For pill we want short list, for card we want curated but not overwhelming
+const displayList = current
+  ? related
+  : navLinks.slice(0, limit).map((l) => apps.find((a) => a.title === l.title)!).filter(Boolean);
+
+const total = apps.length;
+const externalCount = apps.filter((a) => a.external).length;
+const internalCount = total - externalCount;
 ---
 
-<div class:list={['app-switcher not-prose surface-card inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-full border bg-card-bg p-1.5 shadow-sm', className]} role="navigation" aria-label="More from MakerPortal">
-  <span class="ml-1 mr-1 inline-flex items-center gap-1.5 rounded-full bg-elevated px-2.5 py-1 font-mono text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-muted-text">
-    <span class="size-1.5 rounded-full bg-primary-cta"></span>
-    Studio
-  </span>
+{variant === 'pill' ? (
+  <div class:list={['app-switcher app-switcher--pill surface-nav inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-1 shadow-sm', 'overflow-hidden', className]} role="navigation" aria-label="More from MakerPortal">
+    <span class="ml-1 hidden shrink-0 items-center gap-1.5 rounded-full bg-elevated px-2.5 py-1 font-mono text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-muted-text sm:inline-flex">
+      <span class="size-1.5 rounded-full bg-primary-cta"></span>
+      {internalCount} live
+    </span>
 
-  <div class="flex flex-wrap items-center gap-1">
-    {displayList.map((app) => {
-      const isCurrent = app.title === current;
-      const dot = app.iconDot;
-      return (
-        <a
-          href={isCurrent ? '/apps' : app.url}
-          target={isCurrent ? undefined : '_blank'}
-          rel={isCurrent ? undefined : 'noopener noreferrer'}
-          class:list={[
-            'group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.78rem] font-medium transition-colors',
-            isCurrent
-              ? 'border-border bg-elevated text-primary-text font-semibold'
-              : 'border-transparent bg-transparent text-muted-text hover:border-border hover:bg-elevated hover:text-primary-text',
-          ]}
-          aria-current={isCurrent ? 'page' : undefined}
-          title={`${app.title} — ${app.tagline}`}
-        >
-          <span
-            class="icon-dot size-1.5 shrink-0 rounded-full"
-            style={dot ? `--dot-light:${dot.light}; --dot-dark:${dot.dark}; background-color: var(--dot-light);` : ''}
-            aria-hidden="true"
-          ></span>
-          {!compact && <span class="hidden sm:inline">{app.title}</span>}
-          {compact && <span class="sr-only">{app.title}</span>}
-          {showLegacyBadge && app.external && (
-            <span class="ml-0.5 rounded-full bg-elevated px-1 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">Legacy</span>
-          )}
-        </a>
-      );
-    })}
+    <div class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]">
+      <style is:inline>{" .scrollbar-none::-webkit-scrollbar{display:none}"}</style>
+      {displayList.map((app) => {
+        const isCurrent = app.title === current;
+        const dot = app.iconDot;
+        return (
+          <a
+            href={isCurrent ? '/apps' : app.url}
+            target={isCurrent ? undefined : '_blank'}
+            rel={isCurrent ? undefined : 'noopener noreferrer'}
+            class:list={[
+              'group inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.78rem] font-medium transition-colors',
+              isCurrent
+                ? 'border-border bg-elevated text-primary-text font-semibold'
+                : 'border-transparent bg-transparent text-muted-text hover:border-border hover:bg-elevated hover:text-primary-text',
+            ]}
+            aria-current={isCurrent ? 'page' : undefined}
+            title={`${app.title} — ${app.tagline}`}
+          >
+            <span
+              class="icon-dot size-1.5 shrink-0 rounded-full"
+              style={dot ? `--dot-light:${dot.light}; --dot-dark:${dot.dark}; background-color: var(--dot-light);` : ''}
+              aria-hidden="true"
+            ></span>
+            <span>{app.title}</span>
+          </a>
+        );
+      })}
+    </div>
+
+    <a href="/apps" class="ml-1 hidden shrink-0 items-center gap-1 rounded-full bg-primary-text px-3 py-1 text-[0.75rem] font-bold text-canvas transition-opacity hover:opacity-90 sm:inline-flex">
+      All {total} <span aria-hidden="true">→</span>
+    </a>
+    <a href="/apps" class="grid size-7 shrink-0 place-items-center rounded-full bg-primary-text text-canvas transition-opacity hover:opacity-90 sm:hidden" aria-label={`All ${total} apps`}>
+      <span aria-hidden="true">→</span>
+    </a>
   </div>
+) : (
+  <div class:list={['app-switcher app-switcher--card surface-card w-full rounded-[20px] border bg-card-bg p-4 shadow-sm', className]} role="navigation" aria-label="More from MakerPortal">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-elevated px-2.5 py-1 font-mono text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-muted-text">
+          <span class="size-1.5 rounded-full bg-primary-cta animate-pulse"></span>
+          {title}
+        </span>
+        <span class="hidden items-center gap-1.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text/70 sm:inline-flex">
+          <span class="h-px w-4 bg-border"></span>
+          {internalCount} on *.makerportal.ai • {externalCount} legacy
+        </span>
+      </div>
+      <a href="/apps" class="inline-flex items-center gap-1 rounded-full bg-primary-text px-3 py-1 text-[0.75rem] font-bold text-canvas transition-opacity hover:opacity-90">
+        All {total} <span aria-hidden="true">→</span>
+      </a>
+    </div>
 
-  <a href="/apps" class="ml-auto inline-flex items-center gap-1 rounded-full bg-primary-text px-3 py-1 text-[0.75rem] font-bold text-canvas transition-opacity hover:opacity-90">
-    {current ? `All ${apps.length}` : `${apps.length} apps`} <span aria-hidden="true">→</span>
-  </a>
-</div>
+    <div class="flex flex-wrap gap-1.5">
+      {displayList.map((app) => {
+        const isCurrent = app.title === current;
+        const dot = app.iconDot;
+        return (
+          <a
+            href={isCurrent ? '/apps' : app.url}
+            target={isCurrent ? undefined : '_blank'}
+            rel={isCurrent ? undefined : 'noopener noreferrer'}
+            class:list={[
+              'group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.78rem] font-medium transition-all',
+              isCurrent
+                ? 'border-border bg-elevated text-primary-text font-semibold ring-1 ring-border'
+                : 'border-border bg-elevated/50 text-muted-text hover:border-[var(--mp-border-strong)] hover:bg-elevated hover:text-primary-text hover:-translate-y-[0.5px]',
+            ]}
+            aria-current={isCurrent ? 'page' : undefined}
+            title={`${app.title} — ${app.tagline}${app.external ? ' (legacy bridge)' : ''}`}
+          >
+            <span
+              class="icon-dot size-1.5 shrink-0 rounded-full transition-transform group-hover:scale-110"
+              style={dot ? `--dot-light:${dot.light}; --dot-dark:${dot.dark}; background-color: var(--dot-light);` : ''}
+              aria-hidden="true"
+            ></span>
+            <span class="tracking-[-0.01em]">{app.title}</span>
+            {showLegacyBadge && app.external && (
+              <span class="ml-0.5 rounded-full bg-canvas px-1.5 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">Legacy</span>
+            )}
+          </a>
+        );
+      })}
+      {displayList.length < total && (
+        <span class="inline-flex items-center gap-1 rounded-full border border-dashed border-border bg-transparent px-2.5 py-1 font-mono text-[0.68rem] text-muted-text/70">
+          +{total - displayList.length} more
+        </span>
+      )}
+    </div>
+
+    {current && (
+      <div class="mt-3 flex items-center gap-2 border-t border-border pt-3 text-[0.74rem] text-muted-text">
+        <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em]">Context:</span>
+        <span>You're viewing <strong class="font-semibold text-primary-text">{current}</strong> — explore related by category.</span>
+      </div>
+    )}
+  </div>
+)}
 
 <style>
   .app-switcher .icon-dot {
@@ -87,5 +163,9 @@ const displayList = current ? related : navLinks.slice(0, limit).map((l) => apps
   }
   html[data-theme='dark'] .app-switcher .icon-dot {
     background-color: var(--dot-dark, var(--mp-muted)) !important;
+  }
+  /* Ensure card doesn't become weird pill when wrapping */
+  .app-switcher--card {
+    border-radius: 20px !important;
   }
 </style>

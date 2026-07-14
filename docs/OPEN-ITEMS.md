@@ -37,6 +37,19 @@ Expanded from 4 to 11 live:
 - [x] Schema sitemap hub-only, llms.txt includes external mapping
 - [x] New CTAs use bg-primary-text text-canvas
 
+**Hotfix 2026-07-13 — /about broken AppSwitcher pill:**
+- Issue: pill variant (rounded-full + flex-wrap) with 6 items + Legacy badges wrapped to 2 lines, `hidden sm:inline` hid titles on mobile leaving only dots + "Legacy" text, outer rounded-full looked broken when multi-line
+- Root: AppSwitcher was pill-only, not designed for 11-item catalog; about page placed limit=6 inside narrow grid col causing crowding
+- Fix: rewrote AppSwitcher into two variants — `card` (default frontier: surface-card rounded-[20px] with header + wrap grid) and `pill` (horizontal scroll, scrollbar-none, single line for nav bars). Card handles 11 gracefully with `+N more` badge.
+- About redesign: split Studio/Principles into two cols without switcher inside, added stats grid (11 apps / SF / private), then full-width bridge section with `AppSwitcher limit=11 showLegacyBadge title="All 11 products"` card. No more pill inside narrow col.
+- Apps page: hero now uses pill variant limit=6 (scrollable, not wrapping), bottom section uses card variant limit=11 with title "All 11 live • inter-app nav" — no duplicate.
+- Mega menu: increased panel width 36→42rem, products column now grid-cols-2 when >6 items to avoid 11-tall tall panel.
+- Index dashboard: updated hardcoded 3 rows (Biquadia/Notiary/PopCloset) → 4 rows (AuraLinter agentic DSP, nymic vocal, Biquadia, itria offline LLM) with 11 live footer.
+- Watch page: updated series blurbs to mention 11 live and new tech stack.
+- Frontier audit: checked all pages (/, /apps, /about, /team, /contact, /resources, /shop, /watch, /press, /advertise, /privacy, /terms, /blog, /404) for hardcoded 04 counts, broken links, invisible text, backdrop-filter, alt text, focus rings. No `bg-white text-canvas` regressions, no stacked blur.
+
+Result: /about now renders clean card AppSwitcher with all 11, no broken "Studio AuraLinter Biquadia Thumb-Dash nymic Legacy..." inline run-on.
+
 ## P0 — Light mode contrast (DONE 2026-07-13)
 
 Fixed. Dark hero preserved, light now meets WCAG AA for body + meaningful muted text.
