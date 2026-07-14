@@ -54,18 +54,23 @@ export const socials: NavLink[] = [
  * Future: generate dynamically from apps.ts import (requires Astro asset handling).
  * For now manual to keep site-nav.ts pure (no ImageMetadata deps).
  */
+/**
+ * Product links are part of the same ecosystem cluster (makerportal.ai + makersportal.com legacy).
+ * They open same-tab (no new tab) — back button works, one tab per journey.
+ * Truly external (GitHub, X, YouTube) remain target=_blank.
+ */
 export const productLinks: NavLink[] = [
-  { label: 'AuraLinter', href: 'https://auralinter.makerportal.ai', description: 'Agentic DSP Orchestrator', external: true },
-  { label: 'Biquadia', href: 'https://biquadia.makerportal.ai', description: 'Neural DSP lab', external: true },
-  { label: 'Thumb-Dash', href: 'https://thumbdash.makerportal.ai', description: 'Speed-texting battleground', external: true },
-  { label: 'nymic', href: 'https://makersportal.com/apps/nymic', description: 'Vocal engine • kNN-VC', external: true },
-  { label: 'Notiary', href: 'https://notiary.makerportal.ai', description: 'Semantic notes', external: true },
-  { label: 'akous', href: 'https://makersportal.com/apps/akous', description: 'Generative audio • ANE', external: true },
-  { label: 'PopCloset', href: 'https://popcloset.makerportal.ai', description: 'Vision wardrobe', external: true },
-  { label: 'itria', href: 'https://makersportal.com/apps/itria', description: 'On-device LLM • Metal', external: true },
-  { label: 'GridVerse', href: 'https://makersportal.com/apps/gridverse', description: 'AI word game', external: true },
-  { label: 'MotionLink', href: 'https://makersportal.com/apps/motionlink', description: 'Head tracking • Spatial', external: true },
-  { label: 'BLExAR', href: 'https://makersportal.com/apps/blexar', description: 'BLE Arduino • CSV export', external: true },
+  { label: 'AuraLinter', href: 'https://auralinter.makerportal.ai', description: 'Agentic DSP Orchestrator' },
+  { label: 'Biquadia', href: 'https://biquadia.makerportal.ai', description: 'Neural DSP lab' },
+  { label: 'Thumb-Dash', href: 'https://thumbdash.makerportal.ai', description: 'Speed-texting battleground' },
+  { label: 'nymic', href: 'https://makersportal.com/apps/nymic', description: 'Vocal engine • kNN-VC' },
+  { label: 'Notiary', href: 'https://notiary.makerportal.ai', description: 'Semantic notes' },
+  { label: 'akous', href: 'https://makersportal.com/apps/akous', description: 'Generative audio • ANE' },
+  { label: 'PopCloset', href: 'https://popcloset.makerportal.ai', description: 'Vision wardrobe' },
+  { label: 'itria', href: 'https://makersportal.com/apps/itria', description: 'On-device LLM • Metal' },
+  { label: 'GridVerse', href: 'https://makersportal.com/apps/gridverse', description: 'AI word game' },
+  { label: 'MotionLink', href: 'https://makersportal.com/apps/motionlink', description: 'Head tracking • Spatial' },
+  { label: 'BLExAR', href: 'https://makersportal.com/apps/blexar', description: 'BLE Arduino • CSV export' },
 ];
 
 /** Top bar — keep ≤7 for scanability (NN/g + 2025–26 mega-menu research). */

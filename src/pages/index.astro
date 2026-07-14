@@ -151,7 +151,7 @@ const faqSchema = {
 
           <!-- Orbit apps – limited to 4 featured to keep CSS positions valid; all 11 live in grid below -->
           {apps.filter((a) => a.featured || ['AuraLinter','Biquadia','Thumb-Dash','Notiary'].includes(a.title)).slice(0,4).map((app, index) => (
-            <a href={app.url} target="_blank" rel="noopener noreferrer" class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.25rem] place-items-center rounded-[16px] border border-border bg-card-bg shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-[transform,border-color,box-shadow] duration-500 hover:scale-110 hover:border-brand-anchor/40 hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:size-[4.75rem]`} aria-label={`Open ${app.title} — ${app.tagline}`}>
+            <a href={app.url} class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.25rem] place-items-center rounded-[16px] border border-border bg-card-bg shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-[transform,border-color,box-shadow] duration-500 hover:scale-110 hover:border-brand-anchor/40 hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:size-[4.75rem]`} aria-label={`Open ${app.title} — ${app.tagline}`}>
               <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={52} height={52} densities={[1,2]} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" class="size-[2.85rem] rounded-[12px] object-contain transition-transform duration-500 hover:rotate-[-3deg]" />
             </a>
           ))}

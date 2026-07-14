@@ -111,9 +111,7 @@ const relatedApps = showRelated
       </span>
       <a
         href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`Open ${title} – ${tagline} (external)`}
+        aria-label={`Open ${title} – ${tagline}`}
         class="group/link relative z-10 flex size-10 items-center justify-center rounded-full border border-border bg-elevated text-muted-text transition-all duration-300 hover:scale-110 hover:border-[var(--mp-border-strong)] hover:bg-elevated hover:text-primary-text before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-gradient-to-b before:from-[color-mix(in_srgb,var(--mp-text)_8%,transparent)] before:to-transparent before:opacity-0 hover:before:opacity-100"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4 transition-transform duration-300 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5">
@@ -190,7 +188,7 @@ const relatedApps = showRelated
             {relatedApps.map((r, i) => (
               <>
                 {i > 0 && <span class="text-muted-text/40">·</span>}
-                <a href={r.url} target="_blank" rel="noopener noreferrer" class="font-medium text-muted-text transition-colors hover:text-primary-text">
+                <a href={r.url} class="font-medium text-muted-text transition-colors hover:text-primary-text">
                   {r.title}
                 </a>
               </>

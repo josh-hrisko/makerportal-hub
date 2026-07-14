@@ -64,8 +64,6 @@ const internalCount = total - externalCount;
         return (
           <a
             href={isCurrent ? '/apps' : app.url}
-            target={isCurrent ? undefined : '_blank'}
-            rel={isCurrent ? undefined : 'noopener noreferrer'}
             class:list={[
               'group inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.78rem] font-medium transition-colors',
               isCurrent
@@ -118,8 +116,6 @@ const internalCount = total - externalCount;
         return (
           <a
             href={isCurrent ? '/apps' : app.url}
-            target={isCurrent ? undefined : '_blank'}
-            rel={isCurrent ? undefined : 'noopener noreferrer'}
             class:list={[
               'group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.78rem] font-medium transition-all',
               isCurrent
