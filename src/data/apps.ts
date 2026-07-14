@@ -138,7 +138,7 @@ export const apps: AppEntry[] = [
     sequence: '006',
     accent: 'amber',
     techBadges: ['kNN-VC', 'ONNX Runtime', 'HiFiGAN'],
-    iconDot: { light: '#7A3410', dark: '#E69433' }, // histogram #C16223/#E69433 orange
+    iconDot: { light: '#A0511D', dark: '#E69433' }, // histogram #C16223/#E69433 orange — light darkened to #A0511D (closer to icon orange than #7A3410 brown, AA 5.2:1 on white)
     external: true,
   },
   {

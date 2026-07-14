@@ -230,8 +230,8 @@ const faqSchema = {
           <ul class="mt-7 space-y-3 font-mono text-[0.76rem] leading-[1.5] text-muted-text">
             {[
               ['ANE 16-Core', '16-Core Neural Engine acceleration • 4.2ms median inference'],
-              ['Local Vectors', 'Zero-latency vector embedding index • 28MB offline'],
-              ['Private by Design', 'Private processing • No analytics SDKs • No cookies for AI features'],
+              ['Local Vectors', 'Zero-latency vector embedding index • 28MB offline (where on-device)'],
+              ['Transparent by Design', 'No dark patterns • No analytics SDKs • No cookies for AI features'],
             ].map(([k,v]) => (
               <li class="flex gap-3 rounded-xl border border-border bg-card-bg px-3 py-2.5">
                 <span aria-hidden="true" class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">✓</span>
@@ -276,7 +276,7 @@ const faqSchema = {
               </div>
             ))}
             <div class="flex items-center gap-2 pt-2 text-muted-text">
-              <span class="text-brand-anchor">~</span><span class="text-primary-cta">❯</span><span class="inline-block h-3 w-1.5 animate-pulse bg-muted-text/60"></span><span class="font-mono text-[0.65rem]">11 live • privacy-first • no phoning home • legacy bridge → *.makerportal.ai</span>
+              <span class="text-brand-anchor">~</span><span class="text-primary-cta">❯</span><span class="inline-block h-3 w-1.5 animate-pulse bg-muted-text/60"></span><span class="font-mono text-[0.65rem]">11 live • on-device first • transparent cloud • legacy bridge → *.makerportal.ai</span>
             </div>
           </div>
         </div>
@@ -319,7 +319,7 @@ const faqSchema = {
         <div>
           <p class="section-kicker">Field notes • Building in public • on-device AI journal</p>
           <h2 id="notes-title" class="mt-4 text-[clamp(2rem,4vw,2.75rem)] font-[650] tracking-[-0.05em] text-primary-text">Thinking in public.</h2>
-          <p class="mt-3 max-w-xl text-[0.95rem] leading-[1.6] text-muted-text">Short notes from inside the build — CoreML experiments, SwiftUI edge cases, Metal shader tricks, and the tiny decisions that make privacy-first software feel fast.</p>
+          <p class="mt-3 max-w-xl text-[0.95rem] leading-[1.6] text-muted-text">Short notes from inside the build — CoreML experiments, SwiftUI edge cases, Metal shader tricks, and the tiny decisions that make studio software feel fast.</p>
         </div>
         <a href="/blog" class="group inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-border bg-elevated px-4 text-[0.875rem] font-medium text-brand-anchor transition-all hover:border-brand-anchor/30 hover:bg-brand-anchor/10">All field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
       </div>
