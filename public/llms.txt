@@ -1,10 +1,10 @@
 # MakerPortal — Independent AI & iOS Software Studio
 
-> Privacy-first, on-device intelligence. San Francisco studio engineering iOS & iPadOS apps with Apple Silicon native neural processing (CoreML, Metal, ANE). Zero telemetry, zero cloud.
+> On-device first where possible, transparent where cloud is needed. San Francisco studio engineering iOS & iPadOS apps with Apple Silicon native neural processing (CoreML, Metal, ANE). Privacy posture per-app transparent.
 
-MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](https://makersportal.com)) is an independent software studio established in 2023 in San Francisco, CA. Focus: focused utility, productivity, developer tools, audio, game, dashboard, and lifestyle applications that run 100% on-device using local neural networks, real-time DSP, and CoreML.
+MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](https://makersportal.com)) is an independent software studio established in 2023 in San Francisco, CA. Focus: focused utility, productivity, developer tools, audio, game, dashboard, and lifestyle applications — on-device first where possible (CoreML, Metal, ANE, ONNX, llama.cpp), transparent hybrid cloud for agentic DSP (AuraLinter backend with SSE, audio staged temporarily).
 
-**Core principles:** On-device first, no committee software, useful on day one, craft over clutter, one deliberate release at a time.
+**Core principles:** On-device first where possible, transparent hybrid for agentic, no committee software, useful on day one, craft over clutter, one deliberate release at a time.
 
 ## Site map (hub) — empire IA
 

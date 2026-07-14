@@ -44,10 +44,28 @@ const footerLinkClass = (href: string) =>
   isActive(href)
     ? 'w-fit font-medium text-primary-text'
     : 'w-fit text-muted-text transition-colors hover:text-primary-text';
-const linkAttrs = (href: string, external?: boolean) =>
-  external
-    ? { href, target: '_blank', rel: href.includes('github.com/makerportal') || href.includes('MakerPortal') || href.includes('makersportal') || href.includes('x.com/MakerPortal') ? 'me noopener noreferrer' : 'noopener noreferrer' }
-    : { href };
+/**
+ * Ecosystem navigation rule (D-009):
+ * - *.makerportal.ai + makersportal.com = same-tab (studio cluster, back-button journey)
+ * - Truly external (github.com, x.com, youtube.com) = new-tab with noopener
+ * - Internal hub routes = same-tab
+ * Only github/x/youtube get target=_blank.
+ */
+const isTrulyExternal = (href: string) =>
+  href.includes('github.com') || href.includes('x.com/') || href.includes('youtube.com') || href.includes('youtu.be');
+
+const linkAttrs = (href: string, external?: boolean) => {
+  if (!external) return { href };
+  // Even if marked external, ecosystem domains stay same-tab
+  if (href.includes('makerportal.ai') || href.includes('makersportal.com')) {
+    return { href, rel: 'noopener' };
+  }
+  if (isTrulyExternal(href)) {
+    return { href, target: '_blank', rel: href.includes('github.com/makerportal') || href.includes('MakerPortal') || href.includes('x.com/MakerPortal') ? 'me noopener noreferrer' : 'noopener noreferrer' };
+  }
+  // Fallback: non-ecosystem external without explicit true-external flag? Stay same-tab safe.
+  return { href, target: '_blank', rel: 'noopener noreferrer' };
+};
 
 /** Long-form routes default readers toward paper; theme toggle still works sitewide. */
 const isReadingPath =
