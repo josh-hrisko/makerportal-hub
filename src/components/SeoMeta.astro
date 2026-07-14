@@ -11,8 +11,8 @@ interface Props {
 }
 
 const {
-  title = 'MakerPortal — Privacy-First AI & iOS Studio',
-  description = 'San Francisco studio engineering privacy-first iOS & iPadOS apps with on-device neural networks, Apple Neural Engine, CoreML & Metal. Zero telemetry.',
+  title = 'MakerPortal — iOS Studio: On-Device AI & Agentic DSP',
+  description = 'San Francisco studio engineering iOS & iPadOS apps with on-device ML where possible and transparent cloud for agentic DSP. CoreML, Metal, ANE, LangGraph, hybrid architecture.',
   canonical = new URL(Astro.url.pathname, Astro.site),
   noindex = false,
   type = 'website',
@@ -37,7 +37,7 @@ const siteName = 'MakerPortal';
 <meta name="bingbot" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
 
 <!-- Agentic-optimized -->
-<meta name="keywords" content="on-device AI, CoreML, Apple Neural Engine, iOS privacy-first apps, SwiftUI, Metal, local neural networks, zero telemetry, San Francisco iOS studio, Indie iOS apps, offline AI, privacy architecture" />
+<meta name="keywords" content="on-device AI, CoreML, Apple Neural Engine, iOS indie studio, SwiftUI, Metal, local neural networks, agentic DSP, LangGraph, hybrid cloud, San Francisco iOS studio, Indie iOS apps, privacy-conscious, privacy architecture" />
 
 <meta property="og:type" content={type} />
 <meta property="og:site_name" content={siteName} />
@@ -51,7 +51,7 @@ const siteName = 'MakerPortal';
 <meta property="og:image" content={socialImage} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="MakerPortal — Software with a point of view. Privacy-first, on-device AI." />
+<meta property="og:image:alt" content="MakerPortal — Software with a point of view. On-device first, transparent hybrid where needed." />
 <meta property="og:image:type" content="image/png" />
 
 <meta name="twitter:card" content="summary_large_image" />
@@ -60,7 +60,7 @@ const siteName = 'MakerPortal';
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={socialImage} />
-<meta name="twitter:image:alt" content="MakerPortal — Privacy-first on-device AI iOS studio" />
+<meta name="twitter:image:alt" content="MakerPortal — iOS studio: on-device AI & agentic DSP, transparent cloud" />
 
 <!-- Preconnect for perf if needed, but self-hosted fonts now – no external font CDN -->
 <meta name="format-detection" content="telephone=no" />
