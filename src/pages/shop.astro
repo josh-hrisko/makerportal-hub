@@ -28,11 +28,11 @@ const products = [
     </Fragment>
   </HubShell>
 
-  <section id="code" class="border-b border-border" aria-label="Products">
+  <section id="products" class="border-b border-border" aria-label="Products">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
       <div class="grid gap-5 md:grid-cols-3">
         {products.map((p) => (
-          <article id={p.id === 'code' ? undefined : p.id} class="surface-card rounded-[24px] border bg-card-bg p-6">
+          <article id={p.id} class="surface-card scroll-mt-24 rounded-[24px] border bg-card-bg p-6">
             <p class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-primary-cta">{p.tag}</p>
             <h2 class="mt-3 text-xl font-semibold tracking-[-0.03em] text-primary-text">{p.title}</h2>
             <p class="mt-3 text-[0.92rem] leading-[1.65] text-muted-text">{p.blurb}</p>
