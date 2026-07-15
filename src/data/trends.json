@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T14:41:05.496Z",
+  "generatedAt": "2026-07-15T01:15:58.279Z",
   "items": [
     {
       "id": "hackernews-48805598",
@@ -54,12 +54,12 @@
       "score": 2
     },
     {
-      "id": "hackernews-48906841",
+      "id": "hackernews-48907681",
       "source": "hackernews",
-      "title": "Show HN: Libargus:Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
-      "url": "https://news.ycombinator.com/item?id=48906841",
+      "title": "Show HN: Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
       "author": "KingJoker",
-      "publishedAt": "2026-07-14T13:49:13Z",
+      "publishedAt": "2026-07-14T14:40:46Z",
       "tags": [
         "local-llm"
       ],
@@ -410,66 +410,6 @@
       "publishedAt": "2026-07-01T06:50:52Z",
       "tags": [
         "local-llm"
-      ],
-      "score": 1
-    },
-    {
-      "id": "hackernews-48736860",
-      "source": "hackernews",
-      "title": "Show HN: Makes local LLMs faster and more reliable by optimizing for your device",
-      "url": "https://www.autotunellm.com/",
-      "author": "tanavc",
-      "publishedAt": "2026-06-30T18:13:49Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 1
-    },
-    {
-      "id": "hackernews-48735264",
-      "source": "hackernews",
-      "title": "Local LLMs on a Ryzen 8700G iGPU: 13-15 tok/s on gemma4, 9-12 on qwen3.6",
-      "url": "https://loomcycle.dev/blog/local-llms-on-truenas-and-the-frontend-i-had-to-build",
-      "author": "denn-gubsky",
-      "publishedAt": "2026-06-30T16:37:10Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 1
-    },
-    {
-      "id": "hackernews-48735191",
-      "source": "hackernews",
-      "title": "Show HN: Vanta – Markdown notes for iPhone with on-device AI",
-      "url": "https://vanta.shanev.ai",
-      "author": "shanev",
-      "publishedAt": "2026-06-30T16:32:50Z",
-      "tags": [
-        "on-device-ai"
-      ],
-      "score": 1
-    },
-    {
-      "id": "hackernews-48733651",
-      "source": "hackernews",
-      "title": "Show HN: Rampart on CoreML",
-      "url": "https://github.com/narner/Rampart-CoreML",
-      "author": "narner",
-      "publishedAt": "2026-06-30T14:58:31Z",
-      "tags": [
-        "on-device-ai"
-      ],
-      "score": 1
-    },
-    {
-      "id": "hackernews-48733618",
-      "source": "hackernews",
-      "title": "Show HN: Anvit – Offline AI to chat with your PDFs on Android on-device",
-      "url": "https://play.google.com/store/apps/details?id=com.likhith.anvit&hl=en_US",
-      "author": "likhithv02",
-      "publishedAt": "2026-06-30T14:57:07Z",
-      "tags": [
-        "on-device-ai"
       ],
       "score": 1
     }
