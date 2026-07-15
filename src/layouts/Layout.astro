@@ -37,7 +37,16 @@ const isActive = (href: string) => {
   if (clean === '/') return path === '/';
   return path === clean || path.startsWith(`${clean}/`);
 };
+// A mega-menu can legitimately cross-link into another section's page (e.g.
+// Shop's "Affiliate picks" -> /resources#tools). Without this, isActive on
+// that sub-link would also light up Shop while on /resources, alongside
+// Guides (whose own href IS /resources) — two nav items active at once.
+// Whichever item actually owns the current path via its own href wins
+// outright; sub-link matching is only a fallback for pages no item owns
+// directly.
+const directMatchHref = primaryNav.find((item) => isActive(item.href))?.href;
 const isNavItemActive = (href: string, columns?: { links: { href: string }[] }[]) => {
+  if (columns && directMatchHref) return href === directMatchHref;
   if (isActive(href)) return true;
   return columns?.some((col) => col.links.some((l) => isActive(l.href))) ?? false;
 };
@@ -516,7 +525,6 @@ const organizationSchema = {
         const nav = document.querySelector('[data-nav]');
         const backToTop = document.getElementById('back-to-top');
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let lastY = 0;
         let ticking = false;
         let btVisible = false;
         window.addEventListener('scroll', () => {
@@ -538,7 +546,6 @@ const organizationSchema = {
                 backToTop.classList.toggle('translate-y-0', show);
               }
             }
-            lastY = y;
             ticking = false;
           });
         }, { passive: true });
