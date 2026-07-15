@@ -186,6 +186,7 @@ test('runPipeline: paper in, joke and politics out', () => {
   // output stays in the TrendItem shape trends.ts expects
   assert.deepEqual(
     Object.keys(items[0]).sort(),
-    ['author', 'id', 'publishedAt', 'score', 'source', 'tags', 'title', 'url'],
+    ['author', 'domain', 'id', 'publishedAt', 'score', 'source', 'sources', 'tags', 'title', 'url'],
   );
+  assert.equal(items[0].domain, 'arxiv.org');
 });

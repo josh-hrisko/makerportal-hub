@@ -12,6 +12,7 @@ import { fetchBluesky } from './fetch-bluesky.mjs';
 import { fetchHackerNews } from './fetch-hn.mjs';
 import { fetchReddit } from './fetch-reddit.mjs';
 import { runPipeline, isArtifactUrl, engagementBonus } from './pipeline.mjs';
+import { enrichWithImages } from './enrich-images.mjs';
 
 const OUT_PATH = join(process.cwd(), 'src', 'data', 'trends.json');
 const SUMMARY_PATH = join(process.cwd(), 'trend-digest-summary.md'); // gitignored, PR body only
@@ -34,7 +35,8 @@ results.forEach((result, i) => {
   }
 });
 
-const { items, selected, stats } = runPipeline(candidates);
+const { items: bareItems, selected, stats } = runPipeline(candidates);
+const items = await enrichWithImages(bareItems);
 
 const generatedAt = new Date().toISOString();
 writeFileSync(OUT_PATH, `${JSON.stringify({ generatedAt, items }, null, 2)}\n`);

@@ -147,7 +147,17 @@ export function toTrendItem(c) {
     publishedAt: c.publishedAt,
     tags: c.tags,
     score: c.score,
+    domain: hostOf(c.externalUrl ?? c.url),
+    sources: c.sources ?? [c.source],
   };
+}
+
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return undefined;
+  }
 }
 
 export function runPipeline(candidates, now = Date.now()) {

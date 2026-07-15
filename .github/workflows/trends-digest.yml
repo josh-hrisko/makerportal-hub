@@ -43,7 +43,7 @@ jobs:
           git checkout -b "$branch"
           git config user.name "makerportal-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add src/data/trends.json
+          git add -A src/data/trends.json public/trends
           git commit -m "Trend digest: $(date +%Y-%m-%d)"
           # Force-push so a same-day re-run updates the existing digest branch/PR
           git push --force origin "$branch"

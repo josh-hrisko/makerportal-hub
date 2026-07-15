@@ -16,6 +16,12 @@ export type TrendItem = {
   publishedAt: string;
   tags: string[];
   score: number;
+  /** Hostname of the linked artifact, e.g. "github.com" */
+  domain?: string;
+  /** All sources this link surfaced on (corroboration) */
+  sources?: TrendSource[];
+  /** Self-hosted og:image thumbnail (/trends/{id}.webp), built at digest time */
+  image?: string;
 };
 
 export const trends: TrendItem[] = trendsData.items as TrendItem[];
@@ -26,6 +32,18 @@ export const sourceLabels: Record<TrendSource, string> = {
   hackernews: 'Hacker News',
   reddit: 'Reddit',
 };
+
+/** Display names + decorative accent per pillar tag (see scripts/trends/keywords.mjs). */
+export const pillarMeta: Record<string, { label: string; color: string }> = {
+  'on-device-ai': { label: 'On-device AI', color: '#4C6492' },
+  'metal-ane': { label: 'Metal · ANE', color: '#631FCB' },
+  'local-llm': { label: 'Local LLMs', color: '#E6524A' },
+  'dsp-audio': { label: 'DSP · Audio', color: '#3C888F' },
+  'ios-craft': { label: 'iOS craft', color: '#09A1D2' },
+  'privacy-arch': { label: 'Privacy-first', color: '#C16223' },
+};
+
+export const fallbackPillar = { label: 'Signal', color: '#4C6492' };
 
 export function topTrends(limit = 6): TrendItem[] {
   return [...trends].sort((a, b) => b.score - a.score).slice(0, limit);
