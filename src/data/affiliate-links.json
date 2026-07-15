@@ -1,11 +1,415 @@
 [
   {
+    "id": "elegoo-arduino-uno-r3",
+    "label": "Arduino Uno R3 (ELEGOO)",
+    "asin": "B01EWOE0UU",
+    "note": "ATmega328P-based Uno R3 clone — used across BLExAR's RFID, GPS, and joystick hardware builds.",
+    "category": "Microcontroller",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "arduino-nano-esp32",
+    "label": "Arduino Nano ESP32",
+    "asin": "B0C947BHK5",
+    "note": "Official Arduino board (ABX00083) — Bluetooth/WiFi capable, used for BLExAR's e-paper and BLE prototyping.",
+    "category": "Microcontroller",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "raspberry-pi-4-4gb-kit",
+    "label": "Raspberry Pi 4 Model B (4GB) Kit",
+    "asin": "B07XTRK8D4",
+    "note": "4GB Pi 4 kit with case/fan — the compute base for BLExAR's LiDAR, thermal, GPS, and audio-array builds.",
+    "category": "SBC",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "raspberry-pi-pico",
+    "label": "Raspberry Pi Pico",
+    "asin": "B0BDLHMQ9C",
+    "note": "RP2040 board used for the WS2812 LED ring and OLED display builds.",
+    "category": "Microcontroller",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "mfrc522-rfid-kit",
+    "label": "MFRC522 RFID Reader Kit (12pc)",
+    "asin": "B0FND311F3",
+    "note": "RFID reader + tag kit used in BLExAR's Arduino RFID build.",
+    "category": "RFID",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "tf-luna-lidar",
+    "label": "TF-Luna Mini LiDAR Module",
+    "asin": "B09PZ559ZB",
+    "note": "Single-point LiDAR module used for BLExAR's distance-detection build.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "amg8833-thermal-camera",
+    "label": "AMG8833 Thermal Camera (Adafruit)",
+    "asin": "B07D7LXXWR",
+    "note": "Grid-EYE 8x8 thermal array used in BLExAR's thermal-camera build.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "mlx90640-thermal-camera",
+    "label": "MLX90640 Thermal Camera (32x24)",
+    "asin": "B0F312VWW3",
+    "note": "Higher-resolution thermal array used as an alternative sensor across BLExAR's thermal and audio-array builds.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "mlx90614-ir-sensor",
+    "label": "MLX90614 IR Temperature Sensor (GY-906)",
+    "asin": "B071VF2RWM",
+    "note": "Non-contact IR temperature sensor used alongside the thermal-camera builds.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "nema17-stepper-motor",
+    "label": "NEMA 17 Stepper Motor (17HS4023)",
+    "asin": "B0C36GKZ8D",
+    "note": "Stepper motor used in BLExAR's Raspberry Pi motor-control build.",
+    "category": "Motor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "drv8825-stepper-driver",
+    "label": "DRV8825 Stepper Motor Driver",
+    "asin": "B0CP92T4QR",
+    "note": "Driver board paired with the NEMA 17 in the stepper-motor build.",
+    "category": "Driver",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "neo-6m-gps",
+    "label": "NEO-6M GPS Module",
+    "asin": "B0B31NRSD2",
+    "note": "GPS module used across BLExAR's GPS tracker and audio-array builds.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "atgm336h-gps",
+    "label": "ATGM336H Mini GPS Module",
+    "asin": "B09LQDG1HY",
+    "note": "Compact dual-mode GPS module used for BLExAR's pocket GPS tracker build.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "mg90s-micro-servo",
+    "label": "MG90S Micro Servo",
+    "asin": "B0CP98TZJ2",
+    "note": "Micro servo used across several BLExAR Arduino builds.",
+    "category": "Actuator",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "ssd1306-oled-display",
+    "label": "SSD1306 OLED Display (I2C, 0.96\")",
+    "asin": "B0FSRQG23K",
+    "note": "Small OLED display used in BLExAR's Pico display build.",
+    "category": "Display",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "ads1115-adc-module",
+    "label": "ADS1115 16-bit ADC Module",
+    "asin": "B0CNV9G4K1",
+    "note": "Analog-to-digital converter used across BLExAR's sensor builds.",
+    "category": "Component",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "ws2812b-led-strip",
+    "label": "WS2812B Addressable RGB LEDs",
+    "asin": "B0B2D5QXG5",
+    "note": "Individually-addressable LEDs used in BLExAR's Pico LED ring build.",
+    "category": "LED",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "micro-sd-card-module",
+    "label": "Micro SD Card Module (Arduino)",
+    "asin": "B07X478BPL",
+    "note": "SD card module used for on-device logging in BLExAR's GPS and solar-panel builds.",
+    "category": "Storage",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "waveshare-epaper-display",
+    "label": "Waveshare 1.54\" e-Paper Display",
+    "asin": "B072Q4WTWH",
+    "note": "Low-power e-paper display used in BLExAR's Bluetooth e-paper build.",
+    "category": "Display",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "esp32-d1-mini",
+    "label": "ESP32 D1 Mini Dev Board",
+    "asin": "B0D1V336DL",
+    "note": "Compact ESP32 board used for BLExAR's haptic-feedback joystick build.",
+    "category": "Microcontroller",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "seeed-xiao-nrf52840",
+    "label": "Seeed Studio XIAO nRF52840",
+    "asin": "B0DRNTBPNT",
+    "note": "Tiny nRF52840 BLE board used for BLExAR's Bluetooth prototyping.",
+    "category": "Microcontroller",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "mpu9250-imu",
+    "label": "MPU9250 9-DoF IMU",
+    "asin": "B0BXDL3524",
+    "note": "Accelerometer/gyro/magnetometer breakout used in BLExAR's magnetometer-calibration build.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "ina226-current-sensor",
+    "label": "INA226 Current/Voltage Sensor",
+    "asin": "B0DRNG1VKM",
+    "note": "Power-monitoring module used in BLExAR's solar-panel characterization build.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "potentiometer-kit",
+    "label": "Potentiometer Kit",
+    "asin": "B07WDCVGJV",
+    "note": "Used as a rheostat in BLExAR's solar-panel characterization build.",
+    "category": "Component",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "breadboard-400-points",
+    "label": "Breadboard (400 Tie Points)",
+    "asin": "B0CYPVMK9J",
+    "note": "Standard prototyping breadboard used across BLExAR builds.",
+    "category": "Prototyping",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "sandisk-16gb-microsd",
+    "label": "SanDisk Ultra 16GB microSD",
+    "asin": "B074B4P7KD",
+    "note": "Storage card used in BLExAR's solar-panel data-logging build.",
+    "category": "Storage",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "small-solar-panel",
+    "label": "Small Solar Panel (2V, 120mA)",
+    "asin": "B07BLP238X",
+    "note": "54x54mm panel used in BLExAR's solar characterization build.",
+    "category": "Power",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "analog-joystick-module",
+    "label": "2-Axis Analog Joystick Module",
+    "asin": "B0DSZ9D9WH",
+    "note": "Joystick module used in BLExAR's haptic-feedback joystick build.",
+    "category": "Input",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "vibration-motor",
+    "label": "3.7V Vibration Motor",
+    "asin": "B0DY65KVQR",
+    "note": "Haptic motor used in BLExAR's joystick build.",
+    "category": "Actuator",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "hall-effect-flow-meter",
+    "label": "3/4\" Hall Effect Flow Meter",
+    "asin": "B07RF49TZH",
+    "note": "Flow sensor used in BLExAR's water-metering build.",
+    "category": "Sensor",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "lipo-battery-600mah",
+    "label": "3.7V LiPo Battery (600mAh)",
+    "asin": "B094FW6VKN",
+    "note": "Rechargeable battery used across portable BLExAR builds.",
+    "category": "Power",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "12v-2a-power-supply",
+    "label": "12V 2A Power Supply",
+    "asin": "B0DZGTTBGZ",
+    "note": "Power supply used for BLExAR's stepper-motor build.",
+    "category": "Power",
+    "relatedTo": ["blexar"]
+  },
+  {
+    "id": "5v-3a-usbc-power-supply",
+    "label": "5V 3A USB-C Power Supply",
+    "asin": "B09JW4QQJ2",
+    "note": "Power supply used for Raspberry Pi builds and Biquadia's studio desk.",
+    "category": "Power",
+    "relatedTo": ["blexar", "biquadia"]
+  },
+  {
     "id": "behringer-umc1820",
     "label": "Behringer UMC1820",
     "asin": "B01EXI8Y9S",
     "note": "Audio interface used building Biquadia — 8-preamp USB I/O for real-time DSP testing.",
     "category": "Audio interface",
-    "relatedTo": ["inside-biquadia"],
+    "relatedTo": ["inside-biquadia", "biquadia"],
     "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "usb-sound-card",
+    "label": "USB Sound Card",
+    "asin": "B00IRVQ0F8",
+    "note": "USB audio interface used in early Biquadia MEMS-mic prototyping.",
+    "category": "Audio",
+    "relatedTo": ["biquadia"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "admp401-mems-mic",
+    "label": "MEMS Microphone Breakout",
+    "asin": "B07W5Z9NJD",
+    "note": "MEMS mic breakout used for real-time DSP experiments feeding into Biquadia.",
+    "category": "Audio",
+    "relatedTo": ["biquadia"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "irig-pro-duo",
+    "label": "IK Multimedia iRig Pro Duo",
+    "asin": "B084PP4DT8",
+    "note": "Portable 2-channel USB-C audio interface used for mobile Biquadia field recording.",
+    "category": "Audio interface",
+    "relatedTo": ["biquadia"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "shure-mv88-plus",
+    "label": "Shure MV88+ Video Kit",
+    "asin": "B08G7T3Q9S",
+    "note": "Portable stereo condenser mic kit used for Biquadia field/video capture.",
+    "category": "Microphone",
+    "relatedTo": ["biquadia"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "shure-mv7",
+    "label": "Shure MV7",
+    "asin": "B0CTJ8BSWN",
+    "note": "USB/XLR hybrid mic used building and testing nymic.",
+    "category": "Microphone",
+    "relatedTo": ["nymic"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "blue-yeti-nano",
+    "label": "Blue Yeti Nano",
+    "asin": "B07X5JNT3F",
+    "note": "Compact USB condenser mic used for nymic testing.",
+    "category": "Microphone",
+    "relatedTo": ["nymic"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "rode-nt-usb-plus",
+    "label": "Rode NT-USB+",
+    "asin": "B00MMKQOEM",
+    "note": "USB condenser mic used for nymic testing.",
+    "category": "Microphone",
+    "relatedTo": ["nymic"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "ath-m50x",
+    "label": "Audio-Technica ATH-M50x",
+    "asin": "B00HVLUR86",
+    "note": "Reference monitoring headphones used for akous's binaural audio testing.",
+    "category": "Headphones",
+    "relatedTo": ["akous"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "sony-mdr-7506",
+    "label": "Sony MDR-7506",
+    "asin": "B000AJIF4E",
+    "note": "Reference studio headphones used for akous's binaural audio testing.",
+    "category": "Headphones",
+    "relatedTo": ["akous"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "sennheiser-wireless-mic",
+    "label": "Sennheiser Wireless Microphone System",
+    "asin": "B00B0YPAYQ",
+    "note": "Wireless mic system used for akous's ambient/binaural field recording.",
+    "category": "Microphone",
+    "relatedTo": ["akous"],
+    "pillars": ["dsp-audio"]
+  },
+  {
+    "id": "airpods-pro-3",
+    "label": "Apple AirPods Pro (3rd gen)",
+    "asin": "B0FQFB8FMG",
+    "note": "MotionLink's head-tracking feature depends on the Headphone Motion API, which requires AirPods Pro.",
+    "category": "Wearable",
+    "relatedTo": ["motionlink"],
+    "pillars": ["ios-craft"]
+  },
+  {
+    "id": "book-deep-learning",
+    "label": "Deep Learning (Goodfellow, Bengio, Courville)",
+    "asin": "0262035618",
+    "note": "Foundational deep-learning textbook referenced while building itria.",
+    "category": "Book",
+    "relatedTo": ["itria"],
+    "pillars": ["on-device-ai"]
+  },
+  {
+    "id": "book-hands-on-ml",
+    "label": "Hands-On Machine Learning (Aurélien Géron)",
+    "asin": "1098125975",
+    "note": "Practical ML reference used while building itria.",
+    "category": "Book",
+    "relatedTo": ["itria"],
+    "pillars": ["on-device-ai"]
+  },
+  {
+    "id": "book-designing-ml-systems",
+    "label": "Designing Machine Learning Systems (Chip Huyen)",
+    "asin": "1098107969",
+    "note": "ML systems-design reference used while building itria.",
+    "category": "Book",
+    "relatedTo": ["itria"],
+    "pillars": ["on-device-ai"]
+  },
+  {
+    "id": "sandisk-extreme-ssd-1tb",
+    "label": "SanDisk Extreme Portable SSD (1TB)",
+    "asin": "B0GMWYYRQL",
+    "note": "Portable SSD used for studio project storage and backups.",
+    "category": "Storage"
+  },
+  {
+    "id": "usbc-hub-dock",
+    "label": "USB-C Multiport Hub/Dock",
+    "asin": "B0DM8QJRN6",
+    "note": "Studio desk dock used across all app development work.",
+    "category": "Accessory"
   }
 ]
