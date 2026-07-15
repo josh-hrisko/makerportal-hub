@@ -1,176 +1,407 @@
 ---
+import { apps } from '../data/apps';
+
+// Quick links for empty state – curated, not exhaustive
+const quickLinks = [
+  { label: 'App matrix', href: '/apps', desc: '11 live titles • on-device first', kbd: 'A' },
+  { label: 'Field notes', href: '/blog', desc: 'CoreML, SwiftUI, shipping', kbd: 'N' },
+  { label: 'Resources', href: '/resources', desc: 'Guides, tools, gear', kbd: 'R' },
+  { label: 'Agent map', href: '/llms', desc: 'Human + AI index (llms.txt)', kbd: 'L' },
+  { label: 'Contact', href: '/contact', desc: 'Human inbox • SF → Worldwide', kbd: 'C' },
+];
+
+const featuredApps = apps.slice(0, 4);
 ---
 
-<div id="search-modal" class="fixed inset-0 z-[100] hidden items-start justify-center pt-[10vh] pb-[10vh] px-4 opacity-0 transition-opacity duration-200" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search">
-  <div id="search-backdrop" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm"></div>
-  <div class="relative flex w-full max-w-2xl max-h-full transform flex-col overflow-hidden rounded-2xl border border-border bg-card-bg shadow-2xl transition-all scale-95 opacity-0" id="search-container">
-    <div id="search-ui" class="text-primary-text min-h-[300px] overflow-y-auto overscroll-contain p-6"></div>
+<div id="search-modal" class="fixed inset-0 z-[100] hidden flex flex-col items-center justify-start overflow-y-auto px-4 pt-[8vh] sm:pt-[12vh] pb-[max(1rem,env(safe-area-inset-bottom))] opacity-0 transition-opacity duration-[180ms]" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search">
+  <div id="search-backdrop" class="fixed inset-0 bg-[#0A0E14]/40 backdrop-blur-[12px] supports-[backdrop-filter]:bg-canvas/70"></div>
+
+  <div id="search-container" class="relative flex w-full max-w-[42rem] max-h-[min(85vh,48rem)] flex-col overflow-hidden rounded-[24px] border border-border bg-card-bg shadow-[0_16px_64px_-16px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,0,0,0.02),inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-[220ms] scale-[0.96] opacity-0">
+    <!-- Header -->
+    <div class="relative flex h-[3.75rem] shrink-0 items-center gap-3 border-b border-border px-4 sm:px-5">
+      <span class="grid size-9 place-items-center rounded-full bg-elevated text-muted-text">
+        <svg viewBox="0 0 24 24" fill="none" class="size-[1.1rem]"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+
+      <div class="relative flex-1">
+        <input
+          id="mp-search-input"
+          type="search"
+          inputmode="search"
+          enterkeyhint="search"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="Search apps, notes, guides…"
+          class="w-full bg-transparent py-2 pr-8 text-[1.05rem] font-[500] tracking-[-0.01em] text-primary-text placeholder:text-muted-text/70 focus:outline-none"
+          aria-label="Search"
+          aria-controls="mp-search-results"
+          aria-autocomplete="list"
+        />
+        <button id="mp-search-clear" type="button" class="absolute right-0 top-1/2 hidden size-7 -translate-y-1/2 place-items-center rounded-full bg-elevated text-muted-text hover:text-primary-text" aria-label="Clear search">
+          <svg viewBox="0 0 20 20" class="size-4"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="hidden items-center gap-2 sm:flex">
+        <kbd class="rounded-[6px] border border-border bg-elevated px-1.5 py-1 font-mono text-[0.65rem] leading-none text-muted-text">ESC</kbd>
+      </div>
+
+      <button id="mp-search-close" type="button" class="grid size-9 place-items-center rounded-full border border-border bg-elevated/60 text-muted-text transition-colors hover:border-[var(--mp-border-strong)] hover:text-primary-text sm:hidden" aria-label="Close">
+        <svg viewBox="0 0 20 20" class="size-4"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div id="mp-search-body" class="flex min-h-[320px] flex-1 flex-col overflow-y-auto overscroll-contain bg-card-bg">
+      <!-- Default state -->
+      <div id="mp-search-default" class="p-2 sm:p-3">
+        <div class="px-3 py-2.5">
+          <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-muted-text">Quick nav</p>
+        </div>
+        <div class="grid gap-1">
+          {quickLinks.map((q) => (
+            <a href={q.href} data-search-quick class="group flex items-center gap-3 rounded-[14px] px-3 py-2.5 transition-colors hover:bg-elevated">
+              <span class="grid size-9 place-items-center rounded-full border border-border bg-canvas text-[0.7rem] font-semibold tracking-wide text-muted-text group-hover:border-brand-anchor/20 group-hover:text-primary-text">{q.kbd}</span>
+              <span class="flex-1">
+                <span class="block text-[0.95rem] font-medium tracking-[-0.01em] text-primary-text group-hover:text-primary-text">{q.label}</span>
+                <span class="block text-[0.78rem] leading-[1.3] text-muted-text">{q.desc}</span>
+              </span>
+              <span class="hidden size-7 place-items-center rounded-full border border-transparent bg-elevated/0 text-muted-text/60 transition-all group-hover:bg-elevated group-hover:text-muted-text sm:grid">→</span>
+            </a>
+          ))}
+        </div>
+
+        <div class="mt-5 px-3">
+          <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-muted-text">Featured apps • {featuredApps.length} live</p>
+          <div class="mt-2.5 grid grid-cols-2 gap-2">
+            {featuredApps.map((app) => (
+              <a href={app.url} data-search-quick class="group flex items-center gap-2.5 rounded-[12px] border border-border bg-canvas px-3 py-2.5 transition-colors hover:border-brand-anchor/20 hover:bg-elevated">
+                <span class="size-2 rounded-full bg-emerald-500/70 group-hover:bg-brand-anchor" aria-hidden="true"></span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[0.85rem] font-semibold tracking-[-0.01em] text-primary-text">{app.title}</span>
+                  <span class="block truncate text-[0.7rem] text-muted-text">{app.tagline}</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div class="mt-6 rounded-[14px] border border-border bg-elevated/40 px-3.5 py-3">
+          <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">Agentic</p>
+          <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">Try <code class="rounded bg-card-bg px-1 py-0.5 text-[0.75rem]">CoreML</code> <code class="rounded bg-card-bg px-1 py-0.5 text-[0.75rem]">kNN-VC</code> <code class="rounded bg-card-bg px-1 py-0.5 text-[0.75rem]">ANE</code> — indexed from <code class="rounded bg-card-bg px-1 py-0.5 text-[0.75rem]">llms.txt</code> + field notes.</p>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="mp-search-loading" class="hidden p-4">
+        <div class="space-y-3">
+          <div class="h-4 w-24 animate-pulse rounded-full bg-elevated"></div>
+          <div class="space-y-2">
+            {[1,2,3].map(() => (
+              <div class="rounded-[14px] border border-border bg-elevated/30 p-4">
+                <div class="h-4 w-2/3 animate-pulse rounded bg-elevated"></div>
+                <div class="mt-3 h-3 w-full animate-pulse rounded bg-elevated/80"></div>
+                <div class="mt-2 h-3 w-5/6 animate-pulse rounded bg-elevated/60"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="mp-search-results" class="hidden" aria-live="polite">
+        <div class="flex items-center justify-between border-b border-border bg-elevated/30 px-4 py-2.5 sm:px-5">
+          <p id="mp-search-count" class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text"></p>
+          <p class="font-mono text-[0.6rem] text-muted-text">Pagefind • on-device index</p>
+        </div>
+        <div id="mp-search-list" class="p-2 sm:p-3" role="listbox" aria-label="Search results"></div>
+      </div>
+
+      <!-- No results -->
+      <div id="mp-search-empty" class="hidden p-8 text-center">
+        <div class="mx-auto flex max-w-[22rem] flex-col items-center">
+          <span class="grid size-10 place-items-center rounded-full border border-border bg-elevated text-muted-text">?</span>
+          <h3 class="mt-4 text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">No results</h3>
+          <p id="mp-search-empty-q" class="mt-2 text-[0.9rem] leading-[1.5] text-muted-text"></p>
+          <div class="mt-5 flex flex-wrap justify-center gap-2">
+            <a href="/apps" class="rounded-full border border-border bg-elevated px-3 py-1.5 text-[0.78rem] font-medium text-muted-text hover:text-primary-text">Browse apps</a>
+            <a href="/blog" class="rounded-full border border-border bg-elevated px-3 py-1.5 text-[0.78rem] font-medium text-muted-text hover:text-primary-text">Field notes</a>
+            <a href="/contact" class="rounded-full bg-primary-text px-3 py-1.5 text-[0.78rem] font-bold text-canvas">Contact</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between border-t border-border bg-elevated/40 px-4 py-2.5 sm:px-5">
+      <div class="flex items-center gap-3 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
+        <span class="hidden items-center gap-1.5 sm:flex"><kbd class="grid size-5 place-items-center rounded border border-border bg-card-bg text-[0.6rem]">↑</kbd><kbd class="grid size-5 place-items-center rounded border border-border bg-card-bg text-[0.6rem]">↓</kbd> Navigate</span>
+        <span class="flex items-center gap-1.5"><kbd class="rounded border border-border bg-card-bg px-1.5 py-0.5 text-[0.6rem]">↵</kbd> Select</span>
+        <span class="hidden items-center gap-1.5 sm:flex"><kbd class="rounded border border-border bg-card-bg px-1.5 py-0.5 text-[0.6rem]">ESC</kbd> Close</span>
+        <span class="flex items-center gap-1.5 sm:hidden"><kbd class="rounded border border-border bg-card-bg px-1.5 py-0.5 text-[0.6rem]">↵</kbd> Go</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">SF • {new Date().getFullYear()} • 19 pages</span>
+        <span class="size-1 rounded-full bg-emerald-500"></span>
+      </div>
+    </div>
   </div>
 </div>
 
 <style is:global>
-  /* Pagefind UI overrides for our theme */
-  :root {
-    --pagefind-ui-scale: 1;
-    --pagefind-ui-primary: var(--mp-anchor);
-    --pagefind-ui-text: var(--mp-text);
-    --pagefind-ui-background: var(--mp-card);
-    --pagefind-ui-border: var(--mp-border);
-    --pagefind-ui-tag: var(--mp-elevated);
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-border-radius: 12px;
-    --pagefind-ui-font: inherit;
+  /* Pagefind highlight */
+  #mp-search-results mark {
+    background: color-mix(in srgb, var(--mp-anchor) 18%, transparent);
+    color: var(--mp-anchor);
+    border-radius: 4px;
+    padding: 0.05em 0.2em;
+    font-weight: 600;
   }
-  .pagefind-ui__search-input {
-    background-color: var(--mp-canvas) !important;
-    border: 1px solid var(--mp-border) !important;
-    color: var(--mp-text) !important;
+  #mp-search-results .result-active {
+    background: var(--mp-elevated);
+    border-color: var(--mp-border-strong);
   }
-  .pagefind-ui__search-clear {
-    background-color: transparent !important;
-  }
-  .pagefind-ui__result {
-    border-bottom-color: var(--mp-border) !important;
-  }
-  .pagefind-ui__result-title {
-    color: var(--mp-text) !important;
-    font-weight: 600 !important;
-  }
-  .pagefind-ui__result-excerpt {
-    color: var(--mp-muted) !important;
-  }
+  /* Hide native search clear x */
+  #mp-search-input::-webkit-search-decoration,
+  #mp-search-input::-webkit-search-cancel-button,
+  #mp-search-input::-webkit-search-results-button,
+  #mp-search-input::-webkit-search-results-decoration { display:none; }
 </style>
 
 <script is:inline>
   (() => {
-    let initialized = false;
+    let pagefind = null;
     let isOpen = false;
     let lastFocused = null;
+    let currentQuery = '';
+    let selectedIdx = -1;
+    let resultItems = [];
+    let debounceTimer = null;
+
     const modal = document.getElementById('search-modal');
     const backdrop = document.getElementById('search-backdrop');
     const container = document.getElementById('search-container');
+    const input = document.getElementById('mp-search-input');
+    const clearBtn = document.getElementById('mp-search-clear');
+    const closeBtn = document.getElementById('mp-search-close');
+    const body = document.getElementById('mp-search-body');
+    const def = document.getElementById('mp-search-default');
+    const loading = document.getElementById('mp-search-loading');
+    const resultsWrap = document.getElementById('mp-search-results');
+    const resultsList = document.getElementById('mp-search-list');
+    const countEl = document.getElementById('mp-search-count');
+    const empty = document.getElementById('mp-search-empty');
+    const emptyQ = document.getElementById('mp-search-empty-q');
     const searchBtns = document.querySelectorAll('#site-search-btn');
 
-    const trapTab = (e) => {
-      if (e.key !== 'Tab' || !isOpen) return;
-      const focusable = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
+    const show = (el) => el && el.classList.remove('hidden');
+    const hide = (el) => el && el.classList.add('hidden');
+
+    const setState = (state) => {
+      hide(def); hide(loading); hide(resultsWrap); hide(empty);
+      if (state === 'default') show(def);
+      else if (state === 'loading') show(loading);
+      else if (state === 'results') show(resultsWrap);
+      else if (state === 'empty') show(empty);
     };
 
-    const enhanceAndFocusInput = () => {
-      const input = document.querySelector('.pagefind-ui__search-input');
-      if (!input) return null;
-      // Mobile keyboard hints – helps iOS/Android summon keyboard on focus
+    const enhanceInput = () => {
       try {
-        input.setAttribute('inputmode', 'search');
-        input.setAttribute('enterkeyhint', 'search');
-        input.setAttribute('autocomplete', 'off');
-        input.setAttribute('autocorrect', 'off');
-        input.setAttribute('spellcheck', 'false');
-        // Ensure type is search if Pagefind didn't set it
-        if (input.getAttribute('type') !== 'search') {
-          // keep as search for better UX, but don't break if Pagefind expects text
-          input.setAttribute('type', 'search');
-        }
-      } catch (_) {}
-      // One-time Enter -> blur to dismiss keyboard
-      if (!input.dataset.mpEnhanced) {
-        input.dataset.mpEnhanced = 'true';
+        input.setAttribute('inputmode','search');
+        input.setAttribute('enterkeyhint','search');
+      } catch {}
+      if (!input.dataset.enhanced) {
+        input.dataset.enhanced = 'true';
         input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            // Small delay so Pagefind processes the query before blur
-            setTimeout(() => {
-              try { input.blur(); } catch (_) {}
-            }, 50);
+          if (e.key === 'Enter' && !e.shiftKey) {
+            const sel = resultItems[selectedIdx];
+            if (sel && sel.href) {
+              e.preventDefault();
+              window.location.href = sel.href;
+              return;
+            }
+            // if no selection, blur to dismiss keyboard on mobile (original fix)
+            if (currentQuery.trim().length > 0) {
+              setTimeout(()=>{ try{ input.blur(); }catch{} }, 40);
+            }
           }
         });
       }
-      return input;
     };
 
-    const focusInput = (attemptSync) => {
-      const input = enhanceAndFocusInput();
-      if (!input) return;
-      if (attemptSync) {
-        try { input.focus({ preventScroll: true }); } catch (_) { try { input.focus(); } catch {} }
+    const focusInput = (sync) => {
+      enhanceInput();
+      const doFocus = () => {
+        try { input.focus({ preventScroll:true }); } catch { try{ input.focus(); }catch{} }
+      };
+      if (sync) doFocus();
+      requestAnimationFrame(()=>{ doFocus(); setTimeout(()=>{ if(document.activeElement!==input) doFocus(); },120); });
+    };
+
+    const updateClear = () => {
+      if (input.value.length) { clearBtn.classList.remove('hidden'); clearBtn.classList.add('grid'); }
+      else { clearBtn.classList.add('hidden'); clearBtn.classList.remove('grid'); }
+    };
+
+    const getCategory = (url) => {
+      try {
+        const u = new URL(url, location.origin);
+        const p = u.pathname;
+        if (p.startsWith('/apps')) return { label:'Apps', dot:'bg-violet-500' };
+        if (p.startsWith('/blog')) return { label:'Field notes', dot:'bg-amber-500' };
+        if (p.startsWith('/resources') || p.startsWith('/llms')) return { label:'Guides', dot:'bg-brand-anchor' };
+        if (p.startsWith('/shop')) return { label:'Shop', dot:'bg-emerald-500' };
+        if (p.startsWith('/watch')) return { label:'Watch', dot:'bg-primary-cta' };
+        if (p.startsWith('/about') || p.startsWith('/team') || p.startsWith('/press')) return { label:'Studio', dot:'bg-cyan-500' };
+        return { label:'Page', dot:'bg-border' };
+      } catch { return { label:'Page', dot:'bg-border' }; }
+    };
+
+    const renderResults = (results, query) => {
+      resultsList.innerHTML = '';
+      resultItems = [];
+      selectedIdx = -1;
+      if (!results.length) {
+        emptyQ.textContent = `No matches for “${query}”. Try “CoreML”, “ANE”, or an app name.`;
+        setState('empty');
+        countEl.textContent = '0 results';
+        return;
       }
-      // rAF + micro-delay for render race, still close to gesture
-      requestAnimationFrame(() => {
-        try { input.focus({ preventScroll: true }); } catch (_) { try { input.focus(); } catch {} }
-        // iOS sometimes needs second tick after keyboard anim
-        setTimeout(() => {
-          const active = document.activeElement;
-          if (active !== input) {
-            try { input.focus({ preventScroll: true }); } catch (_) { try { input.focus(); } catch {} }
-          }
-        }, 120);
+      countEl.textContent = `${results.length} result${results.length===1?'':'s'} for “${query}”`;
+
+      // Group by category for nicer scanning
+      const groups = {};
+      results.forEach(r => {
+        const cat = getCategory(r.url).label;
+        (groups[cat] ||= []).push(r);
+      });
+
+      Object.entries(groups).forEach(([catLabel, groupResults]) => {
+        const catHead = document.createElement('div');
+        catHead.className = 'px-3 pb-1 pt-4 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-muted-text';
+        catHead.textContent = catLabel;
+        resultsList.appendChild(catHead);
+
+        groupResults.forEach((res) => {
+          const cat = getCategory(res.url);
+          const a = document.createElement('a');
+          a.href = res.url;
+          a.setAttribute('role','option');
+          a.setAttribute('data-idx', resultItems.length);
+          a.className = 'group flex gap-3 rounded-[14px] border border-transparent px-3 py-3 transition-colors hover:bg-elevated hover:border-border';
+          // excerpt may contain HTML with <mark>
+          const excerpt = res.excerpt ? res.excerpt : (res.meta?.description || '');
+          a.innerHTML = `
+            <span class="mt-1.5 size-2 shrink-0 rounded-full ${cat.dot} opacity-80 group-hover:opacity-100" aria-hidden="true"></span>
+            <span class="min-w-0 flex-1">
+              <span class="flex items-start justify-between gap-2">
+                <span class="truncate text-[0.95rem] font-medium tracking-[-0.01em] text-primary-text group-[.result-active]:text-primary-text">${res.meta?.title || res.url}</span>
+                <span class="hidden shrink-0 font-mono text-[0.6rem] uppercase tracking-wide text-muted-text/70 group-hover:text-muted-text sm:block">${new URL(res.url, location.origin).pathname}</span>
+              </span>
+              <span class="mt-1 line-clamp-2 block text-[0.82rem] leading-[1.5] text-muted-text">${excerpt}</span>
+            </span>
+            <span class="hidden size-7 shrink-0 place-items-center self-center rounded-full border border-transparent bg-elevated/0 text-muted-text/60 group-hover:bg-elevated group-hover:text-muted-text sm:grid">→</span>
+          `;
+          a.addEventListener('mouseenter', () => setSelected(parseInt(a.dataset.idx,10)));
+          a.addEventListener('click', () => { /* allow navigation */ });
+          resultsList.appendChild(a);
+          resultItems.push({ href: res.url, el: a });
+        });
+      });
+
+      setState('results');
+      // auto select first
+      setSelected(0);
+    };
+
+    const setSelected = (idx) => {
+      if (!resultItems.length) return;
+      if (idx < 0) idx = resultItems.length - 1;
+      if (idx >= resultItems.length) idx = 0;
+      selectedIdx = idx;
+      resultItems.forEach((it,i)=>{
+        const active = i===idx;
+        it.el.classList.toggle('result-active', active);
+        it.el.setAttribute('aria-selected', active ? 'true' : 'false');
+        if (active) it.el.scrollIntoView({ block:'nearest' });
       });
     };
 
-    const openSearch = () => {
+    async function ensurePagefind() {
+      if (pagefind) return pagefind;
+      try {
+        // @ts-ignore dynamic import
+        pagefind = await import('/pagefind/pagefind.js');
+        await pagefind.init();
+      } catch (e) {
+        console.warn('Pagefind init failed, will retry on next query', e);
+        pagefind = null;
+      }
+      return pagefind;
+    }
+
+    async function doSearch(q) {
+      currentQuery = q;
+      if (!q.trim()) {
+        setState('default');
+        countEl.textContent = '';
+        resultsList.innerHTML = '';
+        resultItems = [];
+        return;
+      }
+      setState('loading');
+      const pf = await ensurePagefind();
+      if (!pf) {
+        setState('empty');
+        emptyQ.textContent = 'Search index not ready — try again.';
+        return;
+      }
+      try {
+        const search = await pf.search(q);
+        if (q !== currentQuery) return; // a newer query started while this one was in flight
+        const datas = await Promise.all(search.results.slice(0, 18).map(r => r.data()));
+        if (q !== currentQuery) return; // stale check again post-await
+        renderResults(datas, q);
+      } catch (e) {
+        console.error('Search failed', e);
+        setState('empty');
+        emptyQ.textContent = 'Search failed — try a different term.';
+      }
+    }
+
+    const debouncedSearch = (q) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(()=> doSearch(q), 160);
+    };
+
+    const openSearch = async () => {
       if (isOpen) return;
       isOpen = true;
       lastFocused = document.activeElement;
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
-      
-      // Initialize Pagefind on first open
-      if (!initialized) {
-        initialized = true;
-        
-        const loadPagefind = async () => {
-          // Add CSS
-          const link = document.createElement('link');
-          link.href = '/pagefind/pagefind-ui.css';
-          link.rel = 'stylesheet';
-          document.head.appendChild(link);
-
-          // Add JS
-          const script = document.createElement('script');
-          script.src = '/pagefind/pagefind-ui.js';
-          script.onload = () => {
-            new window.PagefindUI({
-              element: "#search-ui",
-              showSubResults: true,
-              showImages: false,
-              resetStyles: false
-            });
-            // After injection, enhance + focus. For first load this is async (lose gesture),
-            // but inputmode=search + second-tick focus improves iOS.
-            // We keep a zero-delay sync attempt + rAF as best we can.
-            enhanceAndFocusInput();
-            focusInput(false);
-          };
-          document.head.appendChild(script);
-        };
-        loadPagefind();
-      } else {
-        // Second+ opens: focus synchronously to preserve user gesture chain for iOS keyboard
-        focusInput(true);
-      }
+      enhanceInput();
 
       // Animate in
-      requestAnimationFrame(() => {
+      requestAnimationFrame(()=>{
         modal.classList.remove('opacity-0');
         modal.classList.add('opacity-100');
-        container.classList.remove('scale-95', 'opacity-0');
-        container.classList.add('scale-100', 'opacity-100');
-        modal.setAttribute('aria-hidden', 'false');
-        // If already initialized, re-focus after animation frame (in case first sync missed)
-        if (initialized) {
-          // Only for first paint – already attempted sync focus above
-          requestAnimationFrame(() => focusInput(false));
-        }
+        container.classList.remove('scale-[0.96]','opacity-0');
+        container.classList.add('scale-100','opacity-100');
+        modal.setAttribute('aria-hidden','false');
       });
+
+      // Focus sync for iOS keyboard
+      focusInput(true);
+
+      // Pre-init pagefind in idle so first keystroke is instant
+      if ('requestIdleCallback' in window) requestIdleCallback(()=>ensurePagefind(), {timeout:1200});
+      else setTimeout(()=>ensurePagefind(), 300);
+
+      // If input already has value, search immediately
+      if (input.value.trim()) doSearch(input.value.trim());
+      else setState('default');
     };
 
     const closeSearch = () => {
@@ -178,27 +409,46 @@
       isOpen = false;
       modal.classList.remove('opacity-100');
       modal.classList.add('opacity-0');
-      container.classList.remove('scale-100', 'opacity-100');
-      container.classList.add('scale-95', 'opacity-0');
-      modal.setAttribute('aria-hidden', 'true');
-      
-      setTimeout(() => {
+      container.classList.remove('scale-100','opacity-100');
+      container.classList.add('scale-[0.96]','opacity-0');
+      modal.setAttribute('aria-hidden','true');
+      setTimeout(()=>{
         modal.classList.add('hidden');
         document.body.style.overflow = '';
-        if (lastFocused) lastFocused.focus();
-      }, 200);
+        if (lastFocused && lastFocused.focus) try{ lastFocused.focus(); }catch{}
+      }, 180);
     };
 
+    // Events
     searchBtns.forEach(btn => btn.addEventListener('click', openSearch));
-    backdrop.addEventListener('click', closeSearch);
+    if (backdrop) backdrop.addEventListener('click', closeSearch);
+    if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+    if (clearBtn) clearBtn.addEventListener('click', ()=>{ input.value=''; updateClear(); setState('default'); focusInput(true); });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isOpen) closeSearch();
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    input.addEventListener('input', (e)=>{
+      updateClear();
+      debouncedSearch(e.target.value);
+    });
+
+    document.addEventListener('keydown', (e)=>{
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='k') { e.preventDefault(); isOpen?closeSearch():openSearch(); }
+      else if (e.key==='/' && !isOpen && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !e.target.isContentEditable) { e.preventDefault(); openSearch(); }
+      else if (e.key==='Escape' && isOpen) { e.preventDefault(); closeSearch(); }
+      else if (isOpen && (e.key==='ArrowDown' || e.key==='ArrowUp')) {
         e.preventDefault();
-        isOpen ? closeSearch() : openSearch();
+        if (e.key==='ArrowDown') setSelected(selectedIdx+1);
+        else setSelected(selectedIdx-1);
       }
-      trapTab(e);
+    });
+
+    // Trap focus within modal when open
+    modal.addEventListener('keydown', (e)=>{
+      if (!isOpen || e.key!=='Tab') return;
+      const focusable = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length-1];
+      if (e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
     });
   })();
 </script>
