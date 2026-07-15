@@ -154,9 +154,7 @@ const faqSchema = {
           </div>
         </div>
       </div>
-      <script type="application/json" id="orbit-apps-data">
-        {JSON.stringify(apps.map(a => ({ title: a.title, tagline: a.tagline, url: a.url, icon: a.iconSet.w64.src, icon2x: a.iconSet.w128.src })))}
-      </script>
+      <script type="application/json" id="orbit-apps-data" is:inline set:html={JSON.stringify(apps.map(a => ({ title: a.title, tagline: a.tagline, url: a.url, icon: a.iconSet.w64.src, icon2x: a.iconSet.w128.src })))}></script>
       <script is:inline>
         (() => {
           const run = () => {
