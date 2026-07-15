@@ -155,7 +155,7 @@ const faqSchema = {
         </div>
       </div>
       <script type="application/json" id="orbit-apps-data">
-        {JSON.stringify(apps.map(a => ({ title: a.title, tagline: a.tagline, url: a.url, icon: a.iconSet.w64.src })))}
+        {JSON.stringify(apps.map(a => ({ title: a.title, tagline: a.tagline, url: a.url, icon: a.iconSet.w64.src, icon2x: a.iconSet.w128.src })))}
       </script>
       <script is:inline>
         (() => {
@@ -177,9 +177,10 @@ const faqSchema = {
                 el.setAttribute('aria-label', `Open ${app.title} — ${app.tagline}`);
                 const img = el.querySelector('img');
                 if (img) {
-                  // Fallback for missing srcset handling in client script: just use src
+                  // Preserve the 1x/2x densities Astro's <Image> set up server-side —
+                  // dropping srcset here made icons visibly soft on retina displays.
                   img.src = app.icon;
-                  img.srcset = ''; 
+                  img.srcset = `${app.icon} 1x, ${app.icon2x} 2x`;
                   img.alt = `${app.title} icon`;
                 }
               }

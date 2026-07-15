@@ -45,14 +45,31 @@
   (() => {
     let initialized = false;
     let isOpen = false;
+    let lastFocused = null;
     const modal = document.getElementById('search-modal');
     const backdrop = document.getElementById('search-backdrop');
     const container = document.getElementById('search-container');
     const searchBtns = document.querySelectorAll('#site-search-btn');
 
+    const trapTab = (e) => {
+      if (e.key !== 'Tab' || !isOpen) return;
+      const focusable = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
     const openSearch = () => {
       if (isOpen) return;
       isOpen = true;
+      lastFocused = document.activeElement;
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
       
@@ -114,18 +131,20 @@
       setTimeout(() => {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
+        if (lastFocused) lastFocused.focus();
       }, 200);
     };
 
     searchBtns.forEach(btn => btn.addEventListener('click', openSearch));
     backdrop.addEventListener('click', closeSearch);
-    
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isOpen) closeSearch();
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         isOpen ? closeSearch() : openSearch();
       }
+      trapTab(e);
     });
   })();
 </script>

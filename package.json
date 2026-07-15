@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build && npx pagefind --site dist && node scripts/strip-dev-pages.mjs",
+    "build": "astro check && astro build && npx pagefind --site dist/client && node scripts/sync-pagefind.mjs && node scripts/strip-dev-pages.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "brand:assets": "node scripts/brand-assets/generate.mjs"
