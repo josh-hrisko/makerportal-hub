@@ -1,0 +1,11 @@
+[
+  {
+    "id": "behringer-umc1820",
+    "label": "Behringer UMC1820",
+    "asin": "B01EXI8Y9S",
+    "note": "Audio interface used building Biquadia — 8-preamp USB I/O for real-time DSP testing.",
+    "category": "Audio interface",
+    "relatedTo": ["inside-biquadia"],
+    "pillars": ["dsp-audio"]
+  }
+]

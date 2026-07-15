@@ -1,0 +1,55 @@
+name: Amazon catalog refresh
+
+on:
+  schedule:
+    - cron: '0 14 1 * *' # 1st of month, 14:00 UTC — gear list changes rarely, base rate tier
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build Amazon catalog
+        run: node scripts/amazon/build-catalog.mjs
+        env:
+          AMAZON_CLIENT_ID: ${{ secrets.AMAZON_CLIENT_ID }}
+          AMAZON_CLIENT_SECRET: ${{ secrets.AMAZON_CLIENT_SECRET }}
+
+      - name: Open review PR if catalog changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- src/data/amazon-catalog.json; then
+            echo "No catalog changes — skipping PR."
+            exit 0
+          fi
+
+          branch="amazon/catalog-$(date +%Y-%m-%d)"
+          git checkout -b "$branch"
+          git config user.name "makerportal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A src/data/amazon-catalog.json
+          git commit -m "Amazon catalog refresh: $(date +%Y-%m-%d)"
+          # Force-push so a same-day re-run updates the existing branch/PR
+          git push --force origin "$branch"
+
+          if [ "$(gh pr list --head "$branch" --state open --json number --jq 'length')" = "0" ]; then
+            gh pr create \
+              --title "Amazon catalog refresh — $(date +%Y-%m-%d)" \
+              --body-file amazon-catalog-summary.md \
+              --base main \
+              --head "$branch"
+          else
+            echo "PR already open for $branch — updating body."
+            gh pr edit "$branch" --body-file amazon-catalog-summary.md
+          fi
