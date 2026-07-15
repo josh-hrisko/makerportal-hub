@@ -10,12 +10,11 @@ export default defineConfig({
     isr: false,
   }),
   trailingSlash: 'never',
-  prefetch: {
-    // Hover/tap only — viewport prefetchAll was adding main-thread + network
-    // work right after load on mobile Safari (page.*.js critical-path noise).
-    prefetchAll: false,
-    defaultStrategy: 'hover',
-  },
+  // Disable prefetch runtime to kill critical chain `page.*.js` (413ms) on mobile.
+  // Hover prefetch added main-thread + network work right after load on mobile Safari
+  // and shows up as "Avoid chaining critical requests" in PageSpeed.
+  // Re-enable later with `hover` + `speculationRules` if needed for desktop.
+  prefetch: false,
   build: {
     inlineStylesheets: 'always',
   },

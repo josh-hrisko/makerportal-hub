@@ -1,0 +1,148 @@
+---
+import Layout from '../layouts/Layout.astro';
+import HubShell from '../components/HubShell.astro';
+// Vite raw import keeps file in sync with public/llms.txt at build time
+import llmsRaw from '../../public/llms.txt?raw';
+
+const title = 'llms.txt — Agent-readable map | MakerPortal';
+const description = 'Human-friendly view of MakerPortal’s llms.txt. What it is, how AI crawlers use it, and where to find the raw markdown version for LLMs, RAG, and agentic browsers.';
+
+// Trim raw to avoid huge empty lines in preview
+const rawPreview = llmsRaw.trim();
+
+// Last updated from file header or today fallback
+const lastUpdatedMatch = llmsRaw.match(/Last updated:\s*(.+)/);
+const lastUpdated = lastUpdatedMatch ? lastUpdatedMatch[1].trim() : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+---
+
+<Layout title={title} description={description} canonical="/llms">
+  <Fragment slot="head">
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="Raw llms.txt for LLMs" />
+    <meta name="robots" content="index, follow" />
+  </Fragment>
+
+  <HubShell
+    kicker="System · Agent-readable · Human-legible"
+    title="llms.txt is for agents. This page is for you."
+    lead="We keep a single /llms.txt at the root for LLMs, RAG, and agentic browsers — full site map, 11 apps, tech stack, crawling preferences. This page renders it as readable HTML so humans who click it don’t land in a raw .txt wall."
+    status="AI Index"
+  >
+    <Fragment slot="hero-actions">
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/llms.txt" class="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-text px-5 text-[0.9rem] font-bold tracking-[-0.01em] text-canvas shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all hover:scale-[1.02] hover:opacity-90">
+          View raw /llms.txt <span aria-hidden="true">→</span>
+        </a>
+        <a href="/llms.txt" download="makerportal-llms.txt" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text transition-colors hover:border-[var(--mp-border-strong)] hover:text-primary-text">
+          Download .txt
+        </a>
+        <a href="/sitemap.xml" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text transition-colors hover:border-[var(--mp-border-strong)] hover:text-primary-text">
+          Sitemap →
+        </a>
+      </div>
+      <p class="mt-5 max-w-xl font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">
+        Last synced: {lastUpdated} • Canonical raw always at <code class="rounded bg-elevated px-1 py-0.5">https://www.makerportal.ai/llms.txt</code> • Allowed for GPTBot, Claude, Perplexity, Applebot-Extended
+      </p>
+    </Fragment>
+  </HubShell>
+
+  <section class="border-b border-border">
+    <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+      <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <div class="space-y-8">
+          <div class="surface-card rounded-[20px] border p-6 sm:p-7">
+            <h2 class="text-[1.15rem] font-semibold tracking-[-0.02em] text-primary-text">What is llms.txt?</h2>
+            <p class="mt-3 text-[0.95rem] leading-[1.65] text-muted-text">
+              <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-anchor hover:underline">llmstxt.org</a> proposes a single markdown file at <code class="rounded bg-elevated px-1 py-0.5 text-[0.8rem]">/llms.txt</code> to help LLMs understand a site — like <code class="rounded bg-elevated px-1 py-0.5 text-[0.8rem]">robots.txt</code> but for meaning. Our file lists hub IA, 11 live apps (5 on <code class="rounded bg-elevated px-1 py-0.5 text-[0.8rem]">*.makerportal.ai</code> + 6 legacy bridge on <code class="rounded bg-elevated px-1 py-0.5 text-[0.8rem]">makersportal.com</code>), tech stack (CoreML, ANE, Metal, llama.cpp, LangGraph, kNN-VC), and crawling preferences.
+            </p>
+            <ul class="mt-5 grid gap-2.5 text-[0.88rem] leading-[1.6] text-muted-text">
+              <li class="flex gap-2"><span class="mt-[0.55rem] size-1 shrink-0 rounded-full bg-brand-anchor"></span><span><strong class="font-medium text-primary-text">For LLMs:</strong> One place to get studio ethos, app matrix, sitemap, RSS, and keywords for retrieval — no scraping 100 pages.</span></li>
+              <li class="flex gap-2"><span class="mt-[0.55rem] size-1 shrink-0 rounded-full bg-brand-anchor"></span><span><strong class="font-medium text-primary-text">For humans:</strong> You landed here. This page explains the raw file and links to the pretty sections (/apps, /blog, /resources).</span></li>
+              <li class="flex gap-2"><span class="mt-[0.55rem] size-1 shrink-0 rounded-full bg-brand-anchor"></span><span><strong class="font-medium text-primary-text">For us:</strong> Single source of truth — public/llms.txt stays in sync with this page via Vite raw import.</span></li>
+            </ul>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="surface-card rounded-[20px] border p-5">
+              <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-primary-cta">For AI crawlers</p>
+              <h3 class="mt-2 text-[1rem] font-semibold tracking-[-0.02em] text-primary-text">Crawl friendly</h3>
+              <p class="mt-2 text-[0.85rem] leading-[1.6] text-muted-text">Full site allowed. GPTBot, ChatGPT-User, Google-Extended, Anthropic-ai, ClaudeBot, CCBot, PerplexityBot, Applebot-Extended explicitly allowed in robots.txt. No training exclusion — attribution appreciated.</p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Structured data: Organization, WebSite, SearchAction, CollectionPage</span>
+              </div>
+            </div>
+            <div class="surface-card rounded-[20px] border p-5">
+              <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-primary-cta">For humans clicking</p>
+              <h3 class="mt-2 text-[1rem] font-semibold tracking-[-0.02em] text-primary-text">No raw wall</h3>
+              <p class="mt-2 text-[0.85rem] leading-[1.6] text-muted-text">Nav now points to /llms (this page), not /llms.txt. Raw .txt is still at root for bots, but humans get context, cards, and download CTA. If you did want raw, use the buttons above.</p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <a href="/rss.xml" class="rounded-full border border-border bg-card-bg px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text hover:text-primary-text">RSS has pretty XSL too →</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="surface-card rounded-[20px] border p-5 sm:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h3 class="text-[1rem] font-semibold tracking-[-0.02em] text-primary-text">Raw llms.txt preview</h3>
+              <div class="flex gap-2">
+                <a href="/llms.txt" class="text-[0.75rem] font-medium text-brand-anchor hover:underline">Open raw →</a>
+                <span class="text-[0.75rem] text-muted-text">•</span>
+                <span class="font-mono text-[0.7rem] text-muted-text">{rawPreview.split('\n').length} lines</span>
+              </div>
+            </div>
+            <div class="mt-4 max-h-[32rem] overflow-auto rounded-[14px] border border-border bg-canvas">
+              <pre class="p-4 text-[0.78rem] leading-[1.6] text-primary-text/90 whitespace-pre-wrap break-words font-mono">{rawPreview}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="surface-card rounded-[20px] border p-5">
+            <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-muted-text">Agentic stack</p>
+            <ul class="mt-4 space-y-3 text-[0.85rem]">
+              <li><a href="/sitemap.xml" class="flex items-center justify-between rounded-xl px-2.5 py-2 hover:bg-elevated"><span class="font-medium text-primary-text">sitemap.xml</span><span class="text-muted-text">→</span></a></li>
+              <li><a href="/rss.xml" class="flex items-center justify-between rounded-xl px-2.5 py-2 hover:bg-elevated"><span class="font-medium text-primary-text">rss.xml (styled with XSL)</span><span class="text-muted-text">→</span></a></li>
+              <li><a href="/llms.txt" class="flex items-center justify-between rounded-xl bg-elevated/60 px-2.5 py-2"><span class="font-medium text-primary-text">/llms.txt raw</span><span class="rounded-full bg-primary-text px-2 py-0.5 text-[0.6rem] font-bold text-canvas">Bot</span></a></li>
+              <li><span class="flex items-center justify-between rounded-xl px-2.5 py-2 bg-brand-anchor/5 border border-brand-anchor/10"><span class="font-medium text-brand-anchor">/llms (this page)</span><span class="text-brand-anchor">You are here</span></span></li>
+              <li><a href="/robots.txt" class="flex items-center justify-between rounded-xl px-2.5 py-2 hover:bg-elevated"><span class="font-medium text-primary-text">robots.txt (allows AI)</span><span class="text-muted-text">→</span></a></li>
+            </ul>
+            <p class="mt-5 rounded-xl bg-elevated/60 px-3 py-2.5 font-mono text-[0.62rem] leading-[1.5] text-muted-text">
+              Tip: Link header for agents — <code>Link: &lt;/llms.txt&gt;; rel="alternate"; type="text/plain"</code> — is also in this page’s &lt;head&gt;.
+            </p>
+          </div>
+
+          <div class="rounded-[20px] border border-border bg-canvas p-5">
+            <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Why not just hide it?</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Hiding lowers discoverability for both humans and LLMs. The spec expects it at <code class="rounded bg-elevated px-1 py-0.5">/llms.txt</code>. Better: keep raw at root for crawlers, but route all *human* entry points (mega-menu, footer) to the pretty /llms page that explains and links to raw. Same pattern we used for /rss.xml → XSL.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="rounded-full bg-brand-anchor/10 px-2.5 py-1 text-[0.7rem] font-medium text-brand-anchor">Pattern: raw for bots, HTML for humans</span>
+            </div>
+          </div>
+
+          <div class="rounded-[20px] bg-primary-text p-5 text-canvas">
+            <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] opacity-70">Studio</p>
+            <p class="mt-2 text-[1.05rem] font-semibold tracking-[-0.02em]">Independent, on-device, SF → Worldwide</p>
+            <p class="mt-2 text-[0.85rem] leading-[1.6] opacity-80">11 apps, all privacy-first. Build notes in /blog, tools in /resources, raw agent map in /llms.txt, pretty map here.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <a href="/apps" class="inline-flex min-h-9 items-center rounded-full bg-canvas px-4 text-[0.8rem] font-semibold text-primary-text hover:opacity-90">View 11 apps →</a>
+              <a href="/about" class="inline-flex min-h-9 items-center rounded-full border border-white/15 px-4 text-[0.8rem] font-medium text-canvas/80 hover:text-canvas">About →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-b border-border bg-elevated/30">
+    <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+      <div class="flex flex-wrap gap-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">
+        <a href="/" class="hover:text-primary-text">Home →</a>
+        <span>•</span>
+        <a href="/resources" class="hover:text-primary-text">Resources (was owner of llms.txt link) →</a>
+        <span>•</span>
+        <a href="/sitemap.xml" class="hover:text-primary-text">Sitemap.xml →</a>
+        <span>•</span>
+        <span class="text-primary-text">/llms (human) + /llms.txt (raw for LLMs)</span>
+      </div>
+    </div>
+  </section>
+</Layout>

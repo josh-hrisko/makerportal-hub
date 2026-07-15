@@ -204,30 +204,41 @@ const relatedApps = showRelated
 </article>
 
 <script is:inline>
-  // Spotlight – fine pointers only (skip touch devices; no hover value there).
+  // Spotlight – fine pointers only (skip touch). Optimized to avoid forced reflow during load.
+  // Uses ResizeObserver + rAF batching, deferred to idle so it doesn't affect LCP / TBT.
   if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    document.querySelectorAll('[data-app-card]').forEach((card) => {
-      let rect = null;
-      let pending = false;
-      let lastX = 0;
-      let lastY = 0;
-      const measure = () => { rect = card.getBoundingClientRect(); };
-      card.addEventListener('pointerenter', measure, { passive: true });
-      window.addEventListener('resize', measure, { passive: true });
-      card.addEventListener('pointermove', (e) => {
-        lastX = e.clientX;
-        lastY = e.clientY;
-        if (!rect) measure();
-        if (pending) return;
-        pending = true;
-        requestAnimationFrame(() => {
-          const x = ((lastX - rect.left) / rect.width) * 100;
-          const y = ((lastY - rect.top) / rect.height) * 100;
-          card.style.setProperty('--mouse-x', x + '%');
-          card.style.setProperty('--mouse-y', y + '%');
-          pending = false;
-        });
-      }, { passive: true });
-    });
+    const init = () => {
+      document.querySelectorAll('[data-app-card]').forEach((card) => {
+        let rect = null;
+        let pending = false;
+        let lastX = 0, lastY = 0;
+
+        const measure = () => { rect = card.getBoundingClientRect(); };
+
+        // Keep rect fresh on size changes, not on every window resize scroll
+        const ro = new ResizeObserver(() => measure());
+        ro.observe(card);
+
+        card.addEventListener('pointerenter', measure, { passive: true });
+
+        card.addEventListener('pointermove', (e) => {
+          lastX = e.clientX;
+          lastY = e.clientY;
+          if (pending) return;
+          pending = true;
+          requestAnimationFrame(() => {
+            // Read first, then write – batched in one frame to avoid layout thrash
+            if (!rect) rect = card.getBoundingClientRect();
+            const x = ((lastX - rect.left) / rect.width) * 100;
+            const y = ((lastY - rect.top) / rect.height) * 100;
+            card.style.setProperty('--mouse-x', x + '%');
+            card.style.setProperty('--mouse-y', y + '%');
+            pending = false;
+          });
+        }, { passive: true });
+      });
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(init, { timeout: 1500 });
+    else window.addEventListener('load', init, { once: true });
   }
 </script>

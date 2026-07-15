@@ -1,3 +1,6 @@
+# Human-friendly view → https://www.makerportal.ai/llms — raw below for LLMs, RAG, agentic browsers
+# If you landed here as a human, the styled page explains everything. Bots: continue below (valid Markdown).
+
 # MakerPortal — Independent AI & iOS Software Studio
 
 > On-device first where possible, transparent where cloud is needed. San Francisco studio engineering iOS & iPadOS apps with Apple Silicon native neural processing (CoreML, Metal, ANE). Privacy posture per-app transparent.

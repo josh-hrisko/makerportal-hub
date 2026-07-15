@@ -139,7 +139,7 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Resources',
         links: [
           { label: 'Resource hub', href: '/resources', description: 'Guides & downloads' },
-          { label: 'llms.txt', href: '/llms.txt', description: 'Agent-readable map' },
+          { label: 'Agent map', href: '/llms', description: 'Human + AI index (llms.txt)' },
         ],
       },
       {
@@ -278,6 +278,7 @@ export const hubRoutes: { path: string; priority: string; changefreq: string }[]
   { path: '/contact', priority: '0.85', changefreq: 'monthly' },
   { path: '/press', priority: '0.7', changefreq: 'monthly' },
   { path: '/advertise', priority: '0.75', changefreq: 'monthly' },
+  { path: '/llms', priority: '0.7', changefreq: 'weekly' },
   { path: '/privacy', priority: '0.5', changefreq: 'yearly' },
   { path: '/terms', priority: '0.5', changefreq: 'yearly' },
 ];
