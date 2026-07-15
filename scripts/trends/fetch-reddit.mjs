@@ -3,12 +3,11 @@
  * scoped to the subreddits that already cluster around studio pillars,
  * scored the same as other sources rather than trusted blindly.
  *
- * Needs REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET (repo secrets). Create a
- * "script" app at reddit.com/prefs/apps (type: script, redirect uri:
- * http://localhost:8080) — self-service works fine for this personal-use,
- * read-only case; the Responsible Builder Policy / request-form path is for
- * broader Data API access, not needed here. Skips cleanly (returns []) if
- * the secrets are unset so the rest of the digest still runs.
+ * Needs REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET (repo secrets). Credentials
+ * require approval under Reddit's Responsible Builder Policy (self-service
+ * app creation closed Nov 2025) — apply via the request form linked from the
+ * Reddit Data API Wiki. Skips cleanly (returns []) if the secrets are unset
+ * so the rest of the digest still runs.
  */
 import { scoreText } from './keywords.mjs';
 

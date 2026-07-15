@@ -1,7 +1,12 @@
 /**
- * Bluesky public post search — unauthenticated, official AT Protocol
- * appview endpoint, designed for exactly this kind of read.
+ * Bluesky post search — official AT Protocol endpoints.
  * https://docs.bsky.app/docs/api/app-bsky-feed-search-posts
+ *
+ * The unauthenticated public appview 403s searchPosts from datacenter IPs
+ * (GitHub Actions, cloud sandboxes — verified 2026-07-15), so when
+ * BLUESKY_IDENTIFIER / BLUESKY_APP_PASSWORD are set we create a session
+ * against bsky.social and search authenticated. Unauthenticated public
+ * endpoint remains the fallback for local/residential runs.
  *
  * (Uses the stateless search endpoint rather than the Jetstream firehose —
  * Jetstream is a long-lived stream meant for a persistent consumer; a
@@ -9,14 +14,43 @@
  */
 import { SEARCH_QUERIES, scoreText } from './keywords.mjs';
 
-const ENDPOINT = 'https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts';
+const PUBLIC_ENDPOINT = 'https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts';
+const AUTH_ENDPOINT = 'https://bsky.social/xrpc/app.bsky.feed.searchPosts';
+const SESSION_ENDPOINT = 'https://bsky.social/xrpc/com.atproto.server.createSession';
+
+async function createSession(identifier, appPassword) {
+  const res = await fetch(SESSION_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier, password: appPassword }),
+  });
+  if (!res.ok) throw new Error(`createSession failed: ${res.status}`);
+  const data = await res.json();
+  return data.accessJwt;
+}
 
 export async function fetchBluesky() {
+  const identifier = process.env.BLUESKY_IDENTIFIER;
+  const appPassword = process.env.BLUESKY_APP_PASSWORD;
+
+  let endpoint = PUBLIC_ENDPOINT;
+  let headers = {};
+  if (identifier && appPassword) {
+    try {
+      const accessJwt = await createSession(identifier, appPassword);
+      endpoint = AUTH_ENDPOINT;
+      headers = { Authorization: `Bearer ${accessJwt}` };
+      console.log('[bluesky] authenticated session');
+    } catch (err) {
+      console.warn(`[bluesky] auth failed (${err.message}) — falling back to public endpoint.`);
+    }
+  }
+
   const seen = new Map();
 
   for (const query of SEARCH_QUERIES) {
-    const url = `${ENDPOINT}?q=${encodeURIComponent(query)}&limit=25&sort=top`;
-    const res = await fetch(url);
+    const url = `${endpoint}?q=${encodeURIComponent(query)}&limit=25&sort=top`;
+    const res = await fetch(url, { headers });
     if (!res.ok) {
       console.warn(`[bluesky] query "${query}" failed: ${res.status}`);
       continue;
