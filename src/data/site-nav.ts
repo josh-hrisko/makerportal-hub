@@ -119,7 +119,6 @@ export const primaryNav: PrimaryNavItem[] = [
         links: [
           { label: 'Articles', href: '/blog', description: 'Essays & craft notes' },
           { label: 'Sponsored', href: '/advertise', description: 'Partner placements', badge: 'Open' },
-          { label: 'Watch', href: '/watch', description: 'Video & demos' },
         ],
       },
     ],
@@ -140,16 +139,15 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Resources',
         links: [
           { label: 'Resource hub', href: '/resources', description: 'Guides & downloads' },
-          { label: 'Code archives', href: '/shop', description: 'Paid & free packs' },
           { label: 'llms.txt', href: '/llms.txt', description: 'Agent-readable map' },
         ],
       },
       {
-        title: 'Topics',
+        title: 'On this page',
         links: [
-          { label: 'On-device AI', href: '/blog', description: 'ANE & CoreML' },
-          { label: 'Privacy architecture', href: '/privacy', description: 'Zero telemetry' },
-          { label: 'iOS craft', href: '/blog', description: 'SwiftUI & Metal' },
+          { label: 'Signals we’re tracking', href: '/resources#trending', description: 'Trend digest' },
+          { label: 'Tools we use', href: '/resources#tools', description: 'Studio toolchain' },
+          { label: 'Gear', href: '/resources#gear', description: 'Hardware picks' },
         ],
       },
     ],
