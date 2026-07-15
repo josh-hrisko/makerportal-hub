@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install ImageMagick (og:image thumbnails)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends imagemagick
+
       - name: Pipeline gate tests
         run: node --test scripts/trends/pipeline.test.mjs
 
@@ -43,7 +46,8 @@ jobs:
           git checkout -b "$branch"
           git config user.name "makerportal-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -A src/data/trends.json public/trends
+          git add -A src/data/trends.json
+          if [ -d public/trends ]; then git add -A public/trends; fi
           git commit -m "Trend digest: $(date +%Y-%m-%d)"
           # Force-push so a same-day re-run updates the existing digest branch/PR
           git push --force origin "$branch"
