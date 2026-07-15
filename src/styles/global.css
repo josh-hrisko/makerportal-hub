@@ -842,8 +842,8 @@
     animation-duration: 0.35s;
     animation-timing-function: cubic-bezier(0.16,1,0.3,1);
   }
-  /* Keep header fixed during transitions */
-  header[data-nav] {
-    view-transition-name: site-nav;
-  }
+  /* NOTE: site-nav view-transition-name removed — it persisted header across ClientRouter navigations
+     and broke mega-menu listeners after first navigation (once you click a nav item, second trigger fails).
+     Header now re-creates each navigation, listeners fresh. If you re-add persisted header, make nav
+     script idempotent and listen to astro:page-load. */
 }
