@@ -1,0 +1,60 @@
+[
+  {
+    "id": "blexar-starter",
+    "title": "BLExAR Nano+OLED Starter",
+    "blurb": "Real Arduino Nano ESP32 + SSD1306 OLED + BLE bridge + CSV export sketches from makersportal.com — the exact wiring used in BLExAR builds.",
+    "price": 19,
+    "compareAt": 29,
+    "lemonId": "",
+    "lemonUrl": "",
+    "tag": "Archive",
+    "includes": ["3 Arduino sketches (RFID + GPS + OLED)", "iOS BLE snippet (Swift, HM-10/CC254x/nRF52)", "CSV export sample + wiring diagram PDF", "README with provenance (makersportal.com posts)"],
+    "relatedTo": ["blexar"],
+    "pillars": ["ios-craft"],
+    "featured": true
+  },
+  {
+    "id": "coreml-offline-classifier",
+    "title": "CoreML Offline Classifier Starter",
+    "blurb": "SwiftUI + Vision + CoreML quantized FP16 model, 100% on-device, no cloud. Based on PopCloset + Notiary vector-index patterns.",
+    "price": 29,
+    "compareAt": 49,
+    "lemonId": "",
+    "lemonUrl": "",
+    "tag": "Starter",
+    "includes": ["Xcode 15 SwiftUI project (runs on iPhone + iPad)", "Vision + CoreML pipeline with quantization notes", "Local vector index (28MB) + SwiftData persistence", "Privacy disclosure template"],
+    "relatedTo": ["popcloset", "notiary"],
+    "pillars": ["on-device-ai", "privacy-arch"],
+    "featured": true
+  },
+  {
+    "id": "biquadia-dsp-snippet",
+    "title": "Biquadia DSP Snippet Pack",
+    "blurb": "Biquad filter + Metal shader snippet with clang++ verification notes — real kernels from Biquadia + AuraLinter agentic loop.",
+    "price": 19,
+    "compareAt": 39,
+    "lemonId": "",
+    "lemonUrl": "",
+    "tag": "Snippet",
+    "includes": ["Biquad C++ kernel + Swift bridge", "Metal shader + ANE optimization notes", "LangGraph DSP generation loop excerpt", "SSE streaming sample + compiler-verified log"],
+    "relatedTo": ["biquadia", "auralinter"],
+    "pillars": ["dsp-audio", "metal-ane"],
+    "featured": false
+  },
+  {
+    "id": "supporter-tip",
+    "title": "Support the studio",
+    "blurb": "Pay what you want — support independent SF iOS craft, on-device first, no trackers. Get thank-you + early access to archive drops.",
+    "price": 9,
+    "compareAt": null,
+    "lemonId": "1223799",
+    "lemonVariantId": "1913434",
+    "lemonUrl": "https://makerportal.lemonsqueezy.com/checkout/buy/bafb76d4-09c1-472f-b476-8d4c2b588527",
+    "tag": "Tip",
+    "includes": ["Thank-you note", "Early archive access", "Supporter badge (optional)"],
+    "relatedTo": ["studio"],
+    "pillars": ["privacy-arch"],
+    "featured": false,
+    "pwyw": true
+  }
+]

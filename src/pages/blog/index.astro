@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import ButtondownSignup from '../../components/ButtondownSignup.astro';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
@@ -19,6 +20,14 @@ const description = 'Notes on independent software, product decisions, interface
         <a href="/" class="font-medium transition-colors" style="color: var(--mp-paper-muted)">← Studio home</a>
         <a href="/apps" class="font-medium" style="color: var(--mp-paper-link)">App matrix →</a>
         <a href="/resources" class="font-medium" style="color: var(--mp-paper-link)">Learn →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="reading-paper border-b reading-line" aria-label="Newsletter">
+    <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+      <div class="max-w-3xl">
+        <ButtondownSignup username="" title="Field notes in your inbox" blurb="Privacy-first newsletter via Buttondown — no tracking pixels. Get new notes + archive drops first. Free snippet from BLExAR as lead magnet." />
       </div>
     </div>
   </section>

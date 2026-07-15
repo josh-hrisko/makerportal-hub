@@ -787,9 +787,63 @@
   }
 }
 
+/* Efficiency — content-visibility for below-fold heavy sections (gear 50 items, tools, shop products) */
+#tools, #gear, #products, #trending {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
+}
+
+/* Thrilling — details open anim with interpolate-size (no JS) */
+@supports (interpolate-size: allow-keywords) {
+  :root { interpolate-size: allow-keywords; }
+  details {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition: block-size 0.35s cubic-bezier(0.16,1,0.3,1), content-visibility 0.35s;
+    transition-behavior: allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
+  @starting-style {
+    details[open]::details-content {
+      block-size: 0;
+    }
+  }
+}
+
+/* Scroll-driven nav shrink — state-of-the-art thrill, zero JS (progressive) */
+@supports (animation-timeline: scroll()) {
+  header[data-nav] {
+    animation: nav-shrink linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 120px;
+  }
+  @keyframes nav-shrink {
+    to {
+      --tw-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+  }
+}
+
+/* Make AppCard blur cheaper on mobile */
+@media (max-width: 640px) {
+  .app-card .blur-\[80px\] {
+    filter: blur(40px);
+  }
+}
+
 @supports (view-transition-name: none) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 0.4s;
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.16,1,0.3,1);
+  }
+  /* Keep header fixed during transitions */
+  header[data-nav] {
+    view-transition-name: site-nav;
   }
 }

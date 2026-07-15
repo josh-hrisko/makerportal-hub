@@ -3,6 +3,7 @@ import BrandLogo from '../components/BrandLogo.astro';
 import SeoMeta from '../components/SeoMeta.astro';
 import SearchModal from '../components/SearchModal.astro';
 import { footerColumns, primaryNav, socials } from '../data/site-nav';
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 // @ts-ignore – fontsource side-effect import has no types
 import '@fontsource-variable/plus-jakarta-sans';
@@ -265,6 +266,8 @@ const organizationSchema = {
     <SeoMeta title={title} description={description} canonical={canonical} noindex={noindex} type={type} publishedTime={publishedTime} modifiedTime={modifiedTime} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
     <slot name="head" />
+    <!-- View Transitions for thrilling state-of-the-art nav -->
+    <ClientRouter />
     <!-- Agentic browsing meta -->
     <meta name="ai:publisher" content="MakerPortal – San Francisco" />
     <meta name="ai:content-type" content="technology, iOS development, on-device AI, agentic DSP, transparent hybrid architecture" />

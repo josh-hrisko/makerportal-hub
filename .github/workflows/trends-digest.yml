@@ -2,7 +2,7 @@ name: Trend digest
 
 on:
   schedule:
-    - cron: '0 14 * * 1' # Mondays 14:00 UTC
+    - cron: '0 14 * * *' # daily 14:00 UTC (06:00 PT) — D-017 tabled idea, re-ranks Gear via pillar tags
   workflow_dispatch: {}
 
 permissions:

@@ -1,0 +1,45 @@
+---
+interface Props {
+  username?: string; // e.g. "makerportal"
+  title?: string;
+  blurb?: string;
+  compact?: boolean;
+  class?: string;
+}
+const {
+  username = "",
+  title = "Get archive drops first.",
+  blurb = "Privacy-first newsletter via Buttondown — no tracking pixels, markdown-friendly. Free snippet from BLExAR archive as lead magnet.",
+  compact = false,
+  class: className = "",
+} = Astro.props as Props;
+
+const hasUsername = Boolean(username);
+const formAction = hasUsername ? `https://buttondown.com/api/emails/embed-subscribe/${username}` : "";
+---
+
+<div class={`surface-card rounded-[20px] border bg-card-bg p-5 ${className}`}>
+  {!compact && (
+    <div>
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-primary-cta">Newsletter · Privacy-first</p>
+      <h3 class="mt-2 text-[1.1rem] font-semibold tracking-[-0.02em] text-primary-text">{title}</h3>
+      <p class="mt-2 text-[0.85rem] leading-[1.6] text-muted-text">{blurb}</p>
+    </div>
+  )}
+  {hasUsername ? (
+    <form action={formAction} method="post" target="_blank" class="mt-4 flex gap-2">
+      <input type="email" name="email" required placeholder="you@example.com" class="min-h-11 flex-1 rounded-full border border-border bg-canvas px-4 text-[0.9rem] text-primary-text placeholder:text-muted-text/60 focus:border-brand-anchor focus:outline-none focus:ring-2 focus:ring-brand-anchor/20" />
+      <input type="hidden" name="tag" value="makerportal-hub" />
+      <button type="submit" class="min-h-11 rounded-full bg-primary-text px-5 text-[0.85rem] font-bold text-canvas hover:opacity-90">Join</button>
+    </form>
+  ) : (
+    <div class="mt-4">
+      <div class="flex gap-2">
+        <input type="email" disabled placeholder="you@example.com — needs Buttondown username" class="min-h-11 flex-1 rounded-full border border-border bg-canvas px-4 text-[0.9rem] text-primary-text placeholder:text-muted-text/60" />
+        <span class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.8rem] font-medium text-muted-text">Coming soon</span>
+      </div>
+      <p class="mt-2 font-mono text-[0.6rem] leading-[1.4] text-muted-text">Owner: create Buttondown account at buttondown.com, username becomes form action. Replace prop `username` in component. See docs/MONETIZATION.md. No tracking pixels per D-014.</p>
+    </div>
+  )}
+  <p class="mt-2 font-mono text-[0.6rem] text-muted-text">No tracking, unsubscribe anytime · RSS at <a href="/rss.xml" class="text-brand-anchor hover:text-primary-text">/rss.xml</a> · Privacy-first per D-014</p>
+</div>

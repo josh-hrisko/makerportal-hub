@@ -152,3 +152,18 @@
 2. **`node script.mjs` does not read `.env` automatically.** Needed `node --env-file=.env scripts/amazon/build-catalog.mjs` for local testing — easy to mistake the resulting "not set" warning for a real config problem instead of a missing flag.
 3. **A working pattern at n=1 doesn't prove it works at n=50.** The flat-list gear rendering was correct and looked fine with one item; nothing about the code was "wrong" until the data scaled — always re-check actual rendered output (not just build success) after a data-driven section's input size changes materially.
 **Status (2026-07-15):** All 50 ASINs resolved and verified by the owner; `GetItems` still 403s with `AssociateNotEligible` (see D-015's known-gap note above — same 48-hour window, now covering 5 batches of 10 ASINs instead of 1, so the `BATCH_SIZE = 10` assumption in `fetch-items.mjs` is still unexercised in practice). Re-test after ~2026-07-17.
+
+## D-017 — Daily trends + pillar-driven gear re-ranking
+
+**Decision:** Bump `trends-digest.yml` from weekly (Mondays) to daily (14:00 UTC) and use the resulting pillar frequency to re-rank the 50 curated gear items on `/resources#gear` — no new ASINs, no auto-discovery, only sort order changes. Groups with trending pillars surface first, items within groups sorted by matching pillar count, trending chips rendered with `↗ {Pillar}` badges.
+
+**Why:** Tabled in `OPEN-ITEMS.md` as "good candidate for quick win if you want one before diving into bigger research" — safe because it reuses existing human-curated data (50 ASINs) and the `pillars` soft-tag added in D-015, zero fabrication risk. Weekly cadence made the page feel stale; daily makes the "Signals" section feel live without adding content volume (still capped at 24 items via `MAX_TOTAL`). Re-ranking gives affiliate section a reason to be revisited, improving internal cross-link without inventing new recommendations.
+
+**Mechanism:**
+- `.github/workflows/trends-digest.yml` cron `0 14 * * 1` → `0 14 * * *` (daily).
+- `src/pages/resources.astro` — computes `pillarCounts` from full `trends` array (not just top 7), derives `trendingPillars` sorted by frequency, `linkTrendScore()` sum of counts, `gearGroups` sorted by aggregate score (original index as tie-breaker), items within groups sorted by score. Adds "Re-ranked · trending {Top 3 pillars}" header and `▲ trending` on group summaries, `↗ {pillars}` chip on individual cards where `pillars` intersect trending set. Open state stays `items.length <= 6` (D-016 lesson — don't auto-open large groups even if trending) — only sort order changes, not collapse logic.
+- Verified: 1724px gear bbox height vs 5500px flat-list incident, 7 groups, BLExAR (33 items) stays collapsed, itria (on-device-ai, 6-count trending) surfaces first in this data snapshot. Build passes, no secrets.
+
+**Do not:** use trending to auto-*select* which products get recommended or to inject `SearchItems` candidates without human review (D-015 Do-not still applies). This is ranking only.
+
+**Status (2026-07-15):** Shipped in this session, verified via Playwright boundingBox check. `OPEN-ITEMS.md` tabled item can be marked done.
