@@ -12,7 +12,7 @@
  * Jetstream is a long-lived stream meant for a persistent consumer; a
  * weekly batch job that runs and exits fits a one-shot search query better.)
  */
-import { SEARCH_QUERIES, scoreText } from './keywords.mjs';
+import { SEARCH_QUERIES } from './keywords.mjs';
 
 const PUBLIC_ENDPOINT = 'https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts';
 const AUTH_ENDPOINT = 'https://bsky.social/xrpc/app.bsky.feed.searchPosts';
@@ -60,8 +60,6 @@ export async function fetchBluesky() {
       const uri = post.uri;
       if (!uri || seen.has(uri)) continue;
       const text = post.record?.text ?? '';
-      const { tags, score } = scoreText(text);
-      if (score === 0) continue;
       const rkey = uri.split('/').pop();
       const handle = post.author?.handle;
       seen.set(uri, {
@@ -71,10 +69,23 @@ export async function fetchBluesky() {
         url: handle ? `https://bsky.app/profile/${handle}/post/${rkey}` : uri,
         author: handle,
         publishedAt: post.record?.createdAt ?? post.indexedAt,
-        tags,
-        score: score + Math.round((post.likeCount || 0) / 20),
+        text,
+        externalUrl: extractExternalUrl(post),
+        engagement: post.likeCount || 0,
       });
     }
   }
   return [...seen.values()];
+}
+
+/** First outbound link on the post — embed card first, then rich-text link facets. */
+function extractExternalUrl(post) {
+  const embedUri = post.record?.embed?.external?.uri;
+  if (embedUri) return embedUri;
+  for (const facet of post.record?.facets ?? []) {
+    for (const feature of facet.features ?? []) {
+      if (feature.$type === 'app.bsky.richtext.facet#link' && feature.uri) return feature.uri;
+    }
+  }
+  return undefined;
 }

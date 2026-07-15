@@ -2,7 +2,7 @@
  * Hacker News via the official Algolia Search API — free, no key, no auth.
  * https://hn.algolia.com/api
  */
-import { SEARCH_QUERIES, scoreText } from './keywords.mjs';
+import { SEARCH_QUERIES } from './keywords.mjs';
 
 const ENDPOINT = 'https://hn.algolia.com/api/v1/search';
 const SINCE_DAYS = 14;
@@ -21,8 +21,6 @@ export async function fetchHackerNews() {
     const data = await res.json();
     for (const hit of data.hits ?? []) {
       if (!hit.title || seen.has(hit.objectID)) continue;
-      const { tags, score } = scoreText(`${hit.title} ${hit._tags?.join(' ') ?? ''}`);
-      if (score === 0) continue;
       seen.set(hit.objectID, {
         id: `hackernews-${hit.objectID}`,
         source: 'hackernews',
@@ -30,8 +28,9 @@ export async function fetchHackerNews() {
         url: hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`,
         author: hit.author,
         publishedAt: hit.created_at,
-        tags,
-        score: score + Math.round((hit.points || 0) / 50),
+        text: [hit.title, hit.story_text].filter(Boolean).join(' '),
+        externalUrl: hit.url || undefined,
+        engagement: hit.points || 0,
       });
     }
   }

@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Pipeline gate tests
+        run: node --test scripts/trends/pipeline.test.mjs
+
       - name: Build trend digest
         run: node scripts/trends/build-digest.mjs
         env:
@@ -42,10 +45,16 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add src/data/trends.json
           git commit -m "Trend digest: $(date +%Y-%m-%d)"
-          git push origin "$branch"
+          # Force-push so a same-day re-run updates the existing digest branch/PR
+          git push --force origin "$branch"
 
-          gh pr create \
-            --title "Trend digest — $(date +%Y-%m-%d)" \
-            --body "Automated weekly trend scan (Bluesky, Hacker News, Reddit). Review before merging — this data feeds /blog and /resources topic selection, nothing publishes automatically." \
-            --base main \
-            --head "$branch"
+          if [ "$(gh pr list --head "$branch" --state open --json number --jq 'length')" = "0" ]; then
+            gh pr create \
+              --title "Trend digest — $(date +%Y-%m-%d)" \
+              --body-file trend-digest-summary.md \
+              --base main \
+              --head "$branch"
+          else
+            echo "PR already open for $branch — updating body."
+            gh pr edit "$branch" --body-file trend-digest-summary.md
+          fi

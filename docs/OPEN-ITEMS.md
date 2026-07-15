@@ -106,6 +106,8 @@ See `docs/THEME-SYSTEM.md` for full fix list + QA checklist.
 - [ ] AppSwitcher island integration in AuraLinter, Biquadia, etc. subdomains (import from hub)
 - [ ] Verify light mode contrast for new 7 icons in bright sun + low light (amber/orange/cyan need real device test)
 
+- [ ] Trend digest keyword tuning: after 2–3 weekly cycles, review which pillars under/over-fill (`trend-digest-summary.md` funnel stats in each PR) and adjust `keywords.mjs` needles; fixture tests in `pipeline.test.mjs` guard against regressions (see D-012)
+
 ## P2
 
 - [ ] Font payload: Inter preload if unused critically  

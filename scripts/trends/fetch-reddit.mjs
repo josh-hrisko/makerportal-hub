@@ -9,8 +9,6 @@
  * Reddit Data API Wiki. Skips cleanly (returns []) if the secrets are unset
  * so the rest of the digest still runs.
  */
-import { scoreText } from './keywords.mjs';
-
 const SUBREDDITS = ['iOSProgramming', 'LocalLLaMA', 'DSP', 'apple'];
 const USER_AGENT = 'makerportal-hub-trends/1.0 (by /u/makerportal)';
 
@@ -53,8 +51,6 @@ export async function fetchReddit() {
     for (const child of data.data?.children ?? []) {
       const post = child.data;
       if (!post?.id || seen.has(post.id)) continue;
-      const { tags, score } = scoreText(`${post.title} ${post.selftext ?? ''}`);
-      if (score === 0) continue;
       seen.set(post.id, {
         id: `reddit-${post.id}`,
         source: 'reddit',
@@ -62,8 +58,9 @@ export async function fetchReddit() {
         url: `https://www.reddit.com${post.permalink}`,
         author: post.author,
         publishedAt: new Date(post.created_utc * 1000).toISOString(),
-        tags,
-        score: score + Math.round((post.ups || 0) / 20),
+        text: `${post.title} ${post.selftext ?? ''}`,
+        externalUrl: post.is_self ? undefined : post.url,
+        engagement: post.ups || 0,
       });
     }
   }
