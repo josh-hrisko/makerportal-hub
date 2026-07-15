@@ -1,6 +1,7 @@
 ---
 import BrandLogo from '../components/BrandLogo.astro';
 import SeoMeta from '../components/SeoMeta.astro';
+import SearchModal from '../components/SearchModal.astro';
 import { footerColumns, primaryNav, socials } from '../data/site-nav';
 import '../styles/global.css';
 // @ts-ignore – fontsource side-effect import has no types
@@ -189,17 +190,15 @@ const organizationSchema = {
   <body class="flex min-h-screen flex-col overflow-x-clip bg-canvas font-sans text-primary-text antialiased selection:bg-primary-cta selection:text-white" data-reading-path={isReadingPath ? 'true' : 'false'}>
     <a href="#main-content" class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-brand-anchor px-4 py-2.5 font-semibold text-canvas shadow-lg transition-transform duration-300 focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Skip to main content</a>
 
-    <header class="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-[88rem] px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
-      <!-- Opaque pill nav (no backdrop-filter) — live backdrop-blur on a fixed
-           header is a known iOS Safari compositor tax during scroll. -->
-      <nav aria-label="Primary" class="surface-nav pointer-events-auto relative flex h-[3.875rem] items-center justify-between rounded-full border px-3 transition-[transform,box-shadow,border-color,background-color] duration-300 sm:px-5" data-nav>
+    <header class="fixed inset-x-0 top-0 z-50 border-b border-border bg-canvas/95 px-4 transition-[box-shadow,background-color] duration-300 sm:px-6 lg:px-8" data-nav>
+      <nav aria-label="Primary" class="mx-auto flex h-[3.875rem] max-w-[88rem] items-center justify-between">
         
-        <a href="/" class="group/logo relative inline-flex shrink-0 items-center gap-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-canvas" aria-label="MakerPortal — Home">
+        <a href="/" class="group/logo relative inline-flex shrink-0 items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-canvas" aria-label="MakerPortal — Home">
           <BrandLogo variant="lockup" size="md" />
         </a>
 
-        <!-- Desktop: 5–7 top items + click mega panels (hover optional; click is reliable on trackpads) -->
-        <div class="hidden items-center gap-0.5 lg:flex">
+        <!-- Desktop: Centered Links with active underlines -->
+        <div class="hidden flex-1 items-center justify-center gap-1 lg:flex">
           {primaryNav.map((item) => {
             const active = isNavItemActive(item.href, item.columns);
             const hasMega = Boolean(item.columns?.length);
@@ -207,10 +206,11 @@ const organizationSchema = {
               return (
                 <a
                   href={item.href}
-                  class:list={['relative inline-flex min-h-9 items-center rounded-full px-3 text-[0.84rem] font-medium tracking-[-0.01em] transition-colors', active ? 'font-semibold text-primary-text' : 'text-muted-text hover:text-primary-text']}
+                  class:list={['relative inline-flex h-9 items-center px-3.5 text-[0.84rem] font-medium tracking-[-0.01em] transition-colors', active ? 'text-primary-text' : 'text-muted-text hover:text-primary-text']}
                   aria-current={active ? 'page' : undefined}
                 >
                   {item.label}
+                  {active && <span aria-hidden="true" class="absolute inset-x-3.5 -bottom-[0.9rem] h-[2px] bg-primary-text rounded-t-full"></span>}
                 </a>
               );
             }
@@ -218,7 +218,7 @@ const organizationSchema = {
               <div class="relative" data-mega-root>
                 <button
                   type="button"
-                  class:list={['inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-[0.84rem] font-medium tracking-[-0.01em] transition-colors', active ? 'font-semibold text-primary-text' : 'text-muted-text hover:text-primary-text']}
+                  class:list={['relative inline-flex h-9 items-center gap-1.5 px-3.5 text-[0.84rem] font-medium tracking-[-0.01em] transition-colors', active ? 'text-primary-text' : 'text-muted-text hover:text-primary-text']}
                   aria-expanded="false"
                   aria-haspopup="true"
                   data-mega-trigger
@@ -226,14 +226,15 @@ const organizationSchema = {
                 >
                   {item.label}
                   <svg aria-hidden="true" viewBox="0 0 12 12" class="size-2.5 opacity-50"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  {active && <span aria-hidden="true" class="absolute inset-x-3.5 -bottom-[0.9rem] h-[2px] bg-primary-text rounded-t-full"></span>}
                 </button>
                 <div
                   id={`mega-${item.id}`}
                   data-mega-panel
-                  class="invisible absolute left-1/2 top-[calc(100%+0.65rem)] z-[70] w-[min(92vw,42rem)] -translate-x-1/2 translate-y-1 scale-[0.98] opacity-0 transition-[opacity,transform,visibility] duration-150"
+                  class="invisible absolute left-1/2 top-[calc(100%+1.1rem)] z-[70] w-[min(92vw,42rem)] -translate-x-1/2 translate-y-1 scale-[0.98] opacity-0 transition-[opacity,transform,visibility] duration-150"
                   hidden
                 >
-                  <div class="surface-card overflow-hidden rounded-[22px] border p-5">
+                  <div class="surface-card overflow-hidden rounded-[22px] border p-5 shadow-xl">
                     <div class:list={['grid gap-6', item.featured ? 'sm:grid-cols-[1fr_0.85fr]' : '']}>
                       <div class:list={['grid gap-5', (item.columns?.length ?? 0) > 1 ? 'sm:grid-cols-2' : '']}>
                         {item.columns?.map((col) => (
@@ -279,28 +280,38 @@ const organizationSchema = {
               </div>
             );
           })}
-          <a href="/contact" class="ml-1 inline-flex min-h-9 items-center rounded-full border border-border bg-elevated/80 px-3.5 text-[0.82rem] font-semibold tracking-[-0.01em] text-primary-text transition-colors hover:border-brand-anchor/30 hover:bg-elevated">
-            Contact
-          </a>
         </div>
 
         <div class="flex items-center gap-1 md:gap-2">
+          <!-- Site Search Button -->
           <button
             type="button"
-            class="theme-toggle"
+            id="site-search-btn"
+            class="grid size-9 place-items-center rounded-full text-muted-text transition-colors hover:bg-elevated hover:text-primary-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
+            aria-label="Search site"
+          >
+            <svg viewBox="0 0 24 24" fill="none" class="size-[1.1rem]"><path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          
+          <button
+            type="button"
+            class="theme-toggle grid size-9 place-items-center rounded-full text-muted-text transition-colors hover:bg-elevated hover:text-primary-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
             data-theme-toggle
             aria-label="Toggle color theme"
             title="Toggle light / dark"
           >
-            <svg class="icon-moon size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 019.5 3 7 7 0 1021 14.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
-            <svg class="icon-sun size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+            <svg class="icon-moon size-[1.1rem]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 019.5 3 7 7 0 1021 14.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            <svg class="icon-sun size-[1.1rem]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
-          <a href="/shop" class="hidden min-h-9 items-center rounded-full px-2.5 text-[0.8125rem] font-medium text-muted-text transition-colors hover:text-primary-text sm:inline-flex lg:hidden">Shop</a>
-          <a href="/blog" class="hidden min-h-9 items-center rounded-full px-2.5 text-[0.8125rem] font-medium text-muted-text transition-colors hover:text-primary-text md:inline-flex lg:hidden">Notes</a>
+          
+          <a href="/contact" class="hidden ml-1 min-h-9 items-center rounded-full border border-border bg-elevated/80 px-4 text-[0.82rem] font-semibold tracking-[-0.01em] text-primary-text transition-colors hover:border-brand-anchor/40 hover:bg-elevated lg:inline-flex">
+            Contact
+          </a>
+
           <button
             id="mobile-menu-toggle"
             type="button"
-            class="relative z-[60] grid size-10 place-items-center rounded-full border border-border bg-elevated/80 text-primary-text transition-colors hover:border-brand-anchor/40 hover:bg-elevated lg:hidden"
+            class="relative z-[60] ml-1 grid size-9 place-items-center rounded-full border border-border bg-elevated/80 text-primary-text transition-colors hover:border-brand-anchor/40 hover:bg-elevated lg:hidden"
             aria-expanded="false"
             aria-controls="mobile-menu"
             aria-label="Open navigation"
@@ -351,41 +362,48 @@ const organizationSchema = {
       <div class="flex flex-1 flex-col overflow-y-auto px-4 pb-8 pt-4">
         <a href="/" class="mobile-link mb-2 rounded-2xl px-4 py-3 text-[1.15rem] font-semibold text-primary-text hover:bg-elevated">Home</a>
         <div class="space-y-1" data-mobile-nav>
-          {primaryNav.map((item, index) => (
-            <div class="rounded-2xl border border-transparent" data-mobile-section>
-              {item.columns?.length ? (
-                <>
-                  <button
-                    type="button"
-                    class="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-left text-[1.2rem] font-semibold tracking-[-0.02em] text-primary-text hover:bg-elevated"
-                    aria-expanded="false"
-                    data-mobile-accordion
-                  >
+          {primaryNav.map((item, index) => {
+            const active = isNavItemActive(item.href, item.columns);
+            return (
+              <div class="rounded-2xl border border-transparent" data-mobile-section>
+                {item.columns?.length ? (
+                  <>
+                    <button
+                      type="button"
+                      class:list={['flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-left text-[1.2rem] font-semibold tracking-[-0.02em] hover:bg-elevated', active ? 'text-primary-text bg-elevated/50' : 'text-primary-text']}
+                      aria-expanded="false"
+                      data-mobile-accordion
+                    >
+                      <span>{String(index + 1).padStart(2, '0')} · {item.label}</span>
+                      <span aria-hidden="true" class="text-muted-text/60 transition-transform data-[open]:rotate-90" data-chevron>→</span>
+                    </button>
+                    <div class="hidden space-y-0.5 px-2 pb-3" data-mobile-panel>
+                      <a href={item.href} class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-brand-anchor hover:bg-elevated">Overview →</a>
+                      {item.columns.flatMap((col) =>
+                        col.links.map((link) => {
+                          const linkActive = isNavItemActive(link.href);
+                          return (
+                            <a
+                              {...linkAttrs(link.href, link.external)}
+                              class:list={['mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] hover:bg-elevated hover:text-primary-text', linkActive ? 'text-primary-text font-medium bg-elevated/30' : 'text-muted-text']}
+                              aria-current={linkActive ? 'page' : undefined}
+                            >
+                              {link.label}{link.external ? ' ↗' : ''}
+                            </a>
+                          );
+                        })
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <a href={item.href} aria-current={active ? 'page' : undefined} class:list={['mobile-link flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.2rem] font-semibold tracking-[-0.02em] hover:bg-elevated', active ? 'text-primary-text bg-elevated/50' : 'text-primary-text']}>
                     <span>{String(index + 1).padStart(2, '0')} · {item.label}</span>
-                    <span aria-hidden="true" class="text-muted-text/60 transition-transform data-[open]:rotate-90" data-chevron>→</span>
-                  </button>
-                  <div class="hidden space-y-0.5 px-2 pb-3" data-mobile-panel>
-                    <a href={item.href} class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-brand-anchor hover:bg-elevated">Overview →</a>
-                    {item.columns.flatMap((col) =>
-                      col.links.map((link) => (
-                        <a
-                          {...linkAttrs(link.href, link.external)}
-                          class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] text-muted-text hover:bg-elevated hover:text-primary-text"
-                        >
-                          {link.label}{link.external ? ' ↗' : ''}
-                        </a>
-                      ))
-                    )}
-                  </div>
-                </>
-              ) : (
-                <a href={item.href} class="mobile-link flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.2rem] font-semibold tracking-[-0.02em] text-primary-text hover:bg-elevated">
-                  <span>{String(index + 1).padStart(2, '0')} · {item.label}</span>
-                  <span aria-hidden="true" class="text-muted-text/60">→</span>
-                </a>
-              )}
-            </div>
-          ))}
+                    <span aria-hidden="true" class="text-muted-text/60">→</span>
+                  </a>
+                )}
+              </div>
+            );
+          })}
         </div>
         <a href="/contact" class="mobile-link mt-2 rounded-2xl bg-primary-text px-4 py-3.5 text-center text-[1rem] font-bold text-canvas hover:opacity-90">Contact studio</a>
 
@@ -638,9 +656,7 @@ const organizationSchema = {
           requestAnimationFrame(() => {
             const y = window.scrollY;
             if (nav) {
-              nav.classList.toggle('translate-y-[-4px]', y > 24 && y > lastY);
-              nav.classList.toggle('scale-[0.99]', y > 24 && y > lastY);
-              nav.classList.toggle('shadow-[0_12px_48px_-12px_rgba(0,0,0,0.8)]', y > 12);
+              nav.classList.toggle('shadow-sm', y > 12);
             }
             if (backToTop) {
               const show = y > 480;
@@ -880,5 +896,6 @@ const organizationSchema = {
         </div>
       </div>
     </footer>
+    <SearchModal />
   </body>
 </html>

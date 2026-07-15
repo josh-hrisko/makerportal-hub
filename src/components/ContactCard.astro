@@ -93,7 +93,7 @@
       const value = parseInt((e.target as HTMLInputElement).value, 10);
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        handle.style.left = `calc(${value}% - ${(value / 100) * 44}px + 4px)`;
+        handle.style.left = `calc(${value}% - ${(value / 100) * 52}px + 4px)`;
         bg.style.width = `${value}%`;
         label.style.opacity = (1 - (value / 80)).toString();
       });

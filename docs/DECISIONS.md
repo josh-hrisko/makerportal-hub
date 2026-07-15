@@ -115,3 +115,10 @@
 - **`git add <path>` fatals (exit 128) when the pathspec matches nothing** — guarded with `if [ -d public/trends ]`. Related pitfall: the workflow shell runs `bash -e`, where a bare `[ -d x ] && cmd` line aborts the whole script when the test is false — use a full `if`, not `&&`, in these steps.
 - HN discussion pages (`news.ycombinator.com/item`) have no og:image and rate-limit build fetches (429) — those items intentionally fall back to pillar tiles; ~15/22 items get real thumbnails in practice.
 - Unauthenticated Bluesky `searchPosts` 403s from this dev machine too, not just CI — local `build-digest.mjs` runs are HN-only unless Bluesky env secrets are exported locally.
+
+## D-014 — Shop and Email List Platforms
+
+**Decision:** Use Lemon Squeezy for digital goods and Buttondown for the email list. Substack and Stripe Payment Links were evaluated and rejected.
+**Why:**
+- **Email List (Buttondown):** Substack relies heavily on tracking pixels and forces users into its ecosystem, which conflicts with the studio's "privacy-first" posture. Buttondown offers an explicitly privacy-first mode, disabling tracking pixels, and provides a lightweight markdown-friendly authoring experience that fits the engineering focus of the studio.
+- **Shop Strategy (Lemon Squeezy):** For a static Astro site with no backend, a Merchant of Record (MoR) is required to handle global digital goods tax (VAT/GST). Stripe Payment Links require the seller to calculate and remit taxes, which adds massive overhead. Lemon Squeezy acts as the MoR, handles all tax compliance, has zero monthly fees (per-sale only), and offers a modern embedded checkout that fits the MakerPortal premium aesthetic. Gumroad is a fallback but its UI is less aligned with the studio's visual identity.

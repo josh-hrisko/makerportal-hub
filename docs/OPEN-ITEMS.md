@@ -99,9 +99,9 @@ See `docs/THEME-SYSTEM.md` for full fix list + QA checklist.
 - [x] Verify `.github/workflows/trends-digest.yml` (2026-07-15): pipeline works end-to-end — HN 34 items, PR auto-created after enabling "Allow GitHub Actions to create and approve pull requests" in repo Actions settings. Unauthenticated Bluesky search **confirmed 403 from Actions IPs** (same as sandbox) — switched to authenticated app-password session (`BLUESKY_IDENTIFIER` / `BLUESKY_APP_PASSWORD` repo secrets, account `makerportal`), public endpoint kept as local fallback.
 - [ ] Google Trends signal: apply to the official Trends API alpha waitlist (free); until approved, spot-check manually rather than automate — see D-011 for why disposable/rotating scrape infra was declined
 - [ ] Migrate legacy makersportal.com/apps/* to *.makerportal.ai subdomains on Vercel (need 302s + new standalone Astro sites)
-- [ ] Real shop inventory + YouTube embeds on /watch
+- [ ] Real shop inventory (Lemon Squeezy integration) + YouTube embeds on /watch
 - [ ] More field notes + internal links (AuraLinter launch note, nymic technical deep dive)
-- [ ] Email list (privacy-first)
+- [ ] Email list (Buttondown integration for privacy-first approach)
 - [ ] Press kit downloadable assets including new 11 icons zip
 - [ ] AppSwitcher island integration in AuraLinter, Biquadia, etc. subdomains (import from hub)
 - [ ] Verify light mode contrast for new 7 icons in bright sun + low light (amber/orange/cyan need real device test)

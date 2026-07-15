@@ -80,15 +80,7 @@ const faqSchema = {
     
     <div class="mx-auto grid min-h-[calc(100svh-5rem)] max-w-[88rem] items-center gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-10 lg:py-24">
       <div class="relative z-10 max-w-[46rem] hero-fade-scroll">
-        <div class="mb-7 flex flex-wrap items-center gap-2.5">
-          <p class="group inline-flex items-center gap-2 rounded-full border border-primary-cta/20 bg-primary-cta/[0.10] px-3.5 py-1.5 font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-primary-cta transition-colors hover:border-primary-cta/30">
-            <span aria-hidden="true" class="signal-dot size-1.5 rounded-full bg-primary-cta"></span>
-            Studio transmission • SF • 2026
-          </p>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.66rem] font-medium uppercase tracking-[0.12em] text-muted-text">
-            <span class="size-1 rounded-full bg-emerald-400"></span> Shipping
-          </span>
-        </div>
+        <!-- Kickers removed per handoff -->
 
         <!-- No opacity-from-0 hero animation: LCP text must paint immediately.
              Underline still draws; motion-sensitive users get reduced-motion CSS. -->
@@ -145,7 +137,7 @@ const faqSchema = {
               <span class="mx-auto block size-12 sm:size-14 drop-shadow-lg" aria-hidden="true">
                 <BrandLogo variant="icon" pulseOnView class="h-full w-full" />
               </span>
-              <span class="mt-2 block font-mono text-[0.5rem] font-semibold uppercase tracking-[0.2em] text-muted-text">Build / Learn / Ship</span>
+              <span class="mt-2 block font-mono text-[0.4rem] font-semibold uppercase tracking-[0.1em] text-muted-text sm:text-[0.5rem] sm:tracking-[0.2em] leading-tight">Build<br class="sm:hidden" />Learn<br class="sm:hidden" />Ship</span>
             </div>
           </div>
 
@@ -162,6 +154,41 @@ const faqSchema = {
           </div>
         </div>
       </div>
+      <script type="application/json" id="orbit-apps-data">
+        {JSON.stringify(apps.map(a => ({ title: a.title, tagline: a.tagline, url: a.url, icon: a.iconSet.w64.src })))}
+      </script>
+      <script is:inline>
+        (() => {
+          try {
+            const dataEl = document.getElementById('orbit-apps-data');
+            if (!dataEl) return;
+            let allApps = JSON.parse(dataEl.textContent);
+            // Fisher-Yates shuffle
+            for (let i = allApps.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [allApps[i], allApps[j]] = [allApps[j], allApps[i]];
+            }
+            const selected = allApps.slice(0, 4);
+            const orbitEls = document.querySelectorAll('.orbit-app');
+            orbitEls.forEach((el, idx) => {
+              if (selected[idx]) {
+                const app = selected[idx];
+                el.href = app.url;
+                el.setAttribute('aria-label', `Open ${app.title} — ${app.tagline}`);
+                const img = el.querySelector('img');
+                if (img) {
+                  // Fallback for missing srcset handling in client script: just use src
+                  img.src = app.icon;
+                  img.srcset = ''; 
+                  img.alt = `${app.title} icon`;
+                }
+              }
+            });
+          } catch (e) {
+            console.error('Orbit randomizer failed', e);
+          }
+        })();
+      </script>
     </div>
   </section>
 

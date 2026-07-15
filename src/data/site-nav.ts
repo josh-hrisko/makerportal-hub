@@ -103,7 +103,7 @@ export const primaryNav: PrimaryNavItem[] = [
   },
   {
     id: 'notes',
-    label: 'Notes',
+    label: 'Journal',
     href: '/blog',
     columns: [
       {
@@ -133,7 +133,7 @@ export const primaryNav: PrimaryNavItem[] = [
   },
   {
     id: 'learn',
-    label: 'Learn',
+    label: 'Guides',
     href: '/resources',
     columns: [
       {
@@ -197,7 +197,7 @@ export const primaryNav: PrimaryNavItem[] = [
   },
   {
     id: 'studio',
-    label: 'Studio',
+    label: 'About',
     href: '/about',
     columns: [
       {
@@ -231,8 +231,8 @@ export const footerColumns: FooterColumn[] = [
     links: [
       { label: 'Home', href: '/' },
       { label: 'Apps', href: '/apps' },
-      { label: 'Field notes', href: '/blog' },
-      { label: 'Learn', href: '/resources' },
+      { label: 'Journal', href: '/blog' },
+      { label: 'Guides', href: '/resources' },
       { label: 'Shop', href: '/shop' },
       { label: 'Watch', href: '/watch' },
     ],
