@@ -117,7 +117,7 @@ export const primaryNav: PrimaryNavItem[] = [
       {
         title: 'Formats',
         links: [
-          { label: 'Articles', href: '/blog', description: 'Essays & craft notes' },
+          { label: 'Articles', href: '/blog#articles', description: 'Essays & craft notes' },
           { label: 'Sponsored', href: '/advertise', description: 'Partner placements', badge: 'Open' },
         ],
       },

@@ -31,24 +31,97 @@ interface Props {
 const { title, description, canonical, noindex, type, publishedTime, modifiedTime } = Astro.props;
 const year = new Date().getFullYear();
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+const normalizeHref = (href: string) => {
+  if (!href || href.startsWith('http') || href.startsWith('#')) return '';
+  return href.split('#')[0].replace(/\/$/, '') || '/';
+};
+
 const isActive = (href: string) => {
-  if (!href || href.startsWith('http') || href.startsWith('#')) return false;
-  const clean = href.split('#')[0].replace(/\/$/, '') || '/';
+  const clean = normalizeHref(href);
+  if (!clean) return false;
   if (clean === '/') return path === '/';
   return path === clean || path.startsWith(`${clean}/`);
 };
-// A mega-menu can legitimately cross-link into another section's page (e.g.
-// Shop's "Affiliate picks" -> /resources#tools). Without this, isActive on
-// that sub-link would also light up Shop while on /resources, alongside
-// Guides (whose own href IS /resources) — two nav items active at once.
-// Whichever item actually owns the current path via its own href wins
-// outright; sub-link matching is only a fallback for pages no item owns
-// directly.
-const directMatchHref = primaryNav.find((item) => isActive(item.href))?.href;
-const isNavItemActive = (href: string, columns?: { links: { href: string }[] }[]) => {
-  if (columns && directMatchHref) return href === directMatchHref;
-  if (isActive(href)) return true;
-  return columns?.some((col) => col.links.some((l) => isActive(l.href))) ?? false;
+
+const isActiveExact = (href: string) => {
+  const clean = normalizeHref(href);
+  if (!clean) return false;
+  return path === clean;
+};
+
+// Ownership: first claimant wins. Primary hrefs claimed first so they beat cross-links.
+// This ensures /advertise (which appears in Journal, Shop, About) is owned by only ONE primary (Journal first),
+// and /blog is owned by Journal, etc.
+const routeOwner = new Map<string, string>();
+for (const item of primaryNav) {
+  const c = normalizeHref(item.href);
+  if (c && !routeOwner.has(c)) routeOwner.set(c, item.id);
+}
+for (const item of primaryNav) {
+  if (!item.columns) continue;
+  for (const col of item.columns) {
+    for (const link of col.links) {
+      const c = normalizeHref(link.href);
+      if (!c) continue;
+      if (!routeOwner.has(c)) routeOwner.set(c, item.id);
+    }
+  }
+}
+
+const getPathOwner = (p: string): string | null => {
+  const cp = normalizeHref(p);
+  if (!cp) return null;
+  if (routeOwner.has(cp)) return routeOwner.get(cp)!;
+  // Nested routes: /blog/slug should be owned by who owns /blog
+  let best: string | null = null;
+  let bestLen = -1;
+  for (const [route, ownerId] of routeOwner.entries()) {
+    if (route === '/') continue;
+    if (cp === route || cp.startsWith(route + '/')) {
+      if (route.length > bestLen) {
+        best = ownerId;
+        bestLen = route.length;
+      }
+    }
+  }
+  return best;
+};
+
+const currentOwnerId = getPathOwner(path);
+
+const isPrimaryActive = (item: { id: string }) => currentOwnerId === item.id;
+
+// Compatibility wrapper for older call signatures
+const isNavItemActive = (
+  hrefOrItem: string | { id: string; href: string },
+  columns?: { links: { href: string }[] }[],
+  itemId?: string,
+) => {
+  if (typeof hrefOrItem === 'object' && hrefOrItem && 'id' in hrefOrItem) {
+    return currentOwnerId === (hrefOrItem as any).id;
+  }
+  if (itemId) return currentOwnerId === itemId;
+  if (columns) {
+    const clean = normalizeHref(hrefOrItem as string);
+    const primary = primaryNav.find((p) => normalizeHref(p.href) === clean);
+    if (primary) return currentOwnerId === primary.id;
+    return false;
+  }
+  return isActiveExact(hrefOrItem as string) || isActive(hrefOrItem as string);
+};
+
+// Helper for mobile sub-menu dedup: only first exact match of a given clean href gets active
+// Use Set<any> to allow Set without generic in JSX context (avoids <string> JSX parsing issue)
+const markActiveOnce = (href: string, seen: Set<any>) => {
+  const clean = normalizeHref(href);
+  if (!clean) return false;
+  if (seen.has(clean)) return false;
+  if (isActiveExact(href)) {
+    seen.add(clean);
+    return true;
+  }
+  return false;
 };
 const footerLinkClass = (href: string) =>
   isActive(href)
@@ -209,7 +282,7 @@ const organizationSchema = {
         <!-- Desktop: Centered Links with active underlines -->
         <div class="hidden flex-1 items-center justify-center gap-1 lg:flex">
           {primaryNav.map((item) => {
-            const active = isNavItemActive(item.href, item.columns);
+            const active = isPrimaryActive(item);
             const hasMega = Boolean(item.columns?.length);
             if (!hasMega) {
               return (
@@ -372,7 +445,8 @@ const organizationSchema = {
         <a href="/" class="mobile-link mb-2 rounded-2xl px-4 py-3 text-[1.15rem] font-semibold text-primary-text hover:bg-elevated">Home</a>
         <div class="space-y-1" data-mobile-nav>
           {primaryNav.map((item, index) => {
-            const active = isNavItemActive(item.href, item.columns);
+            const active = isPrimaryActive(item);
+            const seenActive = new Set();
             return (
               <div class="rounded-2xl border border-transparent" data-mobile-section>
                 {item.columns?.length ? (
@@ -390,7 +464,7 @@ const organizationSchema = {
                       <a href={item.href} class="mobile-link block rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-brand-anchor hover:bg-elevated">Overview →</a>
                       {item.columns.flatMap((col) =>
                         col.links.map((link) => {
-                          const linkActive = isNavItemActive(link.href);
+                          const linkActive = markActiveOnce(link.href, seenActive);
                           return (
                             <a
                               {...linkAttrs(link.href, link.external)}

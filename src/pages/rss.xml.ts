@@ -8,6 +8,7 @@ export const GET: APIRoute = async (context) => {
     title: 'Field Notes — MakerPortal',
     description: 'Notes on independent software, product decisions, interface craft, and what we learn while shipping.',
     site: context.site ?? 'https://www.makerportal.ai',
+    stylesheet: '/rss-styles.xsl',
     items: blog.map((post) => ({
       title: post.data.title,
       pubDate: post.data.publishedAt,

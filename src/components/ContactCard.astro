@@ -26,7 +26,7 @@
         ].map(([value, label]) => (
           <label class="cursor-pointer">
             <input type="radio" name="topic" value={value} class="peer sr-only" checked={value==='General Inquiry'} />
-            <span class="inline-flex rounded-full border border-border bg-elevated/60 px-3.5 py-2 text-[0.82rem] font-medium text-muted-text ring-1 ring-transparent transition-all peer-checked:border-primary-cta/50 peer-checked:bg-primary-cta/10 peer-checked:text-primary-cta peer-checked:ring-primary-cta/20 hover:border-[var(--mp-border-strong)] hover:text-primary-text">{label}</span>
+            <span class="inline-flex rounded-full border border-border bg-elevated/60 px-3.5 py-2 text-[0.82rem] font-medium text-muted-text ring-1 ring-transparent transition-all peer-checked:border-brand-anchor/30 peer-checked:bg-brand-anchor/10 peer-checked:text-brand-anchor peer-checked:ring-brand-anchor/20 hover:border-[var(--mp-border-strong)] hover:text-primary-text">{label}</span>
           </label>
         ))}
       </div>
@@ -49,7 +49,7 @@
 
     <div class="sm:col-span-2 space-y-4">
       <div class="unlock-container relative flex h-[3.75rem] items-center justify-center overflow-hidden rounded-full border border-border bg-canvas" id="unlock-container">
-        <div class="unlock-bg absolute left-0 top-0 h-full rounded-full bg-primary-cta/10 pointer-events-none w-0 transition-[width] duration-100" id="unlock-bg"></div>
+        <div class="unlock-bg absolute left-0 top-0 h-full rounded-full bg-brand-anchor/10 pointer-events-none w-0 transition-[width] duration-100" id="unlock-bg"></div>
         <div class="unlock-handle absolute left-1 top-2 flex size-[2.75rem] items-center justify-center rounded-full bg-primary-text text-canvas shadow-[0_4px_16px_rgba(0,0,0,0.12)] pointer-events-none transition-[left]" id="unlock-handle" aria-hidden="true">
           <svg viewBox="0 0 24 24" class="size-4 fill-none stroke-current stroke-[2.2]"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
         </div>
@@ -93,7 +93,11 @@
       const value = parseInt((e.target as HTMLInputElement).value, 10);
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        handle.style.left = `calc(${value}% - ${(value / 100) * 52}px + 4px)`;
+        // Fix: handle is 2.75rem = 44px, container has 4px inset each side.
+        // Travel = W - 44px - 8px = W - 52px for symmetric, but to reach flush right
+        // we use 48px travel (W - 48px) so handle snaps to edge: left = 4px + v*(W-48px)
+        // = calc(v% - v*48px + 4px) → at 100% = calc(100% - 44px) flush.
+        handle.style.left = `calc(${value}% - ${(value / 100) * 48}px + 4px)`;
         bg.style.width = `${value}%`;
         label.style.opacity = (1 - (value / 80)).toString();
       });
@@ -111,17 +115,17 @@
     function unlockForm() {
       isUnlocked = true;
       slider.value = '100';
-      handle.style.left = 'calc(100% - 48px)';
+      handle.style.left = 'calc(100% - 44px)';
       bg.style.width = '100%';
       label.textContent = "Verified ✓";
       label.style.opacity = '1';
       // Use primary-text not hardcoded white — works in both themes
       label.classList.add('text-primary-text');
       slider.disabled = true;
-      container.classList.add('border-emerald-400/30', 'shadow-[0_0_24px_rgba(52,211,153,0.15)]');
+      container.classList.add('border-brand-anchor/30', 'shadow-[0_0_24px_rgba(37,105,151,0.18)]');
       // Handle was bg-primary-text text-canvas; strip both possible variants
       handle.classList.remove('bg-white','bg-primary-text','text-canvas');
-      handle.classList.add('bg-emerald-400','text-[#0A1A14]');
+      handle.classList.add('bg-brand-anchor','text-white');
       handle.innerHTML = `<svg viewBox="0 0 24 24" class="size-4 stroke-[2.5]" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
       submitBtn.disabled = false;
     }
@@ -164,8 +168,8 @@
         const data = await response.json();
         if (response.ok) {
           form.style.display = 'none';
-          formStatus.innerHTML = '<strong class="text-emerald-300">Sent ✓</strong><br>Thanks — we reply within a few hours, SF time. No spam, just build notes.';
-          formStatus.className = 'mt-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[0.875rem] font-medium text-emerald-200';
+          formStatus.innerHTML = '<strong class="text-brand-anchor">Sent ✓</strong><br>Thanks — we reply within a few hours, SF time. No spam, just build notes.';
+          formStatus.className = 'mt-2 rounded-xl border border-brand-anchor/20 bg-brand-anchor/10 px-4 py-3 text-[0.875rem] font-medium text-primary-text';
         } else throw new Error(data.error || 'Failed');
       } catch (err: any) {
         formStatus.textContent = err.message || 'Something went wrong.';
