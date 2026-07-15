@@ -106,7 +106,11 @@ See `docs/THEME-SYSTEM.md` for full fix list + QA checklist.
 - [ ] AppSwitcher island integration in AuraLinter, Biquadia, etc. subdomains (import from hub)
 - [ ] Verify light mode contrast for new 7 icons in bright sun + low light (amber/orange/cyan need real device test)
 
+- [x] Trend digest gating pipeline (D-012, 2026-07-15): staged funnel in `scripts/trends/pipeline.mjs` (dedupe/gates/relevance-dominant scoring/diversity caps), 13 fixture regression tests gate every CI build, PR body is now a pillar-grouped markdown summary with score breakdowns
+- [x] Signals section redesign (D-013, 2026-07-15): featured card + thumbnail grid on `/resources`, self-hosted og:image webp thumbnails built in Actions (see D-013 findings: ImageMagick must be apt-installed on runners; extension-from-content-type bug)
+- [ ] **Merge PR #2** (Trend digest — 2026-07-15) after reviewing the Vercel branch preview — first digest with gates + thumbnails; merging publishes to production /resources
 - [ ] Trend digest keyword tuning: after 2–3 weekly cycles, review which pillars under/over-fill (`trend-digest-summary.md` funnel stats in each PR) and adjust `keywords.mjs` needles; fixture tests in `pipeline.test.mjs` guard against regressions (see D-012)
+- [ ] Watch for HN-mirror bot accounts in Bluesky results (e.g. `bestofhn.bsky.social` passed legitimately on 2026-07-15 with "Submit to upvote" boilerplate) — add an author denylist to `pipeline.mjs` gates if the pattern recurs, not preemptively
 
 ## P2
 

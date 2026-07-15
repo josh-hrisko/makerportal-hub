@@ -65,6 +65,11 @@ const tools = [
     </div>
   </section>
 
+  {/* Signals we're tracking (D-012/D-013): data is src/data/trends.json, produced
+      weekly by the gated digest pipeline and merged via PR — nothing here fetches at
+      runtime. Thumbnails are self-hosted /trends/*.webp (never hotlinked — the
+      "no tracking" claim below depends on that). Items without a thumbnail get a
+      pillar-tinted fallback tile. Fixed aspect boxes = no CLS; no backdrop-filter (D-006). */}
   {trending.length > 0 && featuredSignal && (
     <section id="trending" class="border-b border-border" aria-labelledby="trending-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">

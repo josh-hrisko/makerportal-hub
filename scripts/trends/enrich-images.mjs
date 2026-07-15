@@ -9,6 +9,13 @@
  * missing ImageMagick just means that item renders the pillar-color
  * fallback tile instead. The directory is wiped each run so only the
  * current digest's thumbnails are committed (~20 × ~25 KB per week).
+ *
+ * Ops notes (learned the hard way, see D-013 in docs/DECISIONS.md):
+ * - GitHub ubuntu-latest runners do NOT ship ImageMagick anymore; the
+ *   workflow apt-installs it. If the run log says "no ImageMagick found",
+ *   thumbnails were silently skipped — the digest still succeeds.
+ * - HN discussion pages have no og:image and 429 our fetches; expect
+ *   ~15/22 real thumbnails, the rest fall back by design.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync, unlinkSync, existsSync, statSync } from 'node:fs';

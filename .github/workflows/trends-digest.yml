@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: '22'
 
+      # ubuntu-latest runners stopped shipping ImageMagick; without this,
+      # enrich-images.mjs skips all thumbnails (silently — digest still passes)
       - name: Install ImageMagick (og:image thumbnails)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends imagemagick
 
