@@ -144,7 +144,7 @@ const linkAttrs = (href: string, external?: boolean) => {
     return { href, rel: 'noopener' };
   }
   if (isTrulyExternal(href)) {
-    return { href, target: '_blank', rel: href.includes('github.com/makerportal') || href.includes('MakerPortal') || href.includes('x.com/MakerPortal') ? 'me noopener noreferrer' : 'noopener noreferrer' };
+    return { href, target: '_blank', rel: href.includes('github.com/makerportal') || href.includes('maker_portal') || href.includes('x.com/maker_portal') || href.includes('MakerPortal') ? 'me noopener noreferrer' : 'noopener noreferrer' };
   }
   // Fallback: non-ecosystem external without explicit true-external flag? Stay same-tab safe.
   return { href, target: '_blank', rel: 'noopener noreferrer' };
@@ -170,7 +170,7 @@ const organizationSchema = {
         width: 512,
         height: 512
       },
-      sameAs: ['https://www.makerportal.ai', 'https://github.com/makerportal', 'https://x.com/MakerPortal'],
+      sameAs: ['https://www.makerportal.ai', 'https://github.com/makerportal', 'https://x.com/maker_portal'],
       description: 'An independent San Francisco software studio crafting iOS & iPadOS applications — on-device ML where possible, transparent hybrid cloud for agentic DSP (AuraLinter), CoreML, Metal, ANE, LangGraph.',
       foundingDate: '2023',
       location: { '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality: 'San Francisco', addressRegion: 'CA', addressCountry: 'US' } }
