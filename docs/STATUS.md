@@ -11,6 +11,10 @@ Single snapshot of what's live, what's built but pending, what's placeholder. Re
 - **Blog:** 3 human posts in `src/content/blog/`, no AI pipeline
 - **Build:** `npm run build` → astro check + build + pagefind + strip-dev-pages (brand prod-hidden)
 
+## Traffic (ground truth)
+
+Search Console pull 2026-07-15: **1 click, 3 impressions** over trailing 28 days across `/`, `biquadia.makerportal.ai/`, `www.makerportal.ai/`. Site was only indexed by Google ~1 day before this pull — sparse numbers expected at this stage, not a red flag yet. Re-check in 1-2 weeks before drawing conclusions; treat all monetization/audience claims as pre-traffic until then. Re-run via `node --env-file=.env scripts/search-console/build-report.mjs` (local-only, `analytics/reports/` gitignored — see below).
+
 ## Monetization surfaces (actual)
 
 - **Amazon Associates:** 50 real picks in `affiliate-links.json`, sourced from makersportal.com posts (see `AFFILIATE-CANDIDATES.md`), grouped by app `<details>` collapsible on `/resources#gear`. Disclosure + `rel="sponsored"`.
@@ -19,14 +23,15 @@ Single snapshot of what's live, what's built but pending, what's placeholder. Re
 - **Gear re-ranking:** Daily pillar counts re-order gear groups + items, chips `↗ {Pillar}` + header `Re-ranked · trending`. Safe — same 50 ASINs, only sort. Verified 1724px height vs 5500px incident (D-016).
 - **Shop:** Placeholder cards, MoR Lemon Squeezy chosen per D-014 (5%+50c, MoR tax handled, secure downloads), **not integrated**. See `MONETIZATION.md` for MVP plan ($19-29 per archive).
 - **Email:** Buttondown chosen per D-014 (privacy-first, no tracking pixels), **not built**. Free first 100, $9/mo per addon.
-- **/advertise:** Exists with format copy (sponsored note, resource slot, video integration), no live integration / pricing kit yet.
+- **/advertise:** Media kit shipped 2026-07-15 — live audience stats (11 apps, 6 pillars, 0 trackers from `apps.ts`/`trends.ts`), starting rates $300 note / $150 slot / $500 video, disclosure standards block. No booking/payment integration — inbound via `/contact` only. Low priority to push further given near-zero traffic (see Traffic section above) — nobody sponsors an unproven audience.
+- **Search Console API:** `scripts/search-console/` (fetch-performance.mjs + build-report.mjs) — OAuth refresh-token grant reusing the credential from `analytics/gsc_dashboard.py` (an earlier session's manual Python dashboard, still present and still works). Deliberately local-only: not wired into GitHub Actions, output never touches `src/data/` or gets committed — this repo is public and search performance is private business data. Run via `node --env-file=.env scripts/search-console/build-report.mjs`, output in gitignored `analytics/reports/`. Watch for OAuth refresh-token expiry ~2026-07-19 if the consent screen is still "Testing" mode.
 - **/watch:** Scaffold, no monetized channel yet.
 
 ## Pipelines
 
 | Pipeline | Schedule | Input | Output | Secrets | State |
 |----------|----------|-------|--------|---------|-------|
-| `trends-digest.yml` | daily `0 14 * * *` | Bluesky (auth), HN Algolia, Reddit (optional) | `trends.json` + `public/trends/*.webp` + PR body | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD`, `REDDIT_CLIENT_ID/SECRET` optional | Live, PR #2 pending merge |
+| `trends-digest.yml` | daily `0 14 * * *` | Bluesky (auth), HN Algolia, Reddit (optional) | `trends.json` + `public/trends/*.webp` + PR body | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD`, `REDDIT_CLIENT_ID/SECRET` optional | Live, PR #2 merged 2026-07-15 |
 | `amazon-catalog.yml` | monthly 1st + dispatch | `affiliate-links.json` ASINs | `amazon-catalog.json` + PR body | `AMAZON_CLIENT_ID`, `AMAZON_CLIENT_SECRET` | Built, empty cache until eligible |
 
 No runtime API calls, no client secrets, no Vercel env vars for these — static data only.
@@ -48,7 +53,7 @@ No runtime API calls, no client secrets, no Vercel env vars for these — static
 - Hero: orbit randomizer with requestIdleCallback + batched rAF (deferred after LCP), Build/Learn/Ship center node 0.42rem mono, kickers removed per handoff (preserved easter-egg footer pills)
 - Blog prev/next: `grid-cols-2` side-by-side on mobile (was stacked)
 - Contact slider: fixed centering `top-1/2 -translate-y-1/2` (was `top-2` 1px off due to border-box)
-- View Transitions: `ClientRouter` from `astro:transitions` in Layout head, 0.35s cubic-bezier(0.16,1,0.3,1), nav `view-transition-name: site-nav`
+- View Transitions: `ClientRouter` from `astro:transitions` in Layout head, 0.35s cubic-bezier(0.16,1,0.3,1). Nav `view-transition-name: site-nav` removed + `data-astro-rerun` added to nav/search inline scripts (826bc48) — verified live 2026-07-15 on makerportal.ai: Apps→Journal→Guides mega switch works across repeated ClientRouter navigations.
 - Performance: `content-visibility: auto` for #tools #gear #products #trending (700px intrinsic), `details` open anim via `interpolate-size: allow-keywords` + `@starting-style`, AppCard blur 40px mobile / 80px desktop (was 80px mobile heavy), lighthouse-budget.json added (FCP 1.8s, LCP 2.5s, CLS 0.1, TBT 200, total 500KB)
 - Creators API: re-tested 2026-07-15 — still 403 `AssociateNotEligible` expected (48h window from 16:36 UTC), cache untouched, will re-test after 2026-07-17
 - Secrets only in `.env` + GitHub Actions repo secrets, no client-side secrets, no runtime API calls

@@ -1,10 +1,20 @@
 ---
 import HubShell from '../components/HubShell.astro';
 import Layout from '../layouts/Layout.astro';
+import { apps } from '../data/apps';
+import { pillarMeta } from '../data/trends';
 
 const title = 'Advertise — Sponsor MakerPortal';
 const description =
   'Sponsorships, sponsored notes, and newsletter placements on MakerPortal. Audience of iOS builders, on-device AI, agentic DSP practitioners.';
+
+const pillarLabels = Object.values(pillarMeta).map((p) => p.label);
+
+const formats = [
+  { t: 'Sponsored note', price: '$300', unit: 'per note', d: 'One field note with clear sponsor labeling and editorial standards — written by us, reviewed by you before it ships.' },
+  { t: 'Resource slot', price: '$150', unit: 'per month', d: 'Featured tool card on Learn (/resources) — disclosure always visible, no dark patterns.' },
+  { t: 'Video integration', price: '$500', unit: 'per segment', d: 'Mention or dedicated segment on Watch once the channel is live. Waitlist — contact to be notified.' },
+];
 ---
 
 <Layout title={title} description={description}>
@@ -24,19 +34,39 @@ const description =
 
   <section class="border-b border-border">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
-      <div class="grid gap-5 md:grid-cols-3">
-        {[
-          { t: 'Sponsored note', d: 'One field note with clear sponsor labeling and editorial standards.' },
-          { t: 'Resource slot', d: 'Featured tool on Learn — disclosure always visible.' },
-          { t: 'Video integration', d: 'Mention or segment on Watch once the channel is live.' },
-        ].map((x) => (
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="surface-card rounded-[20px] border bg-card-bg p-5">
+          <p class="text-[1.6rem] font-bold text-primary-text">{apps.length}</p>
+          <p class="mt-1 text-[0.85rem] text-muted-text">Live apps across the studio, each with its own audience of builders and power users.</p>
+        </div>
+        <div class="surface-card rounded-[20px] border bg-card-bg p-5">
+          <p class="text-[1.6rem] font-bold text-primary-text">{pillarLabels.length}</p>
+          <p class="mt-1 text-[0.85rem] text-muted-text">Content pillars we cover: {pillarLabels.join(', ')}.</p>
+        </div>
+        <div class="surface-card rounded-[20px] border bg-card-bg p-5">
+          <p class="text-[1.6rem] font-bold text-primary-text">0</p>
+          <p class="mt-1 text-[0.85rem] text-muted-text">Trackers on this site. Privacy-first by construction — no pixel-based ad verification offered.</p>
+        </div>
+      </div>
+
+      <div class="mt-10 grid gap-5 md:grid-cols-3">
+        {formats.map((x) => (
           <article class="surface-card rounded-[24px] border bg-card-bg p-6">
-            <h2 class="text-xl font-semibold text-primary-text">{x.t}</h2>
+            <div class="flex items-baseline justify-between gap-3">
+              <h2 class="text-xl font-semibold text-primary-text">{x.t}</h2>
+              <p class="whitespace-nowrap text-[0.95rem] font-bold text-primary-text">{x.price}<span class="ml-1 font-normal text-muted-text">{x.unit}</span></p>
+            </div>
             <p class="mt-3 text-[0.92rem] leading-[1.65] text-muted-text">{x.d}</p>
           </article>
         ))}
       </div>
-      <p class="mt-10 text-[0.9rem] text-muted-text">Audience: indie iOS engineers, product people, on-device ML and agentic DSP practitioners (11 apps). Rates and calendar via contact.</p>
+
+      <div class="mt-10 surface-card rounded-[24px] border bg-card-bg p-6">
+        <h2 class="text-lg font-semibold text-primary-text">Disclosure standards</h2>
+        <p class="mt-3 text-[0.9rem] leading-[1.65] text-muted-text">Every sponsored placement is labeled as sponsored — no exceptions, no native-blend copy designed to read as organic. We only take sponsors that fit the studio's actual focus (on-device ML, agentic DSP, Apple platform craft); we turn down fits that don't match, regardless of budget. Affiliate links (Amazon gear on <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">/resources#gear</a>) carry their own <code class="text-[0.8rem]">rel="sponsored"</code> disclosure and are separate from paid sponsorships.</p>
+      </div>
+
+      <p class="mt-10 text-[0.9rem] text-muted-text">Rates above are starting points — final scope and calendar via contact. Audience: indie iOS engineers, product people, on-device ML and agentic DSP practitioners.</p>
     </div>
   </section>
 </Layout>

@@ -1,10 +1,10 @@
-# Handoff prompt — next LLM session (2026-07-15 evening)
+# Handoff prompt — next LLM session (2026-07-15 evening, post nav verify + advertise + search console)
 
 Copy everything below the line into a new agent session.
 
 ---
 
-## HANDOFF: MakerPortal Hub — State-of-the-art, monetized, thrilling (post shop MVP + nav fix)
+## HANDOFF: MakerPortal Hub — traffic reality check, then close the revenue loop
 
 You are a **frontier-level UI/UX + growth & monetization engineer** who writes production Astro 7 + Tailwind v4 + vanilla JS. You've shipped affiliate programs, gated digital stores, View Transitions, search, and content funnels. You know low-effort/high-leverage vs vanity.
 
@@ -22,69 +22,57 @@ Astro 7 + Tailwind v4 · `output: 'static'` · Vercel adapter · Pagefind search
 git log --oneline -20
 ```
 
-- `docs/README.md` — new compressed index (8 active + archive/)
-- `docs/STATUS.md` — single snapshot of what's live/verified as of 2026-07-15 evening session
-- `docs/BACKLOG.md` — current P0/P1/P2 open only (no DONE noise)
-- `docs/MONETIZATION.md` — evergreen shop/email/affiliate/trends stack, verified pricing, shop MVP plan
-- `docs/DECISIONS.md` — read D-011, D-012, D-014, D-015, D-016, D-017 specifically (entire monetization stack + hard-won mistakes, D-016 lessons, D-017 daily trends)
-- `docs/AFFILIATE-CANDIDATES.md` — sourcing trail for 50 Amazon picks (real gear from makersportal.com, not invented)
-- `docs/THEME-SYSTEM.md`, `docs/RESEARCH-EMPIRE-IA.md`, `docs/DID-NOT-WORK.md` — working per owner
-- `src/data/shop.json`, `src/data/affiliate-links.json`, `src/data/amazon-catalog.json`, `src/pages/resources.astro` (gearGroups + trending re-rank), `src/pages/shop.astro` (now real cards, Lemon overlay), `src/components/ButtondownSignup.astro`, `src/layouts/Layout.astro` (nav + View Transitions), `src/styles/global.css` (content-visibility, details anim, scroll-driven nav fix)
+- `docs/README.md` — compressed index (8 active + archive/)
+- `docs/STATUS.md` — single snapshot, updated 2026-07-15 evening
+- `docs/BACKLOG.md` — current P0/P1/P2 open only
+- `docs/MONETIZATION.md` — evergreen shop/email/affiliate/trends stack, verified pricing
+- `docs/DECISIONS.md` — read D-011, D-012, D-014, D-015, D-016, D-017
+- `analytics/reports/search-performance-latest.md` — **read this first**, it's the ground truth on whether anything is working yet
 
-**Do not commit** unless user explicitly says commit/push (last session pushed 0705431).
+### Ground truth as of 2026-07-15 (read before making priority calls)
 
-### Current monetization state (as of 2026-07-15 evening, after autonomous sprint)
+A live Search Console pull (`node --env-file=.env scripts/search-console/build-report.mjs`) returned **1 click, 3 impressions over the trailing 28 days**, across `/`, `biquadia.makerportal.ai/`, and `www.makerportal.ai/`. Site was only indexed by Google ~1 day before this pull, so sparse numbers are expected right now, not a failure signal — re-check in 1-2 weeks before drawing conclusions. Still, don't build more monetization surface area (sponsorships, affiliate polish, advertise upgrades) as if there's an audience to sell yet — there isn't, provably, today. Growth-focused work (see mission below) is the actual lever right now.
 
-- **Amazon Associates:** 50 real owner-confirmed picks grouped collapsible on `/resources#gear`, re-ranked daily by trending pillars (D-017). Live enrichment via Creators API built but hitting `AssociateNotEligible` as of 2026-07-15 16:36 UTC cred creation — expected 48h window, re-test after 2026-07-17: `node --env-file=.env scripts/amazon/build-catalog.mjs`. `amazon-catalog.json` empty until eligible.
-- **Trends digest:** daily 14:00 UTC (was weekly, D-017), gated/scored pipeline + self-hosted webp thumbnails, PR-reviewed, feeds Signals + re-ranks gear. 6 pillars: on-device-ai, metal-ane, local-llm, dsp-audio, ios-craft, privacy-arch. PR #2 was MERGED 2026-07-15, so no open PR now — next daily run will open new PR now that daily cron is on main (pushed).
-- **Shop:** Lemon Squeezy MoR chosen per D-014 (5%+50c, MoR tax handled). Shop MVP shipped: `shop.json` SSOT 3 archives $19-29 + bundle $49 save $39 + tip PWYW $9. Tip live: `https://makerportal.lemonsqueezy.com/checkout/buy/bafb76d4-09c1-472f-b476-8d4c2b588527` (ID 1223799, variant 1913434). Other 3 archives still "Coming soon" — need Buy URLs from owner (see BACKLOG P0). Lemon.js overlay + disclosure + newsletter embed in shop.
-- **Email:** Buttondown chosen per D-014 — **postponed per owner** (not enough content yet). Component exists with `username=""` placeholder showing disabled "Coming soon". Will enable after 3-4 archive drops/field notes.
-- **Press kit:** `public/press/makerportal-icons.zip` 98KB (128+256 webp) + boilerplate 11 apps + pillars + usage notes — downloadable on /press.
-- **Blog:** 3 real posts, no AI pipeline. Newsletter embed added but postponed.
+### What was verified/shipped this session (826bc48 + uncommitted)
 
-### What was just built (last session)
+- **Nav fix verified live** on makerportal.ai: Apps→Journal→Guides mega switch works across repeated View Transition navigations. Also verified live: shop cards/bundle/CTA contrast, search modal (CmdK, live query, arrow nav, Esc), contact slider centering, press kit zip download. All checked off in BACKLOG.md.
+- **`/advertise` upgraded** (`src/pages/advertise.astro`) — real audience stats pulled live from `apps.ts`/`trends.ts` (11 apps, 6 pillars, 0 trackers), rate cards ($300 note / $150 slot / $500 video), disclosure standards block. Build-verified, not committed yet.
+- **Search Console pipeline built** (`scripts/search-console/fetch-performance.mjs` + `build-report.mjs`) — **local-only, deliberately not wired into GitHub Actions or `src/data/`**, because this repo is public and search performance is private business data. Reuses the OAuth refresh token already sitting in `analytics/token.json` / `analytics/client_secret*.json` (from an earlier session's `gsc_dashboard.py`, a manual Python dashboard tool that still exists and still works — this is the same credential, wired into a scriptable JSON/markdown output instead of only an HTML dashboard). Run it via:
+  ```bash
+  node --env-file=.env scripts/search-console/build-report.mjs
+  ```
+  Output lands in `analytics/reports/search-performance-latest.{json,md}` (gitignored). **Caveat:** if the Google Cloud OAuth consent screen is still "Testing" publishing status, the refresh token hard-expires 7 days after issuance (minted ~2026-07-12, so watch for auth failures after ~2026-07-19). Fix: publish the consent screen to "In production" (no verification review needed for a single-user internal tool on `webmasters.readonly`), or re-run `analytics/gsc_dashboard.py` locally to mint a fresh token.
+- `.env` now has `GOOGLE_SC_CLIENT_ID` / `GOOGLE_SC_CLIENT_SECRET` / `GOOGLE_SC_REFRESH_TOKEN` (gitignored, local only).
 
-- Shop MVP: shop.json, shop.astro real cards, Lemon overlay, bundle banner, tip live, disclosure, efficiency notes
-- ButtondownSignup component + embeds on /shop, /blog, /resources (postponed state)
-- Nav full-width sticky opaque already existed, but added ClientRouter `<ViewTransitions />`, fixed search modal warning (`body`→`searchBody`), contact slider centering (`top-1/2 -translate-y-1/2` was off by 1px)
-- Performance: content-visibility auto for #tools #gear #products #trending, details open anim `interpolate-size: allow-keywords` + @starting-style, AppCard blur 40px mobile / 80px desktop (was 80px mobile heavy), lighthouse-budget.json
-- Docs compressed: 11→8 active + archive/ (README updated)
-- **Nav bug found:** Once you click a nav item, you can't select another. Root cause: added `header[data-nav] { view-transition-name: site-nav; }` in global.css to persist header during View Transitions — this broke mega-menu listeners after first ClientRouter navigation (header persisted, listeners lost). Fix applied: removed view-transition-name + added `data-astro-rerun` to nav and search modal inline scripts. Needs verification on live Vercel preview (file:// Playwright test showed mega switching works: Apps→Journal→Guides each 1 panel visible).
+### Your mission — in priority order, informed by the traffic data above
 
-### Your mission — continue state-of-the-art + monetized + thrilling
+1. **Vercel Web Analytics (or Plausible/similar privacy-friendly option) — ship it now.** Search Console only tells you search-referred sessions; you have zero visibility into direct traffic, referrers, or on-site behavior. This is a 15-30 minute add (`@vercel/analytics` package + one component in `Layout.astro`) and every other decision on this site should be informed by it going forward. Keep it privacy-first (no fingerprinting, no cross-site tracking) per the studio's own positioning.
 
-1. **Verify nav fix on live site:** After Vercel deploy of 0705431, visit / → open Apps mega → click Journal mega → should switch (1 panel visible). If still broken, remove ClientRouter or make nav init idempotent via `astro:page-load` listener, not just data-astro-rerun. Do not re-add persisted header name without fixing listener re-init.
+2. **Content cadence, not more monetization surface.** With 1 click in 28 days, the shop, affiliate links, and `/advertise` page have nothing to sell to yet. The highest-leverage work is real field notes from real shipped code — BLExAR launch note, MotionLink deep dive (`CMHeadphoneMotionManager` under-documented, genuine SEO opportunity per prior research), Notiary/PopCloset vector-index writeup. Aim for 1-2 real posts before revisiting any traffic-dependent feature. Cross-link every post into `/resources` pillars per existing IA.
 
-2. **Shop archives — what should the 3 Lemon products be?** Owner blanking. Proposed useful, real-code-only picks (you have real code):
-   - BLExAR Nano+OLED Starter $19 (RFID/GPS/OLED sketches + iOS BLE HM-10/CC254x/nRF52 + CSV) — from makersportal.com 33 builds
-   - MotionLink Head Motion Starter $19 (CMHeadphoneMotionManager wrapper, quaternion/euler, spatial audio prototype, CSV) — from MotionLink, Headphone Motion API under-documented
-   - CoreML Offline Classifier + Vector Index Starter $29 (SwiftUI+Vision+FP16 quantized, local vector index 28MB, SwiftData, privacy disclosure) — from Notiary+PopCloset
-   Bundle $49 save $39. Owner needs to create Lemon products, upload zips (<50MB), paste Buy URLs into shop.json. Tip already live.
+3. **Lemon Squeezy store creation — still OWNER VISIT NEEDED, still blocking real revenue.** This has been sitting for 2+ sessions. It's the one revenue lever that doesn't need traffic — a single $19 sale doesn't care about impression counts. See `docs/BACKLOG.md` P0 for the exact steps (create store `makerportal`, 3 products — BLExAR Nano+OLED $19, CoreML Offline Classifier $29, **Biquadia DSP Snippet Pack $19** — note: `src/data/shop.json` already ships Biquadia as the third pick, not the MotionLink starter an older handoff doc proposed; code is the source of truth). If you're an LLM session without hands to click through Lemon's UI, flag this clearly to the human rather than stalling on it.
 
-3. **Finish monetization checklist:** Merge next daily trend PR, re-test Creators API after 2026-07-17, upgrade /advertise media kit, decide when to re-enable newsletter (after 3-4 notes/archives).
-
-4. **Efficiency + thrilling:** view transitions already added, but verify no CLS regression, check Inter font preload critical path, AppCard blur fix, content-visibility.
+4. **Re-check the Search Console numbers periodically**, not the Creators API or trend PRs — those are already on autopilot (daily cron, monthly cron) and don't need session-by-session attention. Traffic is the metric that actually needs a human/LLM checking in.
 
 ### Hard constraints — do not violate
 
-- Never fabricate recommendation/product/review/usage claim. Every gear pick from `affiliate-links.json` (50 real), every archive from real shipped code (BLExAR, MotionLink, Notiary, etc.)
-- No auto-discovery/auto-publish without human-review gate (trends digest + catalog both PR-reviewed, never auto-merge)
-- No live runtime API calls or client-side secrets — static only, secrets .env + GitHub Actions repo secrets
-- Don't introduce second payment processor — Lemon is MoR per D-014 (Stripe Payment Links pushes VAT to seller)
-- Verify before trusting resolved link text/slug/scraped title as ground truth — D-016 false positives
-- Check rendered output, not just build success, when content volume changes (Playwright boundingBox) — D-016 5500px incident
-- Preserve opaque surfaces, no stacked backdrop-filter (D-006), tokens only, ecosystem same-tab (D-009), hidden theme toggle (D-010)
+- Never fabricate recommendation/product/review/usage claims. Every gear pick real, every archive from real shipped code.
+- No auto-discovery/auto-publish without human-review PR gate (trends + catalog pipelines).
+- No live runtime API calls or client-side secrets on the hub itself — static only.
+- Don't introduce a second payment processor (Lemon is MoR per D-014).
+- **Search Console / analytics data stays local-only and gitignored — this repo is public.** Do not commit `analytics/reports/`, do not wire search performance data into `src/data/` or any public page unless the owner explicitly asks for that tradeoff (it would make real traffic numbers public).
+- Preserve opaque surfaces, no stacked backdrop-filter (D-006), tokens only, ecosystem same-tab (D-009), hidden theme toggle (D-010).
+- Do not commit anything unless the user explicitly says commit/push.
 
 ### Success criteria
 
-- Nav bug verified fixed on live Vercel (can open Apps → Journal without needing double-click)
-- Shop 3 archives live with real Buy URLs (or at least 1 more beyond tip), bundle works, build passes, Playwright shop cards not white-on-white
-- Docs stay compressed (STATUS, BACKLOG, MONETIZATION evergreen)
-- Anything shipped verified end-to-end (build + browser check, no secrets leaked)
+- Vercel Web Analytics (or equivalent) live and reporting real sessions
+- At least 1 new field note published from real shipped code, cross-linked into `/resources`
+- Lemon store either created (ideal) or clearly escalated to the owner as the single blocking item
+- Search Console pipeline still authenticating cleanly (watch the ~2026-07-19 token-expiry risk)
 
-Start by verifying nav fix on live preview, then tackle shop archive usefulness question with owner.
+Start by running `node --env-file=.env scripts/search-console/build-report.mjs` to get fresh numbers, then decide priorities from there — not from assumptions.
 
 ---
 
 *End of pasteable handoff.*
-
