@@ -8,18 +8,20 @@ Single snapshot of what's live, what's built but pending, what's placeholder. Re
 - **Apps:** 11 live — AuraLinter (2026-07-10), Biquadia, Thumb-Dash, nymic, Notiary, akous, PopCloset, itria, GridVerse, MotionLink, BLExAR. 5 on `*.makerportal.ai`, 6 legacy on `makersportal.com` (bridge, migrating)
 - **Theme:** Light default `#F4F1EB` canvas / white cards, dark via hidden triggers (D-010). A11y AA: muted 6.8:1, anchor 5.9:1. Tokens in `global.css`, semantic helpers `surface-card` etc.
 - **Nav:** Single source `site-nav.ts`, ≤7 primary items, mega panels, ecosystem same-tab / true external new-tab (D-009), opaque surfaces (D-006)
-- **Blog:** 3 human posts in `src/content/blog/`, no AI pipeline
+- **Blog:** 4 human posts in `src/content/blog/` (added MotionLink `CMHeadphoneMotionManager` field note 2026-07-15), no AI pipeline. Trend-grounded draft scaffold (`scripts/trends/draft-post.mjs`) exists but is gated — see Trends digest entry below.
 - **Build:** `npm run build` → astro check + build + pagefind + strip-dev-pages (brand prod-hidden)
 
 ## Traffic (ground truth)
 
-Search Console pull 2026-07-15: **1 click, 3 impressions** over trailing 28 days across `/`, `biquadia.makerportal.ai/`, `www.makerportal.ai/`. Site was only indexed by Google ~1 day before this pull — sparse numbers expected at this stage, not a red flag yet. Re-check in 1-2 weeks before drawing conclusions; treat all monetization/audience claims as pre-traffic until then. Re-run via `node --env-file=.env scripts/search-console/build-report.mjs` (local-only, `analytics/reports/` gitignored — see below).
+Search Console re-pull 2026-07-15 (evening): still **1 click, 3 impressions** (window 2026-06-15..2026-07-13) — unchanged from the first pull earlier the same day, expected at this stage, not a red flag. Vercel Web Analytics shipped this session (see Pipelines/Monetization below) — will add direct/referrer/App-Store visibility Search Console can't see, once deployed and toggled on in the Vercel dashboard. Re-check Search Console ~2026-07-29 before drawing conclusions; treat all monetization/audience claims as pre-traffic until then. Re-run via `node --env-file=.env scripts/search-console/build-report.mjs` (local-only, `analytics/reports/` gitignored — see below).
 
 ## Monetization surfaces (actual)
 
 - **Amazon Associates:** 50 real picks in `affiliate-links.json`, sourced from makersportal.com posts (see `AFFILIATE-CANDIDATES.md`), grouped by app `<details>` collapsible on `/resources#gear`. Disclosure + `rel="sponsored"`.
   - Live enrichment: `scripts/amazon/fetch-items.mjs` + `build-catalog.mjs` + workflow `amazon-catalog.yml` (monthly). Creators API cred v3.1, OAuth2. `amazon-catalog.json` currently empty (still `AssociateNotEligible` 48h window from 2026-07-15 16:36 UTC). Re-test after 2026-07-17. `resolveAffiliateLink()` merges live data over static fallback.
 - **Trends digest:** Daily 14:00 UTC `trends-digest.yml` (was weekly, D-017). Pipeline `fetch → dedupe → gates → score → select` in `pipeline.mjs`, 13 fixture tests, PR with pillar-grouped summary + self-hosted webp thumbnails `public/trends/` (no hotlink, privacy). Feeds `/resources#trending` (featured + grid, signal bars). 6 pillars: on-device-ai, metal-ane, local-llm, dsp-audio, ios-craft, privacy-arch. `pillars` soft-tag reused on gear for re-ranking (D-017).
+- **Trend-grounded blog draft (gated, not active):** `scripts/trends/draft-post.mjs` — manual-only CLI, not wired to any workflow/cron, takes a `trends.json` item + `--app <RealShippedApp>` and scaffolds a `draft: true` post. Refuses to run without a real app name (structural enforcement of the "shipped-app grounding" guardrail). See `MONETIZATION.md` P3 for the full argued recommendation on why this stays dormant until 3-4 more Phase 1 field notes exist and the next Search Console check (~2026-07-29) shows real traffic.
+- **Vercel Web Analytics:** `<Analytics />` from `@vercel/analytics/astro` in `Layout.astro` `<head>`, shipped 2026-07-15. Complements Search Console (search-referred only) with direct/referrer/App-Store visibility. Needs Web Analytics toggled on in the Vercel dashboard once deployed — no further code changes needed.
 - **Gear re-ranking:** Daily pillar counts re-order gear groups + items, chips `↗ {Pillar}` + header `Re-ranked · trending`. Safe — same 50 ASINs, only sort. Verified 1724px height vs 5500px incident (D-016).
 - **Shop:** Placeholder cards, MoR Lemon Squeezy chosen per D-014 (5%+50c, MoR tax handled, secure downloads), **not integrated**. See `MONETIZATION.md` for MVP plan ($19-29 per archive).
 - **Email:** Buttondown chosen per D-014 (privacy-first, no tracking pixels), **not built**. Free first 100, $9/mo per addon.
@@ -41,6 +43,15 @@ No runtime API calls, no client secrets, no Vercel env vars for these — static
 - D-014 (Lemon + Buttondown) still valid — Lemon acquired by Stripe 2024, future is Stripe Managed Payments (MoR persists, see Jan 2026 blog)
 - D-015 (Creators API) pending 48h eligibility gate, batch size 10 untested
 - D-017 (daily + re-ranking) shipped this session
+
+## Last verifications (2026-07-15 evening session — backlog burn-down + content-engine review)
+
+- Vercel Web Analytics shipped: `<Analytics />` from `@vercel/analytics/astro` in `Layout.astro`, verified present in build output on every page (`vercel-analytics` custom element).
+- MotionLink field note shipped: `src/content/blog/motionlink-headphone-motion-api.md` — quaternion→Euler conversion (with the NaN-clamp gotcha), the undocumented relative-reference-frame reset, simulator/threading gotchas. Cross-linked to `/resources#gear` (AirPods Pro, the one gear pick tied to `motionlink`) and `/resources#trending`; live app linked directly.
+- Content-engine idea (owner's trend-driven monetized blog framing) examined in full — argued recommendation landed in `MONETIZATION.md` P3: defer active drafting (scaled-content-abuse risk > weak early ROI, no traffic baseline yet), shipped-app grounding is the primary differentiator (not optional), real numbers/before-after is the strongest complement, named franchise and contrarian voice are situational not structural. `scripts/trends/draft-post.mjs` landed as a dormant, manually-invoked skeleton — tested (missing `--app` gate, invalid-app gate, valid run all verified, test artifact deleted before commit-worthy state).
+- Search Console re-pull: still 1 click / 3 impressions, unchanged from morning pull — auth still working cleanly, no action needed before ~2026-07-19 expiry watch.
+- Build: passes clean (exit 0), 20 pages indexed (was 19).
+- Lemon Squeezy store + Buttondown newsletter: still not created — this session has no browser/account access, re-flagged in `BACKLOG.md` Phase 4 as the single highest-priority owner action, sitting 3+ sessions.
 
 ## Last verifications (2026-07-15 session — autonomous roadmap)
 

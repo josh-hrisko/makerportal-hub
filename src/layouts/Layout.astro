@@ -4,6 +4,7 @@ import SeoMeta from '../components/SeoMeta.astro';
 import SearchModal from '../components/SearchModal.astro';
 import { footerColumns, primaryNav, socials } from '../data/site-nav';
 import { ClientRouter } from 'astro:transitions';
+import Analytics from '@vercel/analytics/astro';
 import '../styles/global.css';
 // @ts-ignore – fontsource side-effect import has no types
 import '@fontsource-variable/plus-jakarta-sans';
@@ -271,6 +272,7 @@ const organizationSchema = {
     <!-- Agentic browsing meta -->
     <meta name="ai:publisher" content="MakerPortal – San Francisco" />
     <meta name="ai:content-type" content="technology, iOS development, on-device AI, agentic DSP, transparent hybrid architecture" />
+    <Analytics />
   </head>
   <body class="flex min-h-screen flex-col overflow-x-clip bg-canvas font-sans text-primary-text antialiased selection:bg-primary-cta selection:text-white" data-reading-path={isReadingPath ? 'true' : 'false'}>
     <a href="#main-content" class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-brand-anchor px-4 py-2.5 font-semibold text-canvas shadow-lg transition-transform duration-300 focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Skip to main content</a>
