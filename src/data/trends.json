@@ -1,6 +1,23 @@
 {
-  "generatedAt": "2026-07-15T02:04:26.093Z",
+  "generatedAt": "2026-07-16T15:41:38.718Z",
   "items": [
+    {
+      "id": "hackernews-48907681",
+      "source": "hackernews",
+      "title": "Show HN: Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-14T14:40:46Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 13,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48907681.webp"
+    },
     {
       "id": "hackernews-48894351",
       "source": "hackernews",
@@ -21,21 +38,23 @@
       ]
     },
     {
-      "id": "hackernews-48907681",
+      "id": "hackernews-48929747",
       "source": "hackernews",
-      "title": "Show HN: Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
-      "url": "https://github.com/projectargus-cc/libargus.cc",
-      "author": "KingJoker",
-      "publishedAt": "2026-07-14T14:40:46Z",
+      "title": "Running Gemma4 on Apple Neural Engine",
+      "url": "https://rockyshikoku.medium.com/running-gemma4-on-apple-neural-engine-79fa0cb39dd2",
+      "author": "nmfisher",
+      "publishedAt": "2026-07-16T02:33:38Z",
       "tags": [
-        "local-llm"
+        "on-device-ai",
+        "metal-ane"
       ],
       "score": 11,
-      "domain": "github.com",
+      "domain": "rockyshikoku.medium.com",
       "sources": [
+        "bluesky",
         "hackernews"
       ],
-      "image": "/trends/hackernews-48907681.webp"
+      "image": "/trends/hackernews-48929747.webp"
     },
     {
       "id": "hackernews-48898478",
@@ -74,6 +93,23 @@
       "image": "/trends/hackernews-48861746.webp"
     },
     {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-14T06:56:44.666Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
       "id": "hackernews-48819513",
       "source": "hackernews",
       "title": "GPU-accelerated context memory for on-device AI agents on Apple Silicon",
@@ -88,8 +124,7 @@
       "domain": "github.com",
       "sources": [
         "hackernews"
-      ],
-      "image": "/trends/hackernews-48819513.webp"
+      ]
     },
     {
       "id": "hackernews-48805598",
@@ -108,24 +143,6 @@
         "hackernews"
       ],
       "image": "/trends/hackernews-48805598.webp"
-    },
-    {
-      "id": "bluesky-3mpvwcxtjhf2e",
-      "source": "bluesky",
-      "title": "An open-source Swift library for training transformers on Apple's Neural Engine, skipping CoreML.\n\nSubmit to upvote on HN\nhttps://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2Fchristopherkarani%2FEspresso&",
-      "url": "https://bsky.app/profile/bestofhn.bsky.social/post/3mpvwcxtjhf2e",
-      "author": "bestofhn.bsky.social",
-      "publishedAt": "2026-07-05T15:47:04Z",
-      "tags": [
-        "on-device-ai",
-        "metal-ane"
-      ],
-      "score": 10,
-      "domain": "github.com",
-      "sources": [
-        "bluesky"
-      ],
-      "image": "/trends/bluesky-3mpvwcxtjhf2e.webp"
     },
     {
       "id": "hackernews-48844268",
@@ -179,47 +196,46 @@
       "image": "/trends/hackernews-48782406.webp"
     },
     {
-      "id": "bluesky-3mplspadywk2l",
-      "source": "bluesky",
-      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
-      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
-      "author": "twostraws.bsky.social",
-      "publishedAt": "2026-07-01T15:15:45.242Z",
+      "id": "hackernews-48918840",
+      "source": "hackernews",
+      "title": "Show HN: AI-CLI – tiny C terminal assistant powered by local LLM",
+      "url": "https://github.com/vkataev/ai-cli",
+      "author": "novaRom",
+      "publishedAt": "2026-07-15T10:46:18Z",
       "tags": [
-        "metal-ane",
-        "ios-craft"
+        "local-llm"
       ],
       "score": 8,
-      "domain": "hackingwithswift.com",
+      "domain": "github.com",
       "sources": [
-        "bluesky"
+        "hackernews"
       ],
-      "image": "/trends/bluesky-3mplspadywk2l.webp"
+      "image": "/trends/hackernews-48918840.webp"
     },
     {
-      "id": "bluesky-3mqhmltknst2o",
+      "id": "bluesky-3mqo5s7fgk222",
       "source": "bluesky",
-      "title": "It’s the origins of the Neural Engine in Apple Silicon.",
-      "url": "https://bsky.app/profile/technology-news.bsky.social/post/3mqhmltknst2o",
-      "author": "technology-news.bsky.social",
-      "publishedAt": "2026-07-12T16:41:01.297878+00:00",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-15T07:04:47.168Z",
       "tags": [
-        "metal-ane"
+        "local-llm"
       ],
-      "score": 7,
-      "domain": "theverge.com",
+      "score": 8,
+      "domain": "centricular.com",
       "sources": [
         "bluesky"
       ],
-      "image": "/trends/bluesky-3mqhmltknst2o.webp"
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
     },
     {
-      "id": "hackernews-48874905",
+      "id": "hackernews-48931429",
       "source": "hackernews",
-      "title": "Show HN: Catch your local LLM falling back to CPU",
-      "url": "https://github.com/logxio/picchio",
-      "author": "logickkk1",
-      "publishedAt": "2026-07-11T19:17:35Z",
+      "title": "Show HN: Trellis2.c – Local 3D generation with Vulkan and CUDA",
+      "url": "https://github.com/Wimacs/trellis2.c",
+      "author": "wimaxs",
+      "publishedAt": "2026-07-16T07:39:49Z",
       "tags": [
         "local-llm"
       ],
@@ -228,40 +244,7 @@
       "sources": [
         "hackernews"
       ],
-      "image": "/trends/hackernews-48874905.webp"
-    },
-    {
-      "id": "hackernews-48863722",
-      "source": "hackernews",
-      "title": "Show HN: Local Motion – Use Cursor Agents and Chat with a Local LLM",
-      "url": "https://github.com/mattmireles/local-motion",
-      "author": "MediaSquirrel",
-      "publishedAt": "2026-07-10T18:50:24Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 7,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48863722.webp"
-    },
-    {
-      "id": "hackernews-48855138",
-      "source": "hackernews",
-      "title": "Show HN: TensorSharp: Open-Source Local LLM Inference Engine",
-      "url": "https://tensorsharp.ai/",
-      "author": "zhongkaifu",
-      "publishedAt": "2026-07-10T02:42:07Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 7,
-      "domain": "tensorsharp.ai",
-      "sources": [
-        "hackernews"
-      ]
+      "image": "/trends/hackernews-48931429.webp"
     },
     {
       "id": "hackernews-48829604",
