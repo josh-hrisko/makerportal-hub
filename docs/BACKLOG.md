@@ -31,6 +31,14 @@ Real code, under-documented APIs, near-zero competition for the specific queries
 - [ ] **Agentic DSP pipeline step-through** (AuraLinter) — flagship, most effort, most unique. Hold until the Lab pattern is proven with 2-3 smaller tools.
 - Noted but not planned for v1 (real gaps, higher fabrication/accuracy risk — don't build speculatively): Metal threadgroup/SIMD-occupancy visualizer, `MLComputeUnits` (ANE/GPU/CPU) decision-tree tool, local-LLM memory-footprint calculator (would need to stay scoped to deterministic KV-cache math, no tokens/sec claims).
 
+**Playground — viral math/physics toys, deliberately separate from the Lab (new, 2026-07-15):** owner pushed for 5 more tools pitched for Reddit/HN-style virality (double pendulum + phase space, Fourier epicycles, Chladni cymatics, N-body choreography, conformal mapping). 4 of 5 have no real tie to any MakerPortal app — flagged that directly; owner's call was to build them anyway and accept the brand-dilution tradeoff, on the condition they stay structurally separate from the app-grounded Lab rather than diluting it. See D-018. Registry: `src/data/playground.ts`.
+- [x] **Fourier epicycles** — `src/pages/playground/fourier-epicycles.astro`. Draw any closed shape, decomposed into rotating circles (discrete Fourier series) that reconstruct it live, term-count slider. The one idea of the 5 that's honestly groundable — same frequency-domain math as Biquadia's existing spectral-analysis copy, cross-linked from `/blog/inside-biquadia`. DFT/reconstruction math verified in Node before shipping; a real Canvas API bug (`var(--x)` isn't a valid `ctx.strokeStyle`) was caught in live browser testing and fixed. Build verified 2026-07-15, 24 pages indexed.
+- [ ] **Double pendulum + phase space** — chaotic motion with a live-painting phase-space plot alongside it. Draggable initial angles.
+- [ ] **Chladni cymatics** — particle system settling on 2D standing-wave nodal lines as frequency sweeps.
+- [ ] **N-body orbital choreography** — gravity sandbox with known stable figure-eight-orbit presets, perturbable into chaos.
+- [ ] **Conformal mapping explorer** — complex-plane grid warped live under f(z), homotopy slider. Needs a safe (no `eval`) complex-expression parser if custom functions are supported — scope to presets first if that's a bigger lift than expected.
+- [ ] **Distribution tactic (applies regardless of which Playground tools ship):** record a short GIF of the interaction (drawing → epicycles, chaotic trail → phase-space painting) and post directly to r/math, r/physics, Hacker News with a link — this is the actual traffic mechanism for this category of tool, not just hosting it and waiting.
+
 ## Phase 2 — Distribution (earned attention, human-in-the-loop)
 
 One well-timed post beats a dozen link-drops. These need the owner's voice/judgment, not automation.

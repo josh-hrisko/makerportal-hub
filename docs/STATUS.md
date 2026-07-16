@@ -10,6 +10,7 @@ Single snapshot of what's live, what's built but pending, what's placeholder. Re
 - **Nav:** Single source `site-nav.ts`, ≤7 primary items, mega panels, ecosystem same-tab / true external new-tab (D-009), opaque surfaces (D-006)
 - **Blog:** 4 human posts in `src/content/blog/` (added MotionLink `CMHeadphoneMotionManager` field note 2026-07-15), no AI pipeline. Trend-grounded draft scaffold (`scripts/trends/draft-post.mjs`) exists but is gated — see Trends digest entry below.
 - **Lab (new 2026-07-15):** `/tools` — interactive tools grounded in real shipped app code, not reskinned reference calculators. Registry `src/data/tools.ts` (6-tool roadmap, 1 live). First tool: quaternion ↔ Euler converter (`/tools/quaternion-euler-converter`), cross-linked from the MotionLink field note and a new `/resources#lab` section. No new nav item — linked from the Guides mega panel. See `BACKLOG.md` Phase 1 for the full roadmap and sequencing.
+- **Playground (new 2026-07-15):** `/playground` — viral math/physics toys, deliberately kept separate from the Lab since 4 of 5 planned tools aren't app-grounded (owner's explicit call, see D-018). Registry `src/data/playground.ts` (5-tool roadmap, 1 live). First tool: Fourier epicycles (`/playground/fourier-epicycles`) — draw a shape, watch it decompose into rotating circles, cross-linked from `/blog/inside-biquadia`. New `/resources#playground` section, separate from `#lab`.
 - **Build:** `npm run build` → astro check + build + pagefind + strip-dev-pages (brand prod-hidden)
 
 ## Traffic (ground truth)

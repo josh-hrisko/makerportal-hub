@@ -1,0 +1,350 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Draw Anything, Watch It Become Spinning Circles — Fourier Epicycles | MakerPortal';
+const description =
+  'Draw any closed shape and watch it decompose into rotating circles (a discrete Fourier series) that trace your exact path — the same frequency-domain math as spectral analysis, applied to a drawing instead of audio.';
+const canonical = new URL('/playground/fourier-epicycles', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Fourier Epicycles', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Draw → Fourier Epicycles"
+    lead="Draw a closed shape with your mouse or finger. It gets decomposed into rotating circles — a discrete Fourier series — that chain together to trace your exact path back."
+    pillarHint="dsp-audio"
+  >
+    <section class="border-b border-border" aria-labelledby="canvas-title">
+      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="canvas-title" class="sr-only">Draw and watch</h2>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="text-[0.9rem] text-muted-text" id="status-line">Draw a closed shape below — a star, a loop, your initial. Let go to see it decomposed.</p>
+          <div class="flex gap-2">
+            <button type="button" class="pill-btn" id="preset-circle">Circle</button>
+            <button type="button" class="pill-btn" id="preset-star">Star</button>
+            <button type="button" class="pill-btn" id="clear-btn">Draw again</button>
+          </div>
+        </div>
+        <div class="mt-6 overflow-hidden rounded-[20px] border border-border bg-card-bg">
+          <canvas id="fourier-canvas" width="600" height="500" class="block w-full touch-none" aria-label="Drawing and epicycle animation canvas"></canvas>
+        </div>
+        <div class="mt-6 flex flex-col gap-2">
+          <label for="term-slider" class="flex items-center justify-between font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text">
+            <span>Terms used</span>
+            <span id="term-readout">— / —</span>
+          </label>
+          <input type="range" id="term-slider" min="1" max="60" value="24" class="w-full" disabled />
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="explainer-title">
+      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="explainer-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">What's actually happening</h2>
+        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
+          Your drawing is resampled to evenly spaced points and treated as a sequence of complex numbers (x + iy). A discrete Fourier transform turns that into a set of rotating vectors — each with its own frequency, amplitude, and phase. Chain them tip-to-tail and let them spin: the last tip traces your original path, exactly, once every term is included. Drop terms and you get a smoothed approximation — the same tradeoff spectral analysis makes when it keeps the dominant frequencies and discards the rest.
+        </p>
+        <p class="mt-4 max-w-2xl text-[0.85rem] leading-[1.6] text-muted-text/80">
+          It's the same frequency-domain idea Biquadia applies to audio — <a href="/blog/inside-biquadia" class="text-brand-anchor hover:text-primary-text">spectra, filters, and the character of a signal</a> — just visualized on a 2D drawing instead of a sound wave.
+        </p>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .pill-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.4rem 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .pill-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  #fourier-canvas {
+    background: var(--mp-canvas);
+    cursor: crosshair;
+    aspect-ratio: 6 / 5;
+    height: auto;
+  }
+  input[type='range'] {
+    accent-color: var(--mp-cta);
+  }
+  input[type='range']:disabled {
+    opacity: 0.4;
+  }
+</style>
+
+<script>
+  interface Pt { x: number; y: number; }
+  interface Term { re: number; im: number; freq: number; amp: number; phase: number; }
+
+  const canvas = document.getElementById('fourier-canvas') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const slider = document.getElementById('term-slider') as HTMLInputElement;
+  const termReadout = document.getElementById('term-readout') as HTMLElement;
+  const statusLine = document.getElementById('status-line') as HTMLElement;
+  const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
+  const presetCircle = document.getElementById('preset-circle') as HTMLButtonElement;
+  const presetStar = document.getElementById('preset-star') as HTMLButtonElement;
+
+  const W = canvas.width;
+  const H = canvas.height;
+  const SAMPLE_COUNT = 140;
+  const LOOP_MS = 9000;
+  const TRAIL_MAX = SAMPLE_COUNT * 3;
+
+  // Canvas 2D fillStyle/strokeStyle only accepts literal color values, not var(--x) —
+  // resolve the actual computed color once (re-read on theme toggle since the
+  // custom property value differs between light/dark).
+  function resolveCtaColor(): string {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--mp-cta').trim();
+    return v || '#b8324f';
+  }
+  function resolveTextColor(): string {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--mp-text').trim();
+    return v || '#16202e';
+  }
+  let ctaColor = resolveCtaColor();
+  let textColor = resolveTextColor();
+  new MutationObserver(() => {
+    ctaColor = resolveCtaColor();
+    textColor = resolveTextColor();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  let isDrawing = false;
+  let rawPoints: Pt[] = [];
+  let terms: Term[] = [];
+  let trail: Pt[] = [];
+  let animHandle = 0;
+  let loopStart = 0;
+
+  function canvasPoint(clientX: number, clientY: number): Pt {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  }
+
+  function resamplePath(points: Pt[], n: number): Pt[] {
+    if (points.length < 2) return points;
+    const segLens: number[] = [];
+    let total = 0;
+    for (let i = 0; i < points.length; i++) {
+      const a = points[i];
+      const b = points[(i + 1) % points.length];
+      const d = Math.hypot(b.x - a.x, b.y - a.y);
+      segLens.push(d);
+      total += d;
+    }
+    if (total === 0) return points;
+    const step = total / n;
+    const out: Pt[] = [];
+    let segIdx = 0;
+    let acc = 0;
+    for (let k = 0; k < n; k++) {
+      const target = k * step;
+      while (acc + segLens[segIdx] < target && segIdx < segLens.length - 1) {
+        acc += segLens[segIdx];
+        segIdx++;
+      }
+      const a = points[segIdx];
+      const b = points[(segIdx + 1) % points.length];
+      const segLen = segLens[segIdx];
+      const t = segLen > 0 ? (target - acc) / segLen : 0;
+      out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    }
+    return out;
+  }
+
+  function computeDFT(points: Pt[]): Term[] {
+    const n = points.length;
+    const cx = points.reduce((s, p) => s + p.x, 0) / n;
+    const cy = points.reduce((s, p) => s + p.y, 0) / n;
+    const signal = points.map((p) => ({ re: p.x - cx, im: p.y - cy }));
+    const result: Term[] = [];
+    for (let k = 0; k < n; k++) {
+      let re = 0, im = 0;
+      for (let s = 0; s < n; s++) {
+        const phi = (2 * Math.PI * k * s) / n;
+        re += signal[s].re * Math.cos(phi) + signal[s].im * Math.sin(phi);
+        im += -signal[s].re * Math.sin(phi) + signal[s].im * Math.cos(phi);
+      }
+      re /= n;
+      im /= n;
+      const freq = k <= n / 2 ? k : k - n;
+      result.push({ re, im, freq, amp: Math.hypot(re, im), phase: Math.atan2(im, re) });
+    }
+    result.sort((a, b) => b.amp - a.amp);
+    // Attach the DC (freq 0, the centroid offset) back in real coordinates for drawing origin.
+    (result as Term[] & { centroid?: Pt }).centroid = { x: cx, y: cy };
+    return result;
+  }
+
+  function finalizePath(points: Pt[]) {
+    if (points.length < 6) {
+      resetCanvas();
+      return;
+    }
+    cancelAnimationFrame(animHandle);
+    const resampled = resamplePath(points, SAMPLE_COUNT);
+    terms = computeDFT(resampled);
+    trail = [];
+    const maxTerms = Math.min(60, SAMPLE_COUNT);
+    slider.max = String(maxTerms);
+    slider.value = String(Math.min(24, maxTerms));
+    slider.disabled = false;
+    statusLine.textContent = 'Reconstructing from rotating circles — drag the slider to change how many terms are used.';
+    loopStart = performance.now();
+    animate();
+  }
+
+  function resetCanvas() {
+    cancelAnimationFrame(animHandle);
+    terms = [];
+    trail = [];
+    rawPoints = [];
+    slider.disabled = true;
+    slider.value = '24';
+    termReadout.textContent = '— / —';
+    statusLine.textContent = 'Draw a closed shape below — a star, a loop, your initial. Let go to see it decomposed.';
+    ctx.clearRect(0, 0, W, H);
+  }
+
+  function animate() {
+    const M = Math.min(parseInt(slider.value, 10) || 1, terms.length);
+    termReadout.textContent = `${M} / ${terms.length}`;
+    const centroid = (terms as Term[] & { centroid?: Pt }).centroid ?? { x: W / 2, y: H / 2 };
+    const t = ((performance.now() - loopStart) % LOOP_MS) / LOOP_MS;
+
+    ctx.clearRect(0, 0, W, H);
+
+    let x = centroid.x;
+    let y = centroid.y;
+    ctx.strokeStyle = 'rgba(160,170,185,0.35)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < M; i++) {
+      const term = terms[i];
+      const ang = 2 * Math.PI * term.freq * t + term.phase;
+      const nx = x + term.amp * Math.cos(ang);
+      const ny = y + term.amp * Math.sin(ang);
+      if (term.amp > 1.5) {
+        ctx.beginPath();
+        ctx.arc(x, y, term.amp, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(nx, ny);
+        ctx.strokeStyle = 'rgba(160,170,185,0.55)';
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(160,170,185,0.35)';
+      }
+      x = nx;
+      y = ny;
+    }
+
+    trail.push({ x, y });
+    if (trail.length > TRAIL_MAX) trail.shift();
+
+    ctx.beginPath();
+    ctx.strokeStyle = ctaColor;
+    ctx.lineWidth = 2.5;
+    trail.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+    ctx.stroke();
+
+    ctx.fillStyle = ctaColor;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    animHandle = requestAnimationFrame(animate);
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    cancelAnimationFrame(animHandle);
+    isDrawing = true;
+    rawPoints = [canvasPoint(e.clientX, e.clientY)];
+    ctx.clearRect(0, 0, W, H);
+    canvas.setPointerCapture(e.pointerId);
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!isDrawing) return;
+    const p = canvasPoint(e.clientX, e.clientY);
+    rawPoints.push(p);
+    ctx.strokeStyle = textColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const prev = rawPoints[rawPoints.length - 2] ?? p;
+    ctx.moveTo(prev.x, prev.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+
+  canvas.addEventListener('pointerup', () => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    finalizePath(rawPoints);
+  });
+
+  slider.addEventListener('input', () => {
+    trail = [];
+  });
+
+  clearBtn.addEventListener('click', resetCanvas);
+
+  function loadPreset(points: Pt[]) {
+    resetCanvas();
+    finalizePath(points);
+  }
+
+  presetCircle.addEventListener('click', () => {
+    const pts: Pt[] = [];
+    const r = 130;
+    for (let i = 0; i < 60; i++) {
+      const a = (i / 60) * Math.PI * 2;
+      pts.push({ x: W / 2 + r * Math.cos(a), y: H / 2 + r * Math.sin(a) });
+    }
+    loadPreset(pts);
+  });
+
+  presetStar.addEventListener('click', () => {
+    const pts: Pt[] = [];
+    const spikes = 5;
+    const outerR = 150;
+    const innerR = 60;
+    const cx = W / 2;
+    const cy = H / 2;
+    const totalPoints = spikes * 2;
+    for (let i = 0; i < totalPoints; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const a = (i / totalPoints) * Math.PI * 2 - Math.PI / 2;
+      pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+    }
+    loadPreset(pts);
+  });
+
+  resetCanvas();
+</script>
