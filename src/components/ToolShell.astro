@@ -1,0 +1,53 @@
+---
+import { pillarMeta, fallbackPillar } from '../data/trends';
+
+interface Props {
+  kicker?: string;
+  title: string;
+  lead: string;
+  pillar: string;
+  relatedApp: string;
+  relatedAppUrl: string;
+  relatedFieldNote?: string;
+}
+
+const { kicker = 'Tools we built · Lab', title, lead, pillar, relatedApp, relatedAppUrl, relatedFieldNote } = Astro.props;
+const pillarInfo = pillarMeta[pillar] ?? fallbackPillar;
+---
+
+<section class="hero-grid border-b border-border">
+  <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
+    <div class="flex flex-wrap items-center gap-2">
+      <p class="section-kicker">{kicker}</p>
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.64rem] font-medium uppercase tracking-[0.12em] text-muted-text">
+        <span class="h-1.5 w-1.5 rounded-full" style={`background: ${pillarInfo.color};`} aria-hidden="true"></span>
+        {pillarInfo.label}
+      </span>
+    </div>
+    <h1 class="mt-6 max-w-4xl text-balance text-[clamp(2.4rem,5vw,4rem)] font-[700] leading-[0.95] tracking-[-0.055em] text-primary-text">{title}</h1>
+    <p class="mt-6 max-w-2xl text-[1.05rem] leading-[1.75] text-muted-text sm:text-lg">{lead}</p>
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <a href={relatedAppUrl} class="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">
+        Grounded in {relatedApp} ↗
+      </a>
+      {relatedFieldNote && (
+        <a href={`/blog/${relatedFieldNote}`} class="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-[0.9rem] font-semibold text-primary-text hover:border-brand-anchor hover:text-brand-anchor">
+          Read the field note
+        </a>
+      )}
+    </div>
+  </div>
+</section>
+
+<slot />
+
+<section class="border-t border-border">
+  <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted-text">
+      <a href="/tools" class="hover:text-primary-text">← All tools</a>
+      <a href="/resources#lab" class="hover:text-primary-text">Tools we built</a>
+      <a href={relatedAppUrl} class="hover:text-primary-text">{relatedApp} ↗</a>
+      {relatedFieldNote && <a href={`/blog/${relatedFieldNote}`} class="hover:text-primary-text">Field note</a>}
+    </div>
+  </div>
+</section>

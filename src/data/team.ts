@@ -11,6 +11,12 @@ export type TeamMember = {
   focus: string[];
   image: ImageMetadata;
   imageAlt: string;
+  /**
+   * Optional personal name — scoped exception to the role-first rule above, only for
+   * the specific person who explicitly asked to be named. See DECISIONS.md D-004.
+   */
+  name?: string;
+  linkedin?: string;
 };
 
 export const team: TeamMember[] = [
@@ -23,5 +29,7 @@ export const team: TeamMember[] = [
     focus: ['On-device AI', 'CoreML / ANE', 'SwiftUI', 'Metal', 'Transparent architecture'],
     image: principalHeadshot,
     imageAlt: 'MakerPortal Principal Engineer portrait',
+    name: 'Josh',
+    linkedin: 'https://www.linkedin.com/in/joshua-hrisko/',
   },
 ];

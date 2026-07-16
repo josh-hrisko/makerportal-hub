@@ -146,6 +146,7 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'On this page',
         links: [
           { label: 'Signals we’re tracking', href: '/resources#trending', description: 'Trend digest' },
+          { label: 'Tools we built', href: '/tools', description: 'Interactive · from real code' },
           { label: 'Tools we use', href: '/resources#tools', description: 'Studio toolchain' },
           { label: 'Gear', href: '/resources#gear', description: 'Hardware picks' },
         ],
@@ -271,6 +272,8 @@ export const hubRoutes: { path: string; priority: string; changefreq: string }[]
   { path: '/apps', priority: '0.95', changefreq: 'weekly' },
   { path: '/blog', priority: '0.95', changefreq: 'weekly' },
   { path: '/resources', priority: '0.9', changefreq: 'weekly' },
+  { path: '/tools', priority: '0.85', changefreq: 'monthly' },
+  { path: '/tools/quaternion-euler-converter', priority: '0.8', changefreq: 'monthly' },
   { path: '/shop', priority: '0.9', changefreq: 'weekly' },
   { path: '/watch', priority: '0.85', changefreq: 'weekly' },
   { path: '/about', priority: '0.85', changefreq: 'monthly' },

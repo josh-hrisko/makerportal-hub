@@ -23,7 +23,8 @@
 
 **Decision:** No personal legal name on public hub; GitHub org `makerportal`; team is role-first.  
 **Why:** Studio empire positioning; privacy.  
-**Code:** `/team`, `src/data/team.ts`, scrubbed SeoMeta/schema/llms.txt.
+**Code:** `/team`, `src/data/team.ts`, scrubbed SeoMeta/schema/llms.txt.  
+**Scoped exception (2026-07-15):** Owner explicitly asked to be named on `/team` — "Josh, Principal Engineer" plus a LinkedIn link. This is a deliberate, owner-initiated, single-person exception, not a reversal of the rule: `TeamMember` gained optional `name`/`linkedin` fields (`src/data/team.ts`), used only on the `principal-engineer` entry. The role-first default still applies everywhere else (SeoMeta, llms.txt, other pages, any future team entries without an explicit ask). Don't propagate this to other surfaces without a similar explicit ask.
 
 ## D-005 — Single nav source of truth
 

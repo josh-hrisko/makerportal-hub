@@ -1,0 +1,405 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+
+const title = 'Quaternion to Euler Angle Converter (and back) — Swift, verified round-trip | MakerPortal';
+const description =
+  'Convert quaternion attitude to yaw/pitch/roll and back, with a live 3D orientation preview and copyable Swift — the exact math from MotionLink’s CMHeadphoneMotionManager handling.';
+const canonical = new URL('/tools/quaternion-euler-converter', Astro.site);
+
+const quatToEulerSwift = `func yawPitchRoll(from q: CMQuaternion) -> (yaw: Double, pitch: Double, roll: Double) {
+    let yaw = atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+    let pitch = asin(max(-1, min(1, 2 * (q.w * q.y - q.z * q.x))))
+    let roll = atan2(2 * (q.w * q.x + q.y * q.z), 1 - 2 * (q.x * q.x + q.y * q.y))
+    return (yaw, pitch, roll)
+}`;
+
+const eulerToQuatSwift = `func quaternion(fromYaw yaw: Double, pitch: Double, roll: Double) -> CMQuaternion {
+    let cy = cos(yaw * 0.5), sy = sin(yaw * 0.5)
+    let cp = cos(pitch * 0.5), sp = sin(pitch * 0.5)
+    let cr = cos(roll * 0.5), sr = sin(roll * 0.5)
+    return CMQuaternion(
+        x: sr * cp * cy - cr * sp * sy,
+        y: cr * sp * cy + sr * cp * sy,
+        z: cr * cp * sy - sr * sp * cy,
+        w: cr * cp * cy + sr * sp * sy
+    )
+}`;
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Quaternion to Euler Angle Converter',
+  url: canonical.toString(),
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  isPartOf: { '@type': 'SoftwareApplication', name: 'MotionLink', url: 'https://makersportal.com/apps/motionlink' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Lab', item: 'https://www.makerportal.ai/tools' },
+    { '@type': 'ListItem', position: 3, name: 'Quaternion ↔ Euler Converter', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <ToolShell
+    title="Quaternion ↔ Euler Converter"
+    lead="Convert quaternion attitude to yaw/pitch/roll and back, both directions, live. Same round-trip-verified formulas — including the gimbal-lock clamp — as MotionLink's CMHeadphoneMotionManager handling."
+    pillar="ios-craft"
+    relatedApp="MotionLink"
+    relatedAppUrl="https://makersportal.com/apps/motionlink"
+    relatedFieldNote="motionlink-headphone-motion-api"
+  >
+    <section class="border-b border-border" aria-labelledby="preview-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live preview</h2>
+        <p class="max-w-2xl text-[0.95rem] text-muted-text">
+          A flat plane in 3D space, driven by whichever panel you last edited — it really does look edge-on near ±90° pitch or roll, same as the physics.
+        </p>
+        <p id="preview-source" class="mt-2 font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
+        <div class="mt-10 flex flex-col items-center gap-10 sm:flex-row sm:justify-center">
+          <div class="preview-stage" aria-hidden="true">
+            <div class="preview-object" id="orientation-glyph">
+              <div class="preview-face"></div>
+              <div class="preview-marker"></div>
+            </div>
+          </div>
+          <dl class="grid grid-cols-3 gap-6 font-mono text-center sm:gap-10" aria-live="polite">
+            <div>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Yaw</dt>
+              <dd id="preview-yaw" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
+            </div>
+            <div>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Pitch</dt>
+              <dd id="preview-pitch" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
+            </div>
+            <div>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Roll</dt>
+              <dd id="preview-roll" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="converters-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="converters-title" class="sr-only">Converters</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div class="rounded-[20px] border border-border bg-card-bg p-6 sm:p-7">
+            <h3 class="text-[1.05rem] font-semibold text-primary-text">Quaternion → Euler</h3>
+            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">Same as <code>yawPitchRoll(from:)</code> below. Arbitrary input is auto-normalized to unit length first.</p>
+            <div class="mt-5 grid grid-cols-2 gap-4">
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">x</span>
+                <input type="number" step="0.001" id="q-x" value="0.2393" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">y</span>
+                <input type="number" step="0.001" id="q-y" value="0.1893" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">z</span>
+                <input type="number" step="0.001" id="q-z" value="0.0381" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">w</span>
+                <input type="number" step="0.001" id="q-w" value="0.9515" class="tool-input" />
+              </label>
+            </div>
+            <p id="q-norm-note" class="mt-3 text-[0.72rem] text-muted-text">Magnitude: 1.0000 (already unit length)</p>
+            <div class="mt-5 grid grid-cols-3 gap-4 border-t border-border pt-5 font-mono" aria-live="polite">
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">Yaw</p>
+                <p id="q-yaw" class="mt-1 text-[1.1rem] font-semibold text-primary-text">0.00°</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">Pitch</p>
+                <p id="q-pitch" class="mt-1 text-[1.1rem] font-semibold text-primary-text">0.00°</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">Roll</p>
+                <p id="q-roll" class="mt-1 text-[1.1rem] font-semibold text-primary-text">0.00°</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-[20px] border border-border bg-card-bg p-6 sm:p-7">
+            <h3 class="text-[1.05rem] font-semibold text-primary-text">Euler → Quaternion</h3>
+            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">The reverse direction — <code>quaternion(fromYaw:pitch:roll:)</code> below. Degrees in, unit quaternion out.</p>
+            <div class="mt-5 grid grid-cols-3 gap-4">
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Yaw°</span>
+                <input type="number" step="0.1" id="e-yaw" value="10" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Pitch°</span>
+                <input type="number" step="0.1" id="e-pitch" value="20" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Roll°</span>
+                <input type="number" step="0.1" id="e-roll" value="30" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-8 grid grid-cols-4 gap-3 border-t border-border pt-5 font-mono" aria-live="polite">
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">x</p>
+                <p id="e-x" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">y</p>
+                <p id="e-y" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">z</p>
+                <p id="e-z" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">w</p>
+                <p id="e-w" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Gimbal-lock clamp</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Floating-point drift can push the pitch <code>asin</code> argument fractionally outside <code>[-1, 1]</code>, returning <code>NaN</code> that silently propagates downstream. Clamp it — the tool above does, try feeding it an extreme quaternion.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Relative reference frame</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">On real hardware (<code>CMHeadphoneMotionManager</code>), the "zero" orientation is wherever the headphones were facing when tracking started — not gravity/north-referenced. This calculator has no such frame; that gotcha only applies on-device.</p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.85rem] text-muted-text">Full writeup, including why this cost an afternoon on real AirPods Pro: <a href="/blog/motionlink-headphone-motion-api" class="text-brand-anchor hover:text-primary-text">the field note →</a></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Swift, both directions</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Copy either function directly — this is the same code driving the converters above.</p>
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Quaternion → Euler</p>
+              <button type="button" class="copy-btn" data-copy-target="code-quat-to-euler">Copy</button>
+            </div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+              <Code id="code-quat-to-euler" code={quatToEulerSwift} lang="swift" theme="github-dark" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Euler → Quaternion</p>
+              <button type="button" class="copy-btn" data-copy-target="code-euler-to-quat">Copy</button>
+            </div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+              <Code id="code-euler-to-quat" code={eulerToQuatSwift} lang="swift" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </ToolShell>
+</Layout>
+
+<style>
+  .tool-input {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.5rem 0.7rem;
+    font-size: 0.9rem;
+    color: var(--mp-text);
+  }
+  .tool-input:focus {
+    outline: none;
+    border-color: var(--mp-cta);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-cta) 20%, transparent);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .preview-stage {
+    width: 160px;
+    height: 160px;
+    perspective: 700px;
+  }
+  .preview-object {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.06s linear;
+  }
+  .preview-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--mp-elevated), var(--mp-card));
+    border: 1.5px solid var(--mp-border-strong);
+    box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.35);
+  }
+  .preview-marker {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    border-radius: 9999px;
+    background: var(--mp-cta);
+    transform: translateZ(2px);
+  }
+</style>
+
+<script>
+  function clamp(n: number, lo: number, hi: number): number {
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function yawPitchRoll(x: number, y: number, z: number, w: number) {
+    const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+    const pitch = Math.asin(clamp(2 * (w * y - z * x), -1, 1));
+    const roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+    return { yaw, pitch, roll };
+  }
+
+  function quaternionFromEuler(yaw: number, pitch: number, roll: number) {
+    const cy = Math.cos(yaw * 0.5), sy = Math.sin(yaw * 0.5);
+    const cp = Math.cos(pitch * 0.5), sp = Math.sin(pitch * 0.5);
+    const cr = Math.cos(roll * 0.5), sr = Math.sin(roll * 0.5);
+    return {
+      x: sr * cp * cy - cr * sp * sy,
+      y: cr * sp * cy + sr * cp * sy,
+      z: cr * cp * sy - sr * sp * cy,
+      w: cr * cp * cy + sr * sp * sy,
+    };
+  }
+
+  const deg = (rad: number) => (rad * 180) / Math.PI;
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const fmtDeg = (r: number) => `${deg(r).toFixed(2)}°`;
+  const fmtNum = (n: number) => n.toFixed(4);
+
+  const glyph = document.getElementById('orientation-glyph') as HTMLDivElement;
+  const previewYaw = document.getElementById('preview-yaw') as HTMLElement;
+  const previewPitch = document.getElementById('preview-pitch') as HTMLElement;
+  const previewRoll = document.getElementById('preview-roll') as HTMLElement;
+  const previewSource = document.getElementById('preview-source') as HTMLElement;
+
+  function updatePreview(yawRad: number, pitchRad: number, rollRad: number, source: string) {
+    if (!glyph) return;
+    glyph.style.transform = `rotateZ(${deg(yawRad)}deg) rotateY(${deg(pitchRad)}deg) rotateX(${deg(rollRad)}deg)`;
+    previewYaw.textContent = fmtDeg(yawRad);
+    previewPitch.textContent = fmtDeg(pitchRad);
+    previewRoll.textContent = fmtDeg(rollRad);
+    if (previewSource) previewSource.textContent = `From ${source} panel`;
+  }
+
+  const qx = document.getElementById('q-x') as HTMLInputElement;
+  const qy = document.getElementById('q-y') as HTMLInputElement;
+  const qz = document.getElementById('q-z') as HTMLInputElement;
+  const qw = document.getElementById('q-w') as HTMLInputElement;
+  const qYawOut = document.getElementById('q-yaw') as HTMLElement;
+  const qPitchOut = document.getElementById('q-pitch') as HTMLElement;
+  const qRollOut = document.getElementById('q-roll') as HTMLElement;
+  const qNormNote = document.getElementById('q-norm-note') as HTMLElement;
+
+  function recomputeFromQuaternion() {
+    const x = parseFloat(qx.value) || 0;
+    const y = parseFloat(qy.value) || 0;
+    const z = parseFloat(qz.value) || 0;
+    const w = parseFloat(qw.value) || 0;
+    const mag = Math.sqrt(x * x + y * y + z * z + w * w);
+    const norm = mag > 0 ? { x: x / mag, y: y / mag, z: z / mag, w: w / mag } : { x: 0, y: 0, z: 0, w: 1 };
+    qNormNote.textContent = Math.abs(mag - 1) < 0.0005 ? `Magnitude: ${mag.toFixed(4)} (already unit length)` : `Magnitude: ${mag.toFixed(4)} — normalized before conversion`;
+    const { yaw, pitch, roll } = yawPitchRoll(norm.x, norm.y, norm.z, norm.w);
+    qYawOut.textContent = fmtDeg(yaw);
+    qPitchOut.textContent = fmtDeg(pitch);
+    qRollOut.textContent = fmtDeg(roll);
+    updatePreview(yaw, pitch, roll, 'Quaternion → Euler');
+  }
+
+  [qx, qy, qz, qw].forEach((el) => el?.addEventListener('input', recomputeFromQuaternion));
+
+  const eYaw = document.getElementById('e-yaw') as HTMLInputElement;
+  const ePitch = document.getElementById('e-pitch') as HTMLInputElement;
+  const eRoll = document.getElementById('e-roll') as HTMLInputElement;
+  const eX = document.getElementById('e-x') as HTMLElement;
+  const eY = document.getElementById('e-y') as HTMLElement;
+  const eZ = document.getElementById('e-z') as HTMLElement;
+  const eW = document.getElementById('e-w') as HTMLElement;
+
+  function recomputeFromEuler() {
+    const yawDeg = parseFloat(eYaw.value) || 0;
+    const pitchDeg = parseFloat(ePitch.value) || 0;
+    const rollDeg = parseFloat(eRoll.value) || 0;
+    const q = quaternionFromEuler(rad(yawDeg), rad(pitchDeg), rad(rollDeg));
+    eX.textContent = fmtNum(q.x);
+    eY.textContent = fmtNum(q.y);
+    eZ.textContent = fmtNum(q.z);
+    eW.textContent = fmtNum(q.w);
+    updatePreview(rad(yawDeg), rad(pitchDeg), rad(rollDeg), 'Euler → Quaternion');
+  }
+
+  [eYaw, ePitch, eRoll].forEach((el) => el?.addEventListener('input', recomputeFromEuler));
+
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copyTarget;
+      const codeEl = targetId ? document.getElementById(targetId) : null;
+      if (!codeEl) return;
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent ?? '');
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => {
+          btn.textContent = original;
+        }, 1500);
+      } catch {
+        // Clipboard API unavailable (permissions, insecure context) — fail silently, no crash.
+      }
+    });
+  });
+
+  recomputeFromEuler();
+  recomputeFromQuaternion();
+</script>
