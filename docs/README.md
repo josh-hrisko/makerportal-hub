@@ -7,7 +7,7 @@ Compressed 2026-07-15 — handoff prompts and verbose DONE history archived to `
 | Doc | Purpose | Status |
 |-----|---------|--------|
 | [STATUS.md](./STATUS.md) | **Start here** — single snapshot: 11 apps, theme, pipelines, monetization state, last verifications | Evergreen — update each session |
-| [BACKLOG.md](./BACKLOG.md) | Current open items only (P0/P1/P2) — no DONE history noise | Evergreen — pending work |
+| [BACKLOG.md](./BACKLOG.md) | Comprehensive phased plan (traffic visibility → content → distribution → backlinks → revenue → engineering) — no DONE history noise | Evergreen — check in + burn down each session |
 | [MONETIZATION.md](./MONETIZATION.md) | Shop/email/affiliate/trends stack, verified pricing, prioritized avenues, shop MVP plan | Evergreen — replaces handoff + dated strategy |
 | [DECISIONS.md](./DECISIONS.md) | ADR log D-001→D-017 — why we chose X, hard-won lessons (esp D-011..D-017) | Keep, append only |
 | [THEME-SYSTEM.md](./THEME-SYSTEM.md) | Light default + hidden toggle + reading paper — tokens, QA checklist, a11y ratios | Keep — working per owner |

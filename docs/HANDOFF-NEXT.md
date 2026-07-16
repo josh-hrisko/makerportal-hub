@@ -24,7 +24,7 @@ git log --oneline -20
 
 - `docs/README.md` — compressed index (8 active + archive/)
 - `docs/STATUS.md` — single snapshot, updated 2026-07-15 evening
-- `docs/BACKLOG.md` — current P0/P1/P2 open only
+- `docs/BACKLOG.md` — comprehensive phased plan (traffic visibility → content → distribution → backlinks → revenue → engineering), the single source of truth to check in on and burn down each session
 - `docs/MONETIZATION.md` — evergreen shop/email/affiliate/trends stack, verified pricing
 - `docs/DECISIONS.md` — read D-011, D-012, D-014, D-015, D-016, D-017
 - `analytics/reports/search-performance-latest.md` — **read this first**, it's the ground truth on whether anything is working yet
@@ -50,7 +50,7 @@ A live Search Console pull (`node --env-file=.env scripts/search-console/build-r
 
 2. **Content cadence, not more monetization surface.** With 1 click in 28 days, the shop, affiliate links, and `/advertise` page have nothing to sell to yet. The highest-leverage work is real field notes from real shipped code — BLExAR launch note, MotionLink deep dive (`CMHeadphoneMotionManager` under-documented, genuine SEO opportunity per prior research), Notiary/PopCloset vector-index writeup. Aim for 1-2 real posts before revisiting any traffic-dependent feature. Cross-link every post into `/resources` pillars per existing IA.
 
-3. **Lemon Squeezy store creation — still OWNER VISIT NEEDED, still blocking real revenue.** This has been sitting for 2+ sessions. It's the one revenue lever that doesn't need traffic — a single $19 sale doesn't care about impression counts. See `docs/BACKLOG.md` P0 for the exact steps (create store `makerportal`, 3 products — BLExAR Nano+OLED $19, CoreML Offline Classifier $29, **Biquadia DSP Snippet Pack $19** — note: `src/data/shop.json` already ships Biquadia as the third pick, not the MotionLink starter an older handoff doc proposed; code is the source of truth). If you're an LLM session without hands to click through Lemon's UI, flag this clearly to the human rather than stalling on it.
+3. **Lemon Squeezy store creation — still OWNER VISIT NEEDED, still blocking real revenue.** This has been sitting for 2+ sessions. It's the one revenue lever that doesn't need traffic — a single $19 sale doesn't care about impression counts. See `docs/BACKLOG.md` Phase 4 for the exact steps (create store `makerportal`, 3 products — BLExAR Nano+OLED $19, CoreML Offline Classifier $29, **Biquadia DSP Snippet Pack $19** — note: `src/data/shop.json` already ships Biquadia as the third pick, not the MotionLink starter an older handoff doc proposed; code is the source of truth). If you're an LLM session without hands to click through Lemon's UI, flag this clearly to the human rather than stalling on it.
 
 4. **Re-check the Search Console numbers periodically**, not the Creators API or trend PRs — those are already on autopilot (daily cron, monthly cron) and don't need session-by-session attention. Traffic is the metric that actually needs a human/LLM checking in.
 
