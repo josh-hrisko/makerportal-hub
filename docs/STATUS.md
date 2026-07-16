@@ -10,7 +10,7 @@ Single snapshot of what's live, what's built but pending, what's placeholder. Re
 - **Nav:** Single source `site-nav.ts`, ≤7 primary items, mega panels, ecosystem same-tab / true external new-tab (D-009), opaque surfaces (D-006)
 - **Blog:** 4 human posts in `src/content/blog/` (added MotionLink `CMHeadphoneMotionManager` field note 2026-07-15), no AI pipeline. Trend-grounded draft scaffold (`scripts/trends/draft-post.mjs`) exists but is gated — see Trends digest entry below.
 - **Lab (new 2026-07-15):** `/tools` — interactive tools grounded in real shipped app code, not reskinned reference calculators. Registry `src/data/tools.ts` (6-tool roadmap, 1 live). First tool: quaternion ↔ Euler converter (`/tools/quaternion-euler-converter`), cross-linked from the MotionLink field note and a new `/resources#lab` section. No new nav item — linked from the Guides mega panel. See `BACKLOG.md` Phase 1 for the full roadmap and sequencing.
-- **Playground (new 2026-07-15):** `/playground` — viral math/physics toys, deliberately kept separate from the Lab since 4 of 5 planned tools aren't app-grounded (owner's explicit call, see D-018). Registry `src/data/playground.ts` (5-tool roadmap, 1 live). First tool: Fourier epicycles (`/playground/fourier-epicycles`) — draw a shape, watch it decompose into rotating circles, cross-linked from `/blog/inside-biquadia`. New `/resources#playground` section, separate from `#lab`.
+- **Playground (new 2026-07-15):** `/playground` — viral math/physics toys, deliberately kept separate from the Lab since most planned tools aren't app-grounded (owner's explicit call, see D-018). Registry `src/data/playground.ts` (6-tool roadmap, 2 live). Fourier epicycles (`/playground/fourier-epicycles`) — draw a shape, watch it decompose into rotating circles, cross-linked from `/blog/inside-biquadia`. **Live Earth** (`/playground/globe`, added 2026-07-16, D-019) — real coastlines + real astronomical day/night terminator + real weather (16 cities) + real ISS orbit (verified two-body propagation from actual TLE data), three switchable modes, two new build-time pipelines (`weather-digest.yml`, `satellite-tle.yml`). New `/resources#playground` section, separate from `#lab`.
 - **Build:** `npm run build` → astro check + build + pagefind + strip-dev-pages (brand prod-hidden)
 
 ## Traffic (ground truth)
@@ -37,8 +37,10 @@ Search Console re-pull 2026-07-15 (evening): still **1 click, 3 impressions** (w
 |----------|----------|-------|--------|---------|-------|
 | `trends-digest.yml` | daily `0 14 * * *` | Bluesky (auth), HN Algolia, Reddit (optional) | `trends.json` + `public/trends/*.webp` + PR body | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD`, `REDDIT_CLIENT_ID/SECRET` optional | Live, PR #2 merged 2026-07-15 |
 | `amazon-catalog.yml` | monthly 1st + dispatch | `affiliate-links.json` ASINs | `amazon-catalog.json` + PR body | `AMAZON_CLIENT_ID`, `AMAZON_CLIENT_SECRET` | Built, empty cache until eligible |
+| `weather-digest.yml` | every 6h `0 */6 * * *` | Open-Meteo (free, no key), 16 curated cities | `weather.json` + PR body | none | Built + verified 2026-07-16, feeds Live Earth's Weather mode |
+| `satellite-tle.yml` | every 12h `0 */12 * * *` | Celestrak TLE (free, no key), ISS only | `satellite.json` + PR body | none | Built + verified 2026-07-16, feeds Live Earth's ISS Tracker mode |
 
-No runtime API calls, no client secrets, no Vercel env vars for these — static data only.
+No runtime API calls, no client secrets, no Vercel env vars for these — static data only. `weather-digest.yml`/`satellite-tle.yml` need no secrets at all (both source APIs are free/keyless).
 
 ## Open decisions
 

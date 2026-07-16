@@ -277,6 +277,7 @@ export const hubRoutes: { path: string; priority: string; changefreq: string }[]
   { path: '/tools/quaternion-euler-converter', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/fourier-epicycles', priority: '0.75', changefreq: 'monthly' },
+  { path: '/playground/globe', priority: '0.75', changefreq: 'daily' },
   { path: '/shop', priority: '0.9', changefreq: 'weekly' },
   { path: '/watch', priority: '0.85', changefreq: 'weekly' },
   { path: '/about', priority: '0.85', changefreq: 'monthly' },

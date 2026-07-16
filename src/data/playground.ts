@@ -29,6 +29,14 @@ export const playground: PlaygroundEntry[] = [
     status: 'live',
   },
   {
+    slug: 'globe',
+    title: 'Live Earth',
+    tagline: 'Real coastlines, real weather, real ISS orbit',
+    description:
+      'A rotating globe with three real-data modes: an astronomically accurate day/night terminator, real current weather across 16 cities (refreshed on a schedule), and the ISS tracked live via real orbital mechanics computed client-side from its actual TLE elements.',
+    status: 'live',
+  },
+  {
     slug: 'double-pendulum',
     title: 'Double Pendulum + Phase Space',
     tagline: 'Chaotic motion, painted as pure geometry',
