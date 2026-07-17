@@ -69,7 +69,7 @@ const breadcrumbSchema = {
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live preview</h2>
         <p class="max-w-2xl text-[0.95rem] text-muted-text">
-          A 3D quadcopter drone, driven by whichever panel you last edited. At <strong>0° yaw/pitch/roll</strong> you now see the top in a standard isometric view — X forward (nose, red), Y left (green), Z up (blue). The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll.
+          A 3D quadcopter drone, driven by whichever panel you last edited. At <strong>0° yaw/pitch/roll</strong> you are looking from behind the drone — X forward (nose, red), Y left (green), Z up (blue). The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll.
         </p>
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <p id="preview-source" class="font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
@@ -281,878 +281,318 @@ const breadcrumbSchema = {
 </style>
 
 <script>
+  import * as THREE from 'three';
+
   function initQuaternionPreview() {
-  const pageCanvas = document.getElementById('quat-canvas') as HTMLCanvasElement | null;
-  if (!pageCanvas || pageCanvas.dataset.initialized === 'true') return;
-  pageCanvas.dataset.initialized = 'true';
+    const pageCanvas = document.getElementById('quat-canvas') as HTMLCanvasElement | null;
+    if (!pageCanvas || pageCanvas.dataset.initialized === 'true') return;
+    pageCanvas.dataset.initialized = 'true';
 
-  // ====================================================================
-  // Math core — identical to the Swift functions and the converter panels
-  // ====================================================================
-  function clamp(n: number, lo: number, hi: number): number {
-    return Math.max(lo, Math.min(hi, n));
-  }
-
-  function yawPitchRoll(x: number, y: number, z: number, w: number) {
-    const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
-    const pitch = Math.asin(clamp(2 * (w * y - z * x), -1, 1));
-    const roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
-    return { yaw, pitch, roll };
-  }
-
-  function quaternionFromEuler(yaw: number, pitch: number, roll: number) {
-    const cy = Math.cos(yaw * 0.5), sy = Math.sin(yaw * 0.5);
-    const cp = Math.cos(pitch * 0.5), sp = Math.sin(pitch * 0.5);
-    const cr = Math.cos(roll * 0.5), sr = Math.sin(roll * 0.5);
-    return {
-      x: sr * cp * cy - cr * sp * sy,
-      y: cr * sp * cy + sr * cp * sy,
-      z: cr * cp * sy - sr * sp * cy,
-      w: cr * cp * cy + sr * sp * sy,
-    };
-  }
-
-  const degFromRad = (rad: number) => (rad * 180) / Math.PI;
-  const radFromDeg = (d: number) => (d * Math.PI) / 180;
-  const fmtDeg = (r: number) => `${degFromRad(r).toFixed(2)}°`;
-  const fmtNum = (n: number) => n.toFixed(4);
-
-  // ====================================================================
-  // Quaternion → 3×3 Rotation Matrix
-  // ====================================================================
-  type Mat3 = [number, number, number, number, number, number, number, number, number];
-  type Vec3 = [number, number, number];
-
-  function quatToMatrix(x: number, y: number, z: number, w: number): Mat3 {
-    const xx = x * x, yy = y * y, zz = z * z;
-    const xy = x * y, xz = x * z, yz = y * z;
-    const wx = w * x, wy = w * y, wz = w * z;
-    return [
-      1 - 2 * (yy + zz), 2 * (xy - wz),     2 * (xz + wy),
-      2 * (xy + wz),     1 - 2 * (xx + zz),  2 * (yz - wx),
-      2 * (xz - wy),     2 * (yz + wx),      1 - 2 * (xx + yy),
-    ];
-  }
-
-  function mulMat3Vec3(m: Mat3, v: Vec3): Vec3 {
-    return [
-      m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
-      m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
-      m[6] * v[0] + m[7] * v[1] + m[8] * v[2],
-    ];
-  }
-
-  // ====================================================================
-  // Quaternion algebra for drag interaction
-  // ====================================================================
-  type Quat = { x: number; y: number; z: number; w: number };
-
-  function quatMul(a: Quat, b: Quat): Quat {
-    return {
-      w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-      x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
-      y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
-      z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
-    };
-  }
-
-  function quatNormalize(q: Quat): Quat {
-    const mag = Math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-    if (mag < 1e-10) return { x: 0, y: 0, z: 0, w: 1 };
-    return { x: q.x / mag, y: q.y / mag, z: q.z / mag, w: q.w / mag };
-  }
-
-  function quatFromAxisAngle(axis: Vec3, angle: number): Quat {
-    const ha = angle * 0.5;
-    const s = Math.sin(ha);
-    return { x: axis[0] * s, y: axis[1] * s, z: axis[2] * s, w: Math.cos(ha) };
-  }
-
-  // ====================================================================
-  // 3D Drone Model — high-poly procedural build
-  // ====================================================================
-  interface Face {
-    verts: number[];
-    color: [number, number, number];
-    isNose?: boolean;
-    isProp?: boolean;  // propeller disc — rendered with transparency
-  }
-
-  function buildDroneModel(): { verts: Vec3[]; faces: Face[] } {
-    const verts: Vec3[] = [];
-    const faces: Face[] = [];
-
-    // Premium curated color palette (steel/slate blues with warm accent)
-    const bodyColor: [number, number, number] = [62, 78, 102];
-    const bodyTopColor: [number, number, number] = [82, 105, 138];
-    const bodyBevelColor: [number, number, number] = [72, 90, 118];
-    const armColor: [number, number, number] = [52, 62, 78];
-    const armTopColor: [number, number, number] = [58, 72, 92];
-    const hubColor: [number, number, number] = [45, 55, 70];
-    const hubTopColor: [number, number, number] = [75, 95, 125];
-    const propColor: [number, number, number] = [120, 148, 180];
-    const noseColor: [number, number, number] = [210, 62, 72];
-    const ledColor: [number, number, number] = [60, 220, 130];
-
-    // --- Central body: 24-sided cylinder (appears perfectly round) ---
-    const bodyR = 0.22;
-    const bodyH = 0.055;
-    const bevelH = 0.02;
-    const bevelR = bodyR * 0.92;
-    const nSides = 24;
-
-    // Top ring (bevel)
-    const topBevelStart = verts.length;
-    for (let i = 0; i < nSides; i++) {
-      const a = (i / nSides) * Math.PI * 2;
-      verts.push([bevelR * Math.cos(a), bodyH + bevelH, bevelR * Math.sin(a)]);
+    // Math core
+    function clamp(n: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, n)); }
+    function yawPitchRoll(x: number, y: number, z: number, w: number) {
+      const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+      const pitch = Math.asin(clamp(2 * (w * y - z * x), -1, 1));
+      const roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+      return { yaw, pitch, roll };
     }
-    // Top ring (main)
-    const bodyTopStart = verts.length;
-    for (let i = 0; i < nSides; i++) {
-      const a = (i / nSides) * Math.PI * 2;
-      verts.push([bodyR * Math.cos(a), bodyH, bodyR * Math.sin(a)]);
-    }
-    // Bottom ring (main)
-    const bodyBotStart = verts.length;
-    for (let i = 0; i < nSides; i++) {
-      const a = (i / nSides) * Math.PI * 2;
-      verts.push([bodyR * Math.cos(a), -bodyH, bodyR * Math.sin(a)]);
-    }
-    // Bottom ring (bevel)
-    const botBevelStart = verts.length;
-    for (let i = 0; i < nSides; i++) {
-      const a = (i / nSides) * Math.PI * 2;
-      verts.push([bevelR * Math.cos(a), -bodyH - bevelH, bevelR * Math.sin(a)]);
-    }
-
-    // Top cap (bevel top face)
-    faces.push({ verts: Array.from({ length: nSides }, (_, i) => topBevelStart + i), color: bodyTopColor });
-    // Bottom cap (bevel bottom face)
-    faces.push({ verts: Array.from({ length: nSides }, (_, i) => botBevelStart + (nSides - 1 - i)), color: bodyColor });
-    // Bevel top → main top
-    for (let i = 0; i < nSides; i++) {
-      const j = (i + 1) % nSides;
-      faces.push({
-        verts: [topBevelStart + i, topBevelStart + j, bodyTopStart + j, bodyTopStart + i],
-        color: bodyBevelColor,
-      });
-    }
-    // Main top → main bottom (side quads)
-    for (let i = 0; i < nSides; i++) {
-      const j = (i + 1) % nSides;
-      faces.push({
-        verts: [bodyTopStart + i, bodyTopStart + j, bodyBotStart + j, bodyBotStart + i],
-        color: bodyColor,
-      });
-    }
-    // Main bottom → bevel bottom
-    for (let i = 0; i < nSides; i++) {
-      const j = (i + 1) % nSides;
-      faces.push({
-        verts: [bodyBotStart + i, bodyBotStart + j, botBevelStart + j, botBevelStart + i],
-        color: bodyBevelColor,
-      });
-    }
-
-    // --- Four arms at 45°, 135°, 225°, 315° ---
-    const armAngles = [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75];
-    const armLen = 0.56;
-    const armW = 0.04;
-    const armH = 0.022;
-
-    for (let ai = 0; ai < 4; ai++) {
-      const angle = armAngles[ai];
-      const dx = Math.cos(angle);
-      const dz = Math.sin(angle);
-      const px = -dz;
-      const pz = dx;
-
-      const startDist = bodyR * 0.68;
-      const endDist = armLen;
-
-      const armStart = verts.length;
-      const ntl: Vec3 = [dx * startDist - px * armW, armH, dz * startDist - pz * armW];
-      const ntr: Vec3 = [dx * startDist + px * armW, armH, dz * startDist + pz * armW];
-      const ftl: Vec3 = [dx * endDist - px * armW, armH, dz * endDist - pz * armW];
-      const ftr: Vec3 = [dx * endDist + px * armW, armH, dz * endDist + pz * armW];
-      const nbl: Vec3 = [dx * startDist - px * armW, -armH, dz * startDist - pz * armW];
-      const nbr: Vec3 = [dx * startDist + px * armW, -armH, dz * startDist + pz * armW];
-      const fbl: Vec3 = [dx * endDist - px * armW, -armH, dz * endDist - pz * armW];
-      const fbr: Vec3 = [dx * endDist + px * armW, -armH, dz * endDist + pz * armW];
-
-      verts.push(ntl, ntr, ftr, ftl, nbl, nbr, fbr, fbl);
-
-      faces.push({ verts: [armStart, armStart + 1, armStart + 2, armStart + 3], color: armTopColor });
-      faces.push({ verts: [armStart + 7, armStart + 6, armStart + 5, armStart + 4], color: armColor });
-      faces.push({ verts: [armStart, armStart + 3, armStart + 7, armStart + 4], color: armColor });
-      faces.push({ verts: [armStart + 1, armStart + 5, armStart + 6, armStart + 2], color: armColor });
-      faces.push({ verts: [armStart + 3, armStart + 2, armStart + 6, armStart + 7], color: armColor });
-
-      // --- Motor hub: 12-sided cylinder (smoother) ---
-      const hubR = 0.052;
-      const hubH = 0.042;
-      const hubN = 12;
-      const tipX = dx * endDist;
-      const tipZ = dz * endDist;
-
-      const hubTopStart = verts.length;
-      for (let i = 0; i < hubN; i++) {
-        const a = (i / hubN) * Math.PI * 2;
-        verts.push([tipX + hubR * Math.cos(a), armH + hubH, tipZ + hubR * Math.sin(a)]);
-      }
-      const hubBotStart = verts.length;
-      for (let i = 0; i < hubN; i++) {
-        const a = (i / hubN) * Math.PI * 2;
-        verts.push([tipX + hubR * Math.cos(a), armH, tipZ + hubR * Math.sin(a)]);
-      }
-      faces.push({ verts: Array.from({ length: hubN }, (_, i) => hubTopStart + i), color: hubTopColor });
-      faces.push({ verts: Array.from({ length: hubN }, (_, i) => hubBotStart + (hubN - 1 - i)), color: hubColor });
-      for (let i = 0; i < hubN; i++) {
-        const j = (i + 1) % hubN;
-        faces.push({ verts: [hubTopStart + i, hubTopStart + j, hubBotStart + j, hubBotStart + i], color: hubColor });
-      }
-
-      // --- Propeller: two blades + central disc ---
-      const propR = 0.15;
-      const propY = armH + hubH + 0.006;
-
-      // Blade 1 (elongated, rotated)
-      const bladeW = 0.028;
-      const bladeAngle = angle + Math.PI * 0.15; // slightly offset from arm
-      const bCos = Math.cos(bladeAngle), bSin = Math.sin(bladeAngle);
-      const bpx = -bSin, bpz = bCos; // perpendicular to blade direction
-
-      const b1Start = verts.length;
-      verts.push(
-        [tipX + bCos * propR + bpx * bladeW, propY, tipZ + bSin * propR + bpz * bladeW],
-        [tipX + bCos * propR - bpx * bladeW, propY, tipZ + bSin * propR - bpz * bladeW],
-        [tipX - bCos * propR - bpx * bladeW, propY, tipZ - bSin * propR - bpz * bladeW],
-        [tipX - bCos * propR + bpx * bladeW, propY, tipZ - bSin * propR + bpz * bladeW],
-      );
-      faces.push({ verts: [b1Start, b1Start + 1, b1Start + 2, b1Start + 3], color: propColor, isProp: true });
-      faces.push({ verts: [b1Start + 3, b1Start + 2, b1Start + 1, b1Start], color: propColor, isProp: true });
-
-      // Blade 2 (perpendicular to blade 1)
-      const blade2Angle = bladeAngle + Math.PI * 0.5;
-      const b2Cos = Math.cos(blade2Angle), b2Sin = Math.sin(blade2Angle);
-      const b2px = -b2Sin, b2pz = b2Cos;
-
-      const b2Start = verts.length;
-      verts.push(
-        [tipX + b2Cos * propR + b2px * bladeW, propY, tipZ + b2Sin * propR + b2pz * bladeW],
-        [tipX + b2Cos * propR - b2px * bladeW, propY, tipZ + b2Sin * propR - b2pz * bladeW],
-        [tipX - b2Cos * propR - b2px * bladeW, propY, tipZ - b2Sin * propR - b2pz * bladeW],
-        [tipX - b2Cos * propR + b2px * bladeW, propY, tipZ - b2Sin * propR + b2pz * bladeW],
-      );
-      faces.push({ verts: [b2Start, b2Start + 1, b2Start + 2, b2Start + 3], color: propColor, isProp: true });
-      faces.push({ verts: [b2Start + 3, b2Start + 2, b2Start + 1, b2Start], color: propColor, isProp: true });
-
-      // --- LED indicator on rear arms (small triangle) ---
-      if (ai >= 2) {
-        const ledStart = verts.length;
-        const ledDist = startDist + (endDist - startDist) * 0.4;
-        const ledSize = 0.015;
-        verts.push(
-          [dx * ledDist, armH + 0.003, dz * ledDist - ledSize],
-          [dx * ledDist + ledSize * 1.5, armH + 0.003, dz * ledDist],
-          [dx * ledDist, armH + 0.003, dz * ledDist + ledSize],
-        );
-        faces.push({ verts: [ledStart, ledStart + 1, ledStart + 2], color: ledColor, isNose: true });
-        faces.push({ verts: [ledStart + 2, ledStart + 1, ledStart], color: ledColor, isNose: true });
-      }
-    }
-
-    // --- Nose indicator: chevron on the "front" direction (+X) ---
-    const noseStart = verts.length;
-    const noseLen = 0.14;
-    const noseW = 0.055;
-    const noseInner = 0.07;
-    const noseY = bodyH + bevelH + 0.004;
-    const noseDist = bodyR * 0.55;
-    // Outer chevron
-    verts.push(
-      [noseDist + noseLen, noseY, 0],             // tip
-      [noseDist, noseY, -noseW],                   // left
-      [noseDist + noseInner, noseY, 0],            // inner notch
-      [noseDist, noseY, noseW],                    // right
-    );
-    faces.push({ verts: [noseStart, noseStart + 1, noseStart + 2], color: noseColor, isNose: true });
-    faces.push({ verts: [noseStart, noseStart + 2, noseStart + 3], color: noseColor, isNose: true });
-    faces.push({ verts: [noseStart + 2, noseStart + 1, noseStart], color: noseColor, isNose: true });
-    faces.push({ verts: [noseStart + 3, noseStart + 2, noseStart], color: noseColor, isNose: true });
-
-    // The procedural mesh above is authored in an X-Z ground plane with Y up.
-    // Euler Z-Y-X convention instead expects the vehicle body in X-Y with Z up:
-    // roll about X, pitch about Y, and yaw about the vertical Z axis. This is a
-    // proper +90° X-axis basis rotation (not an Euler remap), so the quaternion
-    // and its rotation matrix remain the single source of orientation truth.
-    const bodyFrameVerts = verts.map(([x, y, z]) => [x, -z, y] as Vec3);
-    return { verts: bodyFrameVerts, faces };
-  }
-
-  // ====================================================================
-  // HiDPI Canvas Setup
-  // ====================================================================
-  const canvas = pageCanvas;
-  const ctx = canvas.getContext('2d')!;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x for performance
-  const CW = canvas.width;   // CSS logical pixels (520)
-  const CH = canvas.height;  // CSS logical pixels (440)
-
-  // Scale the canvas buffer for crisp rendering on HiDPI displays
-  canvas.width = CW * dpr;
-  canvas.height = CH * dpr;
-  canvas.style.width = `${CW}px`;
-  canvas.style.height = `${CH}px`;
-  ctx.scale(dpr, dpr);
-
-  const scale = Math.min(CW, CH) * 0.66;
-  const droneModel = buildDroneModel();
-  // Center origin slightly above geometric center to make room for shadow
-  const ORIGIN_X = CW * 0.5;
-  const ORIGIN_Y = CH * 0.46;
-
-  // ====================================================================
-  // Fixed isometric view matrix (camera orbit)
-  // ====================================================================
-  // We want the zero-quaternion view to show the top of the drone, nose slightly
-  // up-right, and front/side edges visible — a true isometric "standard view".
-  // World convention after buildDroneModel mapping: X forward (nose +X), Y left,
-  // Z up.  Camera looks from +Z toward origin (viewer at +Z).  VIEW is applied
-  // as: v_camera = VIEW * (R_quat * v_body).  So VIEW rotates world into camera.
-  function mat3Mul(a: Mat3, b: Mat3): Mat3 {
-    return [
-      a[0]*b[0]+a[1]*b[3]+a[2]*b[6], a[0]*b[1]+a[1]*b[4]+a[2]*b[7], a[0]*b[2]+a[1]*b[5]+a[2]*b[8],
-      a[3]*b[0]+a[4]*b[3]+a[5]*b[6], a[3]*b[1]+a[4]*b[4]+a[5]*b[7], a[3]*b[2]+a[4]*b[5]+a[5]*b[8],
-      a[6]*b[0]+a[7]*b[3]+a[8]*b[6], a[6]*b[1]+a[7]*b[4]+a[8]*b[7], a[6]*b[2]+a[7]*b[5]+a[8]*b[8],
-    ];
-  }
-  function rotX(rad: number): Mat3 {
-    const c=Math.cos(rad), s=Math.sin(rad);
-    return [1,0,0, 0,c,-s, 0,s,c];
-  }
-  function rotY(rad: number): Mat3 {
-    const c=Math.cos(rad), s=Math.sin(rad);
-    return [c,0,s, 0,1,0, -s,0,c];
-  }
-  function rotZ(rad: number): Mat3 {
-    const c=Math.cos(rad), s=Math.sin(rad);
-    return [c,-s,0, s,c,0, 0,0,1];
-  }
-  const VIEW_MATRIX: Mat3 = (() => {
-    // Tuned for front-up visibility: forward (X) should appear up-right on screen,
-    // top (Z) largely up, and right side visible.  Elevation ~32° tilt, azimuth ~28°.
-    // Composition order: Rx * Ry * Rz  (Rz first, then Ry, then Rx).
-    // Rx(-28) * Ry(-18) * Rz(28) gives X forward slightly front-facing, Y left back,
-    // Z up dominant — see design notes in PR.  This yields a pleasing "standard"
-    // isometric quad view where zero yaw/pitch/roll shows top, not bottom.
-    const rx = rotX(-28 * Math.PI/180);
-    const ry = rotY(-18 * Math.PI/180);
-    const rz = rotZ(28 * Math.PI/180);
-    return mat3Mul(rx, mat3Mul(ry, rz));
-  })();
-
-  // ====================================================================
-  // Lighting — two-light setup for richer shading (camera space)
-  // ====================================================================
-  const lightDir: Vec3 = (() => {
-    const l: Vec3 = [0.3, 0.8, 0.5];
-    const m = Math.hypot(...l);
-    return [l[0] / m, l[1] / m, l[2] / m] as Vec3;
-  })();
-
-  // Fill light (dimmer, from opposite side)
-  const fillDir: Vec3 = (() => {
-    const l: Vec3 = [-0.5, 0.3, -0.3];
-    const m = Math.hypot(...l);
-    return [l[0] / m, l[1] / m, l[2] / m] as Vec3;
-  })();
-
-  // View direction for specular (viewer at +Z looking toward origin)
-  const viewDir: Vec3 = [0, 0, 1];
-
-  function resolveColor(varName: string, fallback: string): string {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
-  }
-
-  function getThemeColors() {
-    return {
-      canvas: resolveColor('--mp-canvas', '#f8f4ed'),
-      text: resolveColor('--mp-text', '#16202e'),
-      muted: resolveColor('--mp-muted', '#4a5d6f'),
-      border: resolveColor('--mp-border', 'rgba(22,32,46,0.12)'),
-      cta: resolveColor('--mp-cta', '#b8324f'),
-    };
-  }
-
-  // ====================================================================
-  // Blinn-Phong shading
-  // ====================================================================
-  function blinnPhong(
-    normal: Vec3,
-    baseColor: [number, number, number],
-    isNose: boolean,
-    isProp: boolean,
-  ): { r: number; g: number; b: number; a: number } {
-    if (isNose) {
-      // Nose/LED always vivid, slight shading only
-      const dot = normal[0] * lightDir[0] + normal[1] * lightDir[1] + normal[2] * lightDir[2];
-      const shade = clamp(0.7 + Math.max(0, dot) * 0.3, 0, 1);
+    function quaternionFromEuler(yaw: number, pitch: number, roll: number) {
+      const cy = Math.cos(yaw * 0.5), sy = Math.sin(yaw * 0.5);
+      const cp = Math.cos(pitch * 0.5), sp = Math.sin(pitch * 0.5);
+      const cr = Math.cos(roll * 0.5), sr = Math.sin(roll * 0.5);
       return {
-        r: Math.round(baseColor[0] * shade),
-        g: Math.round(baseColor[1] * shade),
-        b: Math.round(baseColor[2] * shade),
-        a: 1,
+        x: sr * cp * cy - cr * sp * sy,
+        y: cr * sp * cy + sr * cp * sy,
+        z: cr * cp * sy - sr * sp * cy,
+        w: cr * cp * cy + sr * sp * sy,
       };
     }
 
-    // Ambient
-    const ambient = 0.28;
+    const degFromRad = (rad: number) => (rad * 180) / Math.PI;
+    const radFromDeg = (d: number) => (d * Math.PI) / 180;
+    const fmtDeg = (r: number) => `${degFromRad(r).toFixed(2)}°`;
+    const fmtNum = (n: number) => n.toFixed(4);
 
-    // Key light diffuse
-    const dotKey = normal[0] * lightDir[0] + normal[1] * lightDir[1] + normal[2] * lightDir[2];
-    const diffuseKey = Math.max(0, dotKey) * 0.52;
-
-    // Fill light diffuse (softer)
-    const dotFill = normal[0] * fillDir[0] + normal[1] * fillDir[1] + normal[2] * fillDir[2];
-    const diffuseFill = Math.max(0, dotFill) * 0.15;
-
-    // Blinn-Phong specular (key light only)
-    const halfVec: Vec3 = [
-      lightDir[0] + viewDir[0],
-      lightDir[1] + viewDir[1],
-      lightDir[2] + viewDir[2],
-    ];
-    const hLen = Math.hypot(...halfVec);
-    if (hLen > 0) { halfVec[0] /= hLen; halfVec[1] /= hLen; halfVec[2] /= hLen; }
-    const specDot = normal[0] * halfVec[0] + normal[1] * halfVec[1] + normal[2] * halfVec[2];
-    const specular = Math.pow(Math.max(0, specDot), 32) * 0.35;
-
-    const shade = clamp(ambient + diffuseKey + diffuseFill, 0, 1);
-
-    let r = Math.round(baseColor[0] * shade + 255 * specular);
-    let g = Math.round(baseColor[1] * shade + 255 * specular);
-    let b = Math.round(baseColor[2] * shade + 255 * specular);
-    r = Math.min(255, r);
-    g = Math.min(255, g);
-    b = Math.min(255, b);
-
-    return { r, g, b, a: isProp ? 0.5 : 1 };
-  }
-
-  // ====================================================================
-  // 3D Renderer — with fixed isometric camera
-  // ====================================================================
-  function render3D(rotMatrix: Mat3) {
-    const tc = getThemeColors();
-
-    ctx.clearRect(0, 0, CW, CH);
-
-    // Ambient radial glow behind the drone
-    const glow = ctx.createRadialGradient(CW / 2, CH / 2 - 10, 0, CW / 2, CH / 2 - 10, scale * 0.6);
-    glow.addColorStop(0, 'rgba(130,160,200,0.08)');
-    glow.addColorStop(0.6, 'rgba(130,160,200,0.03)');
-    glow.addColorStop(1, 'rgba(130,160,200,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, CW, CH);
-
-    // Subtle background grid — static (camera space)
-    ctx.strokeStyle = tc.border;
-    ctx.lineWidth = 0.5;
-    ctx.globalAlpha = 0.18;
-    const gridStep = 32;
-    for (let gx = gridStep; gx < CW; gx += gridStep) {
-      ctx.beginPath();
-      ctx.moveTo(gx, 0);
-      ctx.lineTo(gx, CH);
-      ctx.stroke();
+    type Quat = { x: number; y: number; z: number; w: number };
+    function quatMul(a: Quat, b: Quat): Quat {
+      return {
+        w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+        x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+        y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+        z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+      };
     }
-    for (let gy = gridStep; gy < CH; gy += gridStep) {
-      ctx.beginPath();
-      ctx.moveTo(0, gy);
-      ctx.lineTo(CW, gy);
-      ctx.stroke();
+    function quatNormalize(q: Quat): Quat {
+      const mag = Math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+      if (mag < 1e-10) return { x: 0, y: 0, z: 0, w: 1 };
+      return { x: q.x / mag, y: q.y / mag, z: q.z / mag, w: q.w / mag };
     }
-    ctx.globalAlpha = 1;
-
-    // Combined view * model rotation (camera * quaternion)
-    // This is the fix: previously rotMatrix was used directly, so Z-up mapped to depth
-    // and the top face pointed straight at the viewer — showing bottom due to
-    // inverted winding culling.  Now VIEW_MATRIX gives a standard isometric
-    // camera (elevation ~28°, azimuth 28°, with slight Ry), so zero Euler shows
-    // top, front, and side — like a product photo.
-    const finalMatrix = mat3Mul(VIEW_MATRIX, rotMatrix);
-
-    // Transform all vertices into camera space
-    const transformed = droneModel.verts.map((v) => mulMat3Vec3(finalMatrix, v));
-
-    // Orthographic projection: camera X→screen right, Y→up — centered at ORIGIN
-    const projected = transformed.map((v) => ({
-      x: ORIGIN_X + v[0] * scale,
-      y: ORIGIN_Y - v[1] * scale,
-      z: v[2],
-    }));
-
-    // Collect face data for sorting
-    const faceData = droneModel.faces.map((face, fi) => {
-      const pts = face.verts.map((vi) => projected[vi]);
-      const avgZ = pts.reduce((s, p) => s + p.z, 0) / pts.length;
-
-      const p0 = transformed[face.verts[0]];
-      const p1 = transformed[face.verts[1]];
-      const p2 = transformed[face.verts[2]];
-      const e1: Vec3 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
-      const e2: Vec3 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-      const normal: Vec3 = [
-        e1[1] * e2[2] - e1[2] * e2[1],
-        e1[2] * e2[0] - e1[0] * e2[2],
-        e1[0] * e2[1] - e1[1] * e2[0],
-      ];
-      const nLen = Math.hypot(...normal);
-      if (nLen > 0) { normal[0] /= nLen; normal[1] /= nLen; normal[2] /= nLen; }
-
-      return { fi, pts, avgZ, normal };
-    });
-
-    // Painter's algorithm: sort back-to-front by depth
-    faceData.sort((a, b) => a.avgZ - b.avgZ);
-
-    // --- Ground shadow (ellipse that tracks yaw) ---
-    const shadowY = CH * 0.82;
-    // Use finalMatrix's Z axis (world up after view) for slight offset tracking yaw
-    const upInCamera = mulMat3Vec3(finalMatrix, [0, 0, 1]);
-    const fwdInCamera = mulMat3Vec3(finalMatrix, [1, 0, 0]);
-    const shadowOffX = fwdInCamera[0] * scale * 0.06 + upInCamera[0] * scale * 0.02;
-    ctx.save();
-    ctx.globalAlpha = 0.08;
-    const shadowGrad = ctx.createRadialGradient(
-      ORIGIN_X + shadowOffX, shadowY, 0,
-      ORIGIN_X + shadowOffX, shadowY, scale * 0.42
-    );
-    shadowGrad.addColorStop(0, tc.text);
-    shadowGrad.addColorStop(0.7, tc.text);
-    shadowGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = shadowGrad;
-    ctx.beginPath();
-    ctx.ellipse(ORIGIN_X + shadowOffX, shadowY, scale * 0.42, scale * 0.06, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // --- Draw reference axes (body axes, now through camera) ---
-    const axisLen = 0.42;
-    const axes: { dir: Vec3; color: string; label: string }[] = [
-      { dir: [axisLen, 0, 0], color: 'rgba(220,68,68,0.72)', label: 'X·fwd' },
-      { dir: [0, axisLen, 0], color: 'rgba(60,185,90,0.72)', label: 'Y·left' },
-      { dir: [0, 0, axisLen], color: 'rgba(65,110,230,0.72)', label: 'Z·up' },
-    ];
-    const origin = { x: ORIGIN_X, y: ORIGIN_Y };
-
-    for (const axis of axes) {
-      const tip = mulMat3Vec3(finalMatrix, axis.dir);
-      const sx = origin.x + tip[0] * scale;
-      const sy = origin.y - tip[1] * scale;
-      const neg = mulMat3Vec3(finalMatrix, [-axis.dir[0], -axis.dir[1], -axis.dir[2]]);
-      const nx = origin.x + neg[0] * scale;
-      const ny = origin.y - neg[1] * scale;
-
-      // Negative direction (dashed, faint)
-      ctx.save();
-      ctx.setLineDash([3, 5]);
-      ctx.strokeStyle = axis.color;
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.18;
-      ctx.beginPath();
-      ctx.moveTo(origin.x, origin.y);
-      ctx.lineTo(nx, ny);
-      ctx.stroke();
-      ctx.restore();
-
-      // Positive direction (solid)
-      ctx.strokeStyle = axis.color;
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(origin.x, origin.y);
-      ctx.lineTo(sx, sy);
-      ctx.stroke();
-
-      // Arrowhead
-      const tipLen = 8;
-      const tipW = 4;
-      const dirLen = Math.hypot(tip[0], tip[1], tip[2]);
-      if (dirLen > 0.01) {
-        const udx = (sx - origin.x) / (dirLen * scale) * tipLen;
-        const udy = (sy - origin.y) / (dirLen * scale) * tipLen;
-        const perpX = -udy * (tipW / tipLen);
-        const perpY = udx * (tipW / tipLen);
-        ctx.fillStyle = axis.color;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx - udx + perpX, sy - udy + perpY);
-        ctx.lineTo(sx - udx - perpX, sy - udy - perpY);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Label
-      ctx.fillStyle = axis.color;
-      ctx.font = 'bold 11px ui-monospace, SFMono-Regular, monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const labelOffset = 16;
-      const ldx = dirLen > 0.01 ? tip[0] / dirLen : 0;
-      const ldy = dirLen > 0.01 ? tip[1] / dirLen : 0;
-      ctx.fillText(axis.label, sx + ldx * labelOffset, sy - ldy * labelOffset);
+    function quatFromAxisAngle(axis: [number, number, number], angle: number): Quat {
+      const ha = angle * 0.5;
+      const s = Math.sin(ha);
+      return { x: axis[0] * s, y: axis[1] * s, z: axis[2] * s, w: Math.cos(ha) };
     }
 
-    // --- Draw faces with Blinn-Phong shading — correct back-face culling ---
-    for (const fd of faceData) {
-      const face = droneModel.faces[fd.fi];
-      // Correct 3D back-face test: if normal points away from viewer (+Z is viewer),
-      // cull. Previous winding test was inverted for the Z-up mapping and caused
-      // bottom to appear at identity.
-      if (fd.normal[2] <= 0.02) {
-        // Keep slight tolerance to avoid z-fighting at grazing angles, but cull
-        // true back-faces. Prop discs are double-sided (two opposite faces) so one
-        // will survive; nose/LED double-sided similarly.
-        if (!face.isProp && !face.isNose) continue;
-        // For props/nose, keep if at least somewhat facing, but our double-sided
-        // geometry ensures one of the two quads will have positive Z.
-        if (fd.normal[2] <= -0.15) continue;
-      }
+    // Three.js Setup
+    const CW = 520;
+    const CH = 440;
+    const renderer = new THREE.WebGLRenderer({ canvas: pageCanvas, antialias: true, alpha: true });
+    renderer.setSize(CW, CH, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
 
-      const pts2d = fd.pts;
-      const { r, g, b, a } = blinnPhong(fd.normal, face.color, !!face.isNose, !!face.isProp);
+    const scene = new THREE.Scene();
 
-      ctx.beginPath();
-      ctx.moveTo(pts2d[0].x, pts2d[0].y);
-      for (let i = 1; i < pts2d.length; i++) {
-        ctx.lineTo(pts2d[i].x, pts2d[i].y);
-      }
-      ctx.closePath();
+    const camera = new THREE.PerspectiveCamera(35, CW / CH, 0.1, 100);
+    camera.position.set(-5.5, 0, 2);
+    camera.up.set(0, 0, 1);
+    camera.lookAt(0, 0, 0);
 
-      ctx.globalAlpha = a;
-      ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fill();
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
 
-      // Subtle edge lines (darker for solid faces, skip for translucent props)
-      if (!face.isProp) {
-        ctx.strokeStyle = `rgba(${Math.round(r * 0.5)},${Math.round(g * 0.5)},${Math.round(b * 0.5)},0.32)`;
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+    dirLight1.position.set(-4, -4, 5);
+    scene.add(dirLight1);
 
-    // --- Spinning prop blur discs (drawn after solid geometry) ---
+    const dirLight2 = new THREE.DirectionalLight(0xaabbff, 0.5);
+    dirLight2.position.set(4, 4, 3);
+    scene.add(dirLight2);
+
+    const modelGroup = new THREE.Group();
+    scene.add(modelGroup);
+
+    // Body
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3e4e66, roughness: 0.3, metalness: 0.1 });
+    const bodyGeom = new THREE.CylinderGeometry(0.22, 0.22, 0.11, 24);
+    const body = new THREE.Mesh(bodyGeom, bodyMat);
+    body.rotation.x = Math.PI / 2;
+    modelGroup.add(body);
+
+    // Arms
+    const armMat = new THREE.MeshStandardMaterial({ color: 0x343e4e, roughness: 0.5, metalness: 0.2 });
     const armAngles = [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75];
-    const armEndDist = 0.56;
-    for (let ai = 0; ai < 4; ai++) {
-      const angle = armAngles[ai];
-      const tipPos: Vec3 = [Math.cos(angle) * armEndDist, -Math.sin(angle) * armEndDist, 0.022 + 0.042 + 0.008];
-      const tTip = mulMat3Vec3(finalMatrix, tipPos);
-      const sx = ORIGIN_X + tTip[0] * scale;
-      const sy = ORIGIN_Y - tTip[1] * scale;
+    const armLen = 0.56;
+    
+    // Rotors
+    const rotorMat = new THREE.MeshStandardMaterial({ color: 0x7894b4, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+    const rotorGeom = new THREE.CylinderGeometry(0.15, 0.15, 0.01, 16);
+    const motorMat = new THREE.MeshStandardMaterial({ color: 0x2d3746 });
+    const motorGeom = new THREE.CylinderGeometry(0.052, 0.052, 0.042, 12);
 
-      // Only draw blur disc if motor top is facing viewer (in camera space)
-      const motorNorm = mulMat3Vec3(finalMatrix, [0, 0, 1]);
-      if (motorNorm[2] > 0.05) {
-        const discR = 0.15 * scale;
-        const discGrad = ctx.createRadialGradient(sx, sy, discR * 0.15, sx, sy, discR);
-        discGrad.addColorStop(0, 'rgba(120,148,180,0.14)');
-        discGrad.addColorStop(0.4, 'rgba(120,148,180,0.06)');
-        discGrad.addColorStop(1, 'rgba(120,148,180,0)');
-        ctx.fillStyle = discGrad;
-        ctx.beginPath();
-        ctx.arc(sx, sy, discR, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    for (const angle of armAngles) {
+      const armGeom = new THREE.BoxGeometry(armLen, 0.04, 0.022);
+      const arm = new THREE.Mesh(armGeom, armMat);
+      arm.position.set((armLen/2) * Math.cos(angle), (armLen/2) * Math.sin(angle), 0);
+      arm.rotation.z = angle;
+      modelGroup.add(arm);
+
+      const mx = armLen * Math.cos(angle);
+      const my = armLen * Math.sin(angle);
+
+      const motor = new THREE.Mesh(motorGeom, motorMat);
+      motor.rotation.x = Math.PI / 2;
+      motor.position.set(mx, my, 0.022);
+      modelGroup.add(motor);
+
+      const rotor = new THREE.Mesh(rotorGeom, rotorMat);
+      rotor.rotation.x = Math.PI / 2;
+      rotor.position.set(mx, my, 0.05);
+      modelGroup.add(rotor);
     }
-  }
 
-  // ====================================================================
-  // DOM Elements
-  // ====================================================================
-  const previewYaw = document.getElementById('preview-yaw') as HTMLElement;
-  const previewPitch = document.getElementById('preview-pitch') as HTMLElement;
-  const previewRoll = document.getElementById('preview-roll') as HTMLElement;
-  const previewSource = document.getElementById('preview-source') as HTMLElement;
+    // Nose (Chevron)
+    const noseMat = new THREE.MeshStandardMaterial({ color: 0xd23e48 });
+    const shape = new THREE.Shape();
+    shape.moveTo(0.14, 0);
+    shape.lineTo(0, -0.055);
+    shape.lineTo(0.07, 0);
+    shape.lineTo(0, 0.055);
+    shape.lineTo(0.14, 0);
+    const extrudeSettings = { depth: 0.02, bevelEnabled: false };
+    const chevronGeom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    const chevron = new THREE.Mesh(chevronGeom, noseMat);
+    chevron.position.set(0.12, 0, 0.06);
+    modelGroup.add(chevron);
 
-  const qx = document.getElementById('q-x') as HTMLInputElement;
-  const qy = document.getElementById('q-y') as HTMLInputElement;
-  const qz = document.getElementById('q-z') as HTMLInputElement;
-  const qw = document.getElementById('q-w') as HTMLInputElement;
-  const qYawOut = document.getElementById('q-yaw') as HTMLElement;
-  const qPitchOut = document.getElementById('q-pitch') as HTMLElement;
-  const qRollOut = document.getElementById('q-roll') as HTMLElement;
-  const qNormNote = document.getElementById('q-norm-note') as HTMLElement;
+    // Axes setup
+    const arrowX = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1.2, 0xdc4444);
+    const arrowY = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 1.2, 0x3cb95a);
+    const arrowZ = new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), 1.2, 0x416ee6);
+    scene.add(arrowX); scene.add(arrowY); scene.add(arrowZ);
 
-  const eYaw = document.getElementById('e-yaw') as HTMLInputElement;
-  const ePitch = document.getElementById('e-pitch') as HTMLInputElement;
-  const eRoll = document.getElementById('e-roll') as HTMLInputElement;
-  const eX = document.getElementById('e-x') as HTMLElement;
-  const eY = document.getElementById('e-y') as HTMLElement;
-  const eZ = document.getElementById('e-z') as HTMLElement;
-  const eW = document.getElementById('e-w') as HTMLElement;
+    function render3D() {
+      renderer.render(scene, camera);
+    }
 
-  // Current quaternion state for the 3D view
-  let currentQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
+    // DOM Elements
+    const previewYaw = document.getElementById('preview-yaw') as HTMLElement;
+    const previewPitch = document.getElementById('preview-pitch') as HTMLElement;
+    const previewRoll = document.getElementById('preview-roll') as HTMLElement;
+    const previewSource = document.getElementById('preview-source') as HTMLElement;
 
-  function updatePreview(q: Quat, source: string) {
-    currentQuat = quatNormalize(q);
-    const mat = quatToMatrix(currentQuat.x, currentQuat.y, currentQuat.z, currentQuat.w);
-    render3D(mat);
+    const qx = document.getElementById('q-x') as HTMLInputElement;
+    const qy = document.getElementById('q-y') as HTMLInputElement;
+    const qz = document.getElementById('q-z') as HTMLInputElement;
+    const qw = document.getElementById('q-w') as HTMLInputElement;
+    const qYawOut = document.getElementById('q-yaw') as HTMLElement;
+    const qPitchOut = document.getElementById('q-pitch') as HTMLElement;
+    const qRollOut = document.getElementById('q-roll') as HTMLElement;
+    const qNormNote = document.getElementById('q-norm-note') as HTMLElement;
 
-    const { yaw, pitch, roll } = yawPitchRoll(currentQuat.x, currentQuat.y, currentQuat.z, currentQuat.w);
-    previewYaw.textContent = fmtDeg(yaw);
-    previewPitch.textContent = fmtDeg(pitch);
-    previewRoll.textContent = fmtDeg(roll);
-    if (previewSource) previewSource.textContent = `From ${source} panel`;
-  }
+    const eYaw = document.getElementById('e-yaw') as HTMLInputElement;
+    const ePitch = document.getElementById('e-pitch') as HTMLInputElement;
+    const eRoll = document.getElementById('e-roll') as HTMLInputElement;
+    const eX = document.getElementById('e-x') as HTMLElement;
+    const eY = document.getElementById('e-y') as HTMLElement;
+    const eZ = document.getElementById('e-z') as HTMLElement;
+    const eW = document.getElementById('e-w') as HTMLElement;
 
-  function recomputeFromQuaternion() {
-    const x = parseFloat(qx.value) || 0;
-    const y = parseFloat(qy.value) || 0;
-    const z = parseFloat(qz.value) || 0;
-    const w = parseFloat(qw.value) || 0;
-    const mag = Math.sqrt(x * x + y * y + z * z + w * w);
-    const norm = mag > 0 ? { x: x / mag, y: y / mag, z: z / mag, w: w / mag } : { x: 0, y: 0, z: 0, w: 1 };
-    qNormNote.textContent = Math.abs(mag - 1) < 0.0005 ? `Magnitude: ${mag.toFixed(4)} (already unit length)` : `Magnitude: ${mag.toFixed(4)} — normalized before conversion`;
-    const { yaw, pitch, roll } = yawPitchRoll(norm.x, norm.y, norm.z, norm.w);
-    qYawOut.textContent = fmtDeg(yaw);
-    qPitchOut.textContent = fmtDeg(pitch);
-    qRollOut.textContent = fmtDeg(roll);
-    updatePreview(norm, 'Quaternion → Euler');
-  }
+    let currentQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
 
-  [qx, qy, qz, qw].forEach((el) => el?.addEventListener('input', recomputeFromQuaternion));
+    function updatePreview(q: Quat, source: string) {
+      currentQuat = quatNormalize(q);
+      
+      // Update Three.js model rotation. Math convention is perfectly respected.
+      modelGroup.quaternion.set(currentQuat.x, currentQuat.y, currentQuat.z, currentQuat.w);
+      render3D();
 
-  function recomputeFromEuler() {
-    const yawDeg = parseFloat(eYaw.value) || 0;
-    const pitchDeg = parseFloat(ePitch.value) || 0;
-    const rollDeg = parseFloat(eRoll.value) || 0;
-    const q = quaternionFromEuler(radFromDeg(yawDeg), radFromDeg(pitchDeg), radFromDeg(rollDeg));
-    eX.textContent = fmtNum(q.x);
-    eY.textContent = fmtNum(q.y);
-    eZ.textContent = fmtNum(q.z);
-    eW.textContent = fmtNum(q.w);
-    updatePreview(q, 'Euler → Quaternion');
-  }
+      const { yaw, pitch, roll } = yawPitchRoll(currentQuat.x, currentQuat.y, currentQuat.z, currentQuat.w);
+      previewYaw.textContent = fmtDeg(yaw);
+      previewPitch.textContent = fmtDeg(pitch);
+      previewRoll.textContent = fmtDeg(roll);
+      if (previewSource) previewSource.textContent = `From ${source} panel`;
+    }
 
-  [eYaw, ePitch, eRoll].forEach((el) => el?.addEventListener('input', recomputeFromEuler));
+    function recomputeFromQuaternion() {
+      const x = parseFloat(qx.value) || 0;
+      const y = parseFloat(qy.value) || 0;
+      const z = parseFloat(qz.value) || 0;
+      const w = parseFloat(qw.value) || 0;
+      const mag = Math.sqrt(x * x + y * y + z * z + w * w);
+      const norm = mag > 0 ? { x: x / mag, y: y / mag, z: z / mag, w: w / mag } : { x: 0, y: 0, z: 0, w: 1 };
+      qNormNote.textContent = Math.abs(mag - 1) < 0.0005 ? `Magnitude: ${mag.toFixed(4)} (already unit length)` : `Magnitude: ${mag.toFixed(4)} — normalized before conversion`;
+      const { yaw, pitch, roll } = yawPitchRoll(norm.x, norm.y, norm.z, norm.w);
+      qYawOut.textContent = fmtDeg(yaw);
+      qPitchOut.textContent = fmtDeg(pitch);
+      qRollOut.textContent = fmtDeg(roll);
+      updatePreview(norm, 'Quaternion → Euler');
+    }
 
-  // ====================================================================
-  // Copy buttons
-  // ====================================================================
-  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const targetId = btn.dataset.copyTarget;
-      const codeEl = targetId ? document.getElementById(targetId) : null;
-      if (!codeEl) return;
-      try {
-        await navigator.clipboard.writeText(codeEl.textContent ?? '');
-        const original = btn.textContent;
-        btn.textContent = 'Copied';
-        setTimeout(() => { btn.textContent = original; }, 1500);
-      } catch {
-        // Clipboard API unavailable — fail silently.
-      }
+    [qx, qy, qz, qw].forEach((el) => el?.addEventListener('input', recomputeFromQuaternion));
+
+    function recomputeFromEuler() {
+      const yawDeg = parseFloat(eYaw.value) || 0;
+      const pitchDeg = parseFloat(ePitch.value) || 0;
+      const rollDeg = parseFloat(eRoll.value) || 0;
+      const q = quaternionFromEuler(radFromDeg(yawDeg), radFromDeg(pitchDeg), radFromDeg(rollDeg));
+      eX.textContent = fmtNum(q.x);
+      eY.textContent = fmtNum(q.y);
+      eZ.textContent = fmtNum(q.z);
+      eW.textContent = fmtNum(q.w);
+      updatePreview(q, 'Euler → Quaternion');
+    }
+
+    [eYaw, ePitch, eRoll].forEach((el) => el?.addEventListener('input', recomputeFromEuler));
+
+    document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.dataset.copyTarget;
+        const codeEl = targetId ? document.getElementById(targetId) : null;
+        if (!codeEl) return;
+        try {
+          await navigator.clipboard.writeText(codeEl.textContent ?? '');
+          const original = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = original; }, 1500);
+        } catch {}
+      });
     });
-  });
 
-  // ====================================================================
-  // Drag interaction using quaternion composition (no gimbal lock)
-  // ====================================================================
-  const canvasWrap = canvas.parentElement as HTMLElement;
-  let isDragging = false;
-  let dragStartX = 0;
-  let dragStartY = 0;
-  let dragStartQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
+    const canvasWrap = pageCanvas.parentElement as HTMLElement;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
 
-  canvasWrap.addEventListener('pointerdown', (e) => {
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    dragStartQuat = { ...currentQuat };
-    canvasWrap.setPointerCapture(e.pointerId);
-  });
+    canvasWrap.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragStartQuat = { ...currentQuat };
+      canvasWrap.setPointerCapture(e.pointerId);
+    });
 
-  canvasWrap.addEventListener('pointermove', (e) => {
-    if (!isDragging) return;
-    const dx = (e.clientX - dragStartX) * 0.008;
-    const dy = (e.clientY - dragStartY) * 0.008;
+    canvasWrap.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const dx = (e.clientX - dragStartX) * 0.008;
+      const dy = (e.clientY - dragStartY) * 0.008;
 
-    let dragQuat: Quat;
-    if (e.shiftKey) {
-      // Shift → roll about the vehicle's forward X axis.
-      dragQuat = quatFromAxisAngle([1, 0, 0], -dx);
-    } else {
-      // Match the converter's Z-Y-X convention: yaw about vertical Z, pitch about Y.
-      const yawQuat = quatFromAxisAngle([0, 0, 1], -dx);
-      const pitchQuat = quatFromAxisAngle([0, 1, 0], dy);
-      dragQuat = quatMul(yawQuat, pitchQuat);
+      // CRITICAL: DRAG INTERACTION MAPPING
+      // The camera is positioned behind the drone (at -X, looking towards +X). You are looking at the TAIL.
+      // The physical interaction model treats your mouse as dragging the visible tail:
+      // 1. YAW (Horizontal drag): Uses `dx`. Right drag (dx > 0) produces a positive rotation around +Z (Up). This swings the nose left (+Y) and the tail right (-Y). Since you see the tail, dragging right visually moves the tail right.
+      // 2. PITCH (Vertical drag): Uses `-dy`. Down drag (dy > 0) produces a negative rotation around +Y (Left). This pitches the nose down (-Z) and the tail up (+Z). So dragging down visually pulls the nose down.
+      // 3. ROLL (Shift + Horizontal drag): Uses `dx`. Left drag (dx < 0) produces a negative rotation around +X (Forward), banking the left wing down (-Z).
+      // Do NOT arbitrarily flip these signs; they are carefully calibrated for this tail-view perspective.
+      let dragQuat: Quat;
+      if (e.shiftKey) {
+        dragQuat = quatFromAxisAngle([1, 0, 0], dx);
+      } else {
+        const yawQuat = quatFromAxisAngle([0, 0, 1], dx);
+        const pitchQuat = quatFromAxisAngle([0, 1, 0], -dy);
+        dragQuat = quatMul(yawQuat, pitchQuat);
+      }
+
+      const newQuat = quatNormalize(quatMul(dragQuat, dragStartQuat));
+
+      const { yaw, pitch, roll } = yawPitchRoll(newQuat.x, newQuat.y, newQuat.z, newQuat.w);
+      eYaw.value = degFromRad(yaw).toFixed(1);
+      ePitch.value = degFromRad(pitch).toFixed(1);
+      eRoll.value = degFromRad(roll).toFixed(1);
+
+      eX.textContent = fmtNum(newQuat.x);
+      eY.textContent = fmtNum(newQuat.y);
+      eZ.textContent = fmtNum(newQuat.z);
+      eW.textContent = fmtNum(newQuat.w);
+
+      qx.value = newQuat.x.toFixed(4);
+      qy.value = newQuat.y.toFixed(4);
+      qz.value = newQuat.z.toFixed(4);
+      qw.value = newQuat.w.toFixed(4);
+      const mag = Math.sqrt(newQuat.x ** 2 + newQuat.y ** 2 + newQuat.z ** 2 + newQuat.w ** 2);
+      qNormNote.textContent = `Magnitude: ${mag.toFixed(4)} (already unit length)`;
+      qYawOut.textContent = fmtDeg(yaw);
+      qPitchOut.textContent = fmtDeg(pitch);
+      qRollOut.textContent = fmtDeg(roll);
+
+      updatePreview(newQuat, 'Drag interaction');
+    });
+
+    function endQuaternionDrag(e: PointerEvent) {
+      isDragging = false;
+      if (canvasWrap.hasPointerCapture(e.pointerId)) canvasWrap.releasePointerCapture(e.pointerId);
     }
 
-    const newQuat = quatNormalize(quatMul(dragQuat, dragStartQuat));
+    canvasWrap.addEventListener('pointerup', endQuaternionDrag);
+    canvasWrap.addEventListener('pointercancel', endQuaternionDrag);
+    canvasWrap.addEventListener('lostpointercapture', () => { isDragging = false; });
 
-    // Update Euler panel from composed quaternion
-    const { yaw, pitch, roll } = yawPitchRoll(newQuat.x, newQuat.y, newQuat.z, newQuat.w);
-    eYaw.value = degFromRad(yaw).toFixed(1);
-    ePitch.value = degFromRad(pitch).toFixed(1);
-    eRoll.value = degFromRad(roll).toFixed(1);
+    const btnResetZero = document.getElementById('btn-reset-zero') as HTMLButtonElement | null;
+    const btnResetSample = document.getElementById('btn-reset-sample') as HTMLButtonElement | null;
+    btnResetZero?.addEventListener('click', () => {
+      eYaw.value = '0'; ePitch.value = '0'; eRoll.value = '0';
+      recomputeFromEuler();
+    });
+    btnResetSample?.addEventListener('click', () => {
+      eYaw.value = '10'; ePitch.value = '20'; eRoll.value = '30';
+      recomputeFromEuler();
+    });
 
-    // Update Euler → Quat output panel
-    eX.textContent = fmtNum(newQuat.x);
-    eY.textContent = fmtNum(newQuat.y);
-    eZ.textContent = fmtNum(newQuat.z);
-    eW.textContent = fmtNum(newQuat.w);
-
-    // Update Quaternion panel inputs and outputs
-    qx.value = newQuat.x.toFixed(4);
-    qy.value = newQuat.y.toFixed(4);
-    qz.value = newQuat.z.toFixed(4);
-    qw.value = newQuat.w.toFixed(4);
-    const mag = Math.sqrt(newQuat.x ** 2 + newQuat.y ** 2 + newQuat.z ** 2 + newQuat.w ** 2);
-    qNormNote.textContent = `Magnitude: ${mag.toFixed(4)} (already unit length)`;
-    qYawOut.textContent = fmtDeg(yaw);
-    qPitchOut.textContent = fmtDeg(pitch);
-    qRollOut.textContent = fmtDeg(roll);
-
-    updatePreview(newQuat, 'Drag interaction');
-  });
-
-  function endQuaternionDrag(e: PointerEvent) {
-    isDragging = false;
-    if (canvasWrap.hasPointerCapture(e.pointerId)) canvasWrap.releasePointerCapture(e.pointerId);
+    recomputeFromEuler();
+    recomputeFromQuaternion();
   }
 
-  canvasWrap.addEventListener('pointerup', endQuaternionDrag);
-  canvasWrap.addEventListener('pointercancel', endQuaternionDrag);
-  canvasWrap.addEventListener('lostpointercapture', () => { isDragging = false; });
-
-  // ====================================================================
-  // Reset helpers — address "bottom view at 0°" confusion by making zero obvious
-  // ====================================================================
-  const btnResetZero = document.getElementById('btn-reset-zero') as HTMLButtonElement | null;
-  const btnResetSample = document.getElementById('btn-reset-sample') as HTMLButtonElement | null;
-  btnResetZero?.addEventListener('click', () => {
-    eYaw.value = '0'; ePitch.value = '0'; eRoll.value = '0';
-    recomputeFromEuler();
-  });
-  btnResetSample?.addEventListener('click', () => {
-    eYaw.value = '10'; ePitch.value = '20'; eRoll.value = '30';
-    recomputeFromEuler();
-  });
-
-  // Initial render — start with the sample (10/20/30) so first-time load shows
-  // an interesting orientation, but zero is now correctly top-down isometric.
-  recomputeFromEuler();
-  recomputeFromQuaternion();
-  }
-
-  // Bundled Astro scripts execute once; page-load makes the tool initialize
-  // again when this route is revisited through the site's view transitions.
   document.addEventListener('astro:page-load', initQuaternionPreview);
   initQuaternionPreview();
 </script>

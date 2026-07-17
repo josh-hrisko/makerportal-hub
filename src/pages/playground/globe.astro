@@ -130,43 +130,35 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
 </script>
 
 <script>
+  import * as d3 from 'd3-geo';
+
   interface Pt { x: number; y: number; }
-  interface LandFeature { geometry: { coordinates: number[][][] } }
+  interface LandFeature { type: 'Feature'; geometry: { type: 'Polygon' | 'MultiPolygon'; coordinates: any } }
 
   function initGlobe() {
-  const canvas = document.getElementById('globe-canvas') as HTMLCanvasElement | null;
-  if (!canvas || canvas.dataset.initialized === 'true') return;
-  canvas.dataset.initialized = 'true';
+    const canvas = document.getElementById('globe-canvas') as HTMLCanvasElement | null;
+    if (!canvas || canvas.dataset.initialized === 'true') return;
+    canvas.dataset.initialized = 'true';
 
-  const ctx = canvas.getContext('2d')!;
-  const W = canvas.width;
-  const H = canvas.height;
-  const R = W * 0.46;
-  const CX = W / 2;
-  const CY = H / 2;
+    const ctx = canvas.getContext('2d')!;
+    const W = canvas.width;
+    const H = canvas.height;
+    const R = W * 0.46;
+    const CX = W / 2;
+    const CY = H / 2;
 
-  const globeData = (window as unknown as { __globeData: { weatherCities: WeatherCity[]; satelliteTle: { line1: string; line2: string } } }).__globeData;
+    const globeData = (window as unknown as { __globeData: { weatherCities: WeatherCity[]; satelliteTle: { line1: string; line2: string } } }).__globeData;
 
-  interface WeatherCity { name: string; lat: number; lon: number; tempC: number; weatherCode: number; windKph: number; humidity: number; observedAt: string; }
+    interface WeatherCity { name: string; lat: number; lon: number; tempC: number; weatherCode: number; windKph: number; humidity: number; observedAt: string; }
 
-  function deg2rad(d: number) { return (d * Math.PI) / 180; }
-  function rad2deg(r: number) { return (r * 180) / Math.PI; }
+    function deg2rad(d: number) { return (d * Math.PI) / 180; }
+    function rad2deg(r: number) { return (r * 180) / Math.PI; }
 
-  function resolveColor(varName: string, fallback: string): string {
-    const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-    return v || fallback;
-  }
-  let colors = {
-    text: resolveColor('--mp-text', '#16202e'),
-    muted: resolveColor('--mp-muted', '#4a5d6f'),
-    border: resolveColor('--mp-border-strong', 'rgba(22,32,46,0.22)'),
-    cta: resolveColor('--mp-cta', '#b8324f'),
-    elevated: resolveColor('--mp-elevated', '#e8dfd1'),
-    card: resolveColor('--mp-card', '#ffffff'),
-  };
-  let shadeThemeRevision = 0;
-  const themeObserver = new MutationObserver(() => {
-    colors = {
+    function resolveColor(varName: string, fallback: string): string {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      return v || fallback;
+    }
+    let colors = {
       text: resolveColor('--mp-text', '#16202e'),
       muted: resolveColor('--mp-muted', '#4a5d6f'),
       border: resolveColor('--mp-border-strong', 'rgba(22,32,46,0.22)'),
@@ -174,822 +166,521 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
       elevated: resolveColor('--mp-elevated', '#e8dfd1'),
       card: resolveColor('--mp-card', '#ffffff'),
     };
-    shadeThemeRevision++;
-  });
-  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-  // =====================================================================
-  // Orthographic projection with view parameters
-  // =====================================================================
-  let lambda0 = -20; // current spin (longitude of center), degrees
-  const phi0 = 18;   // fixed tilt, degrees
-
-  // Pre-computed trig for the view center (updated when phi0 would change)
-  const sinPhi0 = Math.sin(deg2rad(phi0));
-  const cosPhi0 = Math.cos(deg2rad(phi0));
-
-  /** Convert geographic (lat, lon) to a unit 3D vector on the sphere. */
-  function toVec3(latDeg: number, lonDeg: number): [number, number, number] {
-    const phi = deg2rad(latDeg), lam = deg2rad(lonDeg);
-    return [Math.cos(phi) * Math.cos(lam), Math.cos(phi) * Math.sin(lam), Math.sin(phi)];
-  }
-
-  /** cosC = dot product of point with view center = visibility test.
-   *  If cosC > 0, the point is on the visible hemisphere. */
-  function cosC_latlon(latDeg: number, lonDeg: number): number {
-    const phi = deg2rad(latDeg);
-    const lam = deg2rad(lonDeg - lambda0);
-    return sinPhi0 * Math.sin(phi) + cosPhi0 * Math.cos(phi) * Math.cos(lam);
-  }
-
-  /** Full projection: lat/lon → screen XY + visibility. */
-  function project(latDeg: number, lonDeg: number): { x: number; y: number; visible: boolean } {
-    const phi = deg2rad(latDeg);
-    const lam = deg2rad(lonDeg - lambda0);
-    const cc = sinPhi0 * Math.sin(phi) + cosPhi0 * Math.cos(phi) * Math.cos(lam);
-    const x = CX + R * Math.cos(phi) * Math.sin(lam);
-    const y = CY - R * (cosPhi0 * Math.sin(phi) - sinPhi0 * Math.cos(phi) * Math.cos(lam));
-    return { x, y, visible: cc > 0 };
-  }
-
-  // =====================================================================
-  // Great-circle clipping against the visible hemisphere
-  // =====================================================================
-  //
-  // The visible hemisphere is the half-sphere facing the viewer. A point
-  // P on the unit sphere is visible iff dot(P, viewCenter) > 0.
-  //
-  // For a great-circle arc from A to B on the unit sphere, we parameterize
-  // points as slerp(A, B, t) and find where dot(slerp(A,B,t), center) = 0.
-  //
-  // Since dot product is linear in the position vector, and slerp is a
-  // weighted combination, we can find the crossing t by linear interpolation
-  // of the cosC values:
-  //   t_cross = cosC_A / (cosC_A - cosC_B)
-  //
-  // This is exact for great-circle arcs (not loxodromic) when the arc is
-  // short enough that cosC varies nearly linearly — which is true for the
-  // fine-grained coastline segments we have.
-  //
-  // For the ~1° segments in Natural Earth 110m data, this is extremely
-  // accurate. For longer arcs (graticule lines at 3° steps), we subdivide.
-
-  interface ClipPt { lat: number; lon: number; x: number; y: number; onLimb?: boolean; }
-
-  /**
-   * Interpolate between two lat/lon points at parameter t ∈ [0,1].
-   * Uses spherical linear interpolation along the great circle.
-   */
-  function geoInterp(lat1: number, lon1: number, lat2: number, lon2: number, t: number): { lat: number; lon: number } {
-    // Convert to 3D, slerp, convert back
-    const v1 = toVec3(lat1, lon1);
-    const v2 = toVec3(lat2, lon2);
-    // dot product
-    let dot = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-    dot = Math.max(-1, Math.min(1, dot));
-
-    if (Math.abs(dot) > 0.9999) {
-      // Points are nearly identical or antipodal — use linear interp
-      // but wrap longitude through ±180° to avoid jumping across the Date Line
-      let dLon = lon2 - lon1;
-      if (dLon > 180) dLon -= 360;
-      if (dLon < -180) dLon += 360;
-      return {
-        lat: lat1 + (lat2 - lat1) * t,
-        lon: lon1 + dLon * t,
+    let shadeThemeRevision = 0;
+    const themeObserver = new MutationObserver(() => {
+      colors = {
+        text: resolveColor('--mp-text', '#16202e'),
+        muted: resolveColor('--mp-muted', '#4a5d6f'),
+        border: resolveColor('--mp-border-strong', 'rgba(22,32,46,0.22)'),
+        cta: resolveColor('--mp-cta', '#b8324f'),
+        elevated: resolveColor('--mp-elevated', '#e8dfd1'),
+        card: resolveColor('--mp-card', '#ffffff'),
       };
+      shadeThemeRevision++;
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // =====================================================================
+    // d3-geo projection
+    // =====================================================================
+    let lambda0 = -20; // current spin (longitude of center), degrees
+    const phi0 = 18;   // fixed tilt, degrees
+    
+    // For visibility tests in night shade logic
+    const sinPhi0 = Math.sin(deg2rad(phi0));
+    const cosPhi0 = Math.cos(deg2rad(phi0));
+
+    const projection = d3.geoOrthographic()
+      .scale(R)
+      .translate([CX, CY])
+      .clipAngle(90)
+      .precision(0.1);
+
+    const path = d3.geoPath(projection, ctx);
+    const graticuleGenerator = d3.geoGraticule().step([30, 30]);
+
+    // =====================================================================
+    // Real astronomy: subsolar point + terminator great circle
+    // =====================================================================
+    function subsolarPoint(date: Date): { decl: number; lon: number } {
+      const jd = date.getTime() / 86400000 + 2440587.5;
+      const T = (jd - 2451545.0) / 36525;
+      const meanLon = ((280.46646 + T * (36000.76983 + 0.0003032 * T)) % 360 + 360) % 360;
+      const meanAnomaly = deg2rad(((357.52911 + T * (35999.05029 - 0.0001537 * T)) % 360 + 360) % 360);
+      const equationOfCenter =
+        Math.sin(meanAnomaly) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
+        Math.sin(2 * meanAnomaly) * (0.019993 - 0.000101 * T) +
+        Math.sin(3 * meanAnomaly) * 0.000289;
+      const omega = deg2rad(125.04 - 1934.136 * T);
+      const apparentLon = deg2rad(meanLon + equationOfCenter - 0.00569 - 0.00478 * Math.sin(omega));
+      const obliquity0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - 0.001813 * T))) / 60) / 60;
+      const obliquity = deg2rad(obliquity0 + 0.00256 * Math.cos(omega));
+      const rightAscension = Math.atan2(Math.cos(obliquity) * Math.sin(apparentLon), Math.cos(apparentLon));
+      const decl = rad2deg(Math.asin(Math.sin(obliquity) * Math.sin(apparentLon)));
+
+      const gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000;
+      const longitudeRaw = rad2deg(rightAscension) - gmst;
+      const lon = ((longitudeRaw + 180) % 360 + 360) % 360 - 180;
+      return { decl, lon };
     }
 
-    const omega = Math.acos(dot);
-    const sinOmega = Math.sin(omega);
-    const s0 = Math.sin((1 - t) * omega) / sinOmega;
-    const s1 = Math.sin(t * omega) / sinOmega;
+    function toVec3(latDeg: number, lonDeg: number): [number, number, number] {
+      const phi = deg2rad(latDeg), lam = deg2rad(lonDeg);
+      return [Math.cos(phi) * Math.cos(lam), Math.cos(phi) * Math.sin(lam), Math.sin(phi)];
+    }
+    function cross(a: number[], b: number[]): [number, number, number] {
+      return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    }
+    function normalize(a: number[]): [number, number, number] {
+      const m = Math.hypot(a[0], a[1], a[2]);
+      return [a[0] / m, a[1] / m, a[2] / m];
+    }
+    function toLatLon(v: number[]): { lat: number; lon: number } {
+      return { lat: rad2deg(Math.asin(Math.max(-1, Math.min(1, v[2])))), lon: rad2deg(Math.atan2(v[1], v[0])) };
+    }
 
-    const vx = s0 * v1[0] + s1 * v2[0];
-    const vy = s0 * v1[1] + s1 * v2[1];
-    const vz = s0 * v1[2] + s1 * v2[2];
-
-    return {
-      lat: rad2deg(Math.asin(Math.max(-1, Math.min(1, vz)))),
-      lon: rad2deg(Math.atan2(vy, vx)),
-    };
-  }
-
-  /**
-   * Clip a polygon ring (array of [lon, lat]) against the visible hemisphere.
-   * Returns an array of ClipPt with screen coordinates and limb markers.
-   *
-   * Uses a Sutherland-Hodgman approach: walk consecutive edges, for each:
-   *  - Both visible → emit second point
-   *  - Going invisible → emit intersection on limb
-   *  - Going visible → emit intersection on limb + second point
-   *  - Both invisible → skip
-   *
-   * Limb-marked points allow the drawing code to insert circular arcs.
-   */
-  function clipRing(ring: number[][]): ClipPt[] {
-    if (ring.length < 3) return [];
-
-    const out: ClipPt[] = [];
-    const n = ring.length;
-
-    for (let i = 0; i < n; i++) {
-      const [lon1, lat1] = ring[i];
-      const [lon2, lat2] = ring[(i + 1) % n];
-
-      const cc1 = cosC_latlon(lat1, lon1);
-      const cc2 = cosC_latlon(lat2, lon2);
-
-      // Positive epsilon hides geometry within ~0.1° of the mathematical limb,
-      // preventing behind-sphere points from projecting through at the poles.
-      const vis1 = cc1 > 0.002;
-      const vis2 = cc2 > 0.002;
-
-      if (vis1 && vis2) {
-        // Both visible — emit endpoint
-        const p = project(lat2, lon2);
-        out.push({ lat: lat2, lon: lon2, x: p.x, y: p.y });
-      } else if (vis1 && !vis2) {
-        // Going from visible to invisible — find intersection, emit it
-        const t = cc1 / (cc1 - cc2);
-        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
-        const p = project(mid.lat, mid.lon);
-        out.push({ lat: mid.lat, lon: mid.lon, x: p.x, y: p.y, onLimb: true });
-      } else if (!vis1 && vis2) {
-        // Going from invisible to visible — find intersection, emit it + endpoint
-        const t = cc1 / (cc1 - cc2);
-        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
-        const p1 = project(mid.lat, mid.lon);
-        out.push({ lat: mid.lat, lon: mid.lon, x: p1.x, y: p1.y, onLimb: true });
-        const p2 = project(lat2, lon2);
-        out.push({ lat: lat2, lon: lon2, x: p2.x, y: p2.y });
+    function terminatorLatLon(decl: number, ssLon: number): { lat: number; lon: number }[] {
+      const s = toVec3(decl, ssLon);
+      const ref: [number, number, number] = Math.abs(s[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0];
+      const u = normalize(cross(ref, s));
+      const v = normalize(cross(s, u));
+      const points: { lat: number; lon: number }[] = [];
+      for (let i = 0; i <= 180; i++) {
+        const t = deg2rad(i * 2);
+        const p = [
+          Math.cos(t) * u[0] + Math.sin(t) * v[0],
+          Math.cos(t) * u[1] + Math.sin(t) * v[1],
+          Math.cos(t) * u[2] + Math.sin(t) * v[2],
+        ];
+        points.push(toLatLon(p));
       }
-      // Both invisible → skip
+      return points;
     }
 
-    return out;
-  }
+    const SHADE_SIZE = 256;
+    const nightShadeCanvas = document.createElement('canvas');
+    nightShadeCanvas.width = SHADE_SIZE;
+    nightShadeCanvas.height = SHADE_SIZE;
+    const nightShadeCtx = nightShadeCanvas.getContext('2d')!;
+    let lastShadeLambda = Number.NaN;
+    let lastShadeSolarMinute = -1;
+    let renderedThemeRevision = -1;
 
-  /**
-   * Clip a polyline (not a closed polygon) against the visible hemisphere.
-   * Returns segments (arrays of screen points), splitting at limb crossings.
-   */
-  function clipLine(coords: { lat: number; lon: number }[]): { x: number; y: number }[][] {
-    if (coords.length < 2) return [];
-
-    const segments: { x: number; y: number }[][] = [];
-    let current: { x: number; y: number }[] = [];
-
-    for (let i = 0; i < coords.length - 1; i++) {
-      const { lat: lat1, lon: lon1 } = coords[i];
-      const { lat: lat2, lon: lon2 } = coords[i + 1];
-
-      const cc1 = cosC_latlon(lat1, lon1);
-      const cc2 = cosC_latlon(lat2, lon2);
-
-      const vis1 = cc1 > 0;
-      const vis2 = cc2 > 0;
-
-      if (vis1 && vis2) {
-        if (current.length === 0) {
-          const p1 = project(lat1, lon1);
-          current.push({ x: p1.x, y: p1.y });
-        }
-        const p2 = project(lat2, lon2);
-        current.push({ x: p2.x, y: p2.y });
-      } else if (vis1 && !vis2) {
-        if (current.length === 0) {
-          const p1 = project(lat1, lon1);
-          current.push({ x: p1.x, y: p1.y });
-        }
-        const t = cc1 / (cc1 - cc2);
-        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
-        const pm = project(mid.lat, mid.lon);
-        current.push({ x: pm.x, y: pm.y });
-        // Segment ends here
-        if (current.length >= 2) segments.push(current);
-        current = [];
-      } else if (!vis1 && vis2) {
-        const t = cc1 / (cc1 - cc2);
-        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
-        const pm = project(mid.lat, mid.lon);
-        current = [{ x: pm.x, y: pm.y }];
-        const p2 = project(lat2, lon2);
-        current.push({ x: p2.x, y: p2.y });
-      }
-      // Both invisible → skip
+    function longitudeDelta(a: number, b: number): number {
+      return Math.abs(((a - b + 540) % 360) - 180);
     }
 
-    if (current.length >= 2) segments.push(current);
-    return segments;
-  }
+    function updateNightShade(date: Date, decl: number, ssLon: number) {
+      const solarMinute = Math.floor(date.getTime() / 60000);
+      const needsUpdate =
+        !Number.isFinite(lastShadeLambda) ||
+        longitudeDelta(lambda0, lastShadeLambda) >= 0.2 ||
+        solarMinute !== lastShadeSolarMinute ||
+        renderedThemeRevision !== shadeThemeRevision;
+      if (!needsUpdate) return;
 
-  /**
-   * Draw a clipped polygon path on the canvas.
-   * When consecutive limb points are encountered, draw a circular arc
-   * along the globe's edge between them instead of a straight line.
-   */
-  /**
-   * Compute the centroid of clipped polygon's non-limb (interior) points.
-   * Used to determine which side of a limb arc the polygon's interior is on,
-   * so we choose the correct arc direction (short vs long way around).
-   */
-  function clippedInteriorCentroid(clipped: ClipPt[]): { x: number; y: number } {
-    let sx = 0, sy = 0, n = 0;
-    for (const p of clipped) {
-      if (!p.onLimb) { sx += p.x; sy += p.y; n++; }
-    }
-    // If all points are on the limb, use the geometric centroid of all points
-    if (n === 0) {
-      for (const p of clipped) { sx += p.x; sy += p.y; }
-      n = clipped.length;
-    }
-    return { x: sx / n, y: sy / n };
-  }
-
-  /**
-   * Choose arc direction between two limb points.
-   * Instead of blindly picking the shortest arc, we check which arc direction
-   * keeps the polygon's interior centroid on the correct side.
-   */
-  function chooseLimbArc(angle1: number, angle2: number, centroid: { x: number; y: number }): boolean {
-    // Test midpoint of the short arc
-    let da = angle2 - angle1;
-    while (da > Math.PI) da -= 2 * Math.PI;
-    while (da < -Math.PI) da += 2 * Math.PI;
-    const shortCCW = da < 0;
-
-    // Midpoint of the short arc
-    const midAngle = angle1 + da * 0.5;
-    const midX = CX + R * Math.cos(midAngle);
-    const midY = CY + R * Math.sin(midAngle);
-
-    // Is the centroid closer to the short-arc midpoint or the long-arc midpoint?
-    const shortDist = (midX - centroid.x) ** 2 + (midY - centroid.y) ** 2;
-    const longMidAngle = midAngle + Math.PI;
-    const longMidX = CX + R * Math.cos(longMidAngle);
-    const longMidY = CY + R * Math.sin(longMidAngle);
-    const longDist = (longMidX - centroid.x) ** 2 + (longMidY - centroid.y) ** 2;
-
-    // If centroid is closer to the short-arc midpoint, use the short arc
-    // Otherwise, use the long arc (flip direction)
-    return shortDist <= longDist ? shortCCW : !shortCCW;
-  }
-
-  function drawClippedPolygon(clipped: ClipPt[]) {
-    if (clipped.length < 3) return;
-
-    const centroid = clippedInteriorCentroid(clipped);
-
-    ctx.beginPath();
-    ctx.moveTo(clipped[0].x, clipped[0].y);
-
-    for (let i = 1; i < clipped.length; i++) {
-      const prev = clipped[i - 1];
-      const curr = clipped[i];
-
-      if (prev.onLimb && curr.onLimb) {
-        // Both points are on the limb — draw an arc along the globe edge
-        const angle1 = Math.atan2(prev.y - CY, prev.x - CX);
-        const angle2 = Math.atan2(curr.y - CY, curr.x - CX);
-        const ccw = chooseLimbArc(angle1, angle2, centroid);
-        ctx.arc(CX, CY, R, angle1, angle2, ccw);
-      } else {
-        ctx.lineTo(curr.x, curr.y);
-      }
-    }
-
-    // Close: connect last point back to first
-    const last = clipped[clipped.length - 1];
-    const first = clipped[0];
-    if (last.onLimb && first.onLimb) {
-      const angle1 = Math.atan2(last.y - CY, last.x - CX);
-      const angle2 = Math.atan2(first.y - CY, first.x - CX);
-      const ccw = chooseLimbArc(angle1, angle2, centroid);
-      ctx.arc(CX, CY, R, angle1, angle2, ccw);
-    } else {
-      ctx.lineTo(first.x, first.y);
-    }
-
-    ctx.closePath();
-  }
-
-  // =====================================================================
-  // Real astronomy: subsolar point + terminator great circle
-  // =====================================================================
-  function subsolarPoint(date: Date): { decl: number; lon: number } {
-    // Apparent solar coordinates (Meeus/NOAA low-order solar model). Unlike a
-    // noon-at-Greenwich shortcut, this includes the equation of time and moves
-    // smoothly at millisecond precision.
-    const jd = date.getTime() / 86400000 + 2440587.5;
-    const T = (jd - 2451545.0) / 36525;
-    const meanLon = ((280.46646 + T * (36000.76983 + 0.0003032 * T)) % 360 + 360) % 360;
-    const meanAnomaly = deg2rad(((357.52911 + T * (35999.05029 - 0.0001537 * T)) % 360 + 360) % 360);
-    const equationOfCenter =
-      Math.sin(meanAnomaly) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
-      Math.sin(2 * meanAnomaly) * (0.019993 - 0.000101 * T) +
-      Math.sin(3 * meanAnomaly) * 0.000289;
-    const omega = deg2rad(125.04 - 1934.136 * T);
-    const apparentLon = deg2rad(meanLon + equationOfCenter - 0.00569 - 0.00478 * Math.sin(omega));
-    const obliquity0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - 0.001813 * T))) / 60) / 60;
-    const obliquity = deg2rad(obliquity0 + 0.00256 * Math.cos(omega));
-    const rightAscension = Math.atan2(Math.cos(obliquity) * Math.sin(apparentLon), Math.cos(apparentLon));
-    const decl = rad2deg(Math.asin(Math.sin(obliquity) * Math.sin(apparentLon)));
-
-    const gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000;
-    const longitudeRaw = rad2deg(rightAscension) - gmst;
-    const lon = ((longitudeRaw + 180) % 360 + 360) % 360 - 180;
-    return { decl, lon };
-  }
-
-  function cross(a: number[], b: number[]): [number, number, number] {
-    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-  }
-  function normalize(a: number[]): [number, number, number] {
-    const m = Math.hypot(a[0], a[1], a[2]);
-    return [a[0] / m, a[1] / m, a[2] / m];
-  }
-  function toLatLon(v: number[]): { lat: number; lon: number } {
-    return { lat: rad2deg(Math.asin(Math.max(-1, Math.min(1, v[2])))), lon: rad2deg(Math.atan2(v[1], v[0])) };
-  }
-
-  function terminatorLatLon(decl: number, ssLon: number): { lat: number; lon: number }[] {
-    const s = toVec3(decl, ssLon);
-    const ref: [number, number, number] = Math.abs(s[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0];
-    const u = normalize(cross(ref, s));
-    const v = normalize(cross(s, u));
-    const points: { lat: number; lon: number }[] = [];
-    for (let i = 0; i <= 180; i++) {
-      const t = deg2rad(i * 2);
-      const p = [
-        Math.cos(t) * u[0] + Math.sin(t) * v[0],
-        Math.cos(t) * u[1] + Math.sin(t) * v[1],
-        Math.cos(t) * u[2] + Math.sin(t) * v[2],
+      const sun = toVec3(decl, ssLon);
+      const centerLon = deg2rad(lambda0);
+      const east: [number, number, number] = [-Math.sin(centerLon), Math.cos(centerLon), 0];
+      const up: [number, number, number] = [
+        -sinPhi0 * Math.cos(centerLon),
+        -sinPhi0 * Math.sin(centerLon),
+        cosPhi0,
       ];
-      points.push(toLatLon(p));
-    }
-    return points;
-  }
+      const view: [number, number, number] = [
+        cosPhi0 * Math.cos(centerLon),
+        cosPhi0 * Math.sin(centerLon),
+        sinPhi0,
+      ];
+      const sunEast = sun[0] * east[0] + sun[1] * east[1] + sun[2] * east[2];
+      const sunUp = sun[0] * up[0] + sun[1] * up[1] + sun[2] * up[2];
+      const sunView = sun[0] * view[0] + sun[1] * view[1] + sun[2] * view[2];
+      const darkTheme = document.documentElement.dataset.theme === 'dark';
+      const nightRgb = darkTheme ? [0, 5, 14] : [9, 24, 47];
+      const image = nightShadeCtx.createImageData(SHADE_SIZE, SHADE_SIZE);
 
-  // Render one exact solar-hemisphere mask and place the terminator stroke on
-  // its dot(sun, surface) = 0 boundary. This avoids classifying an entire land
-  // polygon by its centroid, which made coast colors disagree with the line.
-  const SHADE_SIZE = 256;
-  const nightShadeCanvas = document.createElement('canvas');
-  nightShadeCanvas.width = SHADE_SIZE;
-  nightShadeCanvas.height = SHADE_SIZE;
-  const nightShadeCtx = nightShadeCanvas.getContext('2d')!;
-  let lastShadeLambda = Number.NaN;
-  let lastShadeSolarMinute = -1;
-  let renderedThemeRevision = -1;
-
-  function longitudeDelta(a: number, b: number): number {
-    return Math.abs(((a - b + 540) % 360) - 180);
-  }
-
-  function updateNightShade(date: Date, decl: number, ssLon: number) {
-    const solarMinute = Math.floor(date.getTime() / 60000);
-    const needsUpdate =
-      !Number.isFinite(lastShadeLambda) ||
-      longitudeDelta(lambda0, lastShadeLambda) >= 0.2 ||
-      solarMinute !== lastShadeSolarMinute ||
-      renderedThemeRevision !== shadeThemeRevision;
-    if (!needsUpdate) return;
-
-    const sun = toVec3(decl, ssLon);
-    const centerLon = deg2rad(lambda0);
-    const east: [number, number, number] = [-Math.sin(centerLon), Math.cos(centerLon), 0];
-    const up: [number, number, number] = [
-      -sinPhi0 * Math.cos(centerLon),
-      -sinPhi0 * Math.sin(centerLon),
-      cosPhi0,
-    ];
-    const view: [number, number, number] = [
-      cosPhi0 * Math.cos(centerLon),
-      cosPhi0 * Math.sin(centerLon),
-      sinPhi0,
-    ];
-    const sunEast = sun[0] * east[0] + sun[1] * east[1] + sun[2] * east[2];
-    const sunUp = sun[0] * up[0] + sun[1] * up[1] + sun[2] * up[2];
-    const sunView = sun[0] * view[0] + sun[1] * view[1] + sun[2] * view[2];
-    const darkTheme = document.documentElement.dataset.theme === 'dark';
-    const nightRgb = darkTheme ? [0, 5, 14] : [9, 24, 47];
-    const image = nightShadeCtx.createImageData(SHADE_SIZE, SHADE_SIZE);
-
-    for (let py = 0; py < SHADE_SIZE; py++) {
-      const sy = 1 - ((py + 0.5) / SHADE_SIZE) * 2;
-      for (let px = 0; px < SHADE_SIZE; px++) {
-        const sx = ((px + 0.5) / SHADE_SIZE) * 2 - 1;
-        const radial2 = sx * sx + sy * sy;
-        if (radial2 > 1) continue;
-        const towardViewer = Math.sqrt(Math.max(0, 1 - radial2));
-        const solarDot = sx * sunEast + sy * sunUp + towardViewer * sunView;
-        if (solarDot >= 0) continue;
-        const i = (py * SHADE_SIZE + px) * 4;
-        image.data[i] = nightRgb[0];
-        image.data[i + 1] = nightRgb[1];
-        image.data[i + 2] = nightRgb[2];
-        image.data[i + 3] = Math.round((darkTheme ? 0.48 : 0.44) * 255 + Math.min(1, -solarDot) * 42);
+      for (let py = 0; py < SHADE_SIZE; py++) {
+        const sy = 1 - ((py + 0.5) / SHADE_SIZE) * 2;
+        for (let px = 0; px < SHADE_SIZE; px++) {
+          const sx = ((px + 0.5) / SHADE_SIZE) * 2 - 1;
+          const radial2 = sx * sx + sy * sy;
+          if (radial2 > 1) continue;
+          const towardViewer = Math.sqrt(Math.max(0, 1 - radial2));
+          const solarDot = sx * sunEast + sy * sunUp + towardViewer * sunView;
+          if (solarDot >= 0) continue;
+          const i = (py * SHADE_SIZE + px) * 4;
+          image.data[i] = nightRgb[0];
+          image.data[i + 1] = nightRgb[1];
+          image.data[i + 2] = nightRgb[2];
+          image.data[i + 3] = Math.round((darkTheme ? 0.48 : 0.44) * 255 + Math.min(1, -solarDot) * 42);
+        }
       }
+      nightShadeCtx.putImageData(image, 0, 0);
+      lastShadeLambda = lambda0;
+      lastShadeSolarMinute = solarMinute;
+      renderedThemeRevision = shadeThemeRevision;
     }
-    nightShadeCtx.putImageData(image, 0, 0);
-    lastShadeLambda = lambda0;
-    lastShadeSolarMinute = solarMinute;
-    renderedThemeRevision = shadeThemeRevision;
-  }
 
-  function drawNightShade(date: Date, decl: number, ssLon: number) {
-    updateNightShade(date, decl, ssLon);
-    ctx.drawImage(nightShadeCanvas, CX - R, CY - R, R * 2, R * 2);
-  }
+    function drawNightShade(date: Date, decl: number, ssLon: number) {
+      updateNightShade(date, decl, ssLon);
+      ctx.drawImage(nightShadeCanvas, CX - R, CY - R, R * 2, R * 2);
+    }
 
-  // =====================================================================
-  // Simplified two-body ISS propagation from real TLE
-  // =====================================================================
-  const GM = 398600.4418;
-  const EARTH_RADIUS_KM = 6378.137;
+    // =====================================================================
+    // Simplified two-body ISS propagation from real TLE
+    // =====================================================================
+    const GM = 398600.4418;
+    const EARTH_RADIUS_KM = 6378.137;
 
-  function parseTle(line1: string, line2: string) {
-    const epochStr = line1.substring(18, 32).trim();
-    const yy = parseInt(epochStr.substring(0, 2), 10);
-    const year = yy < 57 ? 2000 + yy : 1900 + yy;
-    const dayOfYear = parseFloat(epochStr.substring(2));
-    const epochMs = Date.UTC(year, 0, 1) + (dayOfYear - 1) * 86400000;
-    const inc = parseFloat(line2.substring(8, 16));
-    const raan = parseFloat(line2.substring(17, 25));
-    const ecc = parseFloat(`0.${line2.substring(26, 33).trim()}`);
-    const argp = parseFloat(line2.substring(34, 42));
-    const meanAnom0 = parseFloat(line2.substring(43, 51));
-    const meanMotion = parseFloat(line2.substring(52, 63));
-    const nRadS = (meanMotion * 2 * Math.PI) / 86400;
-    const a = Math.cbrt(GM / (nRadS * nRadS));
-    return { epochMs, inc, raan, ecc, argp, meanAnom0, nRadS, a };
-  }
+    function parseTle(line1: string, line2: string) {
+      const epochStr = line1.substring(18, 32).trim();
+      const yy = parseInt(epochStr.substring(0, 2), 10);
+      const year = yy < 57 ? 2000 + yy : 1900 + yy;
+      const dayOfYear = parseFloat(epochStr.substring(2));
+      const epochMs = Date.UTC(year, 0, 1) + (dayOfYear - 1) * 86400000;
+      const inc = parseFloat(line2.substring(8, 16));
+      const raan = parseFloat(line2.substring(17, 25));
+      const ecc = parseFloat(`0.${line2.substring(26, 33).trim()}`);
+      const argp = parseFloat(line2.substring(34, 42));
+      const meanAnom0 = parseFloat(line2.substring(43, 51));
+      const meanMotion = parseFloat(line2.substring(52, 63));
+      const nRadS = (meanMotion * 2 * Math.PI) / 86400;
+      const a = Math.cbrt(GM / (nRadS * nRadS));
+      return { epochMs, inc, raan, ecc, argp, meanAnom0, nRadS, a };
+    }
 
-  function gmstRad(dateMs: number): number {
-    const jd = dateMs / 86400000 + 2440587.5;
-    const T = (jd - 2451545.0) / 36525;
-    let gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000;
-    gmst = ((gmst % 360) + 360) % 360;
-    return deg2rad(gmst);
-  }
+    function gmstRad(dateMs: number): number {
+      const jd = dateMs / 86400000 + 2440587.5;
+      const T = (jd - 2451545.0) / 36525;
+      let gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000;
+      gmst = ((gmst % 360) + 360) % 360;
+      return deg2rad(gmst);
+    }
 
-  function propagate(elems: ReturnType<typeof parseTle>, dateMs: number) {
-    const dtSec = (dateMs - elems.epochMs) / 1000;
-    let M = deg2rad(elems.meanAnom0) + elems.nRadS * dtSec;
-    M = ((M % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-    let E = M;
-    for (let i = 0; i < 15; i++) E -= (E - elems.ecc * Math.sin(E) - M) / (1 - elems.ecc * Math.cos(E));
-    const nu = 2 * Math.atan2(Math.sqrt(1 + elems.ecc) * Math.sin(E / 2), Math.sqrt(1 - elems.ecc) * Math.cos(E / 2));
-    const r = elems.a * (1 - elems.ecc * Math.cos(E));
-    const xOrb = r * Math.cos(nu), yOrb = r * Math.sin(nu);
-    const w = deg2rad(elems.argp), inc = deg2rad(elems.inc), om = deg2rad(elems.raan);
-    const cw = Math.cos(w), sw = Math.sin(w), ci = Math.cos(inc), si = Math.sin(inc), co = Math.cos(om), so = Math.sin(om);
-    const x = (co * cw - so * sw * ci) * xOrb + (-co * sw - so * cw * ci) * yOrb;
-    const y = (so * cw + co * sw * ci) * xOrb + (-so * sw + co * cw * ci) * yOrb;
-    const z = sw * si * xOrb + cw * si * yOrb;
-    const theta = gmstRad(dateMs);
-    const xEcef = x * Math.cos(theta) + y * Math.sin(theta);
-    const yEcef = -x * Math.sin(theta) + y * Math.cos(theta);
-    const zEcef = z;
-    const rMag = Math.hypot(xEcef, yEcef, zEcef);
-    const lat = rad2deg(Math.asin(zEcef / rMag));
-    const lon = rad2deg(Math.atan2(yEcef, xEcef));
-    const alt = rMag - EARTH_RADIUS_KM;
-    const speedKmS = Math.sqrt(GM * (2 / r - 1 / elems.a));
-    return { lat, lon, alt, speedKmS };
-  }
+    function propagate(elems: ReturnType<typeof parseTle>, dateMs: number) {
+      const dtSec = (dateMs - elems.epochMs) / 1000;
+      let M = deg2rad(elems.meanAnom0) + elems.nRadS * dtSec;
+      M = ((M % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      let E = M;
+      for (let i = 0; i < 15; i++) E -= (E - elems.ecc * Math.sin(E) - M) / (1 - elems.ecc * Math.cos(E));
+      const nu = 2 * Math.atan2(Math.sqrt(1 + elems.ecc) * Math.sin(E / 2), Math.sqrt(1 - elems.ecc) * Math.cos(E / 2));
+      const r = elems.a * (1 - elems.ecc * Math.cos(E));
+      const xOrb = r * Math.cos(nu), yOrb = r * Math.sin(nu);
+      const w = deg2rad(elems.argp), inc = deg2rad(elems.inc), om = deg2rad(elems.raan);
+      const cw = Math.cos(w), sw = Math.sin(w), ci = Math.cos(inc), si = Math.sin(inc), co = Math.cos(om), so = Math.sin(om);
+      const x = (co * cw - so * sw * ci) * xOrb + (-co * sw - so * cw * ci) * yOrb;
+      const y = (so * cw + co * sw * ci) * xOrb + (-so * sw + co * cw * ci) * yOrb;
+      const z = sw * si * xOrb + cw * si * yOrb;
+      const theta = gmstRad(dateMs);
+      const xEcef = x * Math.cos(theta) + y * Math.sin(theta);
+      const yEcef = -x * Math.sin(theta) + y * Math.cos(theta);
+      const zEcef = z;
+      const rMag = Math.hypot(xEcef, yEcef, zEcef);
+      const lat = rad2deg(Math.asin(zEcef / rMag));
+      const lon = rad2deg(Math.atan2(yEcef, xEcef));
+      const alt = rMag - EARTH_RADIUS_KM;
+      const speedKmS = Math.sqrt(GM * (2 / r - 1 / elems.a));
+      return { lat, lon, alt, speedKmS };
+    }
 
-  const issElems = parseTle(globeData.satelliteTle.line1, globeData.satelliteTle.line2);
+    const issElems = parseTle(globeData.satelliteTle.line1, globeData.satelliteTle.line2);
 
-  // =====================================================================
-  // Land data
-  // =====================================================================
-  let land: LandFeature[] = [];
-  const landAbortController = new AbortController();
-  fetch('/data/world-land-110m.json', { signal: landAbortController.signal })
-    .then((r) => {
-      if (!r.ok) throw new Error(`Coastline request failed: ${r.status}`);
-      return r.json();
-    })
-    .then((geojson) => { land = geojson.features; })
-    .catch((error) => {
-      if ((error as Error).name !== 'AbortError') land = [];
+    // =====================================================================
+    // Land data
+    // =====================================================================
+    let land: LandFeature[] = [];
+    const landAbortController = new AbortController();
+    fetch('/data/world-land-110m.json', { signal: landAbortController.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Coastline request failed: ${r.status}`);
+        return r.json();
+      })
+      .then((geojson) => { land = geojson.features; })
+      .catch((error) => {
+        if ((error as Error).name !== 'AbortError') land = [];
+      });
+
+    // =====================================================================
+    // Mode state
+    // =====================================================================
+    type Mode = 'daynight' | 'weather' | 'satellite';
+    let mode: Mode = 'daynight';
+
+    const modeButtons = document.querySelectorAll<HTMLButtonElement>('.mode-btn');
+    const panels: Record<Mode, HTMLElement> = {
+      daynight: document.querySelector('[data-panel="daynight"]')!,
+      weather: document.querySelector('[data-panel="weather"]')!,
+      satellite: document.querySelector('[data-panel="satellite"]')!,
+    };
+
+    function setMode(next: Mode) {
+      mode = next;
+      modeButtons.forEach((b) => b.classList.toggle('is-active', b.dataset.mode === next));
+      (Object.keys(panels) as Mode[]).forEach((k) => panels[k].classList.toggle('hidden', k !== next));
+      draw();
+    }
+
+    modeButtons.forEach((btn) => btn.addEventListener('click', () => setMode(btn.dataset.mode as Mode)));
+
+    // =====================================================================
+    // Weather list panel
+    // =====================================================================
+    const weatherListEl = document.getElementById('weather-list')!;
+    weatherListEl.innerHTML = globeData.weatherCities
+      .map((c) => `<div class="flex items-center justify-between"><span>${c.name}</span><span class="font-semibold">${Math.round(c.tempC)}°C</span></div>`)
+      .join('');
+
+    function tempColor(tempC: number): string {
+      const stops: [number, [number, number, number]][] = [
+        [-15, [70, 120, 200]],
+        [5, [90, 170, 190]],
+        [20, [130, 180, 110]],
+        [30, [220, 170, 70]],
+        [40, [200, 70, 60]],
+      ];
+      const t = Math.max(stops[0][0], Math.min(stops[stops.length - 1][0], tempC));
+      for (let i = 0; i < stops.length - 1; i++) {
+        const [t0, c0] = stops[i];
+        const [t1, c1] = stops[i + 1];
+        if (t >= t0 && t <= t1) {
+          const f = (t - t0) / (t1 - t0);
+          const r = Math.round(c0[0] + (c1[0] - c0[0]) * f);
+          const g = Math.round(c0[1] + (c1[1] - c0[1]) * f);
+          const b = Math.round(c0[2] + (c1[2] - c0[2]) * f);
+          return `rgb(${r},${g},${b})`;
+        }
+      }
+      return 'rgb(150,150,150)';
+    }
+
+    const issTrail: Pt[] = [];
+    let issTrailTimestamp = -1;
+    const issLatEl = document.getElementById('iss-lat')!;
+    const issLonEl = document.getElementById('iss-lon')!;
+    const issAltEl = document.getElementById('iss-alt')!;
+    const issSpeedEl = document.getElementById('iss-speed')!;
+    const earthUtcEl = document.getElementById('earth-utc')!;
+    const subsolarPointEl = document.getElementById('subsolar-point')!;
+
+    let autoRotate = true;
+    const animationToggle = document.getElementById('animation-toggle') as HTMLButtonElement;
+    animationToggle.addEventListener('click', () => {
+      autoRotate = !autoRotate;
+      animationToggle.textContent = autoRotate ? 'Pause rotation' : 'Play rotation';
+      animationToggle.setAttribute('aria-pressed', String(autoRotate));
     });
 
-  // =====================================================================
-  // Mode state
-  // =====================================================================
-  type Mode = 'daynight' | 'weather' | 'satellite';
-  let mode: Mode = 'daynight';
+    let renderWireframe = true;
+    const styleToggle = document.getElementById('style-toggle') as HTMLButtonElement;
+    styleToggle.textContent = 'Wireframe';
+    styleToggle.classList.add('is-active');
 
-  const modeButtons = document.querySelectorAll<HTMLButtonElement>('.mode-btn');
-  const panels: Record<Mode, HTMLElement> = {
-    daynight: document.querySelector('[data-panel="daynight"]')!,
-    weather: document.querySelector('[data-panel="weather"]')!,
-    satellite: document.querySelector('[data-panel="satellite"]')!,
-  };
+    styleToggle.addEventListener('click', () => {
+      renderWireframe = !renderWireframe;
+      styleToggle.textContent = renderWireframe ? 'Wireframe' : 'Filled';
+      styleToggle.classList.toggle('is-active', renderWireframe);
+      draw();
+    });
 
-  function setMode(next: Mode) {
-    mode = next;
-    modeButtons.forEach((b) => b.classList.toggle('is-active', b.dataset.mode === next));
-    (Object.keys(panels) as Mode[]).forEach((k) => panels[k].classList.toggle('hidden', k !== next));
-    draw();
-  }
+    // =====================================================================
+    // Main draw loop
+    // =====================================================================
+    function draw() {
+      // Update projection rotation
+      projection.rotate([-lambda0, -phi0, 0]);
 
-  modeButtons.forEach((btn) => btn.addEventListener('click', () => setMode(btn.dataset.mode as Mode)));
+      ctx.clearRect(0, 0, CX * 2, CY * 2);
 
-  // =====================================================================
-  // Weather list panel
-  // =====================================================================
-  const weatherListEl = document.getElementById('weather-list')!;
-  weatherListEl.innerHTML = globeData.weatherCities
-    .map((c) => `<div class="flex items-center justify-between"><span>${c.name}</span><span class="font-semibold">${Math.round(c.tempC)}°C</span></div>`)
-    .join('');
+      ctx.save();
+      // Clip to globe circle for background and shading
+      ctx.beginPath();
+      ctx.arc(CX, CY, R, 0, Math.PI * 2);
+      ctx.clip();
 
-  function tempColor(tempC: number): string {
-    const stops: [number, [number, number, number]][] = [
-      [-15, [70, 120, 200]],
-      [5, [90, 170, 190]],
-      [20, [130, 180, 110]],
-      [30, [220, 170, 70]],
-      [40, [200, 70, 60]],
-    ];
-    const t = Math.max(stops[0][0], Math.min(stops[stops.length - 1][0], tempC));
-    for (let i = 0; i < stops.length - 1; i++) {
-      const [t0, c0] = stops[i];
-      const [t1, c1] = stops[i + 1];
-      if (t >= t0 && t <= t1) {
-        const f = (t - t0) / (t1 - t0);
-        const r = Math.round(c0[0] + (c1[0] - c0[0]) * f);
-        const g = Math.round(c0[1] + (c1[1] - c0[1]) * f);
-        const b = Math.round(c0[2] + (c1[2] - c0[2]) * f);
-        return `rgb(${r},${g},${b})`;
-      }
-    }
-    return 'rgb(150,150,150)';
-  }
+      // Background
+      ctx.beginPath();
+      ctx.arc(CX, CY, R, 0, Math.PI * 2);
+      ctx.fillStyle = colors.elevated;
+      ctx.fill();
+      ctx.strokeStyle = colors.border;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
 
-  const issTrail: Pt[] = [];
-  let issTrailTimestamp = -1;
-  const issLatEl = document.getElementById('iss-lat')!;
-  const issLonEl = document.getElementById('iss-lon')!;
-  const issAltEl = document.getElementById('iss-alt')!;
-  const issSpeedEl = document.getElementById('iss-speed')!;
-  const earthUtcEl = document.getElementById('earth-utc')!;
-  const subsolarPointEl = document.getElementById('subsolar-point')!;
+      ctx.save();
+      // Graticule
+      ctx.beginPath();
+      path(graticuleGenerator());
+      ctx.strokeStyle = colors.border;
+      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
 
-  let autoRotate = true;
-  const animationToggle = document.getElementById('animation-toggle') as HTMLButtonElement;
-  animationToggle.addEventListener('click', () => {
-    autoRotate = !autoRotate;
-    animationToggle.textContent = autoRotate ? 'Pause rotation' : 'Play rotation';
-    animationToggle.setAttribute('aria-pressed', String(autoRotate));
-  });
+      const now = new Date();
+      const { decl, lon: ssLon } = subsolarPoint(now);
+      earthUtcEl.textContent = now.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
+      subsolarPointEl.textContent = `${Math.abs(decl).toFixed(2)}°${decl >= 0 ? 'N' : 'S'}, ${Math.abs(ssLon).toFixed(2)}°${ssLon >= 0 ? 'E' : 'W'}`;
 
-  let renderWireframe = true;
-  const styleToggle = document.getElementById('style-toggle') as HTMLButtonElement;
-  styleToggle.textContent = 'Wireframe';
-  styleToggle.classList.add('is-active');
-
-  styleToggle.addEventListener('click', () => {
-    renderWireframe = !renderWireframe;
-    styleToggle.textContent = renderWireframe ? 'Wireframe' : 'Filled';
-    styleToggle.classList.toggle('is-active', renderWireframe);
-    draw();
-  });
-
-  // =====================================================================
-  // Main draw loop
-  // =====================================================================
-  function draw() {
-    ctx.clearRect(0, 0, CX * 2, CY * 2);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(CX, CY, R, 0, Math.PI * 2);
-    ctx.clip();
-
-    // Background
-    ctx.beginPath();
-    ctx.arc(CX, CY, R, 0, Math.PI * 2);
-    ctx.fillStyle = colors.elevated;
-    ctx.fill();
-    ctx.strokeStyle = colors.border;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Graticule — now with proper clipping
-    ctx.strokeStyle = `${colors.border}`;
-    ctx.globalAlpha = 0.35;
-    ctx.lineWidth = 0.6;
-    for (let lonLine = -180; lonLine < 180; lonLine += 30) {
-      const coords: { lat: number; lon: number }[] = [];
-      for (let lat = -90; lat <= 90; lat += 3) {
-        coords.push({ lat, lon: lonLine });
-      }
-      const segs = clipLine(coords);
-      for (const seg of segs) {
-        if (seg.length < 2) continue;
+      // Land
+      for (const feature of land) {
         ctx.beginPath();
-        ctx.moveTo(seg[0].x, seg[0].y);
-        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
-        ctx.stroke();
-      }
-    }
-    for (let latLine = -60; latLine <= 60; latLine += 30) {
-      const coords: { lat: number; lon: number }[] = [];
-      for (let lon = -180; lon <= 180; lon += 3) {
-        coords.push({ lat: latLine, lon });
-      }
-      const segs = clipLine(coords);
-      for (const seg of segs) {
-        if (seg.length < 2) continue;
-        ctx.beginPath();
-        ctx.moveTo(seg[0].x, seg[0].y);
-        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
-        ctx.stroke();
-      }
-    }
-    ctx.globalAlpha = 1;
-
-    const now = new Date();
-    const { decl, lon: ssLon } = subsolarPoint(now);
-    earthUtcEl.textContent = now.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
-    subsolarPointEl.textContent = `${Math.abs(decl).toFixed(2)}°${decl >= 0 ? 'N' : 'S'}, ${Math.abs(ssLon).toFixed(2)}°${ssLon >= 0 ? 'E' : 'W'}`;
-
-    // Land — with true spherical clipping
-    for (const feature of land) {
-      for (const ring of feature.geometry.coordinates) {
-        // Clip the ring against the visible hemisphere
-        const clipped = clipRing(ring);
-        if (clipped.length < 3) continue;
-
+        path(feature as any);
         if (renderWireframe) {
-          drawClippedPolygon(clipped);
           ctx.strokeStyle = colors.text;
           ctx.lineWidth = 1;
           ctx.globalAlpha = mode === 'daynight' ? 0.72 : 0.4;
           ctx.stroke();
         } else {
-          // Draw as filled polygons with limb arcs for clean edges
-          drawClippedPolygon(clipped);
           ctx.fillStyle = colors.text;
           ctx.globalAlpha = mode === 'daynight' ? 0.82 : 0.55;
           ctx.fill();
         }
         ctx.globalAlpha = 1;
       }
-    }
 
-    // The lighting mask covers ocean, land, and graticule together, so the
-    // visible color boundary is mathematically identical to the terminator.
-    if (mode === 'daynight') drawNightShade(now, decl, ssLon);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(CX, CY, R, 0, Math.PI * 2);
+      ctx.clip();
+      if (mode === 'daynight') drawNightShade(now, decl, ssLon);
+      ctx.restore();
 
-    // Terminator — with proper clipping
-    if (mode === 'daynight') {
-      const termPts = terminatorLatLon(decl, ssLon);
-      const termSegs = clipLine(termPts);
-      for (const seg of termSegs) {
-        if (seg.length < 2) continue;
+      // Terminator line
+      if (mode === 'daynight') {
+        const termPts = terminatorLatLon(decl, ssLon);
+        const termLine = {
+          type: 'LineString',
+          coordinates: termPts.map((p) => [p.lon, p.lat]),
+        };
         ctx.beginPath();
-        ctx.moveTo(seg[0].x, seg[0].y);
-        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
+        path(termLine as any);
         ctx.strokeStyle = colors.cta;
         ctx.lineWidth = 1.5;
         ctx.globalAlpha = 0.8;
         ctx.stroke();
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = 1;
-    }
 
-    // Weather cities
-    if (mode === 'weather') {
-      for (const city of globeData.weatherCities) {
-        const p = project(city.lat, city.lon);
-        if (!p.visible) continue;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = tempColor(city.tempC);
-        ctx.fill();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = colors.card;
-        ctx.stroke();
-      }
-    }
-
-    // ISS
-    if (mode === 'satellite') {
-      const nowMs = Date.now();
-      const posNow = propagate(issElems, nowMs);
-      const currentSecond = Math.floor(nowMs / 1000);
-      if (currentSecond !== issTrailTimestamp) {
-        issTrail.length = 0;
-        // A useful 25-minute ground track, sampled coarsely enough to remain
-        // light but long enough for orbital motion to be immediately legible.
-        for (let offsetSeconds = -25 * 60; offsetSeconds <= 0; offsetSeconds += 30) {
-          const trailPos = propagate(issElems, nowMs + offsetSeconds * 1000);
-          issTrail.push({ x: trailPos.lat, y: trailPos.lon });
+      // Weather cities
+      if (mode === 'weather') {
+        for (const city of globeData.weatherCities) {
+          const point = { type: 'Point', coordinates: [city.lon, city.lat] };
+          path.pointRadius(5);
+          ctx.beginPath();
+          path(point as any);
+          ctx.fillStyle = tempColor(city.tempC);
+          ctx.fill();
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = colors.card;
+          ctx.stroke();
         }
-        issTrailTimestamp = currentSecond;
       }
 
-      // Clip the ISS trail
-      const trailCoords = issTrail.map((t) => ({ lat: t.x, lon: t.y }));
-      const trailSegs = clipLine(trailCoords);
-      for (const seg of trailSegs) {
-        if (seg.length < 2) continue;
+      // ISS
+      if (mode === 'satellite') {
+        const nowMs = Date.now();
+        const posNow = propagate(issElems, nowMs);
+        const currentSecond = Math.floor(nowMs / 1000);
+        if (currentSecond !== issTrailTimestamp) {
+          issTrail.length = 0;
+          for (let offsetSeconds = -25 * 60; offsetSeconds <= 0; offsetSeconds += 30) {
+            const trailPos = propagate(issElems, nowMs + offsetSeconds * 1000);
+            issTrail.push({ x: trailPos.lat, y: trailPos.lon });
+          }
+          issTrailTimestamp = currentSecond;
+        }
+
+        // Draw trail
+        const trailLine = {
+          type: 'LineString',
+          coordinates: issTrail.map((t) => [t.y, t.x]),
+        };
         ctx.beginPath();
-        ctx.moveTo(seg[0].x, seg[0].y);
-        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
+        path(trailLine as any);
         ctx.strokeStyle = colors.cta;
         ctx.lineWidth = 2;
         ctx.globalAlpha = 0.7;
         ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
+        ctx.globalAlpha = 1;
 
-      const pNow = project(posNow.lat, posNow.lon);
-      if (pNow.visible) {
+        // Draw ISS
+        const point = { type: 'Point', coordinates: [posNow.lon, posNow.lat] };
+        path.pointRadius(5);
         ctx.beginPath();
-        ctx.arc(pNow.x, pNow.y, 5, 0, Math.PI * 2);
+        path(point as any);
         ctx.fillStyle = colors.cta;
         ctx.fill();
+
+        issLatEl.textContent = `${posNow.lat.toFixed(2)}°`;
+        issLonEl.textContent = `${posNow.lon.toFixed(2)}°`;
+        issAltEl.textContent = `${posNow.alt.toFixed(0)} km`;
+        issSpeedEl.textContent = `${posNow.speedKmS.toFixed(2)} km/s`;
       }
-
-      issLatEl.textContent = `${posNow.lat.toFixed(2)}°`;
-      issLonEl.textContent = `${posNow.lon.toFixed(2)}°`;
-      issAltEl.textContent = `${posNow.alt.toFixed(0)} km`;
-      issSpeedEl.textContent = `${posNow.speedKmS.toFixed(2)} km/s`;
+      ctx.restore();
     }
-    ctx.restore();
-  }
 
-  // =====================================================================
-  // Drag interaction
-  // =====================================================================
-  let isDragging = false;
-  let dragStartX = 0;
-  let lambdaAtDragStart = 0;
+    // =====================================================================
+    // Drag interaction
+    // =====================================================================
+    let isDragging = false;
+    let dragStartX = 0;
+    let lambdaAtDragStart = 0;
 
-  canvas.addEventListener('pointerdown', (e) => {
-    isDragging = true;
-    dragStartX = e.clientX;
-    lambdaAtDragStart = lambda0;
-    canvas.setPointerCapture(e.pointerId);
-  });
-  canvas.addEventListener('pointermove', (e) => {
-    if (!isDragging) return;
-    const dx = e.clientX - dragStartX;
-    lambda0 = lambdaAtDragStart - dx * 0.3;
-  });
+    canvas.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      dragStartX = e.clientX;
+      lambdaAtDragStart = lambda0;
+      canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      lambda0 = lambdaAtDragStart - dx * 0.3;
+    });
 
-  function endDrag() {
-    isDragging = false;
-  }
+    function endDrag() {
+      isDragging = false;
+    }
 
-  canvas.addEventListener('pointerup', endDrag);
-  canvas.addEventListener('pointercancel', endDrag);
-  canvas.addEventListener('lostpointercapture', endDrag);
-  window.addEventListener('blur', endDrag);
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+    canvas.addEventListener('lostpointercapture', endDrag);
+    window.addEventListener('blur', endDrag);
 
-  const AUTO_ROTATION_DEG_PER_SECOND = 2.4;
-  let lastFrameTime = performance.now();
-  let animationFrameId = 0;
-  let destroyed = false;
+    const AUTO_ROTATION_DEG_PER_SECOND = 2.4;
+    let lastFrameTime = performance.now();
+    let animationFrameId = 0;
+    let destroyed = false;
 
-  function loop(frameTime: number) {
-    if (destroyed) return;
-    // Clamp long gaps after background-tab throttling so the globe resumes
-    // smoothly instead of jumping or appearing to have stopped.
-    const deltaSeconds = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
-    lastFrameTime = frameTime;
-    if (!isDragging && autoRotate && !document.hidden) {
-      lambda0 = ((lambda0 + AUTO_ROTATION_DEG_PER_SECOND * deltaSeconds + 540) % 360) - 180;
+    function loop(frameTime: number) {
+      if (destroyed) return;
+      const deltaSeconds = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
+      lastFrameTime = frameTime;
+      if (!isDragging && autoRotate && !document.hidden) {
+        lambda0 = ((lambda0 + AUTO_ROTATION_DEG_PER_SECOND * deltaSeconds + 540) % 360) - 180;
+      }
+      draw();
+      animationFrameId = requestAnimationFrame(loop);
     }
     draw();
     animationFrameId = requestAnimationFrame(loop);
-  }
-  draw();
-  animationFrameId = requestAnimationFrame(loop);
 
-  function handleVisibilityChange() {
-    lastFrameTime = performance.now();
-  }
-  document.addEventListener('visibilitychange', handleVisibilityChange);
+    function handleVisibilityChange() {
+      lastFrameTime = performance.now();
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-  document.addEventListener('astro:before-swap', () => {
-    destroyed = true;
-    cancelAnimationFrame(animationFrameId);
-    landAbortController.abort();
-    themeObserver.disconnect();
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    window.removeEventListener('blur', endDrag);
-  }, { once: true });
+    document.addEventListener('astro:before-swap', () => {
+      destroyed = true;
+      cancelAnimationFrame(animationFrameId);
+      landAbortController.abort();
+      themeObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', endDrag);
+    }, { once: true });
   }
 
-  // Keep initialization reliable when this route is entered more than once
-  // through Astro's client-side view transitions.
   document.addEventListener('astro:page-load', initGlobe);
   initGlobe();
 </script>
