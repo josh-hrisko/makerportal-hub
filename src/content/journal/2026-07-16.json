@@ -1,0 +1,334 @@
+{
+  "generatedAt": "2026-07-16T22:19:05.340Z",
+  "items": [
+    {
+      "id": "hackernews-48944208",
+      "source": "hackernews",
+      "title": "Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)",
+      "url": "https://github.com/sushilk1991/velora",
+      "author": "sushilk1991",
+      "publishedAt": "2026-07-17T07:07:38Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "privacy-arch"
+      ],
+      "score": 13,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48944208.webp"
+    },
+    {
+      "id": "hackernews-48907681",
+      "source": "hackernews",
+      "title": "Show HN: Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-14T14:40:46Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 13,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48907681.webp"
+    },
+    {
+      "id": "hackernews-48894351",
+      "source": "hackernews",
+      "title": "Show HN: Biscotti – on-device meeting transcription for macOS",
+      "url": "https://news.ycombinator.com/item?id=48894351",
+      "author": "scosman",
+      "publishedAt": "2026-07-13T15:38:26Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": 13,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48898478",
+      "source": "hackernews",
+      "title": "Open source on-device AI apps (and counting), no cloud, works offline",
+      "url": "https://github.com/zetic-ai/awesome-on-device-ai-apps",
+      "author": "rishabh121108",
+      "publishedAt": "2026-07-13T20:36:54Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 11,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48898478.webp"
+    },
+    {
+      "id": "hackernews-48861746",
+      "source": "hackernews",
+      "title": "Show HN: SpeechCompass – speaker direction for captioning group conversations",
+      "url": "https://github.com/google-deepmind/speech-compass/",
+      "author": "olwal",
+      "publishedAt": "2026-07-10T16:01:26Z",
+      "tags": [
+        "on-device-ai",
+        "dsp-audio"
+      ],
+      "score": 11,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48819513",
+      "source": "hackernews",
+      "title": "GPU-accelerated context memory for on-device AI agents on Apple Silicon",
+      "url": "https://github.com/christopherkarani/ContextCore",
+      "author": "christkarani",
+      "publishedAt": "2026-07-07T15:52:23Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 10,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48819513.webp"
+    },
+    {
+      "id": "hackernews-48805598",
+      "source": "hackernews",
+      "title": "Apple Silicon Exec Explains Mac Mini AI Demand and On-Device Future",
+      "url": "https://www.macrumors.com/2026/07/06/apple-silicon-exec-explains-mac-mini-ai-demand/",
+      "author": "tosh",
+      "publishedAt": "2026-07-06T14:59:21Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 10,
+      "domain": "macrumors.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48805598.webp"
+    },
+    {
+      "id": "hackernews-48844268",
+      "source": "hackernews",
+      "title": "LLama.cpp Got Screwd",
+      "url": "https://github.com/ggml-org/llama.cpp/discussions/25482",
+      "author": "trilogic",
+      "publishedAt": "2026-07-09T11:40:16Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 9,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48844268.webp"
+    },
+    {
+      "id": "hackernews-48843409",
+      "source": "hackernews",
+      "title": "Relm – local LLMs as base-R objects, with interpretability",
+      "url": "https://github.com/Vadale/R-ebirth",
+      "author": "grauk",
+      "publishedAt": "2026-07-09T09:58:28Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 9,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48843409.webp"
+    },
+    {
+      "id": "hackernews-48782406",
+      "source": "hackernews",
+      "title": "Show HN: Local privacy-first Microsoft Recall alternative with Gemma 4",
+      "url": "https://github.com/ayushh0110/ScreenMind/blob/main/README.md",
+      "author": "skye0110",
+      "publishedAt": "2026-07-04T03:30:43Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 9,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48782406.webp"
+    },
+    {
+      "id": "hackernews-48918840",
+      "source": "hackernews",
+      "title": "Show HN: AI-CLI – tiny C terminal assistant powered by local LLM",
+      "url": "https://github.com/vkataev/ai-cli",
+      "author": "novaRom",
+      "publishedAt": "2026-07-15T10:46:18Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 8,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48918840.webp"
+    },
+    {
+      "id": "hackernews-48946283",
+      "source": "hackernews",
+      "title": "Prompt submitted to cloud even when using local LLM by default",
+      "url": "https://github.com/anomalyco/opencode/issues/15854",
+      "author": "josh-wrale",
+      "publishedAt": "2026-07-17T12:00:37Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 7,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48946283.webp"
+    },
+    {
+      "id": "hackernews-48946222",
+      "source": "hackernews",
+      "title": "Show HN: A sandbox for running real jailbreak techniques against local LLMs",
+      "url": "https://github.com/joshfischer1108/jailbreak-lab",
+      "author": "joshfischer1108",
+      "publishedAt": "2026-07-17T11:54:03Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 7,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48946222.webp"
+    },
+    {
+      "id": "hackernews-48829604",
+      "source": "hackernews",
+      "title": "Show HN: Comcent CE – An open-source self-hosted Voice Infrastructure platform",
+      "url": "https://github.com/comcent-io/comcent-ce",
+      "author": "pavanputhra",
+      "publishedAt": "2026-07-08T09:22:23Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 7,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48829604.webp"
+    },
+    {
+      "id": "hackernews-48822627",
+      "source": "hackernews",
+      "title": "Squish, a local LLM inference server for Apple Silicon",
+      "url": "https://squish.run/blog/local-llm-fast-enough/",
+      "author": "wscholl",
+      "publishedAt": "2026-07-07T19:35:56Z",
+      "tags": [
+        "metal-ane",
+        "local-llm"
+      ],
+      "score": 7,
+      "domain": "squish.run",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48822627.webp"
+    },
+    {
+      "id": "hackernews-48814952",
+      "source": "hackernews",
+      "title": "Show HN: Fast, native Mac file manager (filters, fuzzy find, 9 MB, no Electron)",
+      "url": "https://whimfiles.com",
+      "author": "whimbyte",
+      "publishedAt": "2026-07-07T08:12:12Z",
+      "tags": [
+        "metal-ane"
+      ],
+      "score": 7,
+      "domain": "whimfiles.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48877051",
+      "source": "hackernews",
+      "title": "Bring seamless PQC encryption into every messenger you already use",
+      "url": "https://news.ycombinator.com/item?id=48877051",
+      "author": "kvasilev",
+      "publishedAt": "2026-07-12T00:10:39Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 5,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48787415",
+      "source": "hackernews",
+      "title": "EyesOff Spots Shoulder Surfers Using a Privacy-First Approach",
+      "url": "https://www.eyesoff.app/blog/how-eyesoff-spots-shoulder-surfers/",
+      "author": "Two_hands",
+      "publishedAt": "2026-07-04T18:02:56Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 4,
+      "domain": "eyesoff.app",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48787415.webp"
+    },
+    {
+      "id": "hackernews-48784211",
+      "source": "hackernews",
+      "title": "Show HN: Psycurate – Curated place for privacy-first, free psychological tools",
+      "url": "https://psycurate.com",
+      "author": "mursu",
+      "publishedAt": "2026-07-04T10:01:15Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 4,
+      "domain": "psycurate.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48784211.webp"
+    }
+  ]
+}
