@@ -11,9 +11,9 @@ const gear = affiliateLinks
   .sort((a, b) => (a.id === 'airpods-pro-3' ? -1 : b.id === 'airpods-pro-3' ? 1 : 0));
 const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
-const title = 'Quaternion to Euler Angle Converter (and back) — Swift, verified round-trip | MakerPortal';
+const title = 'Quaternion to Euler Angle Converter (and back) | Swift, verified round-trip | MakerPortal';
 const description =
-  `Convert quaternion attitude to yaw/pitch/roll and back, with a live 3D orientation preview and copyable Swift — the exact math from MotionLink\u2019s CMHeadphoneMotionManager handling.`;
+  `Convert quaternions to yaw, pitch, roll and back with a live 3D preview and Swift code. Uses the same formulas MotionLink uses for CMHeadphoneMotionManager.`;
 const canonical = new URL('/playground/quaternion-euler-converter', Astro.site);
 
 const quatToEulerSwift = `func yawPitchRoll(from q: CMQuaternion) -> (yaw: Double, pitch: Double, roll: Double) {
@@ -60,23 +60,23 @@ const breadcrumbSchema = {
 const faqs = [
   {
     q: 'What is the difference between a quaternion and Euler angles?',
-    a: 'Euler angles (yaw, pitch, roll) describe an orientation as three sequential rotations around three axes — intuitive, but subject to gimbal lock at ±90° pitch. A unit quaternion describes the same orientation as a single axis and angle packed into four numbers — no gimbal lock, and it composes and interpolates cleanly, at the cost of not being directly human-readable.',
+    a: 'Euler angles are intuitive: you rotate around three sequential axes (yaw, pitch, roll). But they lock up at ±90° pitch. Quaternions represent the rotation as a single axis and an angle stored as four numbers. They handle composition and interpolation cleanly without breaking, though they are impossible to read by eye.',
   },
   {
     q: 'Why do quaternions avoid gimbal lock?',
-    a: 'Gimbal lock happens because Euler angles apply three rotations in sequence around three DIFFERENT axes that can become parallel (at pitch = ±90° for the yaw-pitch-roll convention used here), collapsing three degrees of freedom into two. A quaternion represents one rotation around one fixed axis directly — there is no sequence of dependent axes to collapse, so the singularity never occurs.',
+    a: 'Gimbal lock is a sequencing problem. When your pitch hits ±90°, the yaw and roll axes align. You lose a degree of freedom because rotating yaw and rotating roll do the exact same thing. Quaternions rotate around a single arbitrary axis in one step. Since there is no sequence of dependent axes to collapse, the singularity never occurs.',
   },
   {
     q: 'How do I convert a quaternion to Euler angles in Swift?',
-    a: 'Use the yawPitchRoll(from:) function on this page: yaw = atan2(2(wz + xy), 1 − 2(y² + z²)), pitch = asin(clamp(2(wy − zx), −1, 1)), roll = atan2(2(wx + yz), 1 − 2(x² + y²)). The clamp on the pitch term is required — floating-point drift can push the asin argument outside [−1, 1] and produce NaN otherwise.',
+    a: 'Grab the yawPitchRoll(from:) function on this page. The math is straightforward, but the critical part is clamping the pitch term. Floating-point precision issues will eventually push the asin argument past 1.0 or -1.0, and without a clamp, your app gets NaNs.',
   },
   {
     q: 'Why does CMHeadphoneMotionManager attitude drift or reset unexpectedly?',
-    a: "CMHeadphoneMotionManager's reference frame is entirely relative, not gravity/north-referenced — whatever orientation the headphones are in when you call startDeviceMotionUpdates becomes the implicit zero point. There is no absolute frame to reset to; the practical fix is a manual recenter (capture the current attitude as a baseline offset on a user action, then subtract it from every subsequent reading). See the MotionLink field note linked below for the full writeup.",
+    a: 'CoreMotion headphone tracking does not use absolute references like a compass. Wherever the headphones are when you call startDeviceMotionUpdates is 0, 0, 0. If they drift or the user adjusts them, they are out of alignment. You have to implement recentering: store the baseline orientation on a user click, then subtract it from incoming samples.',
   },
   {
     q: 'Why must a quaternion be a unit quaternion?',
-    a: 'A quaternion only represents a pure rotation — no scaling — when x² + y² + z² + w² = 1. An un-normalized quaternion still encodes a valid rotation axis and angle, but applying it directly (e.g. to a rotation matrix) introduces scaling artifacts, which is why every conversion on this page normalizes the input first.',
+    a: 'Rotation quaternions must have a length of 1 (x² + y² + z² + w² = 1). If you do not normalize them, applying the rotation will scale or distort your 3D models. The converter panels here automatically normalize your inputs to prevent that.',
   },
 ];
 
@@ -100,7 +100,7 @@ const faqSchema = {
 
   <PlaygroundShell
     title="Quaternion ↔ Euler Converter"
-    lead="Convert quaternion attitude to yaw/pitch/roll and back, both directions, live. The same round-trip-verified formulas MotionLink uses for CMHeadphoneMotionManager, including the gimbal-lock clamp."
+    lead="Convert quaternions to yaw/pitch/roll and back in real time. These are the same round-trip-verified formulas MotionLink uses for CMHeadphoneMotionManager, including the pitch clamping to avoid NaN drift."
     pillarHint="ios-craft"
     isGrounded={true}
     relatedApp="MotionLink"
@@ -111,10 +111,10 @@ const faqSchema = {
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live preview</h2>
         <p class="max-w-2xl text-[0.95rem] text-muted-text">
-          Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll around the head's own nose-to-back axis, regardless of current orientation. The rotation matrix is built directly from the quaternion, with no intermediate Euler decomposition. Axes: <strong>+X</strong> forward (red), <strong>+Y</strong> left (green), <strong>+Z</strong> up (blue). The default <strong>180° yaw</strong> shows the face; "Reset to 0°" puts the camera behind the head, the true mathematical zero.
+          Drag left/right to yaw, up/down to pitch. Shift-drag to roll around the head's local nose-to-back axis. The 3D view constructs the rotation matrix straight from the quaternion. Axes: <strong>+X</strong> forward (red), <strong>+Y</strong> left (green), <strong>+Z</strong> up (blue). The default <strong>180° yaw</strong> shows the face; "Reset to 0°" places the camera behind the head (the mathematical zero orientation).
         </p>
         <p class="mt-2 max-w-2xl text-[0.82rem] text-muted-text/80">
-          See also: <a href="/playground/head-tracked-stereo-pan" class="text-brand-anchor hover:text-primary-text">Head-Tracked Stereo Pan</a>, which uses this same quaternion-to-yaw extraction to drive spatial audio.
+          See also: <a href="/playground/head-tracked-stereo-pan" class="text-brand-anchor hover:text-primary-text">Head-Tracked Stereo Pan</a>, which uses this same quaternion-to-yaw extraction for spatial audio tracking.
         </p>
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <p id="preview-source" class="font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
@@ -232,21 +232,21 @@ const faqSchema = {
     <section class="border-b border-border" aria-labelledby="math-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math and physics, in full</h2>
-        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every conversion above reduces to four numbers. This section covers what they encode, why the three-number representation (yaw/pitch/roll) has a hard singularity, and why rotation order changes the answer. That last point caused a real bug in this page's own drag interaction, documented below with the numeric proof.</p>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every 3D rotation boils down to four numbers. Here is what they actually mean, why yaw/pitch/roll has a hard singularity, and why rotation order matters. Confusing the order broke the drag controls on this very page, as detailed below.</p>
 
         <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <h3 class="text-[1.15rem] font-[650] text-primary-text">What a quaternion actually is</h3>
-            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Pick any axis in 3D space, a unit vector <code>(aₓ, a_y, a_z)</code>, and an angle <code>θ</code> to rotate around it. <strong class="text-primary-text">Euler's rotation theorem</strong> guarantees that every 3D rotation can be expressed this way. A unit quaternion packs that axis and angle into four numbers:</p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Pick a 3D axis (a unit vector <code>(aₓ, a_y, a_z)</code>) and rotate around it by angle <code>θ</code>. Euler's rotation theorem states that any 3D rotation can be written this way. A unit quaternion stores this axis and angle in four components:</p>
             <div class="mt-5 math-card">
               <p class="math-label">Axis–angle form</p>
               <p class="mt-2">q = ( aₓ·sin(θ/2), a_y·sin(θ/2), a_z·sin(θ/2), cos(θ/2) )</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is <code>quatFromAxisAngle()</code> in the script above, the same formula CoreMotion's sensor fusion uses internally to produce <code>attitude.quaternion</code>. If you're reading attitude from hardware instead of CoreMotion, an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">MPU9250 breakout</a>'s onboard DMP outputs the identical data shape: a unit quaternion, straight off the sensor.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is <code>quatFromAxisAngle()</code> in the script below. It is what CoreMotion's sensor fusion outputs under <code>attitude.quaternion</code>. If you are fetching raw IMU data, an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">MPU9250</a>'s onboard DMP spits out this exact format.</p>
             </div>
             <div class="mt-4 math-card">
               <p class="math-label">Unit constraint</p>
               <p class="mt-2">x² + y² + z² + w² = 1</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A quaternion represents a pure rotation (no stretching, no scaling) only at unit length. Every conversion above normalizes first; pasting a non-unit <code>(x, y, z, w)</code> into the Quaternion → Euler panel triggers rescaling before any math runs.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">To represent pure rotation without scaling or stretching, the quaternion must be normalized. We force-normalize the inputs in the Quaternion → Euler panel before calculating the angles.</p>
             </div>
           </div>
           <div class="rounded-[20px] border border-border bg-card-bg p-6">
@@ -293,15 +293,15 @@ const faqSchema = {
               <p>pitch ≈ 0°<br />three independent axes</p>
               <p>pitch = 90°<br />yaw ≡ roll axis</p>
             </div>
-            <p class="mt-3 text-center text-[0.78rem] text-muted-text">Blue = yaw ring, green = pitch ring, red = roll ring. At 90° pitch the blue and red rings become the same physical ring (the dashed red ring traces the same axis as the solid blue one, just slightly larger so both remain visible) — one degree of freedom is gone.</p>
+            <p class="mt-3 text-center text-[0.78rem] text-muted-text">Blue = yaw ring, green = pitch ring, red = roll ring. At 90° pitch the blue and red rings align (the dashed red ring traces the same axis as the solid blue one), collapsing three degrees of freedom down to two.</p>
           </div>
           <div class="lg:order-1">
             <h3 class="text-[1.15rem] font-[650] text-primary-text">Why Euler angles break: gimbal lock</h3>
-            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Yaw/pitch/roll apply three rotations in sequence: yaw around <strong class="text-primary-text">Z</strong>, then pitch around the rotated <strong class="text-primary-text">Y</strong>, then roll around the twice-rotated <strong class="text-primary-text">X</strong>. When pitch reaches ±90°, the first and third axes become parallel. The system loses a degree of freedom: yaw and roll now rotate around the same physical axis, and only their difference is recoverable.</p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Euler angles rotate sequentially: first yaw around Z, then pitch around the new Y, then roll around the new X. When pitch hits ±90°, the yaw and roll axes align. You lose a degree of freedom because yaw and roll now rotate around the same physical axis, making it impossible to separate them.</p>
             <div class="mt-5 math-card">
               <p class="math-label">Verified, not asserted</p>
               <p class="mt-2 text-[0.8rem] leading-[1.6]">(yaw 30°, pitch 90°, roll 0°) → same quaternion as (yaw 50°, pitch 90°, roll 20°) → same quaternion as (yaw 0°, pitch 90°, roll −30°)</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">All three have <code>yaw − roll = 30°</code> and produce identical <code>(x, y, z, w)</code> values to six decimal places. This is the singularity the <code>asin</code> clamp guards against: <code>pitch = 90°</code> is exactly where the domain edge lives.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">All three orientations share <code>yaw − roll = 30°</code> and resolve to the exact same quaternion. The <code>asin</code> clamp in the code catches this boundary to prevent NaNs.</p>
               <button type="button" class="gimbal-example-btn mt-3 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="30" data-pitch="90" data-roll="0">Load (30°, 90°, 0°)</button>
               <button type="button" class="gimbal-example-btn ml-2 mt-3 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="50" data-pitch="90" data-roll="20">Load (50°, 90°, 20°)</button>
             </div>
@@ -310,18 +310,17 @@ const faqSchema = {
 
         <div class="mt-14">
           <h3 class="text-[1.15rem] font-[650] text-primary-text">Composing rotations: why multiplication order matters</h3>
-          <p class="mt-3 max-w-3xl text-[0.92rem] leading-[1.7] text-muted-text">Quaternions compose via the <strong class="text-primary-text">Hamilton product</strong> (quaternion multiplication). The product is associative but <strong class="text-primary-text">not commutative</strong>: <code>q₁⊗q₂ ≠ q₂⊗q₁</code> in general. The order determines whether a rotation is applied in the fixed world frame or the object's own body frame. Confusing the two is a common source of bugs, including one on this page.</p>
+          <p class="mt-3 max-w-3xl text-[0.92rem] leading-[1.7] text-muted-text">Quaternions compose via the Hamilton product. Order matters here: <code>q₁⊗q₂</code> isn't the same as <code>q₂⊗q₁</code>. The sequence determines if you are rotating in the fixed world coordinate system or the object's local body frame.</p>
           <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div class="math-card">
               <p class="math-label">Hamilton product</p>
               <p class="mt-2 text-[0.82rem] leading-[1.7]">w = a_w·b_w − a·b (vector part)<br />v = a_w·b + b_w·a + a×b</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Implemented as <code>quatMul()</code> above. <code>quatMul(delta, current)</code> applies <code>delta</code> in the world frame (pre-multiply). <code>quatMul(current, delta)</code> applies it in the object's local frame (post-multiply).</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Implemented as <code>quatMul()</code> in the script. Pre-multiplying (<code>quatMul(delta, current)</code>) applies the rotation in world space. Post-multiplying (<code>quatMul(current, delta)</code>) applies it locally.</p>
             </div>
             <div class="math-card">
               <p class="math-label">A real bug this caused</p>
-              <p class="mt-2 text-[0.8rem] leading-[1.6]">Craft yawed 40° + pitched 25°, then rolled by <code>quatFromAxisAngle([1,0,0], 0.6)</code>:</p>
-              <p class="mt-2 font-mono text-[0.78rem]">pre-multiply → nose moves <span class="text-primary-cta">0.4254</span><br />post-multiply → nose moves <span class="text-primary-cta">0.0000</span></p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A true roll never moves the nose. This page's shift-drag used the wrong multiplication order until the bug was caught. See <code>docs/DECISIONS.md</code> D-020 for the full numeric write-up.</p>
+              <p class="mt-2 text-[0.8rem] leading-[1.6]">With the head rotated (40° yaw, 25° pitch), adding a 0.6 rad roll using world-space multiplication tumbles the nose by 0.4254 units. Local multiplication keeps the nose locked.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A true roll must never move the nose. The drag controls on this page had this wrong until we flipped the order. See the developer log D-020 for the full numeric breakdown.</p>
             </div>
           </div>
         </div>
@@ -344,27 +343,27 @@ const faqSchema = {
               </tr>
               <tr class="border-b border-border">
                 <td class="py-3 pr-4 font-semibold text-primary-text">Gimbal lock</td>
-                <td class="py-3 pr-4">Yes — at pitch = ±90° for this ZYX convention</td>
+                <td class="py-3 pr-4">Yes (at pitch = ±90° for this ZYX convention)</td>
                 <td class="py-3">No singularities anywhere</td>
               </tr>
               <tr class="border-b border-border">
                 <td class="py-3 pr-4 font-semibold text-primary-text">Composing two rotations</td>
-                <td class="py-3 pr-4">Multiply 3×3 matrices, or re-derive new angles — order-sensitive and easy to get backwards</td>
-                <td class="py-3">One Hamilton product — order still matters, but it's one explicit operation, not implicit in a matrix chain</td>
+                <td class="py-3 pr-4">Multiply 3×3 matrices or compute intermediate angles. Easy to get backwards.</td>
+                <td class="py-3">One Hamilton product. Order still matters, but it is a single explicit operation instead of a matrix chain.</td>
               </tr>
               <tr class="border-b border-border">
                 <td class="py-3 pr-4 font-semibold text-primary-text">Smooth interpolation</td>
-                <td class="py-3 pr-4">Naively interpolating each angle can take the long way round or pass through gimbal lock</td>
-                <td class="py-3">Slerp gives constant angular velocity along the shortest path — the standard choice for animation and sensor fusion</td>
+                <td class="py-3 pr-4">Naively interpolating each angle can take the long way round or pass through gimbal lock.</td>
+                <td class="py-3">Slerp gives constant angular velocity along the shortest path, making it the standard choice for animation.</td>
               </tr>
               <tr>
                 <td class="py-3 pr-4 font-semibold text-primary-text">Human-readable</td>
-                <td class="py-3 pr-4">Yes — this is why the panels above show yaw/pitch/roll, not raw <code>(x, y, z, w)</code></td>
-                <td class="py-3">Not directly — hence this whole page</td>
+                <td class="py-3 pr-4">Yes (which is why the panels show yaw/pitch/roll instead of raw components)</td>
+                <td class="py-3">No (hence this calculator)</td>
               </tr>
             </tbody>
           </table>
-          <p class="mt-4 text-[0.8rem] text-muted-text">Sensors and physics engines store quaternions because they're numerically stable. Humans think in yaw/pitch/roll. This page sits at that boundary, and so does MotionLink's conversion function.</p>
+          <p class="mt-4 text-[0.8rem] text-muted-text">Physics engines and IMUs output quaternions because they're numerically stable. Humans prefer yaw/pitch/roll. This converter sits right at that boundary.</p>
         </div>
       </div>
     </section>
@@ -375,21 +374,21 @@ const faqSchema = {
         <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Gimbal-lock clamp</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Floating-point drift can push the pitch <code>asin</code> argument outside <code>[-1, 1]</code>, producing <code>NaN</code> that propagates silently. Always clamp. Try feeding an extreme quaternion into the converter above to see the clamp in action.</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Floating-point drift will eventually push the pitch <code>asin</code> input outside <code>[-1, 1]</code>, causing silent <code>NaN</code> propagation. Always clamp the input. You can trigger this clamp by feeding extreme values into the Quaternion → Euler converter above.</p>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Relative reference frame</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">On real hardware (<code>CMHeadphoneMotionManager</code>), the "zero" orientation is wherever the headphones were facing when tracking started, not gravity- or north-referenced. This calculator has no implicit frame; that gotcha only applies on-device.</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">CoreMotion headphone tracking does not align to north or gravity. Zero is just whatever direction the headphones were facing when the API started. You have to manage offsets yourself.</p>
           </div>
         </div>
-        <p class="mt-6 text-[0.85rem] text-muted-text">Full writeup, including why this cost an afternoon on real AirPods Pro: <a href="/blog/motionlink-headphone-motion-api" class="text-brand-anchor hover:text-primary-text">the field note →</a></p>
+        <p class="mt-6 text-[0.85rem] text-muted-text">If you want the full story on why these quirks wasted half a day of development time on AirPods Pro, read our field note: <a href="/blog/motionlink-headphone-motion-api" class="text-brand-anchor hover:text-primary-text">the field note →</a></p>
       </div>
     </section>
 
     <section class="border-b border-border" aria-labelledby="code-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Swift, both directions</h2>
-        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Copy either function directly. The math ports to C/C++ unchanged if you're reading quaternions from an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">IMU breakout</a> on an <a href={gearById['elegoo-arduino-uno-r3']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">Arduino</a> instead of CoreMotion.</p>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">These functions drop directly into Xcode. If you're reading raw IMU data from an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">Arduino</a> instead of using CoreMotion, the same logic ports straight to C/C++.</p>
         <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
             <div class="flex items-center justify-between">
@@ -584,22 +583,11 @@ const faqSchema = {
     const CW = 520;
     const CH = 440;
 
-    // Color-theory decision for this dark-gallery direction — reversed from
-    // the previous two iterations: the glossy-white version read as plasticky
-    // and the matte-terracotta version, while tasteful, still read as an
-    // attempt at a real skin tone on a real head, edging toward uncanny. The
-    // fix isn't a "more correct" realistic tone — it's the opposite: an
-    // openly synthetic color (brand blue) so the object reads immediately as
-    // a stylized figure, not a body. No accent materials: with the missile's
-    // fins/ring and the earlier mannequin-head's AirPods/wordmark all
-    // dropped, the head is the only element on the model. Background
-    // #10141d is ~5% luminance; brand blue at ~40% luminance is still
-    // comfortably brighter, just not straining to look "loudest."
+    // Neutral dark background. Model uses a matte blue to look like a
+    // stylized asset rather than an uncanny skin-toned mannequin.
     const BG_COLOR = 0x10141d;
 
-    // Neutral tone mapping is the right choice for a lit product on a dark
-    // background: it avoids the mid-tone crush that ACES introduces, keeping the
-    // cream body predictable and bright without a milky haze.
+    // Neutral mapping prevents mid-tone crush under direct lights.
     const renderer = new THREE.WebGLRenderer({ canvas: pageCanvas, antialias: true, alpha: false });
     renderer.setSize(CW, CH, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -614,9 +602,7 @@ const faqSchema = {
     camera.up.set(0, 0, 1);
     camera.lookAt(0, 0, 0);
 
-    // ── Dark-gallery lighting for a warm craft on a cool graphite field ──
-    // RoomEnvironment IBL gives the clearcoat believable micro-reflections;
-    // three directional lights provide the key/fill/rim sculpting on the body.
+    // Key, fill, and rim lights plus low-intensity IBL environment.
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
     pmremGenerator.dispose();
@@ -639,28 +625,10 @@ const faqSchema = {
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  Real sculpted-head asset via GLTFLoader, replacing the procedural
-    //  mannequin-head geometry that preceded it (which read as "balloon-like"
-    //  no matter how the proportions were tuned). Source: public/models/
-    //  practice-head-sculpt.glb — a Sketchfab download ("Practice Head
-    //  Sculpt" by OverlyWiseBat, Sketchfab Standard license — reviewed and
-    //  confirmed usable here without attribution).
-    //  Optimized via `gltf-transform optimize` (weld + join + meshopt
-    //  simplify, ratio 0.1, error 0.003): 185k -> ~18k vertices, 7.9MB ->
-    //  520KB, no visible quality loss at this render size (verified by
-    //  side-by-side screenshot at 0°, 90° yaw profile, and a tight zoom on
-    //  the nose/lips). Original untouched at /Users/josh/Downloads/
-    //  practice_head_sculpt.glb if a different simplification pass is
-    //  ever needed.
-    //  +X nose/face · +Y left ear · +Z up, same convention as every model
-    //  before it — the loaded mesh's own axes get remapped on load, below.
-    // ═══════════════════════════════════════════════════════════════════
+    // Loaded head mesh: Y-up, Z-forward. Remapped to +X nose, +Y left, +Z up.
+    // Original simplified from 185k to 18k vertices using gltf-transform.
 
-    // Plain MeshStandardMaterial, not MeshPhysicalMaterial — the earlier
-    // porcelain/clearcoat look was the whole source of the "shiny" complaint,
-    // so there's no clearcoat layer to carry over here, and no reason to pay
-    // for MeshPhysicalMaterial's extra shader cost without using it.
+    // Matte finish. Standard material handles this without physical clearcoat cost.
     const bodyMat = new THREE.MeshStandardMaterial({
       color: 0x3e6c99,        // brand blue (BrandIconConcepts' "bl" grid tile) — deliberately unrealistic skin tone
       metalness: 0,
@@ -674,22 +642,15 @@ const faqSchema = {
       (gltf) => {
         const loaded = gltf.scene;
 
-        // The source file ships flat-gray, untextured clay materials (a
-        // sculpting-practice export), so swapping every mesh to bodyMat
-        // isn't fighting existing texture data.
+        // Clay asset lacks textures; override all submeshes with bodyMat.
         loaded.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             (child as THREE.Mesh).material = bodyMat;
           }
         });
 
-        // The source model is Y-up, Z-forward (determined by inspecting its
-        // bounding box: the eye geometry sits at positive local Z, confirming
-        // +Z is the face-forward direction — typical of an FBX-via-Sketchfab
-        // export). Remap local (X, Y, Z) -> world (Y, Z, X) via an explicit
-        // basis matrix so the model's forward becomes +X and up becomes +Z.
-        // This is a best-effort first guess, not verified against a render
-        // yet — check the screenshot before trusting the nose direction.
+        // Source is Y-up, Z-forward. Remap basis vectors to align with core framework axes:
+        // Local Z goes to +X (forward), local X goes to +Y (left), local Y goes to +Z (up).
         const reorient = new THREE.Group();
         reorient.add(loaded);
         reorient.quaternion.setFromRotationMatrix(
@@ -700,19 +661,13 @@ const faqSchema = {
           )
         );
 
-        // Center on the model's own bounding-box center so quaternion
-        // rotation (applied to modelGroup, always around the world origin)
-        // spins it in place instead of swinging it around empty space.
+        // Center pivot point to prevent orbit offsets during rotation.
         const preCenterBox = new THREE.Box3().setFromObject(reorient);
         const center = preCenterBox.getCenter(new THREE.Vector3());
         reorient.position.sub(center);
         modelGroup.add(reorient);
 
-        // Same "fill the frame without ever clipping" formula as every
-        // previous model on this page (see git history for the full
-        // derivation) — here the design radius comes directly from the
-        // loaded geometry's own bounding sphere instead of a hand-derived
-        // constant, since we don't know this mesh's proportions by hand.
+        // Calculate scaling from bounding sphere to fit the camera FOV without clipping.
         const sphere = new THREE.Box3().setFromObject(reorient).getBoundingSphere(new THREE.Sphere());
         const CAMERA_DISTANCE = camera.position.length();
         const HALF_FOV_RAD = THREE.MathUtils.degToRad(camera.fov / 2);
@@ -729,7 +684,7 @@ const faqSchema = {
       }
     );
 
-    // --- World-fixed contact shadow: anchors the craft to the dark ground ---
+    // Ground contact shadow
     const shadowTexture = (() => {
       const canvas = document.createElement('canvas');
       const TEX = 128;
@@ -800,7 +755,7 @@ const faqSchema = {
 
     let currentQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
 
-    // URL hash state: update the URL fragment on every orientation change
+    // Sync URL hash
     function updateHash(yawDeg: number, pitchDeg: number, rollDeg: number) {
       const y = parseFloat(yawDeg.toFixed(1));
       const p = parseFloat(pitchDeg.toFixed(1));
@@ -812,7 +767,7 @@ const faqSchema = {
     function updatePreview(q: Quat, source: string) {
       currentQuat = quatNormalize(q);
       
-      // Update Three.js model rotation. Math convention is perfectly respected.
+      // Set 3D rotation
       modelGroup.quaternion.set(currentQuat.x, currentQuat.y, currentQuat.z, currentQuat.w);
       render3D();
 
@@ -836,6 +791,16 @@ const faqSchema = {
       qYawOut.textContent = fmtDeg(yaw);
       qPitchOut.textContent = fmtDeg(pitch);
       qRollOut.textContent = fmtDeg(roll);
+
+      // Sync to Euler panel
+      eYaw.value = degFromRad(yaw).toFixed(1);
+      ePitch.value = degFromRad(pitch).toFixed(1);
+      eRoll.value = degFromRad(roll).toFixed(1);
+      eX.textContent = fmtNum(norm.x);
+      eY.textContent = fmtNum(norm.y);
+      eZ.textContent = fmtNum(norm.z);
+      eW.textContent = fmtNum(norm.w);
+
       updatePreview(norm, 'Quaternion → Euler');
     }
 
@@ -850,6 +815,19 @@ const faqSchema = {
       eY.textContent = fmtNum(q.y);
       eZ.textContent = fmtNum(q.z);
       eW.textContent = fmtNum(q.w);
+
+      // Sync to Quaternion panel
+      qx.value = q.x.toFixed(4);
+      qy.value = q.y.toFixed(4);
+      qz.value = q.z.toFixed(4);
+      qw.value = q.w.toFixed(4);
+      const mag = Math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+      qNormNote.textContent = Math.abs(mag - 1) < 0.0005 ? `Magnitude: ${mag.toFixed(4)} (already unit length)` : `Magnitude: ${mag.toFixed(4)} — normalized before conversion`;
+      const { yaw, pitch, roll } = yawPitchRoll(q.x, q.y, q.z, q.w);
+      qYawOut.textContent = fmtDeg(yaw);
+      qPitchOut.textContent = fmtDeg(pitch);
+      qRollOut.textContent = fmtDeg(roll);
+
       updatePreview(q, 'Euler → Quaternion');
     }
 
@@ -886,27 +864,11 @@ const faqSchema = {
       const dx = (e.clientX - dragStartX) * 0.008;
       const dy = (e.clientY - dragStartY) * 0.008;
 
-      // CRITICAL: DRAG INTERACTION MAPPING
-      // The camera is positioned behind the model (at -X, looking towards +X). You are looking at the TAIL.
-      // The physical interaction model treats your mouse as dragging the visible tail:
-      // 1. YAW (Horizontal drag): Uses `dx`. Right drag (dx > 0) produces a positive rotation around +Z (Up). This swings the nose left (+Y) and the tail right (-Y). Since you see the tail, dragging right visually moves the tail right.
-      // 2. PITCH (Vertical drag): Uses `-dy`. Down drag (dy > 0) produces a negative rotation around +Y (Left). This pitches the nose down (-Z) and the tail up (+Z). So dragging down visually pulls the nose down.
-      // 3. ROLL (Shift + Horizontal drag): Uses `dx`. Left drag (dx < 0) produces a negative rotation around +X (Forward), banking the left wing down (-Z).
-      // Do NOT arbitrarily flip these signs; they are carefully calibrated for this tail-view perspective.
-      //
-      // YAW/PITCH are EXTRINSIC (world-frame): the delta is pre-multiplied
-      // (quatMul(delta, dragStartQuat)), so `dx`/`dy` always rotate around the
-      // fixed camera-relative axes — dragging right always yaws around the
-      // screen's vertical, regardless of the craft's current attitude. This is
-      // the arcball behavior that reads correctly no matter how the craft is
-      // currently oriented.
-      // ROLL is INTRINSIC (body-frame): the delta is post-multiplied
-      // (quatMul(dragStartQuat, delta)), so the roll axis [1,0,0] is expressed
-      // in the craft's OWN current local frame, not the world frame. This
-      // makes shift-drag always spin the craft around its own current
-      // nose-tail axis — true aeronautical roll — instead of tumbling around
-      // a fixed world axis that no longer lines up with the nose once the
-      // craft has been yawed/pitched away from 0°.
+      // Drag controls (Camera looks down +X at the back of the head):
+      // - Yaw/Pitch: Extrinsic (world frame). Mouse moves rotate around world axes
+      //   so dragging right always yaws vertically on screen.
+      // - Roll (Shift + Drag): Intrinsic (local frame). Rotates around local +X
+      //   (nose-to-back axis) so the head spins around its own nose even when tilted.
       let newQuat: Quat;
       if (e.shiftKey) {
         const rollQuat = quatFromAxisAngle([1, 0, 0], dx);
