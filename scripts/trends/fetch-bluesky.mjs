@@ -10,7 +10,7 @@
  *
  * (Uses the stateless search endpoint rather than the Jetstream firehose —
  * Jetstream is a long-lived stream meant for a persistent consumer; a
- * weekly batch job that runs and exits fits a one-shot search query better.)
+ * daily batch job that runs and exits fits a one-shot search query better.)
  */
 import { SEARCH_QUERIES } from './keywords.mjs';
 

@@ -18,8 +18,8 @@ writeFileSync(OUT_PATH, `${JSON.stringify({ generatedAt, ...tle }, null, 2)}\n`)
 writeFileSync(
   SUMMARY_PATH,
   [
-    'Automated ISS orbital element refresh (Celestrak, no key). **Review before merging** — ',
-    "merging publishes these to the Globe tool's ISS Tracker mode.",
+    'Automated ISS orbital element refresh (Celestrak, no key) — **auto-published** ',
+    "(committed directly to main by globe-data-digest.yml) to the Globe tool's ISS Tracker mode.",
     '',
     `**${tle.name}**`,
     '```',

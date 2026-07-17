@@ -85,8 +85,8 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
         <ul class="mt-4 max-w-2xl space-y-3 text-[0.9rem] leading-[1.65] text-muted-text">
           <li><strong class="text-primary-text">Coastlines</strong> — real Natural Earth data (public domain), self-hosted, not fetched live.</li>
           <li><strong class="text-primary-text">Day/night line</strong> — computed live from real astronomy (solar declination, Greenwich sidereal time) using your browser's clock. No data fetch needed for this one.</li>
-          <li><strong class="text-primary-text">Weather</strong> — real conditions from Open-Meteo, fetched at build time on a schedule and committed as static data, refreshed every 6 hours through a human-reviewed PR — not a live call from your browser.</li>
-          <li><strong class="text-primary-text">ISS position</strong> — real orbital elements from Celestrak, refreshed every 12 hours the same way. The moving dot is genuine orbital mechanics computed in your browser from that real data, simplified to a two-body model (no atmospheric drag or perturbation corrections) — accurate for watching it move, not for precision tracking.</li>
+          <li><strong class="text-primary-text">Weather</strong> — real conditions from Open-Meteo, fetched on a schedule and committed as static data, refreshed every 4 hours — not a live call from your browser.</li>
+          <li><strong class="text-primary-text">ISS position</strong> — real orbital elements from Celestrak, refreshed every 4 hours the same way. The moving dot is genuine orbital mechanics computed in your browser from that real data, simplified to a two-body model (no atmospheric drag or perturbation corrections) — accurate for watching it move, not for precision tracking.</li>
         </ul>
       </div>
     </section>

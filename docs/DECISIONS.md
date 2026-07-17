@@ -94,6 +94,8 @@
 
 ## D-012 — Trend digest gating pipeline (relevance-dominant, engagement capped)
 
+> **Superseded in part by D-022 (2026-07-17):** the "human PR review" / "merge = publish" step below is gone — the journal now auto-publishes directly to `/journal/<date>` and the gate tests are the pre-publish safety net. The *gating pipeline itself* (funnel, scoring, fixture tests) described here is unchanged and still current.
+
 **Decision:** Restructure the digest into a staged funnel — fetch → normalize/dedupe → hard gates → score → diversity select → human PR review — in `scripts/trends/pipeline.mjs`, with fixture regression tests (`pipeline.test.mjs`, run in CI before every build).
 **Why:** First real run (2026-07-15) ranked an 800-like joke post #1: the old formula added uncapped `likes÷20` to single-digit keyword scores, so popularity outvoted relevance; a politics rant also passed on one incidental keyword hit. On a studio marketing surface that's a brand problem.
 **Mechanism:**
@@ -184,6 +186,8 @@
 
 ## D-019 — Live Earth: real weather + real satellite orbit via the build-time-fetch pattern, not live API calls
 
+> **Updated (2026-07-17):** the two separate `weather-digest.yml` (6h) and `satellite-tle.yml` (12h) workflows described below were later combined into a single **`globe-data-digest.yml`** (every 4h) that **commits directly to main** — the human-review-PR gate this entry specifies for globe data was dropped for direct-commit (numeric data, no free-text brand risk). Trends followed the same move in D-022. The build-time-fetch → committed-static-data → browser-reads-same-origin principle is unchanged.
+
 **Decision:** When the owner asked for geospatial/map/weather/satellite tools and specifically wanted **real data** (not simulated), the resolution was to extend the same build-time-fetch → commit → human-review-PR pattern the trends pipeline (D-011/D-012) already uses — not to relax the site's static-only, no-live-runtime-API-call constraint. Two new pipelines: `scripts/weather/` (Open-Meteo, free, no key, 16 curated cities, cron every 6h) and `scripts/satellite/` (Celestrak TLE for the ISS, free, no key, cron every 12h), each writing committed JSON (`src/data/weather.json`, `src/data/satellite.json`) via their own GitHub Action mirroring `trends-digest.yml`'s human-review-PR gate exactly (force-push same-day branch, open/update PR, never auto-merge). Shipped as one unified tool, `/playground/globe.astro` ("Live Earth"), with three switchable modes — Day/Night, Live Weather, ISS Tracker — rather than three separate globe pages, since all three share the same coastline rendering.
 
 **Why:** "Real data" and "static only, no live client-side API calls" initially read as contradictory, but they're not — the trends pipeline already proves the resolution: fetch real data *at build time* on a schedule, commit the snapshot, human reviews before it reaches the site, browser only ever reads static same-origin data. Weather and TLE data go stale faster than trend items (hours, not days), which is why they get their own shorter cron cadences rather than reusing the daily trends schedule — this is "real data, refreshed periodically," not instantaneous live tracking, and the tool's own copy says so explicitly (no overclaiming precision).
@@ -241,4 +245,14 @@
 
 **Do not:** re-add a PR gate here to "review scraped content" without also reverting D-017's daily cadence — a daily PR is exactly the friction D-012's own rationale warns against, and the automated gates are the agreed substitute. Empty-day suppression lives in `build-digest.mjs` (not the workflow) — keep it there so a local run behaves identically to CI. Pushes made with `GITHUB_TOKEN` do not re-trigger workflows (no publish loop), but they *do* trigger Vercel — budget ~1 trends deploy/day on top of globe's ≤6 (see the D-019 / build-budget note).
 
-**Status (2026-07-17):** Workflow converted, comments/decision reconciled, build re-verified (astro check 0 errors, 36 pages, journal routes prerendered). First real auto-publish will be the next 14:00 UTC cron run (or a manual `workflow_dispatch`).
+**Status (2026-07-17):** Workflow converted, comments/decision reconciled, build re-verified (astro check 0 errors, 36 pages, journal routes prerendered). **Auto-publish verified end-to-end** via a manual `workflow_dispatch`: run 29620291282 (34s) re-scraped, committed `8fbb8bf` directly to main as `makerportal-bot` (no PR), Vercel deployed, and `/journal/2026-07-17` went live with the fresh 20-item entry.
+
+## D-023 — Reddit source disabled (kept dormant), GitHub Actions bumped off Node 20
+
+**Decision:** Removed Reddit from the active trends source list. `build-digest.mjs` now fetches Bluesky + Hacker News only; the `fetch-reddit.mjs` module and the `'reddit'` value in the `TrendSource` type / `content.config.ts` enum / `sourceLabels` are **retained dormant** so re-enabling is a one-line change (restore the import + the `sources` entry) if approved credentials ever exist. Also dropped `REDDIT_CLIENT_ID/SECRET` from `trends-digest.yml` and `pull-requests: write` is already gone (D-022). Separately, bumped `actions/checkout` and `actions/setup-node` from `@v4` → `@v5` across all three workflows.
+
+**Why:** Reddit had been a no-op since inception — self-service API access is closed (Responsible Builder Policy, Nov 2025; see D-011 and `docs/archive/OPEN-ITEMS.md`) and unauthenticated scraping was already declined on anti-abuse-evasion grounds. A source that always returns `[]` is confusing noise in the pipeline, the workflow env, and the docs; disabling it cleanly is honest about what actually runs. Retaining the module (rather than deleting) keeps the door open at near-zero cost. The action bump clears GitHub's Node 20 deprecation warning (checkout/setup-node `@v4` run on Node 20, which GitHub is sunsetting and already force-runs on Node 24); `@v5` targets Node 24 natively.
+
+**Do not:** re-add Reddit via unauthenticated `reddit.com/*.json` / RSS polling — that's the exact anti-evasion pattern D-011 declined. Re-enable only with approved Data API credentials added as repo secrets. Keep the `'reddit'` enum value even while dormant — removing it would be a breaking schema change for any historical journal entry that ever carried a Reddit item.
+
+**Status (2026-07-17):** Reddit disabled, workflows on `@v5`, build re-verified (astro check 0 errors, 36 pages), 13 pipeline tests pass. `draft-post.mjs --list` confirmed reading the latest journal entry.

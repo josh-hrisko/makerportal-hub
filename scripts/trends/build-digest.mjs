@@ -1,5 +1,6 @@
 /**
- * Daily trend digest orchestrator — fetches Bluesky/HN/Reddit candidates,
+ * Daily trend digest orchestrator — fetches Bluesky + Hacker News candidates
+ * (Reddit is disabled, D-023 — no API credentials, self-service access closed),
  * runs them through the gate/score/select pipeline (pipeline.mjs), writes
  * src/content/journal/YYYY-MM-DD.json plus a markdown summary surfaced as the
  * GitHub Actions run step summary. Runs from .github/workflows/trends-digest.yml,
@@ -11,7 +12,9 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fetchBluesky } from './fetch-bluesky.mjs';
 import { fetchHackerNews } from './fetch-hn.mjs';
-import { fetchReddit } from './fetch-reddit.mjs';
+// Reddit disabled (D-023) — no API credentials (self-service access closed, D-011).
+// fetch-reddit.mjs is retained; re-enable by restoring this import + the sources entry below.
+// import { fetchReddit } from './fetch-reddit.mjs';
 import { runPipeline, isArtifactUrl, engagementBonus } from './pipeline.mjs';
 import { enrichWithImages } from './enrich-images.mjs';
 
@@ -24,7 +27,7 @@ const SUMMARY_PATH = join(process.cwd(), 'trend-digest-summary.md'); // gitignor
 const sources = [
   { name: 'bluesky', run: fetchBluesky },
   { name: 'hackernews', run: fetchHackerNews },
-  { name: 'reddit', run: fetchReddit },
+  // { name: 'reddit', run: fetchReddit }, // disabled — see D-023 / note above
 ];
 
 const results = await Promise.allSettled(sources.map((s) => s.run()));
@@ -80,7 +83,7 @@ function scoreBreakdown(c) {
 
 function renderSummary(picked, funnel, timestamp) {
   const lines = [
-    'Automated daily trend scan (Bluesky, Hacker News, Reddit) — **auto-published** to the ',
+    'Automated daily trend scan (Bluesky, Hacker News) — **auto-published** to the ',
     '/journal archive and surfaced as the latest entry on /resources "Signals we\'re tracking". ',
     'To remove anything the gates missed, edit or revert `src/content/journal/YYYY-MM-DD.json` on main.',
     '',

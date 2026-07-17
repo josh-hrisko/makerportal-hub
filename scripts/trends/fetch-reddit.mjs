@@ -3,6 +3,11 @@
  * scoped to the subreddits that already cluster around studio pillars,
  * scored the same as other sources rather than trusted blindly.
  *
+ * DORMANT (D-023): not currently wired into build-digest.mjs's source list —
+ * there are no Reddit credentials and self-service API access is closed (D-011).
+ * This module is kept intact so re-enabling is a one-line change in build-digest.mjs
+ * (restore the import + sources entry) once approved credentials exist.
+ *
  * Needs REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET (repo secrets). Credentials
  * require approval under Reddit's Responsible Builder Policy (self-service
  * app creation closed Nov 2025) — apply via the request form linked from the

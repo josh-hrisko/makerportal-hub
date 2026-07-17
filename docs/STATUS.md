@@ -1,4 +1,4 @@
-# Status — MakerPortal Hub (as of 2026-07-15)
+# Status — MakerPortal Hub (current state as of 2026-07-17; dated session logs below)
 
 Single snapshot of what's live, what's built but pending, what's placeholder. Replaces scattered state that was in `OPEN-ITEMS.md` and handoff docs.
 
@@ -21,8 +21,8 @@ Search Console re-pull 2026-07-15 (evening): still **1 click, 3 impressions** (w
 
 - **Amazon Associates:** 50 real picks in `affiliate-links.json`, sourced from makersportal.com posts (see `AFFILIATE-CANDIDATES.md`), grouped by app `<details>` collapsible on `/resources#gear`. Disclosure + `rel="sponsored"`.
   - Live enrichment: `scripts/amazon/fetch-items.mjs` + `build-catalog.mjs` + workflow `amazon-catalog.yml` (monthly). Creators API cred v3.1, OAuth2. `amazon-catalog.json` currently empty (still `AssociateNotEligible` 48h window from 2026-07-15 16:36 UTC). Re-test after 2026-07-17. `resolveAffiliateLink()` merges live data over static fallback.
-- **Trends digest:** Daily 14:00 UTC `trends-digest.yml` (was weekly, D-017). Pipeline `fetch → dedupe → gates → score → select` in `pipeline.mjs`, 13 fixture tests, PR with pillar-grouped summary + self-hosted webp thumbnails `public/trends/` (no hotlink, privacy). Feeds `/resources#trending` (featured + grid, signal bars). 6 pillars: on-device-ai, metal-ane, local-llm, dsp-audio, ios-craft, privacy-arch. `pillars` soft-tag reused on gear for re-ranking (D-017).
-- **Trend-grounded blog draft (gated, not active):** `scripts/trends/draft-post.mjs` — manual-only CLI, not wired to any workflow/cron, takes a `trends.json` item + `--app <RealShippedApp>` and scaffolds a `draft: true` post. Refuses to run without a real app name (structural enforcement of the "shipped-app grounding" guardrail). See `MONETIZATION.md` P3 for the full argued recommendation on why this stays dormant until 3-4 more Phase 1 field notes exist and the next Search Console check (~2026-07-29) shows real traffic.
+- **Trends digest → Signals Journal:** Daily 14:00 UTC `trends-digest.yml` (was weekly, D-017). Pipeline `fetch → dedupe → gates → score → select` in `pipeline.mjs`, 13 fixture tests. **Auto-publishes (D-022):** commits that day's entry directly to `main` as `src/content/journal/YYYY-MM-DD.json` — no PR — so it goes live at `/journal/YYYY-MM-DD` (persistent per-day archive) and the latest entry surfaces on `/resources#trending`. Gate tests are the pre-publish safety net; the pillar-grouped summary is attached to the Actions run via `$GITHUB_STEP_SUMMARY`. Self-hosted webp thumbnails in `public/trends/` (no hotlink, privacy). Sources: Bluesky + Hacker News (**Reddit disabled, D-023** — no credentials). 6 pillars: on-device-ai, metal-ane, local-llm, dsp-audio, ios-craft, privacy-arch. `pillars` soft-tag reused on gear for re-ranking (D-017).
+- **Trend-grounded blog draft (gated, not active):** `scripts/trends/draft-post.mjs` — manual-only CLI, not wired to any workflow/cron, takes a signal from the latest `src/content/journal/YYYY-MM-DD.json` entry + `--app <RealShippedApp>` and scaffolds a `draft: true` post. Refuses to run without a real app name (structural enforcement of the "shipped-app grounding" guardrail — the human-review gate for *blog content* stays, D-011). See `MONETIZATION.md` P3 for the full argued recommendation on why this stays dormant until 3-4 more Phase 1 field notes exist and the next Search Console check (~2026-07-29) shows real traffic.
 - **Vercel Web Analytics:** `<Analytics />` from `@vercel/analytics/astro` in `Layout.astro` `<head>`, shipped 2026-07-15. Complements Search Console (search-referred only) with direct/referrer/App-Store visibility. Needs Web Analytics toggled on in the Vercel dashboard once deployed — no further code changes needed.
 - **Gear re-ranking:** Daily pillar counts re-order gear groups + items, chips `↗ {Pillar}` + header `Re-ranked · trending`. Safe — same 50 ASINs, only sort. Verified 1724px height vs 5500px incident (D-016).
 - **Shop:** Placeholder cards, MoR Lemon Squeezy chosen per D-014 (5%+50c, MoR tax handled, secure downloads), **not integrated**. See `MONETIZATION.md` for MVP plan ($19-29 per archive).
@@ -35,12 +35,11 @@ Search Console re-pull 2026-07-15 (evening): still **1 click, 3 impressions** (w
 
 | Pipeline | Schedule | Input | Output | Secrets | State |
 |----------|----------|-------|--------|---------|-------|
-| `trends-digest.yml` | daily `0 14 * * *` | Bluesky (auth), HN Algolia, Reddit (optional) | `trends.json` + `public/trends/*.webp` + PR body | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD`, `REDDIT_CLIENT_ID/SECRET` optional | Live, PR #2 merged 2026-07-15 |
-| `amazon-catalog.yml` | monthly 1st + dispatch | `affiliate-links.json` ASINs | `amazon-catalog.json` + PR body | `AMAZON_CLIENT_ID`, `AMAZON_CLIENT_SECRET` | Built, empty cache until eligible |
-| `weather-digest.yml` | every 6h `0 */6 * * *` | Open-Meteo (free, no key), 16 curated cities | `weather.json` + PR body | none | Built + verified 2026-07-16, feeds Live Earth's Weather mode |
-| `satellite-tle.yml` | every 12h `0 */12 * * *` | Celestrak TLE (free, no key), ISS only | `satellite.json` + PR body | none | Built + verified 2026-07-16, feeds Live Earth's ISS Tracker mode |
+| `trends-digest.yml` | daily `0 14 * * *` | Bluesky (auth), HN Algolia | `src/content/journal/YYYY-MM-DD.json` + `public/trends/*.webp`, **committed directly to main** (auto-publish, D-022) | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD` | Live, auto-publish verified 2026-07-17 |
+| `amazon-catalog.yml` | monthly 1st + dispatch | `affiliate-links.json` ASINs | `amazon-catalog.json` + PR body | `AMAZON_CLIENT_ID`, `AMAZON_CLIENT_SECRET` | Built, empty cache until eligible; **still PR-gated** (human-curated ASINs, D-015) |
+| `globe-data-digest.yml` | every 4h `0 */4 * * *` | Open-Meteo (16 cities) + Celestrak ISS TLE (both free, no key) | `weather.json` + `satellite.json`, **committed directly to main** | none | Combined weather+satellite (was two separate `weather-digest.yml`/`satellite-tle.yml`), direct-commit; feeds Live Earth |
 
-No runtime API calls, no client secrets, no Vercel env vars for these — static data only. `weather-digest.yml`/`satellite-tle.yml` need no secrets at all (both source APIs are free/keyless).
+No runtime API calls, no client secrets, no Vercel env vars for these — static data only. `globe-data-digest.yml` needs no secrets at all (both source APIs are free/keyless). Reddit is disabled in the trends pipeline (D-023) — no credentials, self-service access closed (D-011); `fetch-reddit.mjs` is retained dormant for a one-line re-enable.
 
 ## Open decisions
 

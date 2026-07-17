@@ -21,8 +21,8 @@ console.log(`Wrote ${cities.length} cities to ${OUT_PATH}`);
 
 function renderSummary(cities, timestamp) {
   const lines = [
-    'Automated weather refresh (Open-Meteo, no key). **Review before merging** — ',
-    'merging publishes real current conditions to the Globe tool\'s Weather mode.',
+    'Automated weather refresh (Open-Meteo, no key) — **auto-published** (committed ',
+    'directly to main by globe-data-digest.yml) to the Globe tool\'s Weather mode.',
     '',
     `**Cities:** ${cities.length}/${cities.length} fetched successfully.`,
     '',
