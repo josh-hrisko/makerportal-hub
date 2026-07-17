@@ -1,10 +1,11 @@
 /**
  * Daily trend digest orchestrator — fetches Bluesky/HN/Reddit candidates,
  * runs them through the gate/score/select pipeline (pipeline.mjs), writes
- * src/content/journal/YYYY-MM-DD.json plus a markdown summary used as the
- * review PR body. Runs from .github/workflows/trends-digest.yml; a human
- * merges the PR before anything reaches /resources or /journal (build-time
- * static data, no runtime fetch on the hub itself).
+ * src/content/journal/YYYY-MM-DD.json plus a markdown summary surfaced as the
+ * GitHub Actions run step summary. Runs from .github/workflows/trends-digest.yml,
+ * which commits the entry directly to main so that day auto-publishes to
+ * /journal/YYYY-MM-DD (D-022) — the gate tests, not a human PR, are the
+ * pre-publish safety net. Build-time static data, no runtime fetch on the hub.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -18,7 +19,7 @@ const dateStr = new Date().toISOString().split('T')[0];
 const OUT_DIR = join(process.cwd(), 'src', 'content', 'journal');
 mkdirSync(OUT_DIR, { recursive: true });
 const OUT_PATH = join(OUT_DIR, `${dateStr}.json`);
-const SUMMARY_PATH = join(process.cwd(), 'trend-digest-summary.md'); // gitignored, PR body only
+const SUMMARY_PATH = join(process.cwd(), 'trend-digest-summary.md'); // gitignored, Actions step summary
 
 const sources = [
   { name: 'bluesky', run: fetchBluesky },
@@ -42,7 +43,12 @@ const { items: bareItems, selected, stats } = runPipeline(candidates);
 const items = await enrichWithImages(bareItems);
 
 const generatedAt = new Date().toISOString();
-writeFileSync(OUT_PATH, `${JSON.stringify({ generatedAt, items }, null, 2)}\n`);
+// Auto-publish (D-022): never create an empty journal day. If gating left nothing,
+// write only the summary and skip OUT_PATH — the workflow's porcelain check then
+// sees no change and publishes nothing, rather than shipping a blank /journal/<date>.
+if (items.length > 0) {
+  writeFileSync(OUT_PATH, `${JSON.stringify({ generatedAt, items }, null, 2)}\n`);
+}
 writeFileSync(SUMMARY_PATH, renderSummary(selected, stats, generatedAt));
 
 const droppedNote = Object.entries(stats.dropped)
@@ -52,7 +58,11 @@ console.log(
   `Funnel: ${stats.fetched} fetched → ${stats.deduped} deduped → ${stats.gated} gated` +
     `${droppedNote ? ` (dropped: ${droppedNote})` : ''} → ${stats.selected} selected`,
 );
-console.log(`Wrote ${items.length} items to ${OUT_PATH}`);
+console.log(
+  items.length > 0
+    ? `Wrote ${items.length} items to ${OUT_PATH}`
+    : 'No items after gating — nothing published today (empty day skipped).',
+);
 
 function mdSafe(text) {
   return text.replace(/\s+/g, ' ').replace(/[[\]]/g, '').trim();
@@ -70,9 +80,9 @@ function scoreBreakdown(c) {
 
 function renderSummary(picked, funnel, timestamp) {
   const lines = [
-    'Automated daily trend scan (Bluesky, Hacker News, Reddit). **Review before merging** — ',
-    'merging publishes this day to the /journal archive and surfaces the latest entry on /resources "Signals we\'re tracking". Prune anything ',
-    'the gates missed by editing `src/content/journal/YYYY-MM-DD.json` in this PR, then merge.',
+    'Automated daily trend scan (Bluesky, Hacker News, Reddit) — **auto-published** to the ',
+    '/journal archive and surfaced as the latest entry on /resources "Signals we\'re tracking". ',
+    'To remove anything the gates missed, edit or revert `src/content/journal/YYYY-MM-DD.json` on main.',
     '',
     `**Funnel:** ${funnel.fetched} fetched → ${funnel.deduped} after dedupe → ${funnel.gated} passed gates` +
       `${Object.keys(funnel.dropped).length ? ` (dropped: ${Object.entries(funnel.dropped).map(([r, n]) => `${n} ${r}`).join(', ')})` : ''} → ${funnel.selected} selected`,

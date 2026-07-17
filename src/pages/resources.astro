@@ -124,8 +124,8 @@ const tools = [
   </section>
 
   {/* Signals we're tracking (D-012/D-013/D-017): data is src/content/journal/YYYY-MM-DD.json
-      (persistent daily journal collection), latest entry surfaced here. Produced daily
-      by the gated digest pipeline and merged via PR — nothing here fetches at runtime.
+      (persistent daily journal collection), latest entry surfaced here. Produced and
+      auto-published daily by the gated digest pipeline (D-022) — nothing here fetches at runtime.
       Thumbnails are self-hosted /trends/*.webp (never hotlinked — the "no tracking"
       claim depends on that). Items without thumbnail get pillar-tinted fallback.
       Fixed aspect boxes = no CLS; no backdrop-filter (D-006). Gear re-ranking (D-017):

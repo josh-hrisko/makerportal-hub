@@ -2,18 +2,24 @@ name: Trend digest
 
 on:
   schedule:
-    - cron: '0 14 * * *' # daily 14:00 UTC (06:00 PT) — D-017 tabled idea, re-ranks Gear via pillar tags
+    - cron: '0 14 * * *' # daily 14:00 UTC (06:00 PT) — publishes that day's Signals Journal entry
   workflow_dispatch: {}
 
 permissions:
   contents: write
-  pull-requests: write
+
+# Prevent overlapping runs from racing on the direct push to main.
+concurrency:
+  group: trends-digest
+  cancel-in-progress: false
 
 jobs:
   digest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-node@v4
         with:
@@ -24,11 +30,15 @@ jobs:
       - name: Install ImageMagick (og:image thumbnails)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends imagemagick
 
+      # Gate regression tests are the automated safety net that stands in for the
+      # removed human PR review (D-022) — a failure here aborts before anything publishes.
       - name: Pipeline gate tests
         run: node --test scripts/trends/pipeline.test.mjs
 
       - name: Build trend digest
-        # Writes src/content/journal/YYYY-MM-DD.json + summary md
+        # Writes src/content/journal/YYYY-MM-DD.json (+ public/trends thumbnails) and
+        # trend-digest-summary.md (surfaced below as the run's step summary). Writes no
+        # journal file when gating leaves nothing, so an empty day never publishes.
         run: node scripts/trends/build-digest.mjs
         env:
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
@@ -36,36 +46,30 @@ jobs:
           BLUESKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
 
-      - name: Open review PR if trends changed
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Publish that day's journal entry directly if changed
         run: |
           # Each run writes a NEW src/content/journal/YYYY-MM-DD.json, which is an
-          # UNTRACKED file relative to main — `git diff` never reports untracked
-          # files, so `git status --porcelain` is required to detect the new day
-          # (also catches same-day re-runs that modify the file and new thumbnails).
+          # UNTRACKED file relative to main — `git diff` never reports untracked files,
+          # so `git status --porcelain` is required to detect the new day (also catches
+          # same-day re-runs and new/removed thumbnails).
           if [ -z "$(git status --porcelain -- src/content/journal/ public/trends)" ]; then
-            echo "No trend changes — skipping PR."
-            exit 0
+            echo "No trend changes detected. Skipping publish."
+          else
+            git config user.name "makerportal-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add -A src/content/journal/
+            if [ -d public/trends ]; then git add -A public/trends; fi
+            git commit -m "Signals Journal: $(date -u +%Y-%m-%d)"
+            # Direct-to-main push can be rejected if main advanced since checkout
+            # (e.g. a globe-data-digest run pushed). Rebase+retry only on rejection.
+            git push origin main || (git pull --rebase origin main && git push origin main)
           fi
 
-          branch="trends/digest-$(date +%Y-%m-%d)"
-          git checkout -b "$branch"
-          git config user.name "makerportal-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A src/content/journal/
-          if [ -d public/trends ]; then git add -A public/trends; fi
-          git commit -m "Trend digest: $(date +%Y-%m-%d)"
-          # Force-push so a same-day re-run updates the existing digest branch/PR
-          git push --force origin "$branch"
-
-          if [ "$(gh pr list --head "$branch" --state open --json number --jq 'length')" = "0" ]; then
-            gh pr create \
-              --title "Trend digest — $(date +%Y-%m-%d)" \
-              --body-file trend-digest-summary.md \
-              --base main \
-              --head "$branch"
-          else
-            echo "PR already open for $branch — updating body."
-            gh pr edit "$branch" --body-file trend-digest-summary.md
+      - name: Publish step summary
+        if: always()
+        run: |
+          # Pillar-grouped breakdown of what published this run — the "skim what
+          # shipped" value the old PR body gave, now attached to the Actions run.
+          if [ -f trend-digest-summary.md ]; then
+            cat trend-digest-summary.md >> "$GITHUB_STEP_SUMMARY"
           fi
