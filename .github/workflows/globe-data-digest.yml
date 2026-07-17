@@ -43,7 +43,10 @@ jobs:
             git config user.email "actions@users.noreply.github.com"
             git add src/data/weather.json src/data/satellite.json
             git commit -m "Globe data update (weather + TLE): $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push origin main
+            # Direct-to-main push can be rejected if main advanced since checkout
+            # (e.g. a trends PR merged). Only rebase+retry on rejection so the happy
+            # path stays a single push. Rebases cleanly: nothing else touches these two files.
+            git push origin main || (git pull --rebase origin main && git push origin main)
           else
             echo "No weather or TLE changes detected. Skipping update."
           fi

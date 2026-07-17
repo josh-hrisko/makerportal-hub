@@ -40,7 +40,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if git diff --quiet -- src/content/journal/; then
+          # Each run writes a NEW src/content/journal/YYYY-MM-DD.json, which is an
+          # UNTRACKED file relative to main — `git diff` never reports untracked
+          # files, so `git status --porcelain` is required to detect the new day
+          # (also catches same-day re-runs that modify the file and new thumbnails).
+          if [ -z "$(git status --porcelain -- src/content/journal/ public/trends)" ]; then
             echo "No trend changes — skipping PR."
             exit 0
           fi

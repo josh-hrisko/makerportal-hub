@@ -105,12 +105,14 @@ const avgSignals = sortedJournals.length ? Math.round(totalSignals / sortedJourn
               const dStr = entry.id;
               const latest = idx === 0;
               const items = entry.data.items as TrendItem[];
-              const uniqueTags = [...new Set(items.flatMap((item: any) => item.tags ?? []))];
-              const topTag = uniqueTags[0];
-              const accentCol = topTag ? pillarOf(topTag).color : '#4C6492';
               const tagCounts = {} as any;
               for (const it of items) for (const t of (it as any).tags ?? []) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
               const sortedTagEntries = Object.entries(tagCounts).sort((a: any,b: any) => (b[1] as number)-(a[1] as number)).slice(0,4);
+              // Top pillar = most frequent tag of the day, so the accent bar and the
+              // "Top pillar" label agree with the frequency-sorted chips below (rather
+              // than reflecting whichever tag the first item happened to list first).
+              const topTag = sortedTagEntries[0]?.[0] as string | undefined;
+              const accentCol = topTag ? pillarOf(topTag).color : '#4C6492';
               const topThreePreview = [...items].sort((a, b) => b.score - a.score).slice(0, 3);
 
               return (
