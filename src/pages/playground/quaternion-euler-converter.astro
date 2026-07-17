@@ -1,0 +1,1069 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Quaternion to Euler Angle Converter (and back) — Swift, verified round-trip | MakerPortal';
+const description =
+  `Convert quaternion attitude to yaw/pitch/roll and back, with a live 3D orientation preview and copyable Swift — the exact math from MotionLink\u2019s CMHeadphoneMotionManager handling.`;
+const canonical = new URL('/tools/quaternion-euler-converter', Astro.site);
+
+const quatToEulerSwift = `func yawPitchRoll(from q: CMQuaternion) -> (yaw: Double, pitch: Double, roll: Double) {
+    let yaw = atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+    let pitch = asin(max(-1, min(1, 2 * (q.w * q.y - q.z * q.x))))
+    let roll = atan2(2 * (q.w * q.x + q.y * q.z), 1 - 2 * (q.x * q.x + q.y * q.y))
+    return (yaw, pitch, roll)
+}`;
+
+const eulerToQuatSwift = `func quaternion(fromYaw yaw: Double, pitch: Double, roll: Double) -> CMQuaternion {
+    let cy = cos(yaw * 0.5), sy = sin(yaw * 0.5)
+    let cp = cos(pitch * 0.5), sp = sin(pitch * 0.5)
+    let cr = cos(roll * 0.5), sr = sin(roll * 0.5)
+    return CMQuaternion(
+        x: sr * cp * cy - cr * sp * sy,
+        y: cr * sp * cy + sr * cp * sy,
+        z: cr * cp * sy - sr * sp * cy,
+        w: cr * cp * cy + sr * sp * sy
+    )
+}`;
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Quaternion to Euler Angle Converter',
+  url: canonical.toString(),
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  isPartOf: { '@type': 'SoftwareApplication', name: 'MotionLink', url: 'https://makersportal.com/apps/motionlink' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Quaternion ↔ Euler Converter', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Quaternion ↔ Euler Converter"
+    lead="Convert quaternion attitude to yaw/pitch/roll and back, both directions, live. Same round-trip-verified formulas — including the gimbal-lock clamp — as MotionLink's CMHeadphoneMotionManager handling."
+    pillarHint="ios-craft"
+    isGrounded={true}
+    relatedApp="MotionLink"
+    relatedAppUrl="https://makersportal.com/apps/motionlink"
+    relatedFieldNote="motionlink-headphone-motion-api"
+  >
+    <section class="border-b border-border" aria-labelledby="preview-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live preview</h2>
+        <p class="max-w-2xl text-[0.95rem] text-muted-text">
+          A 3D quadcopter drone, driven by whichever panel you last edited. The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag to rotate. Hold <strong>Shift</strong> to roll.
+        </p>
+        <p id="preview-source" class="mt-2 font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
+        <div class="mt-10 flex flex-col items-center gap-10 lg:flex-row lg:justify-center">
+          <div class="quat-canvas-wrap" aria-hidden="true">
+            <canvas id="quat-canvas" width="520" height="440"></canvas>
+          </div>
+          <dl class="grid grid-cols-3 gap-6 font-mono text-center sm:gap-10" aria-live="polite">
+            <div>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Yaw</dt>
+              <dd id="preview-yaw" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
+            </div>
+            <div>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Pitch</dt>
+              <dd id="preview-pitch" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
+            </div>
+            <div>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Roll</dt>
+              <dd id="preview-roll" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="converters-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="converters-title" class="sr-only">Converters</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div class="rounded-[20px] border border-border bg-card-bg p-6 sm:p-7">
+            <h3 class="text-[1.05rem] font-semibold text-primary-text">Quaternion → Euler</h3>
+            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">Same as <code>yawPitchRoll(from:)</code> below. Arbitrary input is auto-normalized to unit length first.</p>
+            <div class="mt-5 grid grid-cols-2 gap-4">
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">x</span>
+                <input type="number" step="0.001" id="q-x" value="0.2393" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">y</span>
+                <input type="number" step="0.001" id="q-y" value="0.1893" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">z</span>
+                <input type="number" step="0.001" id="q-z" value="0.0381" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">w</span>
+                <input type="number" step="0.001" id="q-w" value="0.9515" class="tool-input" />
+              </label>
+            </div>
+            <p id="q-norm-note" class="mt-3 text-[0.72rem] text-muted-text">Magnitude: 1.0000 (already unit length)</p>
+            <div class="mt-5 grid grid-cols-3 gap-4 border-t border-border pt-5 font-mono" aria-live="polite">
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">Yaw</p>
+                <p id="q-yaw" class="mt-1 text-[1.1rem] font-semibold text-primary-text">0.00°</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">Pitch</p>
+                <p id="q-pitch" class="mt-1 text-[1.1rem] font-semibold text-primary-text">0.00°</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">Roll</p>
+                <p id="q-roll" class="mt-1 text-[1.1rem] font-semibold text-primary-text">0.00°</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-[20px] border border-border bg-card-bg p-6 sm:p-7">
+            <h3 class="text-[1.05rem] font-semibold text-primary-text">Euler → Quaternion</h3>
+            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">The reverse direction — <code>quaternion(fromYaw:pitch:roll:)</code> below. Degrees in, unit quaternion out.</p>
+            <div class="mt-5 grid grid-cols-3 gap-4">
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Yaw°</span>
+                <input type="number" step="0.1" id="e-yaw" value="10" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Pitch°</span>
+                <input type="number" step="0.1" id="e-pitch" value="20" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Roll°</span>
+                <input type="number" step="0.1" id="e-roll" value="30" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-8 grid grid-cols-4 gap-3 border-t border-border pt-5 font-mono" aria-live="polite">
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">x</p>
+                <p id="e-x" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">y</p>
+                <p id="e-y" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">z</p>
+                <p id="e-z" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+              <div>
+                <p class="text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">w</p>
+                <p id="e-w" class="mt-1 text-[0.95rem] font-semibold text-primary-text">0.0000</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Gimbal-lock clamp</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Floating-point drift can push the pitch <code>asin</code> argument fractionally outside <code>[-1, 1]</code>, returning <code>NaN</code> that silently propagates downstream. Clamp it — the tool above does, try feeding it an extreme quaternion.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Relative reference frame</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">On real hardware (<code>CMHeadphoneMotionManager</code>), the "zero" orientation is wherever the headphones were facing when tracking started — not gravity/north-referenced. This calculator has no such frame; that gotcha only applies on-device.</p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.85rem] text-muted-text">Full writeup, including why this cost an afternoon on real AirPods Pro: <a href="/blog/motionlink-headphone-motion-api" class="text-brand-anchor hover:text-primary-text">the field note →</a></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Swift, both directions</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Copy either function directly — this is the same code driving the converters above.</p>
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Quaternion → Euler</p>
+              <button type="button" class="copy-btn" data-copy-target="code-quat-to-euler">Copy</button>
+            </div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+              <Code id="code-quat-to-euler" code={quatToEulerSwift} lang="swift" theme="github-dark" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Euler → Quaternion</p>
+              <button type="button" class="copy-btn" data-copy-target="code-euler-to-quat">Copy</button>
+            </div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+              <Code id="code-euler-to-quat" code={eulerToQuatSwift} lang="swift" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .tool-input {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.5rem 0.7rem;
+    font-size: 0.9rem;
+    color: var(--mp-text);
+  }
+  .tool-input:focus {
+    outline: none;
+    border-color: var(--mp-cta);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-cta) 20%, transparent);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .quat-canvas-wrap {
+    border-radius: 20px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-card);
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+    max-width: 520px;
+    width: 100%;
+  }
+  .quat-canvas-wrap:active {
+    cursor: grabbing;
+  }
+  #quat-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--mp-canvas);
+  }
+</style>
+
+<script>
+  // ====================================================================
+  // Math core — identical to the Swift functions and the converter panels
+  // ====================================================================
+  function clamp(n: number, lo: number, hi: number): number {
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function yawPitchRoll(x: number, y: number, z: number, w: number) {
+    const yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+    const pitch = Math.asin(clamp(2 * (w * y - z * x), -1, 1));
+    const roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+    return { yaw, pitch, roll };
+  }
+
+  function quaternionFromEuler(yaw: number, pitch: number, roll: number) {
+    const cy = Math.cos(yaw * 0.5), sy = Math.sin(yaw * 0.5);
+    const cp = Math.cos(pitch * 0.5), sp = Math.sin(pitch * 0.5);
+    const cr = Math.cos(roll * 0.5), sr = Math.sin(roll * 0.5);
+    return {
+      x: sr * cp * cy - cr * sp * sy,
+      y: cr * sp * cy + sr * cp * sy,
+      z: cr * cp * sy - sr * sp * cy,
+      w: cr * cp * cy + sr * sp * sy,
+    };
+  }
+
+  const degFromRad = (rad: number) => (rad * 180) / Math.PI;
+  const radFromDeg = (d: number) => (d * Math.PI) / 180;
+  const fmtDeg = (r: number) => `${degFromRad(r).toFixed(2)}°`;
+  const fmtNum = (n: number) => n.toFixed(4);
+
+  // ====================================================================
+  // Quaternion → 3×3 Rotation Matrix
+  // ====================================================================
+  type Mat3 = [number, number, number, number, number, number, number, number, number];
+  type Vec3 = [number, number, number];
+
+  function quatToMatrix(x: number, y: number, z: number, w: number): Mat3 {
+    const xx = x * x, yy = y * y, zz = z * z;
+    const xy = x * y, xz = x * z, yz = y * z;
+    const wx = w * x, wy = w * y, wz = w * z;
+    return [
+      1 - 2 * (yy + zz), 2 * (xy - wz),     2 * (xz + wy),
+      2 * (xy + wz),     1 - 2 * (xx + zz),  2 * (yz - wx),
+      2 * (xz - wy),     2 * (yz + wx),      1 - 2 * (xx + yy),
+    ];
+  }
+
+  function mulMat3Vec3(m: Mat3, v: Vec3): Vec3 {
+    return [
+      m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+      m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
+      m[6] * v[0] + m[7] * v[1] + m[8] * v[2],
+    ];
+  }
+
+  // ====================================================================
+  // Quaternion algebra for drag interaction
+  // ====================================================================
+  type Quat = { x: number; y: number; z: number; w: number };
+
+  function quatMul(a: Quat, b: Quat): Quat {
+    return {
+      w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+      x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+      y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+      z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+    };
+  }
+
+  function quatNormalize(q: Quat): Quat {
+    const mag = Math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+    if (mag < 1e-10) return { x: 0, y: 0, z: 0, w: 1 };
+    return { x: q.x / mag, y: q.y / mag, z: q.z / mag, w: q.w / mag };
+  }
+
+  function quatFromAxisAngle(axis: Vec3, angle: number): Quat {
+    const ha = angle * 0.5;
+    const s = Math.sin(ha);
+    return { x: axis[0] * s, y: axis[1] * s, z: axis[2] * s, w: Math.cos(ha) };
+  }
+
+  // ====================================================================
+  // 3D Drone Model — high-poly procedural build
+  // ====================================================================
+  interface Face {
+    verts: number[];
+    color: [number, number, number];
+    isNose?: boolean;
+    isProp?: boolean;  // propeller disc — rendered with transparency
+  }
+
+  function buildDroneModel(): { verts: Vec3[]; faces: Face[] } {
+    const verts: Vec3[] = [];
+    const faces: Face[] = [];
+
+    // Premium curated color palette (steel/slate blues with warm accent)
+    const bodyColor: [number, number, number] = [62, 78, 102];
+    const bodyTopColor: [number, number, number] = [82, 105, 138];
+    const bodyBevelColor: [number, number, number] = [72, 90, 118];
+    const armColor: [number, number, number] = [52, 62, 78];
+    const armTopColor: [number, number, number] = [58, 72, 92];
+    const hubColor: [number, number, number] = [45, 55, 70];
+    const hubTopColor: [number, number, number] = [75, 95, 125];
+    const propColor: [number, number, number] = [120, 148, 180];
+    const noseColor: [number, number, number] = [210, 62, 72];
+    const ledColor: [number, number, number] = [60, 220, 130];
+
+    // --- Central body: 24-sided cylinder (appears perfectly round) ---
+    const bodyR = 0.22;
+    const bodyH = 0.055;
+    const bevelH = 0.02;
+    const bevelR = bodyR * 0.92;
+    const nSides = 24;
+
+    // Top ring (bevel)
+    const topBevelStart = verts.length;
+    for (let i = 0; i < nSides; i++) {
+      const a = (i / nSides) * Math.PI * 2;
+      verts.push([bevelR * Math.cos(a), bodyH + bevelH, bevelR * Math.sin(a)]);
+    }
+    // Top ring (main)
+    const bodyTopStart = verts.length;
+    for (let i = 0; i < nSides; i++) {
+      const a = (i / nSides) * Math.PI * 2;
+      verts.push([bodyR * Math.cos(a), bodyH, bodyR * Math.sin(a)]);
+    }
+    // Bottom ring (main)
+    const bodyBotStart = verts.length;
+    for (let i = 0; i < nSides; i++) {
+      const a = (i / nSides) * Math.PI * 2;
+      verts.push([bodyR * Math.cos(a), -bodyH, bodyR * Math.sin(a)]);
+    }
+    // Bottom ring (bevel)
+    const botBevelStart = verts.length;
+    for (let i = 0; i < nSides; i++) {
+      const a = (i / nSides) * Math.PI * 2;
+      verts.push([bevelR * Math.cos(a), -bodyH - bevelH, bevelR * Math.sin(a)]);
+    }
+
+    // Top cap (bevel top face)
+    faces.push({ verts: Array.from({ length: nSides }, (_, i) => topBevelStart + i), color: bodyTopColor });
+    // Bottom cap (bevel bottom face)
+    faces.push({ verts: Array.from({ length: nSides }, (_, i) => botBevelStart + (nSides - 1 - i)), color: bodyColor });
+    // Bevel top → main top
+    for (let i = 0; i < nSides; i++) {
+      const j = (i + 1) % nSides;
+      faces.push({
+        verts: [topBevelStart + i, topBevelStart + j, bodyTopStart + j, bodyTopStart + i],
+        color: bodyBevelColor,
+      });
+    }
+    // Main top → main bottom (side quads)
+    for (let i = 0; i < nSides; i++) {
+      const j = (i + 1) % nSides;
+      faces.push({
+        verts: [bodyTopStart + i, bodyTopStart + j, bodyBotStart + j, bodyBotStart + i],
+        color: bodyColor,
+      });
+    }
+    // Main bottom → bevel bottom
+    for (let i = 0; i < nSides; i++) {
+      const j = (i + 1) % nSides;
+      faces.push({
+        verts: [bodyBotStart + i, bodyBotStart + j, botBevelStart + j, botBevelStart + i],
+        color: bodyBevelColor,
+      });
+    }
+
+    // --- Four arms at 45°, 135°, 225°, 315° ---
+    const armAngles = [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75];
+    const armLen = 0.56;
+    const armW = 0.04;
+    const armH = 0.022;
+
+    for (let ai = 0; ai < 4; ai++) {
+      const angle = armAngles[ai];
+      const dx = Math.cos(angle);
+      const dz = Math.sin(angle);
+      const px = -dz;
+      const pz = dx;
+
+      const startDist = bodyR * 0.68;
+      const endDist = armLen;
+
+      const armStart = verts.length;
+      const ntl: Vec3 = [dx * startDist - px * armW, armH, dz * startDist - pz * armW];
+      const ntr: Vec3 = [dx * startDist + px * armW, armH, dz * startDist + pz * armW];
+      const ftl: Vec3 = [dx * endDist - px * armW, armH, dz * endDist - pz * armW];
+      const ftr: Vec3 = [dx * endDist + px * armW, armH, dz * endDist + pz * armW];
+      const nbl: Vec3 = [dx * startDist - px * armW, -armH, dz * startDist - pz * armW];
+      const nbr: Vec3 = [dx * startDist + px * armW, -armH, dz * startDist + pz * armW];
+      const fbl: Vec3 = [dx * endDist - px * armW, -armH, dz * endDist - pz * armW];
+      const fbr: Vec3 = [dx * endDist + px * armW, -armH, dz * endDist + pz * armW];
+
+      verts.push(ntl, ntr, ftr, ftl, nbl, nbr, fbr, fbl);
+
+      faces.push({ verts: [armStart, armStart + 1, armStart + 2, armStart + 3], color: armTopColor });
+      faces.push({ verts: [armStart + 7, armStart + 6, armStart + 5, armStart + 4], color: armColor });
+      faces.push({ verts: [armStart, armStart + 3, armStart + 7, armStart + 4], color: armColor });
+      faces.push({ verts: [armStart + 1, armStart + 5, armStart + 6, armStart + 2], color: armColor });
+      faces.push({ verts: [armStart + 3, armStart + 2, armStart + 6, armStart + 7], color: armColor });
+
+      // --- Motor hub: 12-sided cylinder (smoother) ---
+      const hubR = 0.052;
+      const hubH = 0.042;
+      const hubN = 12;
+      const tipX = dx * endDist;
+      const tipZ = dz * endDist;
+
+      const hubTopStart = verts.length;
+      for (let i = 0; i < hubN; i++) {
+        const a = (i / hubN) * Math.PI * 2;
+        verts.push([tipX + hubR * Math.cos(a), armH + hubH, tipZ + hubR * Math.sin(a)]);
+      }
+      const hubBotStart = verts.length;
+      for (let i = 0; i < hubN; i++) {
+        const a = (i / hubN) * Math.PI * 2;
+        verts.push([tipX + hubR * Math.cos(a), armH, tipZ + hubR * Math.sin(a)]);
+      }
+      faces.push({ verts: Array.from({ length: hubN }, (_, i) => hubTopStart + i), color: hubTopColor });
+      faces.push({ verts: Array.from({ length: hubN }, (_, i) => hubBotStart + (hubN - 1 - i)), color: hubColor });
+      for (let i = 0; i < hubN; i++) {
+        const j = (i + 1) % hubN;
+        faces.push({ verts: [hubTopStart + i, hubTopStart + j, hubBotStart + j, hubBotStart + i], color: hubColor });
+      }
+
+      // --- Propeller: two blades + central disc ---
+      const propR = 0.15;
+      const propY = armH + hubH + 0.006;
+
+      // Blade 1 (elongated, rotated)
+      const bladeW = 0.028;
+      const bladeAngle = angle + Math.PI * 0.15; // slightly offset from arm
+      const bCos = Math.cos(bladeAngle), bSin = Math.sin(bladeAngle);
+      const bpx = -bSin, bpz = bCos; // perpendicular to blade direction
+
+      const b1Start = verts.length;
+      verts.push(
+        [tipX + bCos * propR + bpx * bladeW, propY, tipZ + bSin * propR + bpz * bladeW],
+        [tipX + bCos * propR - bpx * bladeW, propY, tipZ + bSin * propR - bpz * bladeW],
+        [tipX - bCos * propR - bpx * bladeW, propY, tipZ - bSin * propR - bpz * bladeW],
+        [tipX - bCos * propR + bpx * bladeW, propY, tipZ - bSin * propR + bpz * bladeW],
+      );
+      faces.push({ verts: [b1Start, b1Start + 1, b1Start + 2, b1Start + 3], color: propColor, isProp: true });
+      faces.push({ verts: [b1Start + 3, b1Start + 2, b1Start + 1, b1Start], color: propColor, isProp: true });
+
+      // Blade 2 (perpendicular to blade 1)
+      const blade2Angle = bladeAngle + Math.PI * 0.5;
+      const b2Cos = Math.cos(blade2Angle), b2Sin = Math.sin(blade2Angle);
+      const b2px = -b2Sin, b2pz = b2Cos;
+
+      const b2Start = verts.length;
+      verts.push(
+        [tipX + b2Cos * propR + b2px * bladeW, propY, tipZ + b2Sin * propR + b2pz * bladeW],
+        [tipX + b2Cos * propR - b2px * bladeW, propY, tipZ + b2Sin * propR - b2pz * bladeW],
+        [tipX - b2Cos * propR - b2px * bladeW, propY, tipZ - b2Sin * propR - b2pz * bladeW],
+        [tipX - b2Cos * propR + b2px * bladeW, propY, tipZ - b2Sin * propR + b2pz * bladeW],
+      );
+      faces.push({ verts: [b2Start, b2Start + 1, b2Start + 2, b2Start + 3], color: propColor, isProp: true });
+      faces.push({ verts: [b2Start + 3, b2Start + 2, b2Start + 1, b2Start], color: propColor, isProp: true });
+
+      // --- LED indicator on rear arms (small triangle) ---
+      if (ai >= 2) {
+        const ledStart = verts.length;
+        const ledDist = startDist + (endDist - startDist) * 0.4;
+        const ledSize = 0.015;
+        verts.push(
+          [dx * ledDist, armH + 0.003, dz * ledDist - ledSize],
+          [dx * ledDist + ledSize * 1.5, armH + 0.003, dz * ledDist],
+          [dx * ledDist, armH + 0.003, dz * ledDist + ledSize],
+        );
+        faces.push({ verts: [ledStart, ledStart + 1, ledStart + 2], color: ledColor, isNose: true });
+        faces.push({ verts: [ledStart + 2, ledStart + 1, ledStart], color: ledColor, isNose: true });
+      }
+    }
+
+    // --- Nose indicator: chevron on the "front" direction (+X) ---
+    const noseStart = verts.length;
+    const noseLen = 0.14;
+    const noseW = 0.055;
+    const noseInner = 0.07;
+    const noseY = bodyH + bevelH + 0.004;
+    const noseDist = bodyR * 0.55;
+    // Outer chevron
+    verts.push(
+      [noseDist + noseLen, noseY, 0],             // tip
+      [noseDist, noseY, -noseW],                   // left
+      [noseDist + noseInner, noseY, 0],            // inner notch
+      [noseDist, noseY, noseW],                    // right
+    );
+    faces.push({ verts: [noseStart, noseStart + 1, noseStart + 2], color: noseColor, isNose: true });
+    faces.push({ verts: [noseStart, noseStart + 2, noseStart + 3], color: noseColor, isNose: true });
+    faces.push({ verts: [noseStart + 2, noseStart + 1, noseStart], color: noseColor, isNose: true });
+    faces.push({ verts: [noseStart + 3, noseStart + 2, noseStart], color: noseColor, isNose: true });
+
+    return { verts, faces };
+  }
+
+  // ====================================================================
+  // HiDPI Canvas Setup
+  // ====================================================================
+  const canvas = document.getElementById('quat-canvas') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x for performance
+  const CW = canvas.width;   // CSS logical pixels (520)
+  const CH = canvas.height;  // CSS logical pixels (440)
+
+  // Scale the canvas buffer for crisp rendering on HiDPI displays
+  canvas.width = CW * dpr;
+  canvas.height = CH * dpr;
+  canvas.style.width = `${CW}px`;
+  canvas.style.height = `${CH}px`;
+  ctx.scale(dpr, dpr);
+
+  const scale = Math.min(CW, CH) * 0.72;
+  const droneModel = buildDroneModel();
+
+  // ====================================================================
+  // Lighting — two-light setup for richer shading
+  // ====================================================================
+  const lightDir: Vec3 = (() => {
+    const l: Vec3 = [0.3, 0.8, 0.5];
+    const m = Math.hypot(...l);
+    return [l[0] / m, l[1] / m, l[2] / m] as Vec3;
+  })();
+
+  // Fill light (dimmer, from opposite side)
+  const fillDir: Vec3 = (() => {
+    const l: Vec3 = [-0.5, 0.3, -0.3];
+    const m = Math.hypot(...l);
+    return [l[0] / m, l[1] / m, l[2] / m] as Vec3;
+  })();
+
+  // View direction for specular (looking down -Z in orthographic)
+  const viewDir: Vec3 = [0, 0, 1];
+
+  function resolveColor(varName: string, fallback: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+  }
+
+  function getThemeColors() {
+    return {
+      canvas: resolveColor('--mp-canvas', '#f8f4ed'),
+      text: resolveColor('--mp-text', '#16202e'),
+      muted: resolveColor('--mp-muted', '#4a5d6f'),
+      border: resolveColor('--mp-border', 'rgba(22,32,46,0.12)'),
+      cta: resolveColor('--mp-cta', '#b8324f'),
+    };
+  }
+
+  function computeFaceNormal(projected: { x: number; y: number }[]): number {
+    if (projected.length < 3) return 0;
+    const a = projected[0], b = projected[1], c = projected[2];
+    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  }
+
+  // ====================================================================
+  // Blinn-Phong shading
+  // ====================================================================
+  function blinnPhong(
+    normal: Vec3,
+    baseColor: [number, number, number],
+    isNose: boolean,
+    isProp: boolean,
+  ): { r: number; g: number; b: number; a: number } {
+    if (isNose) {
+      // Nose/LED always vivid, slight shading only
+      const dot = normal[0] * lightDir[0] + normal[1] * lightDir[1] + normal[2] * lightDir[2];
+      const shade = clamp(0.7 + Math.max(0, dot) * 0.3, 0, 1);
+      return {
+        r: Math.round(baseColor[0] * shade),
+        g: Math.round(baseColor[1] * shade),
+        b: Math.round(baseColor[2] * shade),
+        a: 1,
+      };
+    }
+
+    // Ambient
+    const ambient = 0.28;
+
+    // Key light diffuse
+    const dotKey = normal[0] * lightDir[0] + normal[1] * lightDir[1] + normal[2] * lightDir[2];
+    const diffuseKey = Math.max(0, dotKey) * 0.52;
+
+    // Fill light diffuse (softer)
+    const dotFill = normal[0] * fillDir[0] + normal[1] * fillDir[1] + normal[2] * fillDir[2];
+    const diffuseFill = Math.max(0, dotFill) * 0.15;
+
+    // Blinn-Phong specular (key light only)
+    const halfVec: Vec3 = [
+      lightDir[0] + viewDir[0],
+      lightDir[1] + viewDir[1],
+      lightDir[2] + viewDir[2],
+    ];
+    const hLen = Math.hypot(...halfVec);
+    if (hLen > 0) { halfVec[0] /= hLen; halfVec[1] /= hLen; halfVec[2] /= hLen; }
+    const specDot = normal[0] * halfVec[0] + normal[1] * halfVec[1] + normal[2] * halfVec[2];
+    const specular = Math.pow(Math.max(0, specDot), 32) * 0.35;
+
+    const shade = clamp(ambient + diffuseKey + diffuseFill, 0, 1);
+
+    let r = Math.round(baseColor[0] * shade + 255 * specular);
+    let g = Math.round(baseColor[1] * shade + 255 * specular);
+    let b = Math.round(baseColor[2] * shade + 255 * specular);
+    r = Math.min(255, r);
+    g = Math.min(255, g);
+    b = Math.min(255, b);
+
+    return { r, g, b, a: isProp ? 0.5 : 1 };
+  }
+
+  // ====================================================================
+  // 3D Renderer
+  // ====================================================================
+  function render3D(rotMatrix: Mat3) {
+    const tc = getThemeColors();
+
+    ctx.clearRect(0, 0, CW, CH);
+
+    // Ambient radial glow behind the drone
+    const glow = ctx.createRadialGradient(CW / 2, CH / 2 - 10, 0, CW / 2, CH / 2 - 10, scale * 0.6);
+    glow.addColorStop(0, 'rgba(130,160,200,0.08)');
+    glow.addColorStop(0.6, 'rgba(130,160,200,0.03)');
+    glow.addColorStop(1, 'rgba(130,160,200,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, CW, CH);
+
+    // Subtle background grid
+    ctx.strokeStyle = tc.border;
+    ctx.lineWidth = 0.5;
+    ctx.globalAlpha = 0.2;
+    const gridStep = 32;
+    for (let gx = gridStep; gx < CW; gx += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, CH);
+      ctx.stroke();
+    }
+    for (let gy = gridStep; gy < CH; gy += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(CW, gy);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Transform all vertices
+    const transformed = droneModel.verts.map((v) => mulMat3Vec3(rotMatrix, v));
+
+    // Orthographic projection: X→right, Y→up (negate for canvas), Z→depth
+    const projected = transformed.map((v) => ({
+      x: CW / 2 + v[0] * scale,
+      y: CH / 2 - v[1] * scale,
+      z: v[2],
+    }));
+
+    // Collect face data for sorting
+    const faceData = droneModel.faces.map((face, fi) => {
+      const pts = face.verts.map((vi) => projected[vi]);
+      const avgZ = pts.reduce((s, p) => s + p.z, 0) / pts.length;
+
+      const p0 = transformed[face.verts[0]];
+      const p1 = transformed[face.verts[1]];
+      const p2 = transformed[face.verts[2]];
+      const e1: Vec3 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+      const e2: Vec3 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+      const normal: Vec3 = [
+        e1[1] * e2[2] - e1[2] * e2[1],
+        e1[2] * e2[0] - e1[0] * e2[2],
+        e1[0] * e2[1] - e1[1] * e2[0],
+      ];
+      const nLen = Math.hypot(...normal);
+      if (nLen > 0) { normal[0] /= nLen; normal[1] /= nLen; normal[2] /= nLen; }
+
+      return { fi, pts, avgZ, normal };
+    });
+
+    // Painter's algorithm: sort back-to-front
+    faceData.sort((a, b) => a.avgZ - b.avgZ);
+
+    // --- Ground shadow (projected ellipse that tracks rotation) ---
+    const shadowY = CH * 0.82;
+    // Use the rotated Y-axis to shift shadow position
+    const rotY = mulMat3Vec3(rotMatrix, [0, 1, 0]);
+    const shadowOffX = rotY[0] * scale * 0.08;
+    ctx.save();
+    ctx.globalAlpha = 0.07;
+    const shadowGrad = ctx.createRadialGradient(
+      CW / 2 + shadowOffX, shadowY, 0,
+      CW / 2 + shadowOffX, shadowY, scale * 0.38
+    );
+    shadowGrad.addColorStop(0, tc.text);
+    shadowGrad.addColorStop(0.7, tc.text);
+    shadowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = shadowGrad;
+    ctx.beginPath();
+    ctx.ellipse(CW / 2 + shadowOffX, shadowY, scale * 0.38, scale * 0.05, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // --- Draw reference axes with arrow tips ---
+    const axisLen = 0.42;
+    const axes: { dir: Vec3; color: string; label: string }[] = [
+      { dir: [axisLen, 0, 0], color: 'rgba(220,68,68,0.65)', label: 'X' },
+      { dir: [0, axisLen, 0], color: 'rgba(60,185,90,0.65)', label: 'Y' },
+      { dir: [0, 0, axisLen], color: 'rgba(65,110,230,0.65)', label: 'Z' },
+    ];
+    const origin = { x: CW / 2, y: CH / 2 };
+
+    for (const axis of axes) {
+      const tip = mulMat3Vec3(rotMatrix, axis.dir);
+      const sx = origin.x + tip[0] * scale;
+      const sy = origin.y - tip[1] * scale;
+      const neg = mulMat3Vec3(rotMatrix, [-axis.dir[0], -axis.dir[1], -axis.dir[2]]);
+      const nx = origin.x + neg[0] * scale;
+      const ny = origin.y - neg[1] * scale;
+
+      // Negative direction (dashed, faint)
+      ctx.save();
+      ctx.setLineDash([3, 5]);
+      ctx.strokeStyle = axis.color;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.2;
+      ctx.beginPath();
+      ctx.moveTo(origin.x, origin.y);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      ctx.restore();
+
+      // Positive direction (solid)
+      ctx.strokeStyle = axis.color;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(origin.x, origin.y);
+      ctx.lineTo(sx, sy);
+      ctx.stroke();
+
+      // Arrowhead
+      const tipLen = 8;
+      const tipW = 4;
+      const dirLen = Math.hypot(tip[0], tip[1], tip[2]);
+      if (dirLen > 0.01) {
+        const udx = (sx - origin.x) / (dirLen * scale) * tipLen;
+        const udy = (sy - origin.y) / (dirLen * scale) * tipLen;
+        const perpX = -udy * (tipW / tipLen);
+        const perpY = udx * (tipW / tipLen);
+        ctx.fillStyle = axis.color;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx - udx + perpX, sy - udy + perpY);
+        ctx.lineTo(sx - udx - perpX, sy - udy - perpY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Label
+      ctx.fillStyle = axis.color;
+      ctx.font = 'bold 11px ui-monospace, SFMono-Regular, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const labelOffset = 16;
+      const ldx = dirLen > 0.01 ? tip[0] / dirLen : 0;
+      const ldy = dirLen > 0.01 ? tip[1] / dirLen : 0;
+      ctx.fillText(axis.label, sx + ldx * labelOffset, sy - ldy * labelOffset);
+    }
+
+    // --- Draw faces with Blinn-Phong shading ---
+    for (const fd of faceData) {
+      const face = droneModel.faces[fd.fi];
+      const pts2d = fd.pts.map((p) => ({ x: p.x, y: p.y }));
+
+      // Back-face culling
+      const winding = computeFaceNormal(pts2d);
+      if (winding > 0) continue;
+
+      const { r, g, b, a } = blinnPhong(fd.normal, face.color, !!face.isNose, !!face.isProp);
+
+      ctx.beginPath();
+      ctx.moveTo(pts2d[0].x, pts2d[0].y);
+      for (let i = 1; i < pts2d.length; i++) {
+        ctx.lineTo(pts2d[i].x, pts2d[i].y);
+      }
+      ctx.closePath();
+
+      ctx.globalAlpha = a;
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fill();
+
+      // Subtle edge lines (darker for solid faces, skip for translucent props)
+      if (!face.isProp) {
+        ctx.strokeStyle = `rgba(${Math.round(r * 0.5)},${Math.round(g * 0.5)},${Math.round(b * 0.5)},0.3)`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // --- Spinning prop blur discs (drawn after solid geometry) ---
+    const armAngles = [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75];
+    const armEndDist = 0.56;
+    for (let ai = 0; ai < 4; ai++) {
+      const angle = armAngles[ai];
+      const tipPos: Vec3 = [Math.cos(angle) * armEndDist, 0.022 + 0.042 + 0.008, Math.sin(angle) * armEndDist];
+      const tTip = mulMat3Vec3(rotMatrix, tipPos);
+      const sx = CW / 2 + tTip[0] * scale;
+      const sy = CH / 2 - tTip[1] * scale;
+
+      // Only draw blur disc if motor top is facing viewer
+      const motorNorm = mulMat3Vec3(rotMatrix, [0, 1, 0]);
+      if (motorNorm[2] > -0.1) {
+        const discR = 0.15 * scale;
+        const discGrad = ctx.createRadialGradient(sx, sy, discR * 0.15, sx, sy, discR);
+        discGrad.addColorStop(0, 'rgba(120,148,180,0.12)');
+        discGrad.addColorStop(0.4, 'rgba(120,148,180,0.06)');
+        discGrad.addColorStop(1, 'rgba(120,148,180,0)');
+        ctx.fillStyle = discGrad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, discR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // ====================================================================
+  // DOM Elements
+  // ====================================================================
+  const previewYaw = document.getElementById('preview-yaw') as HTMLElement;
+  const previewPitch = document.getElementById('preview-pitch') as HTMLElement;
+  const previewRoll = document.getElementById('preview-roll') as HTMLElement;
+  const previewSource = document.getElementById('preview-source') as HTMLElement;
+
+  const qx = document.getElementById('q-x') as HTMLInputElement;
+  const qy = document.getElementById('q-y') as HTMLInputElement;
+  const qz = document.getElementById('q-z') as HTMLInputElement;
+  const qw = document.getElementById('q-w') as HTMLInputElement;
+  const qYawOut = document.getElementById('q-yaw') as HTMLElement;
+  const qPitchOut = document.getElementById('q-pitch') as HTMLElement;
+  const qRollOut = document.getElementById('q-roll') as HTMLElement;
+  const qNormNote = document.getElementById('q-norm-note') as HTMLElement;
+
+  const eYaw = document.getElementById('e-yaw') as HTMLInputElement;
+  const ePitch = document.getElementById('e-pitch') as HTMLInputElement;
+  const eRoll = document.getElementById('e-roll') as HTMLInputElement;
+  const eX = document.getElementById('e-x') as HTMLElement;
+  const eY = document.getElementById('e-y') as HTMLElement;
+  const eZ = document.getElementById('e-z') as HTMLElement;
+  const eW = document.getElementById('e-w') as HTMLElement;
+
+  // Current quaternion state for the 3D view
+  let currentQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
+
+  function updatePreview(q: Quat, source: string) {
+    currentQuat = quatNormalize(q);
+    const mat = quatToMatrix(currentQuat.x, currentQuat.y, currentQuat.z, currentQuat.w);
+    render3D(mat);
+
+    const { yaw, pitch, roll } = yawPitchRoll(currentQuat.x, currentQuat.y, currentQuat.z, currentQuat.w);
+    previewYaw.textContent = fmtDeg(yaw);
+    previewPitch.textContent = fmtDeg(pitch);
+    previewRoll.textContent = fmtDeg(roll);
+    if (previewSource) previewSource.textContent = `From ${source} panel`;
+  }
+
+  function recomputeFromQuaternion() {
+    const x = parseFloat(qx.value) || 0;
+    const y = parseFloat(qy.value) || 0;
+    const z = parseFloat(qz.value) || 0;
+    const w = parseFloat(qw.value) || 0;
+    const mag = Math.sqrt(x * x + y * y + z * z + w * w);
+    const norm = mag > 0 ? { x: x / mag, y: y / mag, z: z / mag, w: w / mag } : { x: 0, y: 0, z: 0, w: 1 };
+    qNormNote.textContent = Math.abs(mag - 1) < 0.0005 ? `Magnitude: ${mag.toFixed(4)} (already unit length)` : `Magnitude: ${mag.toFixed(4)} — normalized before conversion`;
+    const { yaw, pitch, roll } = yawPitchRoll(norm.x, norm.y, norm.z, norm.w);
+    qYawOut.textContent = fmtDeg(yaw);
+    qPitchOut.textContent = fmtDeg(pitch);
+    qRollOut.textContent = fmtDeg(roll);
+    updatePreview(norm, 'Quaternion → Euler');
+  }
+
+  [qx, qy, qz, qw].forEach((el) => el?.addEventListener('input', recomputeFromQuaternion));
+
+  function recomputeFromEuler() {
+    const yawDeg = parseFloat(eYaw.value) || 0;
+    const pitchDeg = parseFloat(ePitch.value) || 0;
+    const rollDeg = parseFloat(eRoll.value) || 0;
+    const q = quaternionFromEuler(radFromDeg(yawDeg), radFromDeg(pitchDeg), radFromDeg(rollDeg));
+    eX.textContent = fmtNum(q.x);
+    eY.textContent = fmtNum(q.y);
+    eZ.textContent = fmtNum(q.z);
+    eW.textContent = fmtNum(q.w);
+    updatePreview(q, 'Euler → Quaternion');
+  }
+
+  [eYaw, ePitch, eRoll].forEach((el) => el?.addEventListener('input', recomputeFromEuler));
+
+  // ====================================================================
+  // Copy buttons
+  // ====================================================================
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copyTarget;
+      const codeEl = targetId ? document.getElementById(targetId) : null;
+      if (!codeEl) return;
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent ?? '');
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      } catch {
+        // Clipboard API unavailable — fail silently.
+      }
+    });
+  });
+
+  // ====================================================================
+  // Drag interaction using quaternion composition (no gimbal lock)
+  // ====================================================================
+  const canvasWrap = canvas.parentElement as HTMLElement;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragStartQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
+
+  canvasWrap.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragStartQuat = { ...currentQuat };
+    canvasWrap.setPointerCapture(e.pointerId);
+  });
+
+  canvasWrap.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const dx = (e.clientX - dragStartX) * 0.008;
+    const dy = (e.clientY - dragStartY) * 0.008;
+
+    let dragQuat: Quat;
+    if (e.shiftKey) {
+      // Shift → roll around the Z axis (forward/back direction)
+      dragQuat = quatFromAxisAngle([0, 0, 1], -dx);
+    } else {
+      // Normal drag: yaw around Y axis, pitch around X axis
+      const yawQuat = quatFromAxisAngle([0, 1, 0], -dx);
+      const pitchQuat = quatFromAxisAngle([1, 0, 0], dy);
+      dragQuat = quatMul(yawQuat, pitchQuat);
+    }
+
+    const newQuat = quatNormalize(quatMul(dragQuat, dragStartQuat));
+
+    // Update Euler panel from composed quaternion
+    const { yaw, pitch, roll } = yawPitchRoll(newQuat.x, newQuat.y, newQuat.z, newQuat.w);
+    eYaw.value = degFromRad(yaw).toFixed(1);
+    ePitch.value = degFromRad(pitch).toFixed(1);
+    eRoll.value = degFromRad(roll).toFixed(1);
+
+    // Update Euler → Quat output panel
+    eX.textContent = fmtNum(newQuat.x);
+    eY.textContent = fmtNum(newQuat.y);
+    eZ.textContent = fmtNum(newQuat.z);
+    eW.textContent = fmtNum(newQuat.w);
+
+    // Update Quaternion panel inputs and outputs
+    qx.value = newQuat.x.toFixed(4);
+    qy.value = newQuat.y.toFixed(4);
+    qz.value = newQuat.z.toFixed(4);
+    qw.value = newQuat.w.toFixed(4);
+    const mag = Math.sqrt(newQuat.x ** 2 + newQuat.y ** 2 + newQuat.z ** 2 + newQuat.w ** 2);
+    qNormNote.textContent = `Magnitude: ${mag.toFixed(4)} (already unit length)`;
+    qYawOut.textContent = fmtDeg(yaw);
+    qPitchOut.textContent = fmtDeg(pitch);
+    qRollOut.textContent = fmtDeg(roll);
+
+    updatePreview(newQuat, 'Drag interaction');
+  });
+
+  canvasWrap.addEventListener('pointerup', (e) => {
+    isDragging = false;
+    canvasWrap.releasePointerCapture(e.pointerId);
+  });
+
+  canvasWrap.addEventListener('pointercancel', (e) => {
+    isDragging = false;
+    canvasWrap.releasePointerCapture(e.pointerId);
+  });
+
+  // Initial render
+  recomputeFromEuler();
+  recomputeFromQuaternion();
+</script>

@@ -40,6 +40,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
           <button type="button" class="mode-btn is-active" data-mode="daynight">Day / Night</button>
           <button type="button" class="mode-btn" data-mode="weather">Live Weather</button>
           <button type="button" class="mode-btn" data-mode="satellite">ISS Tracker</button>
+          <button type="button" class="mode-btn ml-auto" id="style-toggle">Wireframe</button>
         </div>
 
         <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_18rem]">
@@ -166,21 +167,305 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     };
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-  // ---- Orthographic projection (D3 geoOrthographic-equivalent, rotation in longitude + tilt) ----
-  let lambda0 = -20; // current spin, degrees
-  const phi0 = 18; // fixed view tilt, degrees
+  // =====================================================================
+  // Orthographic projection with view parameters
+  // =====================================================================
+  let lambda0 = -20; // current spin (longitude of center), degrees
+  const phi0 = 18;   // fixed tilt, degrees
 
+  // Pre-computed trig for the view center (updated when phi0 would change)
+  const sinPhi0 = Math.sin(deg2rad(phi0));
+  const cosPhi0 = Math.cos(deg2rad(phi0));
+
+  /** Convert geographic (lat, lon) to a unit 3D vector on the sphere. */
+  function toVec3(latDeg: number, lonDeg: number): [number, number, number] {
+    const phi = deg2rad(latDeg), lam = deg2rad(lonDeg);
+    return [Math.cos(phi) * Math.cos(lam), Math.cos(phi) * Math.sin(lam), Math.sin(phi)];
+  }
+
+  /** cosC = dot product of point with view center = visibility test.
+   *  If cosC > 0, the point is on the visible hemisphere. */
+  function cosC_latlon(latDeg: number, lonDeg: number): number {
+    const phi = deg2rad(latDeg);
+    const lam = deg2rad(lonDeg - lambda0);
+    return sinPhi0 * Math.sin(phi) + cosPhi0 * Math.cos(phi) * Math.cos(lam);
+  }
+
+  /** Full projection: lat/lon → screen XY + visibility. */
   function project(latDeg: number, lonDeg: number): { x: number; y: number; visible: boolean } {
     const phi = deg2rad(latDeg);
     const lam = deg2rad(lonDeg - lambda0);
-    const p0 = deg2rad(phi0);
-    const cosC = Math.sin(p0) * Math.sin(phi) + Math.cos(p0) * Math.cos(phi) * Math.cos(lam);
+    const cc = sinPhi0 * Math.sin(phi) + cosPhi0 * Math.cos(phi) * Math.cos(lam);
     const x = CX + R * Math.cos(phi) * Math.sin(lam);
-    const y = CY - R * (Math.cos(p0) * Math.sin(phi) - Math.sin(p0) * Math.cos(phi) * Math.cos(lam));
-    return { x, y, visible: cosC > 0 };
+    const y = CY - R * (cosPhi0 * Math.sin(phi) - sinPhi0 * Math.cos(phi) * Math.cos(lam));
+    return { x, y, visible: cc > 0 };
   }
 
-  // ---- Real astronomy: subsolar point + terminator great circle ----
+  // =====================================================================
+  // Great-circle clipping against the visible hemisphere
+  // =====================================================================
+  //
+  // The visible hemisphere is the half-sphere facing the viewer. A point
+  // P on the unit sphere is visible iff dot(P, viewCenter) > 0.
+  //
+  // For a great-circle arc from A to B on the unit sphere, we parameterize
+  // points as slerp(A, B, t) and find where dot(slerp(A,B,t), center) = 0.
+  //
+  // Since dot product is linear in the position vector, and slerp is a
+  // weighted combination, we can find the crossing t by linear interpolation
+  // of the cosC values:
+  //   t_cross = cosC_A / (cosC_A - cosC_B)
+  //
+  // This is exact for great-circle arcs (not loxodromic) when the arc is
+  // short enough that cosC varies nearly linearly — which is true for the
+  // fine-grained coastline segments we have.
+  //
+  // For the ~1° segments in Natural Earth 110m data, this is extremely
+  // accurate. For longer arcs (graticule lines at 3° steps), we subdivide.
+
+  interface ClipPt { lat: number; lon: number; x: number; y: number; onLimb?: boolean; }
+
+  /**
+   * Interpolate between two lat/lon points at parameter t ∈ [0,1].
+   * Uses spherical linear interpolation along the great circle.
+   */
+  function geoInterp(lat1: number, lon1: number, lat2: number, lon2: number, t: number): { lat: number; lon: number } {
+    // Convert to 3D, slerp, convert back
+    const v1 = toVec3(lat1, lon1);
+    const v2 = toVec3(lat2, lon2);
+    // dot product
+    let dot = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+    dot = Math.max(-1, Math.min(1, dot));
+
+    if (Math.abs(dot) > 0.9999) {
+      // Points are nearly identical or antipodal — use linear interp
+      // but wrap longitude through ±180° to avoid jumping across the Date Line
+      let dLon = lon2 - lon1;
+      if (dLon > 180) dLon -= 360;
+      if (dLon < -180) dLon += 360;
+      return {
+        lat: lat1 + (lat2 - lat1) * t,
+        lon: lon1 + dLon * t,
+      };
+    }
+
+    const omega = Math.acos(dot);
+    const sinOmega = Math.sin(omega);
+    const s0 = Math.sin((1 - t) * omega) / sinOmega;
+    const s1 = Math.sin(t * omega) / sinOmega;
+
+    const vx = s0 * v1[0] + s1 * v2[0];
+    const vy = s0 * v1[1] + s1 * v2[1];
+    const vz = s0 * v1[2] + s1 * v2[2];
+
+    return {
+      lat: rad2deg(Math.asin(Math.max(-1, Math.min(1, vz)))),
+      lon: rad2deg(Math.atan2(vy, vx)),
+    };
+  }
+
+  /**
+   * Clip a polygon ring (array of [lon, lat]) against the visible hemisphere.
+   * Returns an array of ClipPt with screen coordinates and limb markers.
+   *
+   * Uses a Sutherland-Hodgman approach: walk consecutive edges, for each:
+   *  - Both visible → emit second point
+   *  - Going invisible → emit intersection on limb
+   *  - Going visible → emit intersection on limb + second point
+   *  - Both invisible → skip
+   *
+   * Limb-marked points allow the drawing code to insert circular arcs.
+   */
+  function clipRing(ring: number[][]): ClipPt[] {
+    if (ring.length < 3) return [];
+
+    const out: ClipPt[] = [];
+    const n = ring.length;
+
+    for (let i = 0; i < n; i++) {
+      const [lon1, lat1] = ring[i];
+      const [lon2, lat2] = ring[(i + 1) % n];
+
+      const cc1 = cosC_latlon(lat1, lon1);
+      const cc2 = cosC_latlon(lat2, lon2);
+
+      // Positive epsilon hides geometry within ~0.1° of the mathematical limb,
+      // preventing behind-sphere points from projecting through at the poles.
+      const vis1 = cc1 > 0.002;
+      const vis2 = cc2 > 0.002;
+
+      if (vis1 && vis2) {
+        // Both visible — emit endpoint
+        const p = project(lat2, lon2);
+        out.push({ lat: lat2, lon: lon2, x: p.x, y: p.y });
+      } else if (vis1 && !vis2) {
+        // Going from visible to invisible — find intersection, emit it
+        const t = cc1 / (cc1 - cc2);
+        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
+        const p = project(mid.lat, mid.lon);
+        out.push({ lat: mid.lat, lon: mid.lon, x: p.x, y: p.y, onLimb: true });
+      } else if (!vis1 && vis2) {
+        // Going from invisible to visible — find intersection, emit it + endpoint
+        const t = cc1 / (cc1 - cc2);
+        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
+        const p1 = project(mid.lat, mid.lon);
+        out.push({ lat: mid.lat, lon: mid.lon, x: p1.x, y: p1.y, onLimb: true });
+        const p2 = project(lat2, lon2);
+        out.push({ lat: lat2, lon: lon2, x: p2.x, y: p2.y });
+      }
+      // Both invisible → skip
+    }
+
+    return out;
+  }
+
+  /**
+   * Clip a polyline (not a closed polygon) against the visible hemisphere.
+   * Returns segments (arrays of screen points), splitting at limb crossings.
+   */
+  function clipLine(coords: { lat: number; lon: number }[]): { x: number; y: number }[][] {
+    if (coords.length < 2) return [];
+
+    const segments: { x: number; y: number }[][] = [];
+    let current: { x: number; y: number }[] = [];
+
+    for (let i = 0; i < coords.length - 1; i++) {
+      const { lat: lat1, lon: lon1 } = coords[i];
+      const { lat: lat2, lon: lon2 } = coords[i + 1];
+
+      const cc1 = cosC_latlon(lat1, lon1);
+      const cc2 = cosC_latlon(lat2, lon2);
+
+      const vis1 = cc1 > 0;
+      const vis2 = cc2 > 0;
+
+      if (vis1 && vis2) {
+        if (current.length === 0) {
+          const p1 = project(lat1, lon1);
+          current.push({ x: p1.x, y: p1.y });
+        }
+        const p2 = project(lat2, lon2);
+        current.push({ x: p2.x, y: p2.y });
+      } else if (vis1 && !vis2) {
+        if (current.length === 0) {
+          const p1 = project(lat1, lon1);
+          current.push({ x: p1.x, y: p1.y });
+        }
+        const t = cc1 / (cc1 - cc2);
+        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
+        const pm = project(mid.lat, mid.lon);
+        current.push({ x: pm.x, y: pm.y });
+        // Segment ends here
+        if (current.length >= 2) segments.push(current);
+        current = [];
+      } else if (!vis1 && vis2) {
+        const t = cc1 / (cc1 - cc2);
+        const mid = geoInterp(lat1, lon1, lat2, lon2, Math.max(0.001, Math.min(0.999, t)));
+        const pm = project(mid.lat, mid.lon);
+        current = [{ x: pm.x, y: pm.y }];
+        const p2 = project(lat2, lon2);
+        current.push({ x: p2.x, y: p2.y });
+      }
+      // Both invisible → skip
+    }
+
+    if (current.length >= 2) segments.push(current);
+    return segments;
+  }
+
+  /**
+   * Draw a clipped polygon path on the canvas.
+   * When consecutive limb points are encountered, draw a circular arc
+   * along the globe's edge between them instead of a straight line.
+   */
+  /**
+   * Compute the centroid of clipped polygon's non-limb (interior) points.
+   * Used to determine which side of a limb arc the polygon's interior is on,
+   * so we choose the correct arc direction (short vs long way around).
+   */
+  function clippedInteriorCentroid(clipped: ClipPt[]): { x: number; y: number } {
+    let sx = 0, sy = 0, n = 0;
+    for (const p of clipped) {
+      if (!p.onLimb) { sx += p.x; sy += p.y; n++; }
+    }
+    // If all points are on the limb, use the geometric centroid of all points
+    if (n === 0) {
+      for (const p of clipped) { sx += p.x; sy += p.y; }
+      n = clipped.length;
+    }
+    return { x: sx / n, y: sy / n };
+  }
+
+  /**
+   * Choose arc direction between two limb points.
+   * Instead of blindly picking the shortest arc, we check which arc direction
+   * keeps the polygon's interior centroid on the correct side.
+   */
+  function chooseLimbArc(angle1: number, angle2: number, centroid: { x: number; y: number }): boolean {
+    // Test midpoint of the short arc
+    let da = angle2 - angle1;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    const shortCCW = da < 0;
+
+    // Midpoint of the short arc
+    const midAngle = angle1 + da * 0.5;
+    const midX = CX + R * Math.cos(midAngle);
+    const midY = CY + R * Math.sin(midAngle);
+
+    // Is the centroid closer to the short-arc midpoint or the long-arc midpoint?
+    const shortDist = (midX - centroid.x) ** 2 + (midY - centroid.y) ** 2;
+    const longMidAngle = midAngle + Math.PI;
+    const longMidX = CX + R * Math.cos(longMidAngle);
+    const longMidY = CY + R * Math.sin(longMidAngle);
+    const longDist = (longMidX - centroid.x) ** 2 + (longMidY - centroid.y) ** 2;
+
+    // If centroid is closer to the short-arc midpoint, use the short arc
+    // Otherwise, use the long arc (flip direction)
+    return shortDist <= longDist ? shortCCW : !shortCCW;
+  }
+
+  function drawClippedPolygon(clipped: ClipPt[]) {
+    if (clipped.length < 3) return;
+
+    const centroid = clippedInteriorCentroid(clipped);
+
+    ctx.beginPath();
+    ctx.moveTo(clipped[0].x, clipped[0].y);
+
+    for (let i = 1; i < clipped.length; i++) {
+      const prev = clipped[i - 1];
+      const curr = clipped[i];
+
+      if (prev.onLimb && curr.onLimb) {
+        // Both points are on the limb — draw an arc along the globe edge
+        const angle1 = Math.atan2(prev.y - CY, prev.x - CX);
+        const angle2 = Math.atan2(curr.y - CY, curr.x - CX);
+        const ccw = chooseLimbArc(angle1, angle2, centroid);
+        ctx.arc(CX, CY, R, angle1, angle2, ccw);
+      } else {
+        ctx.lineTo(curr.x, curr.y);
+      }
+    }
+
+    // Close: connect last point back to first
+    const last = clipped[clipped.length - 1];
+    const first = clipped[0];
+    if (last.onLimb && first.onLimb) {
+      const angle1 = Math.atan2(last.y - CY, last.x - CX);
+      const angle2 = Math.atan2(first.y - CY, first.x - CX);
+      const ccw = chooseLimbArc(angle1, angle2, centroid);
+      ctx.arc(CX, CY, R, angle1, angle2, ccw);
+    } else {
+      ctx.lineTo(first.x, first.y);
+    }
+
+    ctx.closePath();
+  }
+
+  // =====================================================================
+  // Real astronomy: subsolar point + terminator great circle
+  // =====================================================================
   function subsolarPoint(date: Date): { decl: number; lon: number } {
     const start = Date.UTC(date.getUTCFullYear(), 0, 0);
     const dayOfYear = (date.getTime() - start) / 86400000;
@@ -192,10 +477,6 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     return { decl, lon };
   }
 
-  function toVec3(latDeg: number, lonDeg: number): [number, number, number] {
-    const phi = deg2rad(latDeg), lam = deg2rad(lonDeg);
-    return [Math.cos(phi) * Math.cos(lam), Math.cos(phi) * Math.sin(lam), Math.sin(phi)];
-  }
   function cross(a: number[], b: number[]): [number, number, number] {
     return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
   }
@@ -204,12 +485,12 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     return [a[0] / m, a[1] / m, a[2] / m];
   }
   function toLatLon(v: number[]): { lat: number; lon: number } {
-    return { lat: rad2deg(Math.asin(v[2])), lon: rad2deg(Math.atan2(v[1], v[0])) };
+    return { lat: rad2deg(Math.asin(Math.max(-1, Math.min(1, v[2])))), lon: rad2deg(Math.atan2(v[1], v[0])) };
   }
 
   function terminatorLatLon(decl: number, ssLon: number): { lat: number; lon: number }[] {
     const s = toVec3(decl, ssLon);
-    const ref = Math.abs(s[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0];
+    const ref: [number, number, number] = Math.abs(s[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0];
     const u = normalize(cross(ref, s));
     const v = normalize(cross(s, u));
     const points: { lat: number; lon: number }[] = [];
@@ -230,8 +511,10 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     return Math.sin(phi) * Math.sin(d) + Math.cos(phi) * Math.cos(d) * Math.cos(dl) > 0;
   }
 
-  // ---- Simplified two-body ISS propagation from real TLE, verified against known ISS behavior ----
-  const GM = 398600.4418; // km^3/s^2, Earth standard gravitational parameter
+  // =====================================================================
+  // Simplified two-body ISS propagation from real TLE
+  // =====================================================================
+  const GM = 398600.4418;
   const EARTH_RADIUS_KM = 6378.137;
 
   function parseTle(line1: string, line2: string) {
@@ -287,18 +570,18 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
 
   const issElems = parseTle(globeData.satelliteTle.line1, globeData.satelliteTle.line2);
 
-  // ---- Land data ----
+  // =====================================================================
+  // Land data
+  // =====================================================================
   let land: LandFeature[] = [];
   fetch('/data/world-land-110m.json')
     .then((r) => r.json())
-    .then((geojson) => {
-      land = geojson.features;
-    })
-    .catch(() => {
-      land = [];
-    });
+    .then((geojson) => { land = geojson.features; })
+    .catch(() => { land = []; });
 
-  // ---- Mode state ----
+  // =====================================================================
+  // Mode state
+  // =====================================================================
   type Mode = 'daynight' | 'weather' | 'satellite';
   let mode: Mode = 'daynight';
 
@@ -317,7 +600,9 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
 
   modeButtons.forEach((btn) => btn.addEventListener('click', () => setMode(btn.dataset.mode as Mode)));
 
-  // ---- Weather list panel ----
+  // =====================================================================
+  // Weather list panel
+  // =====================================================================
   const weatherListEl = document.getElementById('weather-list')!;
   weatherListEl.innerHTML = globeData.weatherCities
     .map((c) => `<div class="flex items-center justify-between"><span>${c.name}</span><span class="font-semibold">${Math.round(c.tempC)}°C</span></div>`)
@@ -352,94 +637,142 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
   const issAltEl = document.getElementById('iss-alt')!;
   const issSpeedEl = document.getElementById('iss-speed')!;
 
-  function drawGlobe() {
-    ctx.clearRect(0, 0, W, H);
+  let renderWireframe = true;
+  const styleToggle = document.getElementById('style-toggle') as HTMLButtonElement;
+  styleToggle.textContent = 'Wireframe';
+  styleToggle.classList.add('is-active');
 
-    // ocean/base circle
+  styleToggle.addEventListener('click', () => {
+    renderWireframe = !renderWireframe;
+    styleToggle.textContent = renderWireframe ? 'Wireframe' : 'Filled';
+    styleToggle.classList.toggle('is-active', renderWireframe);
+    draw();
+  });
+
+  // =====================================================================
+  // Main draw loop
+  // =====================================================================
+  function draw() {
+    ctx.clearRect(0, 0, CX * 2, CY * 2);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Background
     ctx.beginPath();
     ctx.arc(CX, CY, R, 0, Math.PI * 2);
     ctx.fillStyle = colors.elevated;
     ctx.fill();
     ctx.lineWidth = 1.5;
-    ctx.strokeStyle = colors.border;
     ctx.stroke();
 
-    // graticule
+    // Graticule — now with proper clipping
     ctx.strokeStyle = `${colors.border}`;
     ctx.globalAlpha = 0.35;
     ctx.lineWidth = 0.6;
     for (let lonLine = -180; lonLine < 180; lonLine += 30) {
-      ctx.beginPath();
-      let started = false;
+      const coords: { lat: number; lon: number }[] = [];
       for (let lat = -90; lat <= 90; lat += 3) {
-        const p = project(lat, lonLine);
-        if (!p.visible) { started = false; continue; }
-        if (!started) { ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
+        coords.push({ lat, lon: lonLine });
       }
-      ctx.stroke();
+      const segs = clipLine(coords);
+      for (const seg of segs) {
+        if (seg.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
+        ctx.stroke();
+      }
     }
     for (let latLine = -60; latLine <= 60; latLine += 30) {
-      ctx.beginPath();
-      let started = false;
+      const coords: { lat: number; lon: number }[] = [];
       for (let lon = -180; lon <= 180; lon += 3) {
-        const p = project(latLine, lon);
-        if (!p.visible) { started = false; continue; }
-        if (!started) { ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
+        coords.push({ lat: latLine, lon });
       }
-      ctx.stroke();
+      const segs = clipLine(coords);
+      for (const seg of segs) {
+        if (seg.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
+        ctx.stroke();
+      }
     }
     ctx.globalAlpha = 1;
 
     const now = new Date();
     const { decl, lon: ssLon } = subsolarPoint(now);
 
-    // land
+    // Land — with true spherical clipping
     for (const feature of land) {
       for (const ring of feature.geometry.coordinates) {
-        ctx.beginPath();
-        let started = false;
-        let anyVisible = false;
+        // Compute centroid for day/night shading
         let centroidLat = 0, centroidLon = 0;
         for (const [lon, lat] of ring) {
-          centroidLat += lat; centroidLon += lon;
+          centroidLat += lat;
+          centroidLon += lon;
         }
-        centroidLat /= ring.length; centroidLon /= ring.length;
+        centroidLat /= ring.length;
+        centroidLon /= ring.length;
         const lit = mode === 'daynight' ? isDaylight(centroidLat, centroidLon, decl, ssLon) : true;
-        for (const [lon, lat] of ring) {
-          const p = project(lat, lon);
-          if (p.visible) {
-            anyVisible = true;
-            if (!started) { ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
-          } else {
-            started = false;
+
+        // Clip the ring against the visible hemisphere
+        const clipped = clipRing(ring);
+        if (clipped.length < 3) continue;
+
+        if (renderWireframe) {
+          // Draw as wireframe strokes with correct limb arc direction
+          const wfCentroid = clippedInteriorCentroid(clipped);
+          ctx.beginPath();
+          ctx.moveTo(clipped[0].x, clipped[0].y);
+          for (let i = 1; i < clipped.length; i++) {
+            const prev = clipped[i - 1];
+            const curr = clipped[i];
+            if (prev.onLimb && curr.onLimb) {
+              // Arc along the limb with centroid-directed arc choice
+              const a1 = Math.atan2(prev.y - CY, prev.x - CX);
+              const a2 = Math.atan2(curr.y - CY, curr.x - CX);
+              const ccw = chooseLimbArc(a1, a2, wfCentroid);
+              ctx.arc(CX, CY, R, a1, a2, ccw);
+            } else {
+              ctx.lineTo(curr.x, curr.y);
+            }
           }
-        }
-        if (anyVisible) {
-          ctx.closePath();
+          ctx.strokeStyle = mode === 'daynight' ? (lit ? colors.text : colors.muted) : colors.text;
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = mode === 'daynight' ? (lit ? 0.7 : 0.2) : 0.4;
+          ctx.stroke();
+        } else {
+          // Draw as filled polygons with limb arcs for clean edges
+          drawClippedPolygon(clipped);
           ctx.fillStyle = mode === 'daynight' ? (lit ? colors.text : colors.muted) : colors.text;
           ctx.globalAlpha = mode === 'daynight' ? (lit ? 0.85 : 0.35) : 0.55;
           ctx.fill();
-          ctx.globalAlpha = 1;
         }
+        ctx.globalAlpha = 1;
       }
     }
 
+    // Terminator — with proper clipping
     if (mode === 'daynight') {
       const termPts = terminatorLatLon(decl, ssLon);
-      ctx.beginPath();
-      let started = false;
-      for (const { lat, lon } of termPts) {
-        const p = project(lat, lon);
-        if (!p.visible) { started = false; continue; }
-        if (!started) { ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
+      const termSegs = clipLine(termPts);
+      for (const seg of termSegs) {
+        if (seg.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
+        ctx.strokeStyle = colors.cta;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.8;
+        ctx.stroke();
       }
-      ctx.strokeStyle = colors.cta;
-      ctx.lineWidth = 1.5;
-      ctx.globalAlpha = 0.8;
-      ctx.stroke();
       ctx.globalAlpha = 1;
     }
 
+    // Weather cities
     if (mode === 'weather') {
       for (const city of globeData.weatherCities) {
         const p = project(city.lat, city.lon);
@@ -454,23 +787,26 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
       }
     }
 
+    // ISS
     if (mode === 'satellite') {
       const nowMs = Date.now();
       const posNow = propagate(issElems, nowMs);
       issTrail.push({ x: posNow.lat, y: posNow.lon });
       if (issTrail.length > 60) issTrail.shift();
 
-      ctx.beginPath();
-      let started = false;
-      for (const t of issTrail) {
-        const p = project(t.x, t.y);
-        if (!p.visible) { started = false; continue; }
-        if (!started) { ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
+      // Clip the ISS trail
+      const trailCoords = issTrail.map((t) => ({ lat: t.x, lon: t.y }));
+      const trailSegs = clipLine(trailCoords);
+      for (const seg of trailSegs) {
+        if (seg.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
+        ctx.strokeStyle = colors.cta;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.7;
+        ctx.stroke();
       }
-      ctx.strokeStyle = colors.cta;
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.7;
-      ctx.stroke();
       ctx.globalAlpha = 1;
 
       const pNow = project(posNow.lat, posNow.lon);
@@ -486,8 +822,12 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
       issAltEl.textContent = `${posNow.alt.toFixed(0)} km`;
       issSpeedEl.textContent = `${posNow.speedKmS.toFixed(2)} km/s`;
     }
+    ctx.restore();
   }
 
+  // =====================================================================
+  // Drag interaction
+  // =====================================================================
   let isDragging = false;
   let dragStartX = 0;
   let lambdaAtDragStart = 0;
@@ -501,7 +841,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
   canvas.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
     const dx = e.clientX - dragStartX;
-    lambda0 = lambdaAtDragStart + dx * 0.3;
+    lambda0 = lambdaAtDragStart - dx * 0.3;
   });
   canvas.addEventListener('pointerup', () => {
     isDragging = false;
@@ -509,7 +849,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
 
   function loop() {
     if (!isDragging) lambda0 += 0.04;
-    drawGlobe();
+    draw();
     requestAnimationFrame(loop);
   }
   loop();
