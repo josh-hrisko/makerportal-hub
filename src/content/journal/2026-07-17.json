@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T22:22:22.657Z",
+  "generatedAt": "2026-07-17T23:18:03.443Z",
   "items": [
     {
       "id": "hackernews-48944208",
@@ -57,6 +57,25 @@
       ]
     },
     {
+      "id": "hackernews-48929747",
+      "source": "hackernews",
+      "title": "Running Gemma4 on Apple Neural Engine",
+      "url": "https://rockyshikoku.medium.com/running-gemma4-on-apple-neural-engine-79fa0cb39dd2",
+      "author": "nmfisher",
+      "publishedAt": "2026-07-16T02:33:38Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 11,
+      "domain": "rockyshikoku.medium.com",
+      "sources": [
+        "bluesky",
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48929747.webp"
+    },
+    {
       "id": "hackernews-48898478",
       "source": "hackernews",
       "title": "Open source on-device AI apps (and counting), no cloud, works offline",
@@ -93,6 +112,23 @@
       "image": "/trends/hackernews-48861746.webp"
     },
     {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-14T06:56:44.666Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
       "id": "hackernews-48819513",
       "source": "hackernews",
       "title": "GPU-accelerated context memory for on-device AI agents on Apple Silicon",
@@ -109,24 +145,6 @@
         "hackernews"
       ],
       "image": "/trends/hackernews-48819513.webp"
-    },
-    {
-      "id": "hackernews-48805598",
-      "source": "hackernews",
-      "title": "Apple Silicon Exec Explains Mac Mini AI Demand and On-Device Future",
-      "url": "https://www.macrumors.com/2026/07/06/apple-silicon-exec-explains-mac-mini-ai-demand/",
-      "author": "tosh",
-      "publishedAt": "2026-07-06T14:59:21Z",
-      "tags": [
-        "on-device-ai",
-        "metal-ane"
-      ],
-      "score": 10,
-      "domain": "macrumors.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48805598.webp"
     },
     {
       "id": "hackernews-48844268",
@@ -197,6 +215,23 @@
       "image": "/trends/hackernews-48918840.webp"
     },
     {
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-15T07:04:47.168Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 8,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
       "id": "hackernews-48946283",
       "source": "hackernews",
       "title": "Prompt submitted to cloud even when using local LLM by default",
@@ -212,23 +247,6 @@
         "hackernews"
       ],
       "image": "/trends/hackernews-48946283.webp"
-    },
-    {
-      "id": "hackernews-48946222",
-      "source": "hackernews",
-      "title": "Show HN: A sandbox for running real jailbreak techniques against local LLMs",
-      "url": "https://github.com/joshfischer1108/jailbreak-lab",
-      "author": "joshfischer1108",
-      "publishedAt": "2026-07-17T11:54:03Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 7,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48946222.webp"
     },
     {
       "id": "hackernews-48829604",
@@ -311,8 +329,7 @@
       "domain": "eyesoff.app",
       "sources": [
         "hackernews"
-      ],
-      "image": "/trends/hackernews-48787415.webp"
+      ]
     },
     {
       "id": "hackernews-48784211",
@@ -328,8 +345,7 @@
       "domain": "psycurate.com",
       "sources": [
         "hackernews"
-      ],
-      "image": "/trends/hackernews-48784211.webp"
+      ]
     }
   ]
 }
