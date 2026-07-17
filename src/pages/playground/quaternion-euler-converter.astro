@@ -69,9 +69,13 @@ const breadcrumbSchema = {
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live preview</h2>
         <p class="max-w-2xl text-[0.95rem] text-muted-text">
-          A 3D quadcopter drone, driven by whichever panel you last edited. The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag to rotate. Hold <strong>Shift</strong> to roll.
+          A 3D quadcopter drone, driven by whichever panel you last edited. At <strong>0° yaw/pitch/roll</strong> you now see the top in a standard isometric view — X forward (nose, red), Y left (green), Z up (blue). The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll.
         </p>
-        <p id="preview-source" class="mt-2 font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <p id="preview-source" class="font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
+          <button type="button" id="btn-reset-zero" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text">Reset to 0°</button>
+          <button type="button" id="btn-reset-sample" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text">10° / 20° / 30° sample</button>
+        </div>
         <div class="mt-10 flex flex-col items-center gap-10 lg:flex-row lg:justify-center">
           <div class="quat-canvas-wrap" aria-hidden="true">
             <canvas id="quat-canvas" width="520" height="440"></canvas>
@@ -607,7 +611,47 @@ const breadcrumbSchema = {
   const droneModel = buildDroneModel();
 
   // ====================================================================
-  // Lighting — two-light setup for richer shading
+  // Fixed isometric view matrix (camera orbit)
+  // ====================================================================
+  // We want the zero-quaternion view to show the top of the drone, nose slightly
+  // up-right, and front/side edges visible — a true isometric "standard view".
+  // World convention after buildDroneModel mapping: X forward (nose +X), Y left,
+  // Z up.  Camera looks from +Z toward origin (viewer at +Z).  VIEW is applied
+  // as: v_camera = VIEW * (R_quat * v_body).  So VIEW rotates world into camera.
+  function mat3Mul(a: Mat3, b: Mat3): Mat3 {
+    return [
+      a[0]*b[0]+a[1]*b[3]+a[2]*b[6], a[0]*b[1]+a[1]*b[4]+a[2]*b[7], a[0]*b[2]+a[1]*b[5]+a[2]*b[8],
+      a[3]*b[0]+a[4]*b[3]+a[5]*b[6], a[3]*b[1]+a[4]*b[4]+a[5]*b[7], a[3]*b[2]+a[4]*b[5]+a[5]*b[8],
+      a[6]*b[0]+a[7]*b[3]+a[8]*b[6], a[6]*b[1]+a[7]*b[4]+a[8]*b[7], a[6]*b[2]+a[7]*b[5]+a[8]*b[8],
+    ];
+  }
+  function rotX(rad: number): Mat3 {
+    const c=Math.cos(rad), s=Math.sin(rad);
+    return [1,0,0, 0,c,-s, 0,s,c];
+  }
+  function rotY(rad: number): Mat3 {
+    const c=Math.cos(rad), s=Math.sin(rad);
+    return [c,0,s, 0,1,0, -s,0,c];
+  }
+  function rotZ(rad: number): Mat3 {
+    const c=Math.cos(rad), s=Math.sin(rad);
+    return [c,-s,0, s,c,0, 0,0,1];
+  }
+  const VIEW_MATRIX: Mat3 = (() => {
+    // Tuned for front-up visibility: forward (X) should appear up-right on screen,
+    // top (Z) largely up, and right side visible.  Elevation ~32° tilt, azimuth ~28°.
+    // Composition order: Rx * Ry * Rz  (Rz first, then Ry, then Rx).
+    // Rx(-28) * Ry(-18) * Rz(28) gives X forward slightly front-facing, Y left back,
+    // Z up dominant — see design notes in PR.  This yields a pleasing "standard"
+    // isometric quad view where zero yaw/pitch/roll shows top, not bottom.
+    const rx = rotX(-28 * Math.PI/180);
+    const ry = rotY(-18 * Math.PI/180);
+    const rz = rotZ(28 * Math.PI/180);
+    return mat3Mul(rx, mat3Mul(ry, rz));
+  })();
+
+  // ====================================================================
+  // Lighting — two-light setup for richer shading (camera space)
   // ====================================================================
   const lightDir: Vec3 = (() => {
     const l: Vec3 = [0.3, 0.8, 0.5];
@@ -622,7 +666,7 @@ const breadcrumbSchema = {
     return [l[0] / m, l[1] / m, l[2] / m] as Vec3;
   })();
 
-  // View direction for specular (looking down -Z in orthographic)
+  // View direction for specular (viewer at +Z looking toward origin)
   const viewDir: Vec3 = [0, 0, 1];
 
   function resolveColor(varName: string, fallback: string): string {
@@ -637,12 +681,6 @@ const breadcrumbSchema = {
       border: resolveColor('--mp-border', 'rgba(22,32,46,0.12)'),
       cta: resolveColor('--mp-cta', '#b8324f'),
     };
-  }
-
-  function computeFaceNormal(projected: { x: number; y: number }[]): number {
-    if (projected.length < 3) return 0;
-    const a = projected[0], b = projected[1], c = projected[2];
-    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
   }
 
   // ====================================================================
@@ -701,7 +739,7 @@ const breadcrumbSchema = {
   }
 
   // ====================================================================
-  // 3D Renderer
+  // 3D Renderer — with fixed isometric camera
   // ====================================================================
   function render3D(rotMatrix: Mat3) {
     const tc = getThemeColors();
@@ -716,10 +754,10 @@ const breadcrumbSchema = {
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, CW, CH);
 
-    // Subtle background grid
+    // Subtle background grid — static (camera space)
     ctx.strokeStyle = tc.border;
     ctx.lineWidth = 0.5;
-    ctx.globalAlpha = 0.2;
+    ctx.globalAlpha = 0.18;
     const gridStep = 32;
     for (let gx = gridStep; gx < CW; gx += gridStep) {
       ctx.beginPath();
@@ -735,10 +773,18 @@ const breadcrumbSchema = {
     }
     ctx.globalAlpha = 1;
 
-    // Transform all vertices
-    const transformed = droneModel.verts.map((v) => mulMat3Vec3(rotMatrix, v));
+    // Combined view * model rotation (camera * quaternion)
+    // This is the fix: previously rotMatrix was used directly, so Z-up mapped to depth
+    // and the top face pointed straight at the viewer — showing bottom due to
+    // inverted winding culling.  Now VIEW_MATRIX gives a standard isometric
+    // camera (elevation ~28°, azimuth 28°, with slight Ry), so zero Euler shows
+    // top, front, and side — like a product photo.
+    const finalMatrix = mat3Mul(VIEW_MATRIX, rotMatrix);
 
-    // Orthographic projection: X→right, Y→up (negate for canvas), Z→depth
+    // Transform all vertices into camera space
+    const transformed = droneModel.verts.map((v) => mulMat3Vec3(finalMatrix, v));
+
+    // Orthographic projection: camera X→screen right, Y→up
     const projected = transformed.map((v) => ({
       x: CW / 2 + v[0] * scale,
       y: CH / 2 - v[1] * scale,
@@ -766,43 +812,44 @@ const breadcrumbSchema = {
       return { fi, pts, avgZ, normal };
     });
 
-    // Painter's algorithm: sort back-to-front
+    // Painter's algorithm: sort back-to-front by depth
     faceData.sort((a, b) => a.avgZ - b.avgZ);
 
-    // --- Ground shadow (projected ellipse that tracks rotation) ---
+    // --- Ground shadow (ellipse that tracks yaw) ---
     const shadowY = CH * 0.82;
-    // Z is the vehicle's vertical axis in the Z-Y-X yaw/pitch/roll convention.
-    const rotZ = mulMat3Vec3(rotMatrix, [0, 0, 1]);
-    const shadowOffX = rotZ[0] * scale * 0.08;
+    // Use finalMatrix's Z axis (world up after view) for slight offset tracking yaw
+    const upInCamera = mulMat3Vec3(finalMatrix, [0, 0, 1]);
+    const fwdInCamera = mulMat3Vec3(finalMatrix, [1, 0, 0]);
+    const shadowOffX = fwdInCamera[0] * scale * 0.06 + upInCamera[0] * scale * 0.02;
     ctx.save();
-    ctx.globalAlpha = 0.07;
+    ctx.globalAlpha = 0.08;
     const shadowGrad = ctx.createRadialGradient(
       CW / 2 + shadowOffX, shadowY, 0,
-      CW / 2 + shadowOffX, shadowY, scale * 0.38
+      CW / 2 + shadowOffX, shadowY, scale * 0.42
     );
     shadowGrad.addColorStop(0, tc.text);
     shadowGrad.addColorStop(0.7, tc.text);
     shadowGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = shadowGrad;
     ctx.beginPath();
-    ctx.ellipse(CW / 2 + shadowOffX, shadowY, scale * 0.38, scale * 0.05, 0, 0, Math.PI * 2);
+    ctx.ellipse(CW / 2 + shadowOffX, shadowY, scale * 0.42, scale * 0.06, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // --- Draw reference axes with arrow tips ---
+    // --- Draw reference axes (body axes, now through camera) ---
     const axisLen = 0.42;
     const axes: { dir: Vec3; color: string; label: string }[] = [
-      { dir: [axisLen, 0, 0], color: 'rgba(220,68,68,0.65)', label: 'X' },
-      { dir: [0, axisLen, 0], color: 'rgba(60,185,90,0.65)', label: 'Y' },
-      { dir: [0, 0, axisLen], color: 'rgba(65,110,230,0.65)', label: 'Z' },
+      { dir: [axisLen, 0, 0], color: 'rgba(220,68,68,0.72)', label: 'X·fwd' },
+      { dir: [0, axisLen, 0], color: 'rgba(60,185,90,0.72)', label: 'Y·left' },
+      { dir: [0, 0, axisLen], color: 'rgba(65,110,230,0.72)', label: 'Z·up' },
     ];
     const origin = { x: CW / 2, y: CH / 2 };
 
     for (const axis of axes) {
-      const tip = mulMat3Vec3(rotMatrix, axis.dir);
+      const tip = mulMat3Vec3(finalMatrix, axis.dir);
       const sx = origin.x + tip[0] * scale;
       const sy = origin.y - tip[1] * scale;
-      const neg = mulMat3Vec3(rotMatrix, [-axis.dir[0], -axis.dir[1], -axis.dir[2]]);
+      const neg = mulMat3Vec3(finalMatrix, [-axis.dir[0], -axis.dir[1], -axis.dir[2]]);
       const nx = origin.x + neg[0] * scale;
       const ny = origin.y - neg[1] * scale;
 
@@ -811,7 +858,7 @@ const breadcrumbSchema = {
       ctx.setLineDash([3, 5]);
       ctx.strokeStyle = axis.color;
       ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.2;
+      ctx.globalAlpha = 0.18;
       ctx.beginPath();
       ctx.moveTo(origin.x, origin.y);
       ctx.lineTo(nx, ny);
@@ -856,15 +903,23 @@ const breadcrumbSchema = {
       ctx.fillText(axis.label, sx + ldx * labelOffset, sy - ldy * labelOffset);
     }
 
-    // --- Draw faces with Blinn-Phong shading ---
+    // --- Draw faces with Blinn-Phong shading — correct back-face culling ---
     for (const fd of faceData) {
       const face = droneModel.faces[fd.fi];
-      const pts2d = fd.pts.map((p) => ({ x: p.x, y: p.y }));
+      // Correct 3D back-face test: if normal points away from viewer (+Z is viewer),
+      // cull. Previous winding test was inverted for the Z-up mapping and caused
+      // bottom to appear at identity.
+      if (fd.normal[2] <= 0.02) {
+        // Keep slight tolerance to avoid z-fighting at grazing angles, but cull
+        // true back-faces. Prop discs are double-sided (two opposite faces) so one
+        // will survive; nose/LED double-sided similarly.
+        if (!face.isProp && !face.isNose) continue;
+        // For props/nose, keep if at least somewhat facing, but our double-sided
+        // geometry ensures one of the two quads will have positive Z.
+        if (fd.normal[2] <= -0.15) continue;
+      }
 
-      // Back-face culling
-      const winding = computeFaceNormal(pts2d);
-      if (winding > 0) continue;
-
+      const pts2d = fd.pts;
       const { r, g, b, a } = blinnPhong(fd.normal, face.color, !!face.isNose, !!face.isProp);
 
       ctx.beginPath();
@@ -880,7 +935,7 @@ const breadcrumbSchema = {
 
       // Subtle edge lines (darker for solid faces, skip for translucent props)
       if (!face.isProp) {
-        ctx.strokeStyle = `rgba(${Math.round(r * 0.5)},${Math.round(g * 0.5)},${Math.round(b * 0.5)},0.3)`;
+        ctx.strokeStyle = `rgba(${Math.round(r * 0.5)},${Math.round(g * 0.5)},${Math.round(b * 0.5)},0.32)`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
       }
@@ -893,16 +948,16 @@ const breadcrumbSchema = {
     for (let ai = 0; ai < 4; ai++) {
       const angle = armAngles[ai];
       const tipPos: Vec3 = [Math.cos(angle) * armEndDist, -Math.sin(angle) * armEndDist, 0.022 + 0.042 + 0.008];
-      const tTip = mulMat3Vec3(rotMatrix, tipPos);
+      const tTip = mulMat3Vec3(finalMatrix, tipPos);
       const sx = CW / 2 + tTip[0] * scale;
       const sy = CH / 2 - tTip[1] * scale;
 
-      // Only draw blur disc if motor top is facing viewer
-      const motorNorm = mulMat3Vec3(rotMatrix, [0, 0, 1]);
-      if (motorNorm[2] > -0.1) {
+      // Only draw blur disc if motor top is facing viewer (in camera space)
+      const motorNorm = mulMat3Vec3(finalMatrix, [0, 0, 1]);
+      if (motorNorm[2] > 0.05) {
         const discR = 0.15 * scale;
         const discGrad = ctx.createRadialGradient(sx, sy, discR * 0.15, sx, sy, discR);
-        discGrad.addColorStop(0, 'rgba(120,148,180,0.12)');
+        discGrad.addColorStop(0, 'rgba(120,148,180,0.14)');
         discGrad.addColorStop(0.4, 'rgba(120,148,180,0.06)');
         discGrad.addColorStop(1, 'rgba(120,148,180,0)');
         ctx.fillStyle = discGrad;
@@ -1073,7 +1128,22 @@ const breadcrumbSchema = {
   canvasWrap.addEventListener('pointercancel', endQuaternionDrag);
   canvasWrap.addEventListener('lostpointercapture', () => { isDragging = false; });
 
-  // Initial render
+  // ====================================================================
+  // Reset helpers — address "bottom view at 0°" confusion by making zero obvious
+  // ====================================================================
+  const btnResetZero = document.getElementById('btn-reset-zero') as HTMLButtonElement | null;
+  const btnResetSample = document.getElementById('btn-reset-sample') as HTMLButtonElement | null;
+  btnResetZero?.addEventListener('click', () => {
+    eYaw.value = '0'; ePitch.value = '0'; eRoll.value = '0';
+    recomputeFromEuler();
+  });
+  btnResetSample?.addEventListener('click', () => {
+    eYaw.value = '10'; ePitch.value = '20'; eRoll.value = '30';
+    recomputeFromEuler();
+  });
+
+  // Initial render — start with the sample (10/20/30) so first-time load shows
+  // an interesting orientation, but zero is now correctly top-down isometric.
   recomputeFromEuler();
   recomputeFromQuaternion();
   }
