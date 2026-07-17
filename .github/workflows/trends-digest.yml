@@ -39,7 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if git diff --quiet -- src/data/trends.json; then
+          if git diff --quiet -- src/content/journal/; then
             echo "No trend changes — skipping PR."
             exit 0
           fi
@@ -48,7 +48,7 @@ jobs:
           git checkout -b "$branch"
           git config user.name "makerportal-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -A src/data/trends.json
+          git add -A src/content/journal/
           if [ -d public/trends ]; then git add -A public/trends; fi
           git commit -m "Trend digest: $(date +%Y-%m-%d)"
           # Force-push so a same-day re-run updates the existing digest branch/PR

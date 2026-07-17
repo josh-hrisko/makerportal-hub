@@ -17,4 +17,26 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+const journal = defineCollection({
+  loader: glob({ base: './src/content/journal', pattern: '**/*.json' }),
+  schema: z.object({
+    generatedAt: z.string(),
+    items: z.array(
+      z.object({
+        id: z.string(),
+        source: z.enum(['bluesky', 'hackernews', 'reddit']),
+        title: z.string(),
+        url: z.string(),
+        author: z.string().optional(),
+        publishedAt: z.string(),
+        tags: z.array(z.string()).default([]),
+        score: z.number(),
+        domain: z.string().optional(),
+        sources: z.array(z.enum(['bluesky', 'hackernews', 'reddit'])).optional(),
+        image: z.string().optional(),
+      })
+    ),
+  }),
+});
+
+export const collections = { blog, journal };

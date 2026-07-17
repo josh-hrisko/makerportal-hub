@@ -139,6 +139,7 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Resources',
         links: [
           { label: 'Resource hub', href: '/resources', description: 'Guides & downloads' },
+          { label: 'Signals journal', href: '/journal', description: 'Daily trend backlog' },
           { label: 'Agent map', href: '/llms', description: 'Human + AI index (llms.txt)' },
         ],
       },
@@ -232,6 +233,7 @@ export const footerColumns: FooterColumn[] = [
       { label: 'Apps', href: '/apps' },
       { label: 'Journal', href: '/blog' },
       { label: 'Guides', href: '/resources' },
+      { label: 'Signals journal', href: '/journal' },
       { label: 'Shop', href: '/shop' },
       { label: 'Watch', href: '/watch' },
     ],
@@ -272,6 +274,7 @@ export const hubRoutes: { path: string; priority: string; changefreq: string }[]
   { path: '/apps', priority: '0.95', changefreq: 'weekly' },
   { path: '/blog', priority: '0.95', changefreq: 'weekly' },
   { path: '/resources', priority: '0.9', changefreq: 'weekly' },
+  { path: '/journal', priority: '0.8', changefreq: 'daily' },
   { path: '/playground', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/quaternion-euler-converter', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/fourier-epicycles', priority: '0.75', changefreq: 'monthly' },

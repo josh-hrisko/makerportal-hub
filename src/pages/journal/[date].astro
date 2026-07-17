@@ -1,0 +1,201 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import HubShell from '../../components/HubShell.astro';
+import { pillarMeta, fallbackPillar, sourceLabels } from '../../data/trends';
+import type { TrendItem } from '../../data/trends';
+
+export async function getStaticPaths() {
+  const journals = await getCollection('journal');
+  return journals.map((entry) => ({
+    params: { date: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const dateStr = entry.id;
+const items = entry.data.items as TrendItem[];
+const generatedAt = entry.data.generatedAt;
+
+const trending = [...items].sort((a, b) => b.score - a.score);
+const [featuredSignal, ...restSignals] = trending;
+
+const pillarOf = (item: { tags: string[] }) => pillarMeta[item.tags[0]] ?? fallbackPillar;
+
+const signalBars = (score: number) => Math.max(1, Math.min(5, Math.round(score / 3)));
+
+const timeAgo = (iso: string) => {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 864e5));
+  return days === 0 ? 'today' : `${days}d ago`;
+};
+
+const formattedDate = new Date(dateStr + 'T12:00:00Z').toLocaleDateString('en-US', {
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+const title = `Signals Report — ${formattedDate} | MakerPortal`;
+const description = `Daily developer trends and public discussion signals captured on ${formattedDate}.`;
+---
+
+<Layout title={title} description={description}>
+  <HubShell
+    kicker={`Learn · Signals Journal · Report`}
+    title={formattedDate}
+    lead={`Captured on ${new Date(generatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. Review of developer discussion on on-device AI, iOS platform craft, and DSP.`}
+    status="Journal"
+  >
+    <Fragment slot="hero-actions">
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/journal" class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">← Back to Journal</a>
+        <a href="/resources" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Resource hub</a>
+      </div>
+    </Fragment>
+  </HubShell>
+
+  {trending.length > 0 && featuredSignal ? (
+    <section class="border-b border-border bg-canvas">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Daily Digest Funnel</h2>
+            <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">
+              The top captured signal and general grid of community-curated links for this day. Scores are computed based on keyword hits, artifact status, and cross-source corroboration.
+            </p>
+          </div>
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text">
+            <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle" aria-hidden="true"></span>
+            Scan · {dateStr}
+          </p>
+        </div>
+
+        {/* Featured signal */}
+        <a
+          href={featuredSignal.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group mt-8 grid overflow-hidden rounded-[20px] border border-border bg-card-bg transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated md:grid-cols-[1.1fr_1fr]"
+        >
+          <div class="relative aspect-[16/9] overflow-hidden md:aspect-auto md:min-h-[15rem]">
+            {featuredSignal.image ? (
+              <img
+                src={featuredSignal.image}
+                alt=""
+                width="640"
+                height="360"
+                loading="lazy"
+                decoding="async"
+                class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              />
+            ) : (
+              <div
+                class="absolute inset-0 flex items-center justify-center"
+                style={`background: linear-gradient(135deg, color-mix(in srgb, ${pillarOf(featuredSignal).color} 16%, var(--mp-card-bg)), var(--mp-card-bg));`}
+                aria-hidden="true"
+              >
+                <span class="font-mono text-[0.7rem] uppercase tracking-[0.2em]" style={`color: ${pillarOf(featuredSignal).color};`}>◉ {pillarOf(featuredSignal).label}</span>
+              </div>
+            )}
+          </div>
+          <div class="flex flex-col justify-between gap-6 p-6 sm:p-8">
+            <div>
+              <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">
+                <span class="text-primary-cta">Top signal</span>
+                <span class="mx-1.5" aria-hidden="true">·</span>{(featuredSignal.sources ?? [featuredSignal.source]).map((s) => sourceLabels[s]).join(' + ')}
+                <span class="mx-1.5" aria-hidden="true">·</span>{timeAgo(featuredSignal.publishedAt)}
+              </p>
+              <h3 class="mt-3 text-[clamp(1.15rem,2.4vw,1.5rem)] font-semibold leading-[1.35] tracking-[-0.02em] text-primary-text group-hover:text-primary-cta">{featuredSignal.title}</h3>
+            </div>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span class="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+                <span class="h-2 w-2 rounded-full" style={`background: ${pillarOf(featuredSignal).color};`} aria-hidden="true"></span>
+                {pillarOf(featuredSignal).label}
+              </span>
+              {featuredSignal.domain && <span class="rounded-full border border-border bg-elevated px-2.5 py-0.5 font-mono text-[0.65rem] text-muted-text">{featuredSignal.domain}</span>}
+              <span class="ml-auto inline-flex items-end gap-[3px]" role="img" aria-label={`Signal strength ${signalBars(featuredSignal.score)} of 5`}>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <span
+                    class="w-[4px] rounded-sm"
+                    style={`height: ${4 + n * 2}px; background: ${n <= signalBars(featuredSignal.score) ? pillarOf(featuredSignal).color : 'var(--mp-border)'};`}
+                    aria-hidden="true"
+                  ></span>
+                ))}
+              </span>
+            </div>
+          </div>
+        </a>
+
+        {/* Signal grid */}
+        <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {restSignals.map((item) => {
+            const pillar = pillarOf(item);
+            return (
+              <li>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-card-bg transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated"
+                >
+                  <div class="relative aspect-[16/9] overflow-hidden">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt=""
+                        width="640"
+                        height="360"
+                        loading="lazy"
+                        decoding="async"
+                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+                    ) : (
+                      <div
+                        class="absolute inset-0 flex items-center justify-center"
+                        style={`background: linear-gradient(135deg, color-mix(in srgb, ${pillar.color} 16%, var(--mp-card-bg)), var(--mp-card-bg));`}
+                        aria-hidden="true"
+                      >
+                        <span class="font-mono text-[0.65rem] uppercase tracking-[0.2em]" style={`color: ${pillar.color};`}>◉ {pillar.label}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div class="flex flex-1 flex-col justify-between gap-4 p-5">
+                    <div>
+                      <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">
+                        {(item.sources ?? [item.source]).map((s) => sourceLabels[s]).join(' + ')}
+                        <span class="mx-1.5" aria-hidden="true">·</span>{timeAgo(item.publishedAt)}
+                      </p>
+                      <h3 class="mt-2 text-[0.95rem] font-medium leading-[1.5] text-primary-text group-hover:text-primary-cta">{item.title}</h3>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                      <span class="inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">
+                        <span class="h-1.5 w-1.5 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                        {pillar.label}
+                      </span>
+                      {item.domain && <span class="rounded-full border border-border bg-elevated px-2 py-0.5 font-mono text-[0.62rem] text-muted-text">{item.domain}</span>}
+                      <span class="ml-auto inline-flex items-end gap-[2.5px]" role="img" aria-label={`Signal strength ${signalBars(item.score)} of 5`}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <span
+                            class="w-[3px] rounded-sm"
+                            style={`height: ${3 + n * 2}px; background: ${n <= signalBars(item.score) ? pillar.color : 'var(--mp-border)'};`}
+                            aria-hidden="true"
+                          ></span>
+                        ))}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  ) : (
+    <section class="border-b border-border bg-canvas py-24 text-center">
+      <p class="text-muted-text">No signals captured for this day.</p>
+    </section>
+  )}
+</Layout>

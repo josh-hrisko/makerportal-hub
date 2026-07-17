@@ -3,8 +3,6 @@
  * scripts/trends/build-digest.mjs (weekly GitHub Action, PR-reviewed before
  * merge). Build-time only — no runtime fetch, no client tracker.
  */
-import trendsData from './trends.json';
-
 export type TrendSource = 'bluesky' | 'hackernews' | 'reddit';
 
 export type TrendItem = {
@@ -24,9 +22,6 @@ export type TrendItem = {
   image?: string;
 };
 
-export const trends: TrendItem[] = trendsData.items as TrendItem[];
-export const trendsGeneratedAt: string | null = trendsData.generatedAt;
-
 export const sourceLabels: Record<TrendSource, string> = {
   bluesky: 'Bluesky',
   hackernews: 'Hacker News',
@@ -44,7 +39,3 @@ export const pillarMeta: Record<string, { label: string; color: string }> = {
 };
 
 export const fallbackPillar = { label: 'Signal', color: '#4C6492' };
-
-export function topTrends(limit = 6): TrendItem[] {
-  return [...trends].sort((a, b) => b.score - a.score).slice(0, limit);
-}

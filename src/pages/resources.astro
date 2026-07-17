@@ -4,10 +4,20 @@ import Layout from '../layouts/Layout.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import ButtondownSignup from '../components/ButtondownSignup.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../data/affiliate-links';
-import { trends as allTrends, topTrends, sourceLabels, pillarMeta, fallbackPillar, trendsGeneratedAt } from '../data/trends';
+import { getCollection } from 'astro:content';
+import { sourceLabels, pillarMeta, fallbackPillar } from '../data/trends';
+import type { TrendItem } from '../data/trends';
 import { playground } from '../data/playground';
 
-const trending = topTrends(7);
+// Fetch the journal entries to get the latest daily signals
+const journals = await getCollection('journal');
+const sortedJournals = journals.sort((a, b) => b.id.localeCompare(a.id));
+const latestJournal = sortedJournals[0];
+
+const allTrends: TrendItem[] = latestJournal ? (latestJournal.data.items as TrendItem[]) : [];
+const trendsGeneratedAt = latestJournal ? latestJournal.data.generatedAt : null;
+
+const trending = [...allTrends].sort((a, b) => b.score - a.score).slice(0, 7);
 const [featuredSignal, ...restSignals] = trending;
 
 const pillarOf = (item: { tags: string[] }) => pillarMeta[item.tags[0]] ?? fallbackPillar;
@@ -126,7 +136,7 @@ const tools = [
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 id="trending-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Signals we're tracking</h2>
-            <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">A build-time scan of public discussion on on-device AI, iOS craft, and DSP — no tracking involved, just what's shaping the next field note. Trending pillars also re-rank <a href="#gear" class="text-brand-anchor hover:text-primary-text">Gear</a> below.</p>
+            <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">A build-time scan of public discussion on on-device AI, iOS craft, and DSP — no tracking involved, just what's shaping the next field note. Trending pillars also re-rank <a href="#gear" class="text-brand-anchor hover:text-primary-text">Gear</a> below. View the full backlog in the <a href="/journal" class="text-brand-anchor hover:text-primary-text font-semibold">Signals Journal</a>.</p>
           </div>
           {scanDate && (
             <p class="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text">

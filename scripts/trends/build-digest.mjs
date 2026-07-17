@@ -6,7 +6,7 @@
  * before anything reaches /resources (build-time static data, no runtime
  * fetch on the hub itself).
  */
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fetchBluesky } from './fetch-bluesky.mjs';
 import { fetchHackerNews } from './fetch-hn.mjs';
@@ -14,7 +14,10 @@ import { fetchReddit } from './fetch-reddit.mjs';
 import { runPipeline, isArtifactUrl, engagementBonus } from './pipeline.mjs';
 import { enrichWithImages } from './enrich-images.mjs';
 
-const OUT_PATH = join(process.cwd(), 'src', 'data', 'trends.json');
+const dateStr = new Date().toISOString().split('T')[0];
+const OUT_DIR = join(process.cwd(), 'src', 'content', 'journal');
+mkdirSync(OUT_DIR, { recursive: true });
+const OUT_PATH = join(OUT_DIR, `${dateStr}.json`);
 const SUMMARY_PATH = join(process.cwd(), 'trend-digest-summary.md'); // gitignored, PR body only
 
 const sources = [
