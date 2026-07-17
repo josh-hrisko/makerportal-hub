@@ -127,9 +127,10 @@ export const playground: PlaygroundEntry[] = [
     slug: 'chladni-cymatics',
     title: 'Chladni Cymatics',
     tagline: 'Sound made visible — standing wave sand patterns',
-    description: 'A virtual plate of particles that collect along the nodal lines of 2D standing waves as you sweep frequency.',
+    description:
+      'Thousands of sand grains flee the vibrating regions of a driven plate and settle along its nodal lines. Sweep the frequency through real modal resonances, drag the driver anywhere on the plate, and watch classic Chladni figures assemble live.',
     isGrounded: false,
-    status: 'planned',
+    status: 'live',
   },
   {
     slug: 'n-body-choreography',

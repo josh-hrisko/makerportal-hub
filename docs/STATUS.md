@@ -10,7 +10,7 @@ Single snapshot of what's live, what's built but pending, what's placeholder. Re
 - **Nav:** Single source `site-nav.ts`, ≤7 primary items, mega panels, ecosystem same-tab / true external new-tab (D-009), opaque surfaces (D-006)
 - **Blog:** 4 human posts in `src/content/blog/` (added MotionLink `CMHeadphoneMotionManager` field note 2026-07-15), no AI pipeline. Trend-grounded draft scaffold (`scripts/trends/draft-post.mjs`) exists but is gated — see Trends digest entry below.
 - **Unified Playground:** `/playground` now contains both app-grounded interactive tools and exploratory math/physics toys, with provenance labeled per entry. Registry: `src/data/playground.ts`. The quaternion ↔ Euler converter lives at `/playground/quaternion-euler-converter` and is cross-linked from the MotionLink field note.
-- **Playground:** `/playground` — unified app-grounded tools and exploratory math/physics toys, labeled honestly per entry. Live: quaternion ↔ Euler converter, Fourier epicycles, Live Earth, and Double Pendulum + Phase Space (fixed-step RK4, draggable bobs, twin-trajectory chaos comparison, energy diagnostics). Registry: `src/data/playground.ts`.
+- **Playground:** `/playground` — unified app-grounded tools and exploratory math/physics toys, labeled honestly per entry. Live: quaternion ↔ Euler converter, Fourier epicycles, Live Earth, Double Pendulum + Phase Space (fixed-step RK4, draggable bobs, twin-trajectory chaos comparison, energy diagnostics), and Chladni Cymatics (driven modal superposition with movable driver, frequency sweep, and Grabec-style grain transport — added 2026-07-16). Registry: `src/data/playground.ts`.
 - **Build:** `npm run build` → astro check + build + pagefind + strip-dev-pages (brand prod-hidden)
 
 ## Traffic (ground truth)

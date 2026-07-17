@@ -1,0 +1,910 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Chladni Cymatics — Standing-Wave Sand Patterns | MakerPortal';
+const description =
+  'Thousands of virtual sand grains migrate to the nodal lines of a vibrating plate. Sweep the drive frequency through real modal resonances — with a movable driver, live mode readouts, and honest math.';
+const canonical = new URL('/playground/chladni-cymatics', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Chladni Cymatics', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Chladni Cymatics"
+    lead="Bow a metal plate covered in sand and the grains flee the vibrating regions, collecting along the silent nodal lines. This is the same experiment as a driven modal superposition: sweep the frequency, move the driver, and watch thousands of grains assemble the resonant geometry."
+  >
+    <section class="border-b border-border" aria-labelledby="simulation-title">
+      <div class="mx-auto max-w-[76rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 id="simulation-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Sound made visible</h2>
+            <p id="chladni-status" class="mt-2 max-w-2xl text-[0.88rem] leading-[1.55] text-muted-text">Running. Drag anywhere on the plate to move the driver; grains re-settle onto the new nodal lines.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="sim-btn is-active" id="run-toggle" aria-pressed="true">Pause</button>
+            <button type="button" class="sim-btn" id="resand-btn">Re-sand</button>
+            <button type="button" class="sim-btn" id="field-toggle" aria-pressed="false">Show field</button>
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1.15fr_1fr]">
+          <div class="canvas-card">
+            <div class="canvas-label-row">
+              <span>Vibrating plate</span>
+              <span>Drag to move the driver</span>
+            </div>
+            <canvas
+              id="chladni-canvas"
+              width="640"
+              height="640"
+              tabindex="0"
+              aria-label="Chladni plate simulation. Drag with a pointer or use arrow keys to move the drive point; sand grains collect along nodal lines."
+            ></canvas>
+          </div>
+
+          <div class="rounded-[20px] border border-border bg-card-bg p-5 lg:p-6">
+            <div class="flex flex-wrap gap-2" aria-label="Pattern presets">
+              <button type="button" class="preset-btn is-active" data-preset="star">Star</button>
+              <button type="button" class="preset-btn" data-preset="cross">Cross</button>
+              <button type="button" class="preset-btn" data-preset="diamond">Diamond</button>
+              <button type="button" class="preset-btn" data-preset="windowpane">Windowpane</button>
+              <button type="button" class="preset-btn" data-preset="lattice">Lattice</button>
+              <button type="button" class="preset-btn" data-preset="rosette">Rosette</button>
+              <button type="button" class="preset-btn" data-preset="flower">Flower</button>
+              <button type="button" class="preset-btn" data-preset="lace">Lace</button>
+            </div>
+
+            <div class="mt-5 grid gap-5">
+              <label class="control-label" for="freq-slider">
+                <span>Drive frequency</span><output id="freq-readout">10.00 × f₁</output>
+                <input type="range" id="freq-slider" min="-0.32" max="6.15" step="0.01" value="3.3219" aria-label="Drive frequency, logarithmic scale, in multiples of the fundamental" />
+              </label>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" class="sim-btn" id="sweep-toggle" aria-pressed="false">Sweep frequency</button>
+                <span class="font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-text">slow upward glide through every resonance</span>
+              </div>
+
+              <div>
+                <p class="control-heading">Drive point</p>
+                <div class="mt-2 flex flex-wrap gap-2" role="group" aria-label="Drive point position">
+                  <button type="button" class="preset-btn is-active" data-drive="center">Center</button>
+                  <button type="button" class="preset-btn" data-drive="offaxis">Off-axis</button>
+                  <button type="button" class="preset-btn" data-drive="edge">Edge</button>
+                </div>
+              </div>
+
+              <label class="control-label" for="gamma-slider">
+                <span>Resonance width γ</span><output id="gamma-readout">0.030</output>
+                <input type="range" id="gamma-slider" min="0.01" max="0.12" step="0.005" value="0.03" aria-label="Resonance width: smaller values isolate single modes, larger values blend neighbours" />
+              </label>
+
+              <div>
+                <p class="control-heading">Grains</p>
+                <div class="mt-2 flex flex-wrap gap-2" role="group" aria-label="Particle count">
+                  <button type="button" class="preset-btn" data-grains="2500">2.5k</button>
+                  <button type="button" class="preset-btn is-active" data-grains="5000">5k</button>
+                  <button type="button" class="preset-btn" data-grains="9000">9k</button>
+                </div>
+              </div>
+            </div>
+
+            <dl class="mt-6 grid grid-cols-2 gap-3 font-mono text-[0.75rem]" aria-live="off">
+              <div class="metric-card"><dt>Dominant modes</dt><dd id="metric-modes">—</dd></div>
+              <div class="metric-card"><dt>Mode share</dt><dd id="metric-share">—</dd></div>
+              <div class="metric-card"><dt>Grains settled</dt><dd id="metric-settled">—</dd></div>
+              <div class="metric-card"><dt>Driver</dt><dd id="metric-driver">—</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="math-title">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math under the sand</h2>
+        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <p>
+            A plate driven at a point responds as a weighted sum of its standing-wave modes. Each mode’s weight is a resonance curve: enormous when the drive frequency sits on that mode’s eigenfrequency, tiny elsewhere. Two modes like (4,2) and (2,4) share an eigenfrequency on a square plate, so at resonance they respond <em>together</em> — the diagonal symmetry of the classic patterns is degeneracy you can hear.
+          </p>
+          <p>
+            The grains aren’t decoration; they are the measurement. Vibrating regions kick grains into a random walk whose step size grows with local amplitude, while the time-averaged bounce drifts them down the amplitude gradient. Both effects vanish exactly on a nodal line, so the silent curves are the only places grains can come to rest — which is why sand draws the mathematics by itself.
+          </p>
+        </div>
+        <div class="mt-7 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Driven modal superposition</p>
+            <p class="mt-2">u(x,y) = Σ φₘₙ(x₀,y₀) · φₘₙ(x,y) / √((f²ₘₙ − f²)² + (γ f fₘₙ)²)</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">φₘₙ = cos(mπx)cos(nπy) with free-edge (Neumann) boundary conditions; the drive point (x₀,y₀) sets each mode’s coupling, so moving the driver genuinely re-weights the sum.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Plate dispersion</p>
+            <p class="mt-2">fₘₙ / f₁ = (m² + n²) / 2</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Bending waves in a stiff plate obey ω ∝ k², unlike a membrane’s ω ∝ k — resonances spread out quadratically as you sweep upward, exactly as the slider feels.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Grain transport</p>
+            <p class="mt-2">dx = −μ ∇(u²) dt + σ|u| dW</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Deterministic drift down the squared-amplitude gradient plus amplitude-scaled jitter (a Grabec-style stochastic model), integrated at a fixed 1/120 s timestep independent of display frame rate.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Honest limitations</p>
+            <p class="mt-2 text-[0.74rem] leading-[1.55] text-muted-text">Cosine modes are exact for a free membrane and a standard approximation for a free plate — a real plate’s biharmonic eigenfunctions bend the lines near edges. Response amplitude is auto-normalized so patterns stay visible between resonances, and grain–grain collisions are ignored. Patterns are qualitatively faithful; eigenfrequencies of any physical plate will differ.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .sim-btn,
+  .preset-btn {
+    min-height: 2.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.45rem 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .sim-btn:hover,
+  .preset-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-border-strong);
+  }
+  .sim-btn.is-active,
+  .preset-btn.is-active {
+    color: var(--mp-canvas);
+    border-color: var(--mp-text);
+    background: var(--mp-text);
+  }
+  .canvas-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mp-border);
+    border-radius: 20px;
+    background: var(--mp-card);
+    align-self: start;
+  }
+  .canvas-label-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--mp-border);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mp-muted);
+  }
+  #chladni-canvas {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    background: var(--mp-canvas);
+    cursor: crosshair;
+    touch-action: none;
+  }
+  #chladni-canvas:focus-visible {
+    outline: 2px solid var(--mp-cta);
+    outline-offset: -2px;
+  }
+  .control-label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .control-label output { color: var(--mp-text); }
+  .control-label input {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--mp-cta);
+  }
+  .control-heading {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .metric-card,
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem;
+  }
+  .metric-card dt,
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .metric-card dd {
+    margin-top: 0.35rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .math-card {
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+</style>
+
+<script>
+  function initChladni() {
+    const canvasElement = document.getElementById('chladni-canvas') as HTMLCanvasElement | null;
+    if (!canvasElement || canvasElement.dataset.initialized === 'true') return;
+    const canvas = canvasElement;
+    canvas.dataset.initialized = 'true';
+
+    const ctx = canvas.getContext('2d')!;
+    const W = 640;
+    const H = 640;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // ------------------------------------------------------------------
+    // DOM
+    // ------------------------------------------------------------------
+    const statusEl = document.getElementById('chladni-status')!;
+    const runToggle = document.getElementById('run-toggle') as HTMLButtonElement;
+    const resandBtn = document.getElementById('resand-btn') as HTMLButtonElement;
+    const fieldToggle = document.getElementById('field-toggle') as HTMLButtonElement;
+    const sweepToggle = document.getElementById('sweep-toggle') as HTMLButtonElement;
+    const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
+    const freqReadout = document.getElementById('freq-readout')!;
+    const gammaSlider = document.getElementById('gamma-slider') as HTMLInputElement;
+    const gammaReadout = document.getElementById('gamma-readout')!;
+    const presetButtons = document.querySelectorAll<HTMLButtonElement>('[data-preset]');
+    const driveButtons = document.querySelectorAll<HTMLButtonElement>('[data-drive]');
+    const grainButtons = document.querySelectorAll<HTMLButtonElement>('[data-grains]');
+    const metricModes = document.getElementById('metric-modes')!;
+    const metricShare = document.getElementById('metric-share')!;
+    const metricSettled = document.getElementById('metric-settled')!;
+    const metricDriver = document.getElementById('metric-driver')!;
+
+    // ------------------------------------------------------------------
+    // Model constants — validated numerically in Node before shipping
+    // (resonance selectivity, nodal-line residuals, transport convergence,
+    //  frame-rate independence, separable-grid exactness).
+    // ------------------------------------------------------------------
+    const MAX_MODE = 8;
+    const GRID = 144;                 // field grid cells per axis
+    const PHYSICS_DT = 1 / 120;
+    const MU = 0.12;                  // gradient mobility
+    const JITTER = 0.006;             // amplitude-scaled random-walk step
+    const STEP_CAP = 0.004;           // per-step displacement cap (plate units)
+    const COEFF_KEEP = 16;            // strongest modes kept per rebuild
+    const FADE_SECONDS = 0.7;
+    const SWEEP_OCTAVES_PER_SEC = 0.1;
+    const modeFreq = (m: number, n: number) => (m * m + n * n) / 2;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ------------------------------------------------------------------
+    // Theme colors (resolved from CSS custom properties, never passed raw)
+    // ------------------------------------------------------------------
+    function resolveColor(name: string, fallback: string): string {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+    }
+    const probe = document.createElement('canvas');
+    probe.width = probe.height = 1;
+    const probeCtx = probe.getContext('2d')!;
+    function colorToRGB(color: string): [number, number, number] {
+      probeCtx.fillStyle = '#000';
+      probeCtx.fillStyle = color;
+      probeCtx.clearRect(0, 0, 1, 1);
+      probeCtx.fillRect(0, 0, 1, 1);
+      const d = probeCtx.getImageData(0, 0, 1, 1).data;
+      return [d[0], d[1], d[2]];
+    }
+    let colors: { canvas: string; text: string; muted: string; cta: string; ctaRGB: [number, number, number]; textRGB: [number, number, number] };
+    function readColors() {
+      const cta = resolveColor('--mp-cta', '#b8324f');
+      const text = resolveColor('--mp-text', '#16202e');
+      colors = {
+        canvas: resolveColor('--mp-canvas', '#f8f4ed'),
+        text,
+        muted: resolveColor('--mp-muted', '#4a5d6f'),
+        cta,
+        ctaRGB: colorToRGB(cta),
+        textRGB: colorToRGB(text),
+      };
+    }
+    readColors();
+    const themeObserver = new MutationObserver(() => { readColors(); overlayDirty = true; });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // ------------------------------------------------------------------
+    // Field state
+    // ------------------------------------------------------------------
+    interface Coeff { m: number; n: number; c: number; }
+    const G1 = GRID + 1;
+    // active target grid
+    let gridU = new Float32Array(G1 * G1);
+    let gridGX = new Float32Array(G1 * G1);
+    let gridGY = new Float32Array(G1 * G1);
+    let gridUMax = 1;
+    // fade-from snapshot for discrete jumps
+    let fadeU = new Float32Array(G1 * G1);
+    let fadeGX = new Float32Array(G1 * G1);
+    let fadeGY = new Float32Array(G1 * G1);
+    let fadeUMax = 1;
+    let fadeT = 1; // 1 = fade finished
+
+    let logF = Math.log2(10);         // default: the (4,2)/(2,4) star resonance
+    let gamma = 0.03;
+    let driveX = 0.5;
+    let driveY = 0.5;
+    let activeCoeffs: Coeff[] = [];
+
+    function computeCoefficients(f: number): Coeff[] {
+      const all: Coeff[] = [];
+      for (let m = 0; m <= MAX_MODE; m++) {
+        for (let n = 0; n <= MAX_MODE; n++) {
+          if (m === 0 && n === 0) continue;
+          const fmn = modeFreq(m, n);
+          const coupling = Math.cos(m * Math.PI * driveX) * Math.cos(n * Math.PI * driveY);
+          const denom = Math.hypot(fmn * fmn - f * f, gamma * f * fmn);
+          const c = coupling / denom;
+          if (Math.abs(c) > 1e-9) all.push({ m, n, c });
+        }
+      }
+      all.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
+      const kept = all.slice(0, COEFF_KEEP);
+      const floor = kept.length ? Math.abs(kept[0].c) * 1e-3 : 0;
+      return kept.filter((k) => Math.abs(k.c) >= floor);
+    }
+
+    // Separable evaluation: u = Σ c·cos(mπx)cos(nπy), so per-axis cos/sin
+    // tables turn the grid rebuild into pure multiply-adds (validated exact).
+    const cosTable: Float32Array[] = [];
+    const sinTable: Float32Array[] = [];
+    for (let m = 0; m <= MAX_MODE; m++) {
+      const ct = new Float32Array(G1);
+      const st = new Float32Array(G1);
+      for (let i = 0; i < G1; i++) {
+        ct[i] = Math.cos(m * Math.PI * (i / GRID));
+        st[i] = Math.sin(m * Math.PI * (i / GRID));
+      }
+      cosTable.push(ct);
+      sinTable.push(st);
+    }
+
+    function rebuildGrid() {
+      activeCoeffs = computeCoefficients(Math.pow(2, logF));
+      gridU.fill(0);
+      gridGX.fill(0);
+      gridGY.fill(0);
+      for (const { m, n, c } of activeCoeffs) {
+        const cm = cosTable[m], cn = cosTable[n];
+        const sm = sinTable[m], sn = sinTable[n];
+        const cgx = -c * m * Math.PI;
+        const cgy = -c * n * Math.PI;
+        for (let j = 0; j < G1; j++) {
+          const cnj = cn[j], snj = sn[j];
+          const row = j * G1;
+          for (let i = 0; i < G1; i++) {
+            gridU[row + i] += c * cm[i] * cnj;
+            gridGX[row + i] += cgx * sm[i] * cnj;
+            gridGY[row + i] += cgy * cm[i] * snj;
+          }
+        }
+      }
+      gridUMax = 1e-12;
+      for (let k = 0; k < gridU.length; k++) {
+        const a = Math.abs(gridU[k]);
+        if (a > gridUMax) gridUMax = a;
+      }
+      overlayDirty = true;
+    }
+
+    function snapshotForFade() {
+      // capture the currently displayed (possibly mid-fade) field as fade source
+      if (fadeT >= 1) {
+        fadeU.set(gridU); fadeGX.set(gridGX); fadeGY.set(gridGY);
+        fadeUMax = gridUMax;
+      } else {
+        const t = easedFade();
+        for (let k = 0; k < gridU.length; k++) {
+          fadeU[k] = fadeU[k] + (gridU[k] - fadeU[k]) * t;
+          fadeGX[k] = fadeGX[k] + (gridGX[k] - fadeGX[k]) * t;
+          fadeGY[k] = fadeGY[k] + (gridGY[k] - fadeGY[k]) * t;
+        }
+        fadeUMax = fadeUMax + (gridUMax - fadeUMax) * t;
+      }
+      fadeT = 0;
+    }
+
+    const easedFade = () => {
+      const t = Math.min(1, fadeT);
+      return t * t * (3 - 2 * t); // smoothstep
+    };
+
+    // Bilinear sample of the blended field. Returns [u, gx, gy, umax-normalizer].
+    const sampleOut = new Float64Array(3);
+    function sampleField(x: number, y: number) {
+      const fx = Math.min(GRID - 1e-6, Math.max(0, x * GRID));
+      const fy = Math.min(GRID - 1e-6, Math.max(0, y * GRID));
+      const i = Math.floor(fx), j = Math.floor(fy);
+      const tx = fx - i, ty = fy - j;
+      const k00 = j * G1 + i, k10 = k00 + 1, k01 = k00 + G1, k11 = k01 + 1;
+      const w00 = (1 - tx) * (1 - ty), w10 = tx * (1 - ty), w01 = (1 - tx) * ty, w11 = tx * ty;
+      let u = gridU[k00] * w00 + gridU[k10] * w10 + gridU[k01] * w01 + gridU[k11] * w11;
+      let gx = gridGX[k00] * w00 + gridGX[k10] * w10 + gridGX[k01] * w01 + gridGX[k11] * w11;
+      let gy = gridGY[k00] * w00 + gridGY[k10] * w10 + gridGY[k01] * w01 + gridGY[k11] * w11;
+      if (fadeT < 1) {
+        const t = easedFade();
+        const fu = fadeU[k00] * w00 + fadeU[k10] * w10 + fadeU[k01] * w01 + fadeU[k11] * w11;
+        const fgx = fadeGX[k00] * w00 + fadeGX[k10] * w10 + fadeGX[k01] * w01 + fadeGX[k11] * w11;
+        const fgy = fadeGY[k00] * w00 + fadeGY[k10] * w10 + fadeGY[k01] * w01 + fadeGY[k11] * w11;
+        u = fu + (u - fu) * t;
+        gx = fgx + (gx - fgx) * t;
+        gy = fgy + (gy - fgy) * t;
+      }
+      sampleOut[0] = u;
+      sampleOut[1] = gx;
+      sampleOut[2] = gy;
+      return sampleOut;
+    }
+    function blendedUMax(): number {
+      return fadeT < 1 ? fadeUMax + (gridUMax - fadeUMax) * easedFade() : gridUMax;
+    }
+
+    // ------------------------------------------------------------------
+    // Particles
+    // ------------------------------------------------------------------
+    let grainCount = window.matchMedia('(max-width: 640px)').matches ? 2500 : 5000;
+    let px = new Float32Array(0);
+    let py = new Float32Array(0);
+
+    function resand() {
+      px = new Float32Array(grainCount);
+      py = new Float32Array(grainCount);
+      for (let p = 0; p < grainCount; p++) {
+        px[p] = Math.random();
+        py[p] = Math.random();
+      }
+    }
+
+    function stepPhysics() {
+      const umax = blendedUMax();
+      const inv = 1 / umax;
+      for (let p = 0; p < grainCount; p++) {
+        const s = sampleField(px[p], py[p]);
+        const un = s[0] * inv;
+        const drift = -MU * 2 * un * inv * PHYSICS_DT;
+        let dx = drift * s[1] + JITTER * Math.abs(un) * (Math.random() - 0.5);
+        let dy = drift * s[2] + JITTER * Math.abs(un) * (Math.random() - 0.5);
+        if (dx > STEP_CAP) dx = STEP_CAP; else if (dx < -STEP_CAP) dx = -STEP_CAP;
+        if (dy > STEP_CAP) dy = STEP_CAP; else if (dy < -STEP_CAP) dy = -STEP_CAP;
+        let nx = px[p] + dx;
+        let ny = py[p] + dy;
+        if (nx < 0) nx = -nx; else if (nx > 1) nx = 2 - nx;
+        if (ny < 0) ny = -ny; else if (ny > 1) ny = 2 - ny;
+        px[p] = nx;
+        py[p] = ny;
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // Field overlay (amplitude heat map, rebuilt only when the grid changes)
+    // ------------------------------------------------------------------
+    let overlayDirty = true;
+    let overlayVisible = false;
+    const overlayCanvas = document.createElement('canvas');
+    overlayCanvas.width = G1;
+    overlayCanvas.height = G1;
+    const overlayCtx = overlayCanvas.getContext('2d')!;
+    const overlayImage = overlayCtx.createImageData(G1, G1);
+
+    function rebuildOverlay() {
+      const [r, g, b] = colors.ctaRGB;
+      const data = overlayImage.data;
+      const umax = blendedUMax();
+      for (let j = 0; j < G1; j++) {
+        for (let i = 0; i < G1; i++) {
+          const k = j * G1 + i;
+          let u = gridU[k];
+          if (fadeT < 1) {
+            const t = easedFade();
+            u = fadeU[k] + (u - fadeU[k]) * t;
+          }
+          const a = Math.min(1, Math.abs(u) / umax);
+          const o = k * 4;
+          data[o] = r;
+          data[o + 1] = g;
+          data[o + 2] = b;
+          data[o + 3] = Math.round(a * 90);
+        }
+      }
+      overlayCtx.putImageData(overlayImage, 0, 0);
+      overlayDirty = false;
+    }
+
+    // ------------------------------------------------------------------
+    // Rendering
+    // ------------------------------------------------------------------
+    function draw() {
+      ctx.fillStyle = colors.canvas;
+      ctx.fillRect(0, 0, W, H);
+
+      if (overlayVisible) {
+        if (overlayDirty || fadeT < 1) rebuildOverlay();
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(overlayCanvas, 0, 0, G1, G1, 0, 0, W, H);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = colors.text;
+      ctx.globalAlpha = 0.8;
+      for (let p = 0; p < grainCount; p++) {
+        ctx.fillRect(px[p] * W - 1, py[p] * H - 1, 2, 2);
+      }
+      ctx.globalAlpha = 1;
+
+      // driver marker
+      const dxp = driveX * W;
+      const dyp = driveY * H;
+      ctx.strokeStyle = colors.cta;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(dxp, dyp, 9, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(dxp - 4, dyp); ctx.lineTo(dxp + 4, dyp);
+      ctx.moveTo(dxp, dyp - 4); ctx.lineTo(dxp, dyp + 4);
+      ctx.stroke();
+    }
+
+    // ------------------------------------------------------------------
+    // Metrics
+    // ------------------------------------------------------------------
+    function updateMetrics() {
+      const total = activeCoeffs.reduce((s, k) => s + Math.abs(k.c), 0) || 1;
+      // fold degenerate partners (m,n)/(n,m) into one entry, keep top 3
+      const shares = new Map<string, number>();
+      for (const k of activeCoeffs) {
+        const key = k.m <= k.n ? `${k.m},${k.n}` : `${k.n},${k.m}`;
+        shares.set(key, (shares.get(key) ?? 0) + Math.abs(k.c) / total);
+      }
+      const top = [...shares.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+      metricModes.textContent = top.map(([key]) => `(${key})`).join(' ') || '—';
+      metricShare.textContent = top.length ? `${Math.round(top[0][1] * 100)}% leading` : '—';
+
+      const sampleCount = Math.min(600, grainCount);
+      const stride = Math.max(1, Math.floor(grainCount / sampleCount));
+      const umax = blendedUMax();
+      let settled = 0, counted = 0;
+      for (let p = 0; p < grainCount; p += stride) {
+        const s = sampleField(px[p], py[p]);
+        if (Math.abs(s[0]) / umax < 0.1) settled++;
+        counted++;
+      }
+      metricSettled.textContent = `${Math.round((settled / Math.max(1, counted)) * 100)}%`;
+      metricDriver.textContent = `(${driveX.toFixed(2)}, ${driveY.toFixed(2)})`;
+    }
+
+    function updateFreqReadout() {
+      const f = Math.pow(2, logF);
+      freqSlider.value = logF.toFixed(4);
+      freqReadout.textContent = `${f.toFixed(2)} × f₁`;
+    }
+
+    // ------------------------------------------------------------------
+    // Control wiring
+    // ------------------------------------------------------------------
+    let running = !reducedMotion;
+    let sweeping = false;
+    let accumulator = 0;
+    let lastFrameTime = performance.now();
+    let animationFrameId = 0;
+    let destroyed = false;
+    let frameCounter = 0;
+
+    function setRunning(next: boolean) {
+      running = next;
+      runToggle.textContent = running ? 'Pause' : 'Play';
+      runToggle.classList.toggle('is-active', running);
+      runToggle.setAttribute('aria-pressed', String(running));
+      statusEl.textContent = running
+        ? 'Running. Drag anywhere on the plate to move the driver; grains re-settle onto the new nodal lines.'
+        : reducedMotion
+          ? 'Reduced motion is on: each change is shown as an instantly settled pattern instead of a live animation.'
+          : 'Paused. The field stays live for the overlay; grains hold their positions.';
+    }
+
+    // Instant settle for reduced-motion users: run the same fixed-step
+    // physics synchronously so every parameter change shows a finished pattern.
+    function instantSettle() {
+      const burst = Math.round(4 / PHYSICS_DT);
+      const saveFade = fadeT;
+      fadeT = 1; // settle against the final field, not the blend
+      for (let s = 0; s < burst; s++) stepPhysics();
+      fadeT = saveFade;
+    }
+
+    // Rapid slider input under reduced motion coalesces into one settle,
+    // 150 ms after the last change, instead of a synchronous burst per event.
+    let pendingSettle = false;
+    let lastChangeTime = 0;
+
+    function afterFieldChange(discrete: boolean) {
+      if (discrete && !reducedMotion) snapshotForFade();
+      rebuildGrid();
+      if (reducedMotion) {
+        fadeT = 1;
+        pendingSettle = true;
+        lastChangeTime = performance.now();
+      }
+      draw();
+      updateMetrics();
+    }
+
+    runToggle.addEventListener('click', () => setRunning(!running));
+    resandBtn.addEventListener('click', () => {
+      resand();
+      if (reducedMotion) instantSettle();
+      draw();
+      updateMetrics();
+    });
+    fieldToggle.addEventListener('click', () => {
+      overlayVisible = !overlayVisible;
+      fieldToggle.textContent = overlayVisible ? 'Hide field' : 'Show field';
+      fieldToggle.classList.toggle('is-active', overlayVisible);
+      fieldToggle.setAttribute('aria-pressed', String(overlayVisible));
+      overlayDirty = true;
+      draw();
+    });
+    sweepToggle.addEventListener('click', () => {
+      sweeping = !sweeping;
+      sweepToggle.classList.toggle('is-active', sweeping);
+      sweepToggle.setAttribute('aria-pressed', String(sweeping));
+      if (sweeping && reducedMotion) {
+        // sweeping is continuous motion by definition; step in discrete hops instead
+        statusEl.textContent = 'Reduced motion: sweep advances in discrete steps, one resonance at a time.';
+      }
+    });
+
+    freqSlider.addEventListener('input', () => {
+      logF = parseFloat(freqSlider.value);
+      presetButtons.forEach((b) => b.classList.remove('is-active'));
+      updateFreqReadout();
+      afterFieldChange(false);
+    });
+    gammaSlider.addEventListener('input', () => {
+      gamma = parseFloat(gammaSlider.value);
+      gammaReadout.textContent = gamma.toFixed(3);
+      afterFieldChange(false);
+    });
+
+    const drivePoints: Record<string, [number, number]> = {
+      center: [0.5, 0.5],
+      offaxis: [0.353, 0.278],
+      edge: [0.5, 0.02],
+    };
+    function markDriveButtons() {
+      driveButtons.forEach((b) => {
+        const dp = drivePoints[b.dataset.drive ?? ''];
+        b.classList.toggle('is-active', !!dp && Math.abs(dp[0] - driveX) < 1e-3 && Math.abs(dp[1] - driveY) < 1e-3);
+      });
+    }
+    driveButtons.forEach((b) => {
+      b.addEventListener('click', () => {
+        const dp = drivePoints[b.dataset.drive ?? 'center'];
+        driveX = dp[0];
+        driveY = dp[1];
+        markDriveButtons();
+        presetButtons.forEach((x) => x.classList.remove('is-active'));
+        afterFieldChange(true);
+      });
+    });
+
+    grainButtons.forEach((b) => {
+      b.addEventListener('click', () => {
+        grainCount = parseInt(b.dataset.grains ?? '5000', 10);
+        grainButtons.forEach((x) => x.classList.toggle('is-active', x === b));
+        resand();
+        if (reducedMotion) instantSettle();
+        draw();
+        updateMetrics();
+      });
+    });
+
+    // Presets: named patterns = (resonance, drive point). The degenerate-pair
+    // mixing that shapes each figure comes from the physics, not a lookup.
+    const presets: Record<string, { f: number; drive: [number, number] }> = {
+      star: { f: modeFreq(4, 2), drive: drivePoints.center },
+      // edge drive flips the sign of the (2,0) coupling relative to (0,2),
+      // turning the center-driven diamond into the true diagonal cross
+      cross: { f: modeFreq(2, 0), drive: drivePoints.edge },
+      diamond: { f: modeFreq(2, 0), drive: drivePoints.center },
+      windowpane: { f: modeFreq(2, 2), drive: drivePoints.center },
+      lattice: { f: modeFreq(4, 4), drive: drivePoints.center },
+      rosette: { f: modeFreq(6, 2), drive: drivePoints.center },
+      flower: { f: modeFreq(5, 3), drive: drivePoints.offaxis },
+      lace: { f: modeFreq(7, 5), drive: drivePoints.offaxis },
+    };
+    presetButtons.forEach((b) => {
+      b.addEventListener('click', () => {
+        const preset = presets[b.dataset.preset ?? 'star'];
+        logF = Math.log2(preset.f);
+        driveX = preset.drive[0];
+        driveY = preset.drive[1];
+        sweeping = false;
+        sweepToggle.classList.remove('is-active');
+        sweepToggle.setAttribute('aria-pressed', 'false');
+        presetButtons.forEach((x) => x.classList.toggle('is-active', x === b));
+        markDriveButtons();
+        updateFreqReadout();
+        afterFieldChange(true);
+      });
+    });
+
+    // Pointer: drag the driver around the plate
+    let draggingDriver = false;
+    function pointToPlate(event: PointerEvent): [number, number] {
+      const rect = canvas.getBoundingClientRect();
+      return [
+        Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
+        Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
+      ];
+    }
+    canvas.addEventListener('pointerdown', (event) => {
+      draggingDriver = true;
+      try { canvas.setPointerCapture(event.pointerId); } catch { /* pointer may already be gone */ }
+      const [x, y] = pointToPlate(event);
+      driveX = x; driveY = y;
+      markDriveButtons();
+      presetButtons.forEach((b) => b.classList.remove('is-active'));
+      afterFieldChange(false);
+    });
+    canvas.addEventListener('pointermove', (event) => {
+      if (!draggingDriver) return;
+      const [x, y] = pointToPlate(event);
+      driveX = x; driveY = y;
+      afterFieldChange(false);
+    });
+    function endDriverDrag(event: PointerEvent) {
+      draggingDriver = false;
+      if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      markDriveButtons();
+      updateMetrics();
+    }
+    canvas.addEventListener('pointerup', endDriverDrag);
+    canvas.addEventListener('pointercancel', endDriverDrag);
+
+    // Keyboard: arrow keys move the driver, Home recenters
+    canvas.addEventListener('keydown', (event) => {
+      const step = event.shiftKey ? 0.05 : 0.02;
+      let handled = true;
+      if (event.key === 'ArrowLeft') driveX = Math.max(0, driveX - step);
+      else if (event.key === 'ArrowRight') driveX = Math.min(1, driveX + step);
+      else if (event.key === 'ArrowUp') driveY = Math.max(0, driveY - step);
+      else if (event.key === 'ArrowDown') driveY = Math.min(1, driveY + step);
+      else if (event.key === 'Home') { driveX = 0.5; driveY = 0.5; }
+      else handled = false;
+      if (handled) {
+        event.preventDefault();
+        markDriveButtons();
+        presetButtons.forEach((b) => b.classList.remove('is-active'));
+        afterFieldChange(false);
+      }
+    });
+
+    // ------------------------------------------------------------------
+    // Main loop — fixed-timestep physics, frame-rate independent
+    // ------------------------------------------------------------------
+    let sweepSettleTimer = 0;
+    function renderFrame(frameTime: number) {
+      if (destroyed) return;
+      const elapsed = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
+      lastFrameTime = frameTime;
+
+      if (running && !document.hidden) {
+        if (fadeT < 1) fadeT = Math.min(1, fadeT + elapsed / FADE_SECONDS);
+        if (sweeping) {
+          logF += SWEEP_OCTAVES_PER_SEC * elapsed;
+          if (logF > 6.15) logF = -0.32;
+          updateFreqReadout();
+          presetButtons.forEach((b) => b.classList.remove('is-active'));
+          rebuildGrid();
+        }
+        accumulator += elapsed;
+        let safety = 0;
+        while (accumulator >= PHYSICS_DT && safety < 8) {
+          stepPhysics();
+          accumulator -= PHYSICS_DT;
+          safety++;
+        }
+        draw();
+        frameCounter++;
+        if (frameCounter % 15 === 0) updateMetrics();
+      } else if (reducedMotion && pendingSettle && frameTime - lastChangeTime > 150) {
+        pendingSettle = false;
+        instantSettle();
+        draw();
+        updateMetrics();
+      } else if (reducedMotion && sweeping) {
+        // discrete-hop sweep for reduced motion: advance one resonance every 4 s
+        sweepSettleTimer += elapsed;
+        if (sweepSettleTimer > 4) {
+          sweepSettleTimer = 0;
+          logF += 0.4;
+          if (logF > 6.15) logF = -0.32;
+          updateFreqReadout();
+          rebuildGrid();
+          fadeT = 1;
+          instantSettle();
+          draw();
+          updateMetrics();
+        }
+      }
+      animationFrameId = requestAnimationFrame(renderFrame);
+    }
+
+    function handleVisibilityChange() { lastFrameTime = performance.now(); }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // ------------------------------------------------------------------
+    // Boot
+    // ------------------------------------------------------------------
+    rebuildGrid();
+    resand();
+    if (reducedMotion) {
+      setRunning(false);
+      instantSettle();
+    } else {
+      setRunning(true);
+    }
+    updateFreqReadout();
+    gammaReadout.textContent = gamma.toFixed(3);
+    markDriveButtons();
+    draw();
+    updateMetrics();
+    animationFrameId = requestAnimationFrame(renderFrame);
+
+    document.addEventListener('astro:before-swap', () => {
+      destroyed = true;
+      cancelAnimationFrame(animationFrameId);
+      themeObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initChladni);
+  initChladni();
+</script>
