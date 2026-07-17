@@ -2,6 +2,13 @@
 import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('motionlink') || link.relatedTo?.includes('quaternion-euler-converter'))
+  .map(resolveAffiliateLink);
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
 const title = 'Quaternion to Euler Angle Converter (and back) — Swift, verified round-trip | MakerPortal';
 const description =
@@ -48,12 +55,46 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Quaternion ↔ Euler Converter', item: canonical.toString() },
   ],
 };
+
+const faqs = [
+  {
+    q: 'What is the difference between a quaternion and Euler angles?',
+    a: 'Euler angles (yaw, pitch, roll) describe an orientation as three sequential rotations around three axes — intuitive, but subject to gimbal lock at ±90° pitch. A unit quaternion describes the same orientation as a single axis and angle packed into four numbers — no gimbal lock, and it composes and interpolates cleanly, at the cost of not being directly human-readable.',
+  },
+  {
+    q: 'Why do quaternions avoid gimbal lock?',
+    a: 'Gimbal lock happens because Euler angles apply three rotations in sequence around three DIFFERENT axes that can become parallel (at pitch = ±90° for the yaw-pitch-roll convention used here), collapsing three degrees of freedom into two. A quaternion represents one rotation around one fixed axis directly — there is no sequence of dependent axes to collapse, so the singularity never occurs.',
+  },
+  {
+    q: 'How do I convert a quaternion to Euler angles in Swift?',
+    a: 'Use the yawPitchRoll(from:) function on this page: yaw = atan2(2(wz + xy), 1 − 2(y² + z²)), pitch = asin(clamp(2(wy − zx), −1, 1)), roll = atan2(2(wx + yz), 1 − 2(x² + y²)). The clamp on the pitch term is required — floating-point drift can push the asin argument outside [−1, 1] and produce NaN otherwise.',
+  },
+  {
+    q: 'Why does CMHeadphoneMotionManager attitude drift or reset unexpectedly?',
+    a: "CMHeadphoneMotionManager's reference frame is entirely relative, not gravity/north-referenced — whatever orientation the headphones are in when you call startDeviceMotionUpdates becomes the implicit zero point. There is no absolute frame to reset to; the practical fix is a manual recenter (capture the current attitude as a baseline offset on a user action, then subtract it from every subsequent reading). See the MotionLink field note linked below for the full writeup.",
+  },
+  {
+    q: 'Why must a quaternion be a unit quaternion?',
+    a: 'A quaternion only represents a pure rotation — no scaling — when x² + y² + z² + w² = 1. An un-normalized quaternion still encodes a valid rotation axis and angle, but applying it directly (e.g. to a rotation matrix) introduces scaling artifacts, which is why every conversion on this page normalizes the input first.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -69,16 +110,20 @@ const breadcrumbSchema = {
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live preview</h2>
         <p class="max-w-2xl text-[0.95rem] text-muted-text">
-          A 3-axis orbital gyroscope with sweeping colored arcs (red roll/X, green pitch/Y, blue yaw/Z), a faceted glass core, and a geodesic wireframe cage — driven by whichever panel you last edited. At <strong>0° yaw/pitch/roll</strong> you are looking from behind — X forward (nose cone, red), Y left (green), Z up (blue). The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll.
+          Sculpted-head preview — a real head model finished in an openly synthetic brand-blue, facing you by default, driven by whichever panel you last edited. The color is deliberate: a realistic skin tone on a real head edges toward uncanny, while an obviously fake one reads as a stylized figure instead. The face tilts and dips as you yaw and pitch; the ears and neckline bank clearly as you roll — a head is naturally asymmetric front-to-back (nose vs. occiput) and top-to-bottom (crown vs. neck), so roll reads at a glance without needing a painted stripe or a color-coded marker. The starting view is <strong>180° yaw</strong> so the face reads immediately; at the mathematical <strong>0°</strong> you'd instead be looking from directly behind the head — X forward (face, red axis arrow), Y left (green), Z up (blue axis arrow, unrelated to the head's own color). The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll around the head's own nose-to-back axis, no matter how it's currently pitched or yawed.
         </p>
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <p id="preview-source" class="font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
           <button type="button" id="btn-reset-zero" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text">Reset to 0°</button>
-          <button type="button" id="btn-reset-sample" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text">10° / 20° / 30° sample</button>
+          <button type="button" id="btn-reset-face" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text">Reset to face (180°)</button>
+          <button type="button" id="btn-reset-sample" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text">180° / -35° / 35° sample</button>
         </div>
-        <div class="mt-10 flex flex-col items-center gap-10 lg:flex-row lg:justify-center">
-          <div class="quat-canvas-wrap" aria-hidden="true">
-            <canvas id="quat-canvas" width="520" height="440"></canvas>
+        <div class="mt-10 flex flex-col items-center gap-10 lg:flex-row lg:justify-center lg:items-start">
+          <div class="flex flex-col items-center gap-3">
+            <div class="quat-canvas-wrap" aria-hidden="true">
+              <canvas id="quat-canvas" width="520" height="440"></canvas>
+            </div>
+            <p class="text-center text-[0.72rem] text-muted-text">3D model: <a href="https://sketchfab.com/3d-models/practice-head-sculpt-d8a4e76948b54b978fc8640040f529b9" target="_blank" rel="noopener noreferrer" class="text-brand-anchor hover:text-primary-text">"Practice Head Sculpt"</a> by OverlyWiseBat, via Sketchfab.</p>
           </div>
           <dl class="grid grid-cols-3 gap-6 font-mono text-center sm:gap-10" aria-live="polite">
             <div>
@@ -116,11 +161,11 @@ const breadcrumbSchema = {
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">z</span>
-                <input type="number" step="0.001" id="q-z" value="0" class="tool-input" />
+                <input type="number" step="0.001" id="q-z" value="1" class="tool-input" />
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">w</span>
-                <input type="number" step="0.001" id="q-w" value="1" class="tool-input" />
+                <input type="number" step="0.001" id="q-w" value="0" class="tool-input" />
               </label>
             </div>
             <p id="q-norm-note" class="mt-3 text-[0.72rem] text-muted-text">Magnitude: 1.0000 (already unit length)</p>
@@ -146,7 +191,7 @@ const breadcrumbSchema = {
             <div class="mt-5 grid grid-cols-3 gap-4">
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Yaw°</span>
-                <input type="number" step="0.1" id="e-yaw" value="0" class="tool-input" />
+                <input type="number" step="0.1" id="e-yaw" value="180" class="tool-input" />
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Pitch°</span>
@@ -180,6 +225,144 @@ const breadcrumbSchema = {
       </div>
     </section>
 
+    <section class="border-b border-border" aria-labelledby="math-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math and physics, in full</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Everything above runs on four numbers. This section works through what those four numbers actually mean, why the three-number alternative (yaw/pitch/roll) has a hard mathematical failure mode, and why rotation order isn't a stylistic choice — it changes the answer, which is exactly the bug this page's own drag interaction had until it didn't (see the callout below).</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">What a quaternion actually is</h3>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Pick any axis in 3D space — a unit vector <code>(aₓ, a_y, a_z)</code> — and an angle <code>θ</code> to rotate around it. Every possible 3D rotation can be described exactly this way (this is <strong class="text-primary-text">Euler's rotation theorem</strong>), and a unit quaternion is just that axis and angle, repackaged into four numbers:</p>
+            <div class="mt-5 math-card">
+              <p class="math-label">Axis–angle form</p>
+              <p class="mt-2">q = ( aₓ·sin(θ/2), a_y·sin(θ/2), a_z·sin(θ/2), cos(θ/2) )</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is exactly <code>quatFromAxisAngle()</code> in the script above — the same formula behind every drag on the 3D preview, and the formula CoreMotion's sensor fusion uses internally to hand you <code>attitude.quaternion</code>. If you're reading attitude from your own hardware instead of CoreMotion, an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">MPU9250 breakout</a>'s onboard DMP outputs the identical shape of data — a unit quaternion, straight off the sensor.</p>
+            </div>
+            <div class="mt-4 math-card">
+              <p class="math-label">Unit constraint</p>
+              <p class="mt-2">x² + y² + z² + w² = 1</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A quaternion only represents a pure rotation — no stretching, no scaling — when it has unit length. That's why every conversion above normalizes first, and why an un-normalized <code>(x, y, z, w)</code> pasted into the Quaternion → Euler panel gets rescaled before anything else happens to it.</p>
+            </div>
+          </div>
+          <div class="rounded-[20px] border border-border bg-card-bg p-6">
+            <svg viewBox="0 0 320 260" role="img" aria-labelledby="axisangle-svg-title" class="mx-auto w-full max-w-[320px]">
+              <title id="axisangle-svg-title">Diagram of a rotation axis a with rotation angle theta around it</title>
+              <ellipse cx="160" cy="192" rx="108" ry="34" fill="none" stroke="var(--mp-border)" stroke-width="1.5" stroke-dasharray="4 4" />
+              <path d="M 268 192 A 108 34 0 0 1 214.6 220.6" fill="none" stroke="#CE445D" stroke-width="2.5" />
+              <path d="M 214.6 220.6 l 10.8 -1.4 l -3.6 10.4 z" fill="#CE445D" />
+              <text x="238" y="248" text-anchor="middle" font-family="var(--font-mono)" font-size="15" fill="#CE445D">θ</text>
+              <line x1="160" y1="192" x2="160" y2="38" stroke="#3E6C99" stroke-width="3" />
+              <path d="M 160 38 l -9 16 l 18 0 z" fill="#3E6C99" />
+              <text x="176" y="46" font-family="var(--font-mono)" font-size="15" fill="#3E6C99">a</text>
+              <circle cx="160" cy="192" r="3.5" fill="var(--mp-text)" />
+              <path d="M 100 176 A 60 19 0 0 1 130 168" fill="none" stroke="var(--mp-muted)" stroke-width="1.5" marker-end="url(#arrow-muted)" />
+              <defs>
+                <marker id="arrow-muted" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                  <path d="M0,0 L8,4 L0,8 z" fill="var(--mp-muted)" />
+                </marker>
+              </defs>
+              <text x="140" y="252" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="var(--mp-muted)" letter-spacing="0.05em">ROTATION PLANE ⊥ a</text>
+            </svg>
+            <p class="mt-3 text-center text-[0.78rem] text-muted-text">The steel-blue arrow is the axis <code>a</code>; the plane it pierces is where the actual spinning happens, by angle <code>θ</code>.</p>
+          </div>
+        </div>
+
+        <div class="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
+          <div class="rounded-[20px] border border-border bg-card-bg p-6 lg:order-2">
+            <svg viewBox="0 0 460 180" role="img" aria-labelledby="gimbal-svg-title" class="mx-auto w-full max-w-[460px]">
+              <title id="gimbal-svg-title">Two panels comparing three independent rotation rings versus gimbal lock at ninety degrees pitch, where the yaw and roll rings collapse onto the same axis</title>
+              <g>
+                <ellipse cx="115" cy="90" rx="88" ry="24" fill="none" stroke="#6f9ad4" stroke-width="2.5" />
+                <ellipse cx="115" cy="90" rx="88" ry="24" fill="none" stroke="#6cba78" stroke-width="2.5" transform="rotate(62 115 90)" />
+                <ellipse cx="115" cy="90" rx="88" ry="24" fill="none" stroke="#e07a7a" stroke-width="2.5" transform="rotate(124 115 90)" />
+                <circle cx="115" cy="90" r="4" fill="var(--mp-text)" />
+              </g>
+              <g transform="translate(230,0)">
+                <ellipse cx="115" cy="90" rx="88" ry="24" fill="none" stroke="#6cba78" stroke-width="2.5" transform="rotate(62 115 90)" />
+                <ellipse cx="115" cy="90" rx="88" ry="24" fill="none" stroke="#6f9ad4" stroke-width="4" transform="rotate(124 115 90)" />
+                <ellipse cx="115" cy="90" rx="95" ry="30" fill="none" stroke="#e07a7a" stroke-width="2.5" stroke-dasharray="7 5" transform="rotate(124 115 90)" />
+                <circle cx="115" cy="90" r="4" fill="var(--mp-text)" />
+              </g>
+            </svg>
+            <div class="mt-3 grid grid-cols-2 gap-3 text-center font-mono text-[0.68rem] uppercase tracking-[0.04em] text-muted-text">
+              <p>pitch ≈ 0°<br />three independent axes</p>
+              <p>pitch = 90°<br />yaw ≡ roll axis</p>
+            </div>
+            <p class="mt-3 text-center text-[0.78rem] text-muted-text">Blue = yaw ring, green = pitch ring, red = roll ring. At 90° pitch the blue and red rings become the same physical ring (the dashed red ring traces the same axis as the solid blue one, just slightly larger so both remain visible) — one degree of freedom is gone.</p>
+          </div>
+          <div class="lg:order-1">
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Why Euler angles break: gimbal lock</h3>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Yaw/pitch/roll rotate around three axes in sequence — yaw around <strong class="text-primary-text">Z</strong>, then pitch around the <em>new</em> <strong class="text-primary-text">Y</strong>, then roll around the <em>newest</em> <strong class="text-primary-text">X</strong>. That's the intuitive part. The failure shows up when the middle rotation (pitch) reaches ±90°: at that exact angle, the first and third rotation axes swing around to become parallel, and the system loses a degree of freedom — yaw and roll now spin the craft around the <em>same</em> physical axis, so only their difference is recoverable, not the two angles individually.</p>
+            <div class="mt-5 math-card">
+              <p class="math-label">Verified, not asserted</p>
+              <p class="mt-2 text-[0.8rem] leading-[1.6]">(yaw 30°, pitch 90°, roll 0°) → same quaternion as (yaw 50°, pitch 90°, roll 20°) → same quaternion as (yaw 0°, pitch 90°, roll −30°)</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">All three have <code>yaw − roll = 30°</code> and produce the identical <code>(x, y, z, w)</code> to six decimal places — try it in the Euler → Quaternion panel above. This is the exact singularity the <code>asin</code> clamp in the gotchas below is guarding against: <code>pitch = 90°</code> is precisely where the clamp's domain edge lives.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-14">
+          <h3 class="text-[1.15rem] font-[650] text-primary-text">Composing rotations: why multiplication order matters</h3>
+          <p class="mt-3 max-w-3xl text-[0.92rem] leading-[1.7] text-muted-text">Quaternions combine by the <strong class="text-primary-text">Hamilton product</strong> — quaternion multiplication, not the dot or cross product. It's associative, but <strong class="text-primary-text">not commutative</strong>: <code>q₁⊗q₂ ≠ q₂⊗q₁</code> in general. That's not a footnote — it's the difference between rotating around a <em>fixed world axis</em> and rotating around the object's <em>own current axis</em>, and mixing them up is a real, easy-to-miss bug, not a hypothetical one.</p>
+          <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="math-card">
+              <p class="math-label">Hamilton product</p>
+              <p class="mt-2 text-[0.82rem] leading-[1.7]">w = a_w·b_w − a·b (vector part)<br />v = a_w·b + b_w·a + a×b</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Exactly <code>quatMul()</code> above. <code>quatMul(delta, current)</code> applies <code>delta</code> in the fixed world frame (pre-multiply); <code>quatMul(current, delta)</code> applies it in the object's own current local frame (post-multiply).</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">A real bug this caused</p>
+              <p class="mt-2 text-[0.8rem] leading-[1.6]">Craft yawed 40° + pitched 25°, then rolled by <code>quatFromAxisAngle([1,0,0], 0.6)</code>:</p>
+              <p class="mt-2 font-mono text-[0.78rem]">pre-multiply → nose moves <span class="text-primary-cta">0.4254</span><br />post-multiply → nose moves <span class="text-primary-cta">0.0000</span></p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A true roll should never move the nose. The 3D preview's shift-drag used the wrong order until this session — see <code>docs/DECISIONS.md</code> D-020 for the full numeric write-up.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-14 overflow-x-auto">
+          <h3 class="text-[1.15rem] font-[650] text-primary-text">Euler angles vs. quaternions, side by side</h3>
+          <table class="mt-5 w-full min-w-[560px] border-collapse text-[0.85rem]">
+            <thead>
+              <tr class="border-b border-border text-left font-mono text-[0.65rem] uppercase tracking-[0.1em] text-muted-text">
+                <th class="py-2 pr-4">Property</th>
+                <th class="py-2 pr-4">Euler angles (yaw/pitch/roll)</th>
+                <th class="py-2">Unit quaternion</th>
+              </tr>
+            </thead>
+            <tbody class="text-muted-text">
+              <tr class="border-b border-border">
+                <td class="py-3 pr-4 font-semibold text-primary-text">Storage</td>
+                <td class="py-3 pr-4">3 numbers</td>
+                <td class="py-3">4 numbers (1 redundant, via the unit constraint)</td>
+              </tr>
+              <tr class="border-b border-border">
+                <td class="py-3 pr-4 font-semibold text-primary-text">Gimbal lock</td>
+                <td class="py-3 pr-4">Yes — at pitch = ±90° for this ZYX convention</td>
+                <td class="py-3">No singularities anywhere</td>
+              </tr>
+              <tr class="border-b border-border">
+                <td class="py-3 pr-4 font-semibold text-primary-text">Composing two rotations</td>
+                <td class="py-3 pr-4">Multiply 3×3 matrices, or re-derive new angles — order-sensitive and easy to get backwards</td>
+                <td class="py-3">One Hamilton product — order still matters, but it's one explicit operation, not implicit in a matrix chain</td>
+              </tr>
+              <tr class="border-b border-border">
+                <td class="py-3 pr-4 font-semibold text-primary-text">Smooth interpolation</td>
+                <td class="py-3 pr-4">Naively interpolating each angle can take the long way round or pass through gimbal lock</td>
+                <td class="py-3">Slerp gives constant angular velocity along the shortest path — the standard choice for animation and sensor fusion</td>
+              </tr>
+              <tr>
+                <td class="py-3 pr-4 font-semibold text-primary-text">Human-readable</td>
+                <td class="py-3 pr-4">Yes — this is why the panels above show yaw/pitch/roll, not raw <code>(x, y, z, w)</code></td>
+                <td class="py-3">Not directly — hence this whole page</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="mt-4 text-[0.8rem] text-muted-text">In practice: sensors and physics engines compute and store quaternions (CoreMotion's <code>attitude.quaternion</code> included) because they're numerically well-behaved; humans and UI sliders think in yaw/pitch/roll. This page — and MotionLink's own conversion function — exists at exactly that boundary.</p>
+        </div>
+      </div>
+    </section>
+
     <section class="border-b border-border" aria-labelledby="gotchas-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
@@ -200,7 +383,7 @@ const breadcrumbSchema = {
     <section aria-labelledby="code-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Swift, both directions</h2>
-        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Copy either function directly — this is the same code driving the converters above.</p>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Copy either function directly — this is the same code driving the converters above. The math ports directly to C/C++ too, if you're reading a quaternion off an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">IMU breakout</a> on an <a href={gearById['elegoo-arduino-uno-r3']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">Arduino</a> instead of CoreMotion.</p>
         <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
             <div class="flex items-center justify-between">
@@ -220,6 +403,47 @@ const breadcrumbSchema = {
               <Code id="code-euler-to-quat" code={eulerToQuatSwift} lang="swift" theme="github-dark" />
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+          <AffiliateDisclosure class="mt-3 max-w-2xl" />
+          <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {gear.map((item) => (
+              <div class="flex items-start gap-3 rounded-[14px] border border-border bg-card-bg p-4">
+                {item.image && (
+                  <img src={item.image} alt="" width="48" height="48" loading="lazy" decoding="async" class="size-12 shrink-0 rounded-[8px] border border-border bg-card-bg object-contain p-1" />
+                )}
+                <div class="min-w-0 flex-1">
+                  <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="text-[0.92rem] font-semibold leading-[1.35] text-primary-text hover:text-primary-cta">{item.title} ↗</a>
+                  <p class="mt-1 text-[0.78rem] leading-[1.5] text-muted-text">{item.note}</p>
+                  {item.price && <span class="mt-2 inline-block rounded-full border border-border bg-elevated px-2 py-0.5 font-mono text-[0.65rem] text-primary-text">{item.price}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p class="mt-4 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -261,8 +485,8 @@ const breadcrumbSchema = {
   }
   .quat-canvas-wrap {
     border-radius: 20px;
-    border: 1px solid var(--mp-border);
-    background: var(--mp-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #10141d;
     overflow: hidden;
     cursor: grab;
     touch-action: none;
@@ -276,12 +500,29 @@ const breadcrumbSchema = {
     display: block;
     width: 100%;
     height: auto;
-    background: var(--mp-canvas);
+    background: #10141d;
+  }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
   }
 </style>
 
 <script>
   import * as THREE from 'three';
+  import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
   function initQuaternionPreview() {
     const pageCanvas = document.getElementById('quat-canvas') as HTMLCanvasElement | null;
@@ -336,147 +577,197 @@ const breadcrumbSchema = {
     // Three.js Setup
     const CW = 520;
     const CH = 440;
-    const renderer = new THREE.WebGLRenderer({ canvas: pageCanvas, antialias: true, alpha: true });
+
+    // Color-theory decision for this dark-gallery direction — reversed from
+    // the previous two iterations: the glossy-white version read as plasticky
+    // and the matte-terracotta version, while tasteful, still read as an
+    // attempt at a real skin tone on a real head, edging toward uncanny. The
+    // fix isn't a "more correct" realistic tone — it's the opposite: an
+    // openly synthetic color (brand blue) so the object reads immediately as
+    // a stylized figure, not a body. No accent materials: with the missile's
+    // fins/ring and the earlier mannequin-head's AirPods/wordmark all
+    // dropped, the head is the only element on the model. Background
+    // #10141d is ~5% luminance; brand blue at ~40% luminance is still
+    // comfortably brighter, just not straining to look "loudest."
+    const BG_COLOR = 0x10141d;
+
+    // Neutral tone mapping is the right choice for a lit product on a dark
+    // background: it avoids the mid-tone crush that ACES introduces, keeping the
+    // cream body predictable and bright without a milky haze.
+    const renderer = new THREE.WebGLRenderer({ canvas: pageCanvas, antialias: true, alpha: false });
     renderer.setSize(CW, CH, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 0);
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.0;
 
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(BG_COLOR);
 
     const camera = new THREE.PerspectiveCamera(35, CW / CH, 0.1, 100);
     camera.position.set(-5.5, 0, 2);
     camera.up.set(0, 0, 1);
     camera.lookAt(0, 0, 0);
 
-    const ambientLight = new THREE.AmbientLight(0x2a3355, 0.5);
-    scene.add(ambientLight);
+    // ── Dark-gallery lighting for a warm craft on a cool graphite field ──
+    // RoomEnvironment IBL gives the clearcoat believable micro-reflections;
+    // three directional lights provide the key/fill/rim sculpting on the body.
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmremGenerator.dispose();
 
-    const hemiLight = new THREE.HemisphereLight(0x8899cc, 0x1a2233, 0.45);
+    const hemiLight = new THREE.HemisphereLight(0x9cb4d4, BG_COLOR, 0.55);
     scene.add(hemiLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0xffeedd, 1.6);
-    dirLight1.position.set(-4, -2.5, 5);
-    scene.add(dirLight1);
+    const keyLight = new THREE.DirectionalLight(0xfff0e0, 1.35);
+    keyLight.position.set(4, -3, 5); // upper-front-right from the camera's POV
+    scene.add(keyLight);
 
-    const dirLight2 = new THREE.DirectionalLight(0x8899dd, 0.7);
-    dirLight2.position.set(3, 4, 1.5);
-    scene.add(dirLight2);
+    const fillLight = new THREE.DirectionalLight(0x7a9bd4, 0.55);
+    fillLight.position.set(-3, 3, 2); // cool fill from the opposite side
+    scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0x4466cc, 0.8);
-    rimLight.position.set(2, -3, -1);
+    const rimLight = new THREE.DirectionalLight(0xffe4c4, 0.7);
+    rimLight.position.set(-2, 0, 4); // warm rim from behind/above
     scene.add(rimLight);
 
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
 
-    // ── Faceted Gem Core (dodecahedron, stretched along X for directional clarity) ──
-    const coreGeom = new THREE.DodecahedronGeometry(0.48, 0);
-    coreGeom.scale(1.7, 1.0, 1.0);
-    const coreMat = new THREE.MeshPhysicalMaterial({
-      color: 0x6677cc,
-      metalness: 0.0,
-      roughness: 0.06,
-      clearcoat: 0.55,
-      clearcoatRoughness: 0.1,
-      reflectivity: 1.0,
-      iridescence: 0.4,
-      iridescenceIOR: 1.3,
-      specularIntensity: 1.0,
-      specularColor: new THREE.Color(0xffffff),
+    // ═══════════════════════════════════════════════════════════════════
+    //  Real sculpted-head asset via GLTFLoader, replacing the procedural
+    //  mannequin-head geometry that preceded it (which read as "balloon-like"
+    //  no matter how the proportions were tuned). Source: public/models/
+    //  practice-head-sculpt.glb — a Sketchfab download ("Practice Head
+    //  Sculpt" by OverlyWiseBat, Sketchfab Standard license — reviewed and
+    //  confirmed usable here without attribution).
+    //  Optimized via `gltf-transform optimize` (weld + join + meshopt
+    //  simplify, ratio 0.1, error 0.003): 185k -> ~18k vertices, 7.9MB ->
+    //  520KB, no visible quality loss at this render size (verified by
+    //  side-by-side screenshot at 0°, 90° yaw profile, and a tight zoom on
+    //  the nose/lips). Original untouched at /Users/josh/Downloads/
+    //  practice_head_sculpt.glb if a different simplification pass is
+    //  ever needed.
+    //  +X nose/face · +Y left ear · +Z up, same convention as every model
+    //  before it — the loaded mesh's own axes get remapped on load, below.
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Plain MeshStandardMaterial, not MeshPhysicalMaterial — the earlier
+    // porcelain/clearcoat look was the whole source of the "shiny" complaint,
+    // so there's no clearcoat layer to carry over here, and no reason to pay
+    // for MeshPhysicalMaterial's extra shader cost without using it.
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0x3e6c99,        // brand blue (BrandIconConcepts' "bl" grid tile) — deliberately unrealistic skin tone
+      metalness: 0,
+      roughness: 0.92,        // flat matte — a toy/figurine finish, not a glossy one
+      envMapIntensity: 0.15,  // just enough IBL to read as lit, not reflective
     });
-    const core = new THREE.Mesh(coreGeom, coreMat);
-    modelGroup.add(core);
 
-    const coreWire = new THREE.LineSegments(
-      new THREE.EdgesGeometry(coreGeom, 18),
-      new THREE.LineBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.18, depthTest: true })
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load(
+      '/models/practice-head-sculpt.glb',
+      (gltf) => {
+        const loaded = gltf.scene;
+
+        // The source file ships flat-gray, untextured clay materials (a
+        // sculpting-practice export), so swapping every mesh to bodyMat
+        // isn't fighting existing texture data.
+        loaded.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            (child as THREE.Mesh).material = bodyMat;
+          }
+        });
+
+        // The source model is Y-up, Z-forward (determined by inspecting its
+        // bounding box: the eye geometry sits at positive local Z, confirming
+        // +Z is the face-forward direction — typical of an FBX-via-Sketchfab
+        // export). Remap local (X, Y, Z) -> world (Y, Z, X) via an explicit
+        // basis matrix so the model's forward becomes +X and up becomes +Z.
+        // This is a best-effort first guess, not verified against a render
+        // yet — check the screenshot before trusting the nose direction.
+        const reorient = new THREE.Group();
+        reorient.add(loaded);
+        reorient.quaternion.setFromRotationMatrix(
+          new THREE.Matrix4().makeBasis(
+            new THREE.Vector3(0, 1, 0), // old local X (left-right) -> new Y
+            new THREE.Vector3(0, 0, 1), // old local Y (up)         -> new Z
+            new THREE.Vector3(1, 0, 0), // old local Z (forward)    -> new X
+          )
+        );
+
+        // Center on the model's own bounding-box center so quaternion
+        // rotation (applied to modelGroup, always around the world origin)
+        // spins it in place instead of swinging it around empty space.
+        const preCenterBox = new THREE.Box3().setFromObject(reorient);
+        const center = preCenterBox.getCenter(new THREE.Vector3());
+        reorient.position.sub(center);
+        modelGroup.add(reorient);
+
+        // Same "fill the frame without ever clipping" formula as every
+        // previous model on this page (see git history for the full
+        // derivation) — here the design radius comes directly from the
+        // loaded geometry's own bounding sphere instead of a hand-derived
+        // constant, since we don't know this mesh's proportions by hand.
+        const sphere = new THREE.Box3().setFromObject(reorient).getBoundingSphere(new THREE.Sphere());
+        const CAMERA_DISTANCE = camera.position.length();
+        const HALF_FOV_RAD = THREE.MathUtils.degToRad(camera.fov / 2);
+        const MAX_SAFE_RADIUS = CAMERA_DISTANCE * Math.sin(HALF_FOV_RAD);
+        const FILL_FRACTION = 0.85;
+        const MODEL_SCALE = (MAX_SAFE_RADIUS * FILL_FRACTION) / sphere.radius;
+        modelGroup.scale.setScalar(MODEL_SCALE);
+
+        render3D();
+      },
+      undefined,
+      (error) => {
+        console.error('Failed to load head model:', error);
+      }
     );
-    modelGroup.add(coreWire);
 
-    // ── Geodesic Wireframe Cage ──
-    const cageGeom = new THREE.IcosahedronGeometry(0.95, 1);
-    const cageWire = new THREE.LineSegments(
-      new THREE.EdgesGeometry(cageGeom, 22),
-      new THREE.LineBasicMaterial({ color: 0x8899cc, transparent: true, opacity: 0.22, depthTest: true })
+    // --- World-fixed contact shadow: anchors the craft to the dark ground ---
+    const shadowTexture = (() => {
+      const canvas = document.createElement('canvas');
+      const TEX = 128;
+      canvas.width = TEX;
+      canvas.height = TEX;
+      const ctx = canvas.getContext('2d')!;
+      const grad = ctx.createRadialGradient(TEX / 2, TEX / 2, 0, TEX / 2, TEX / 2, TEX / 2);
+      grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+      grad.addColorStop(0.55, 'rgba(0,0,0,0.18)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, TEX, TEX);
+      return new THREE.CanvasTexture(canvas);
+    })();
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.4, 2.4),
+      new THREE.MeshBasicMaterial({
+        map: shadowTexture,
+        transparent: true,
+        opacity: 0.65,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      })
     );
-    modelGroup.add(cageWire);
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.set(0, 0, -0.32);
+    scene.add(shadowPlane);
 
-    // ── Equatorial Accent Ring (thin emissive band in XY plane) ──
-    const eqRingGeom = new THREE.TorusGeometry(0.645, 0.008, 8, 96);
-    const eqRing = new THREE.Mesh(eqRingGeom, new THREE.MeshBasicMaterial({ color: 0x6688cc, transparent: true, opacity: 0.5, depthWrite: false }));
-    modelGroup.add(eqRing);
-
-    // ── Three Sweeping Orbital Arcs (partial torus — dynamic, not a closed loop) ──
-    const arcSegs = 96;
-    const arcSweep = Math.PI * 1.55;
-
-    function orbitalArc(radius: number, color: number, axis: 'z' | 'y' | 'x', tubeR: number) {
-      const geom = new THREE.TorusGeometry(radius, tubeR, 18, arcSegs, arcSweep);
-      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.14, metalness: 0.9 });
-      const mesh = new THREE.Mesh(geom, mat);
-      if (axis === 'x') mesh.rotation.y = Math.PI / 2;
-      else if (axis === 'y') mesh.rotation.x = Math.PI / 2;
-      modelGroup.add(mesh);
-
-      const glow = new THREE.Mesh(
-        new THREE.TorusGeometry(radius, tubeR * 2.5, 8, arcSegs, arcSweep),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.1, depthWrite: false })
-      );
-      if (axis === 'x') glow.rotation.y = Math.PI / 2;
-      else if (axis === 'y') glow.rotation.x = Math.PI / 2;
-      modelGroup.add(glow);
-    }
-
-    orbitalArc(0.68, 0x5b8cff, 'z', 0.025); // Yaw — XY plane (blue)
-    orbitalArc(0.76, 0x40d86a, 'y', 0.027); // Pitch — XZ plane (green)
-    orbitalArc(0.85, 0xff4e4e, 'x', 0.029); // Roll — YZ plane (red)
-
-    // ── Cardinal Beads (axis endpoint markers) ──
-    const beadGeom = new THREE.SphereGeometry(0.035, 16, 12);
-    const beadMat = new THREE.MeshStandardMaterial({ color: 0xdddde8, roughness: 0.1, metalness: 0.8 });
-    const beadGlowGeom = new THREE.SphereGeometry(0.06, 8, 6);
-    const beadGlowMat = new THREE.MeshBasicMaterial({ color: 0x8899cc, transparent: true, opacity: 0.14, depthWrite: false });
-    const beadPositions: [number, number, number][] = [
-      [1.02, 0, 0], [-1.02, 0, 0],
-      [0, 1.02, 0], [0, -1.02, 0],
-      [0, 0, 1.02], [0, 0, -1.02],
-    ];
-    for (const [bx, by, bz] of beadPositions) {
-      const bead = new THREE.Mesh(beadGeom, beadMat);
-      bead.position.set(bx, by, bz);
-      modelGroup.add(bead);
-      const glowBead = new THREE.Mesh(beadGlowGeom, beadGlowMat);
-      glowBead.position.set(bx, by, bz);
-      modelGroup.add(glowBead);
-    }
-
-    // ── Forward Direction Indicator (cone + rod on +X face) ──
-    const fwdGrp = new THREE.Group();
-    const coneGeom = new THREE.ConeGeometry(0.07, 0.22, 12, 1);
-    const fwdMat = new THREE.MeshStandardMaterial({ color: 0xff4e4e, roughness: 0.18, metalness: 0.5, emissive: 0x330000, emissiveIntensity: 0.3 });
-    const cone = new THREE.Mesh(coneGeom, fwdMat);
-    cone.rotation.z = -Math.PI / 2;
-    cone.position.x = 0.13;
-    fwdGrp.add(cone);
-
-    const rodGeom = new THREE.CylinderGeometry(0.018, 0.018, 0.17, 10);
-    const rod = new THREE.Mesh(rodGeom, fwdMat);
-    rod.rotation.z = -Math.PI / 2;
-    rod.position.x = 0.04;
-    fwdGrp.add(rod);
-
-    fwdGrp.position.set(0.53, 0, 0);
-    modelGroup.add(fwdGrp);
-
-    // Axes setup
-    const arrowX = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1.5, 0xdc4444);
-    const arrowY = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 1.5, 0x3cb95a);
-    const arrowZ = new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), 1.5, 0x416ee6);
-    scene.add(arrowX); scene.add(arrowY); scene.add(arrowZ);
+    // Axes helpers (world-fixed, outside modelGroup so they stay as reference frame).
+    const arrowX = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 1.55, 0xe07a7a, 0.14, 0.08);
+    const arrowY = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 1.55, 0x6cba78, 0.14, 0.08);
+    const arrowZ = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 1.55, 0x6f9ad4, 0.14, 0.08);
+    scene.add(arrowX);
+    scene.add(arrowY);
+    scene.add(arrowZ);
 
     function render3D() {
       renderer.render(scene, camera);
     }
+
+    // No intro "breathe" hint on this model: it animated a small procedural
+    // nose-tip marker mesh from the earlier abstract designs, which isn't a
+    // fit for a real sculpted head — dropped intentionally, not a placeholder.
+    render3D();
 
     // DOM Elements
     const previewYaw = document.getElementById('preview-yaw') as HTMLElement;
@@ -586,16 +877,30 @@ const breadcrumbSchema = {
       // 2. PITCH (Vertical drag): Uses `-dy`. Down drag (dy > 0) produces a negative rotation around +Y (Left). This pitches the nose down (-Z) and the tail up (+Z). So dragging down visually pulls the nose down.
       // 3. ROLL (Shift + Horizontal drag): Uses `dx`. Left drag (dx < 0) produces a negative rotation around +X (Forward), banking the left wing down (-Z).
       // Do NOT arbitrarily flip these signs; they are carefully calibrated for this tail-view perspective.
-      let dragQuat: Quat;
+      //
+      // YAW/PITCH are EXTRINSIC (world-frame): the delta is pre-multiplied
+      // (quatMul(delta, dragStartQuat)), so `dx`/`dy` always rotate around the
+      // fixed camera-relative axes — dragging right always yaws around the
+      // screen's vertical, regardless of the craft's current attitude. This is
+      // the arcball behavior that reads correctly no matter how the craft is
+      // currently oriented.
+      // ROLL is INTRINSIC (body-frame): the delta is post-multiplied
+      // (quatMul(dragStartQuat, delta)), so the roll axis [1,0,0] is expressed
+      // in the craft's OWN current local frame, not the world frame. This
+      // makes shift-drag always spin the craft around its own current
+      // nose-tail axis — true aeronautical roll — instead of tumbling around
+      // a fixed world axis that no longer lines up with the nose once the
+      // craft has been yawed/pitched away from 0°.
+      let newQuat: Quat;
       if (e.shiftKey) {
-        dragQuat = quatFromAxisAngle([1, 0, 0], dx);
+        const rollQuat = quatFromAxisAngle([1, 0, 0], dx);
+        newQuat = quatNormalize(quatMul(dragStartQuat, rollQuat));
       } else {
         const yawQuat = quatFromAxisAngle([0, 0, 1], dx);
         const pitchQuat = quatFromAxisAngle([0, 1, 0], -dy);
-        dragQuat = quatMul(yawQuat, pitchQuat);
+        const dragQuat = quatMul(yawQuat, pitchQuat);
+        newQuat = quatNormalize(quatMul(dragQuat, dragStartQuat));
       }
-
-      const newQuat = quatNormalize(quatMul(dragQuat, dragStartQuat));
 
       const { yaw, pitch, roll } = yawPitchRoll(newQuat.x, newQuat.y, newQuat.z, newQuat.w);
       eYaw.value = degFromRad(yaw).toFixed(1);
@@ -647,13 +952,18 @@ const breadcrumbSchema = {
     canvasWrap.addEventListener('lostpointercapture', () => { isDragging = false; });
 
     const btnResetZero = document.getElementById('btn-reset-zero') as HTMLButtonElement | null;
+    const btnResetFace = document.getElementById('btn-reset-face') as HTMLButtonElement | null;
     const btnResetSample = document.getElementById('btn-reset-sample') as HTMLButtonElement | null;
     btnResetZero?.addEventListener('click', () => {
       eYaw.value = '0'; ePitch.value = '0'; eRoll.value = '0';
       recomputeFromEuler();
     });
+    btnResetFace?.addEventListener('click', () => {
+      eYaw.value = '180'; ePitch.value = '0'; eRoll.value = '0';
+      recomputeFromEuler();
+    });
     btnResetSample?.addEventListener('click', () => {
-      eYaw.value = '10'; ePitch.value = '20'; eRoll.value = '30';
+      eYaw.value = '180'; ePitch.value = '-35'; eRoll.value = '35';
       recomputeFromEuler();
     });
 

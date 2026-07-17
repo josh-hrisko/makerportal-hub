@@ -295,8 +295,29 @@ Add, edit, or delete entries freely — this file is yours.
 
 ---
 
+## quaternion-euler-converter — added 2026-07-17, not yet confirmed
+
+51. 3D Math Primer for Graphics and Game Development (Dunn & Parberry)
+    Category: Book
+    Status: Suggested — the standard reference for the axis-angle/quaternion/gimbal-lock material added to the quaternion ↔ Euler converter's math section. Not yet confirmed you own/use this exact edition.
+    Affiliate link: (needs SiteStripe)
+
+52. Adafruit BNO055 9-DOF Absolute Orientation IMU (outputs quaternions directly)
+    Category: Sensor
+    Status: Suggested — a real hardware IMU that outputs quaternion attitude natively (same data shape as CMHeadphoneMotionManager's attitude.quaternion), a natural "build this yourself" pick for readers of the quaternion ↔ Euler converter page. Not yet confirmed you own/use this exact board.
+    Affiliate link: (needs SiteStripe)
+
+53. MPU6050 6-DoF Accelerometer + Gyroscope (GY-521 breakout)
+    Category: Sensor
+    Status: Suggested — the cheaper 6-DoF sibling of MPU9250 (already live, id `mpu9250-imu`, now cross-linked to this page), no magnetometer but the same DMP quaternion output over I2C. A common first IMU for readers who don't need magnetic heading. Not yet confirmed you own/use this exact board.
+    Affiliate link: (needs SiteStripe)
+
+Note: MPU9250 (`mpu9250-imu`) and Arduino Uno R3 (`elegoo-arduino-uno-r3`) were already live picks (originally BLExAR-only) — their `relatedTo` arrays were extended to include `quaternion-euler-converter` rather than duplicating them as new entries, since they're the same real products.
+
+---
+
 ### Next steps
 1. Copy each numbered line into Amazon search / SiteStripe to find the real listing and generate the link.
 2. Paste the result on that item's Affiliate link line — a bare ASIN is fine.
-3. Edit freely — delete anything that doesn't fit, fix any Suggested item (37-44, 46-50 especially) to match what you actually use.
+3. Edit freely — delete anything that doesn't fit, fix any Suggested item (37-44, 46-52 especially) to match what you actually use.
 4. Once a batch is ready, tell me and I'll turn the confirmed entries into affiliate-links.json entries (with relatedTo/pillars set per section) — same review-before-ship posture as everything else in this pipeline (see docs/DECISIONS.md D-011/D-015).
