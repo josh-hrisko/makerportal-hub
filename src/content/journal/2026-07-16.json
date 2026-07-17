@@ -1,25 +1,6 @@
 {
-  "generatedAt": "2026-07-16T22:19:05.340Z",
+  "generatedAt": "2026-07-16T15:41:38.718Z",
   "items": [
-    {
-      "id": "hackernews-48944208",
-      "source": "hackernews",
-      "title": "Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)",
-      "url": "https://github.com/sushilk1991/velora",
-      "author": "sushilk1991",
-      "publishedAt": "2026-07-17T07:07:38Z",
-      "tags": [
-        "on-device-ai",
-        "local-llm",
-        "privacy-arch"
-      ],
-      "score": 11,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48944208.webp"
-    },
     {
       "id": "hackernews-48907681",
       "source": "hackernews",
@@ -30,12 +11,50 @@
       "tags": [
         "local-llm"
       ],
-      "score": 14,
+      "score": 13,
       "domain": "github.com",
       "sources": [
         "hackernews"
       ],
       "image": "/trends/hackernews-48907681.webp"
+    },
+    {
+      "id": "hackernews-48894351",
+      "source": "hackernews",
+      "title": "Show HN: Biscotti – on-device meeting transcription for macOS",
+      "url": "https://news.ycombinator.com/item?id=48894351",
+      "author": "scosman",
+      "publishedAt": "2026-07-13T15:38:26Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": 13,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48929747",
+      "source": "hackernews",
+      "title": "Running Gemma4 on Apple Neural Engine",
+      "url": "https://rockyshikoku.medium.com/running-gemma4-on-apple-neural-engine-79fa0cb39dd2",
+      "author": "nmfisher",
+      "publishedAt": "2026-07-16T02:33:38Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 11,
+      "domain": "rockyshikoku.medium.com",
+      "sources": [
+        "bluesky",
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48929747.webp"
     },
     {
       "id": "hackernews-48898478",
@@ -66,7 +85,42 @@
         "on-device-ai",
         "dsp-audio"
       ],
-      "score": 9,
+      "score": 11,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48861746.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-14T06:56:44.666Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "hackernews-48819513",
+      "source": "hackernews",
+      "title": "GPU-accelerated context memory for on-device AI agents on Apple Silicon",
+      "url": "https://github.com/christopherkarani/ContextCore",
+      "author": "christkarani",
+      "publishedAt": "2026-07-07T15:52:23Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 10,
       "domain": "github.com",
       "sources": [
         "hackernews"
@@ -83,7 +137,7 @@
         "on-device-ai",
         "metal-ane"
       ],
-      "score": 11,
+      "score": 10,
       "domain": "macrumors.com",
       "sources": [
         "hackernews"
@@ -117,12 +171,29 @@
       "tags": [
         "local-llm"
       ],
-      "score": 7,
+      "score": 9,
       "domain": "github.com",
       "sources": [
         "hackernews"
       ],
       "image": "/trends/hackernews-48843409.webp"
+    },
+    {
+      "id": "hackernews-48782406",
+      "source": "hackernews",
+      "title": "Show HN: Local privacy-first Microsoft Recall alternative with Gemma 4",
+      "url": "https://github.com/ayushh0110/ScreenMind/blob/main/README.md",
+      "author": "skye0110",
+      "publishedAt": "2026-07-04T03:30:43Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 9,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48782406.webp"
     },
     {
       "id": "hackernews-48918840",
@@ -134,7 +205,7 @@
       "tags": [
         "local-llm"
       ],
-      "score": 9,
+      "score": 8,
       "domain": "github.com",
       "sources": [
         "hackernews"
@@ -142,12 +213,29 @@
       "image": "/trends/hackernews-48918840.webp"
     },
     {
-      "id": "hackernews-48946283",
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-15T07:04:47.168Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 8,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
+      "id": "hackernews-48931429",
       "source": "hackernews",
-      "title": "Prompt submitted to cloud even when using local LLM by default",
-      "url": "https://github.com/anomalyco/opencode/issues/15854",
-      "author": "josh-wrale",
-      "publishedAt": "2026-07-17T12:00:37Z",
+      "title": "Show HN: Trellis2.c – Local 3D generation with Vulkan and CUDA",
+      "url": "https://github.com/Wimacs/trellis2.c",
+      "author": "wimaxs",
+      "publishedAt": "2026-07-16T07:39:49Z",
       "tags": [
         "local-llm"
       ],
@@ -156,24 +244,24 @@
       "sources": [
         "hackernews"
       ],
-      "image": "/trends/hackernews-48946283.webp"
+      "image": "/trends/hackernews-48931429.webp"
     },
     {
-      "id": "hackernews-48946222",
+      "id": "hackernews-48829604",
       "source": "hackernews",
-      "title": "Show HN: A sandbox for running real jailbreak techniques against local LLMs",
-      "url": "https://github.com/joshfischer1108/jailbreak-lab",
-      "author": "joshfischer1108",
-      "publishedAt": "2026-07-17T11:54:03Z",
+      "title": "Show HN: Comcent CE – An open-source self-hosted Voice Infrastructure platform",
+      "url": "https://github.com/comcent-io/comcent-ce",
+      "author": "pavanputhra",
+      "publishedAt": "2026-07-08T09:22:23Z",
       "tags": [
-        "local-llm"
+        "privacy-arch"
       ],
-      "score": 5,
+      "score": 7,
       "domain": "github.com",
       "sources": [
         "hackernews"
       ],
-      "image": "/trends/hackernews-48946222.webp"
+      "image": "/trends/hackernews-48829604.webp"
     },
     {
       "id": "hackernews-48822627",
@@ -186,7 +274,7 @@
         "metal-ane",
         "local-llm"
       ],
-      "score": 8,
+      "score": 7,
       "domain": "squish.run",
       "sources": [
         "hackernews"
@@ -219,8 +307,24 @@
       "tags": [
         "privacy-arch"
       ],
-      "score": 3,
+      "score": 5,
       "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48787415",
+      "source": "hackernews",
+      "title": "EyesOff Spots Shoulder Surfers Using a Privacy-First Approach",
+      "url": "https://www.eyesoff.app/blog/how-eyesoff-spots-shoulder-surfers/",
+      "author": "Two_hands",
+      "publishedAt": "2026-07-04T18:02:56Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 4,
+      "domain": "eyesoff.app",
       "sources": [
         "hackernews"
       ]
@@ -235,84 +339,27 @@
       "tags": [
         "privacy-arch"
       ],
-      "score": 5,
+      "score": 4,
       "domain": "psycurate.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48784211.webp"
-    },
-    {
-      "id": "hackernews-48894351",
-      "source": "hackernews",
-      "title": "Show HN: Biscotti – on-device meeting transcription for macOS",
-      "url": "https://news.ycombinator.com/item?id=48894351",
-      "author": "scosman",
-      "publishedAt": "2026-07-13T15:38:26Z",
-      "tags": [
-        "on-device-ai",
-        "local-llm",
-        "ios-craft",
-        "privacy-arch"
-      ],
-      "score": 13,
-      "domain": "news.ycombinator.com",
       "sources": [
         "hackernews"
       ]
     },
     {
-      "id": "hackernews-48819513",
+      "id": "hackernews-48764190",
       "source": "hackernews",
-      "title": "GPU-accelerated context memory for on-device AI agents on Apple Silicon",
-      "url": "https://github.com/christopherkarani/ContextCore",
-      "author": "christkarani",
-      "publishedAt": "2026-07-07T15:52:23Z",
+      "title": "Ask HN: What are you go to LLM models for the following",
+      "url": "https://news.ycombinator.com/item?id=48764190",
+      "author": "mrburton",
+      "publishedAt": "2026-07-02T16:55:04Z",
       "tags": [
-        "on-device-ai",
         "metal-ane"
       ],
-      "score": 8,
-      "domain": "github.com",
+      "score": 4,
+      "domain": "news.ycombinator.com",
       "sources": [
         "hackernews"
-      ],
-      "image": "/trends/hackernews-48819513.webp"
-    },
-    {
-      "id": "bluesky-3mpvwcxtjhf2e",
-      "source": "bluesky",
-      "title": "An open-source Swift library for training transformers on Apple's Neural Engine, skipping CoreML.\n\nSubmit to upvote on HN\nhttps://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2Fchristopherkarani%2FEspresso&",
-      "url": "https://bsky.app/profile/bestofhn.bsky.social/post/3mpvwcxtjhf2e",
-      "author": "bestofhn.bsky.social",
-      "publishedAt": "2026-07-05T15:47:04Z",
-      "tags": [
-        "on-device-ai",
-        "metal-ane"
-      ],
-      "score": 11,
-      "domain": "github.com",
-      "sources": [
-        "bluesky"
-      ],
-      "image": "/trends/bluesky-3mpvwcxtjhf2e.webp"
-    },
-    {
-      "id": "hackernews-48782406",
-      "source": "hackernews",
-      "title": "Show HN: Local privacy-first Microsoft Recall alternative with Gemma 4",
-      "url": "https://github.com/ayushh0110/ScreenMind/blob/main/README.md",
-      "author": "skye0110",
-      "publishedAt": "2026-07-04T03:30:43Z",
-      "tags": [
-        "privacy-arch"
-      ],
-      "score": 9,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48782406.webp"
+      ]
     }
   ]
 }

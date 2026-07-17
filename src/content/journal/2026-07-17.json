@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T22:19:05.340Z",
+  "generatedAt": "2026-07-17T22:22:22.657Z",
   "items": [
     {
       "id": "hackernews-48944208",
@@ -89,7 +89,8 @@
       "domain": "github.com",
       "sources": [
         "hackernews"
-      ]
+      ],
+      "image": "/trends/hackernews-48861746.webp"
     },
     {
       "id": "hackernews-48819513",
