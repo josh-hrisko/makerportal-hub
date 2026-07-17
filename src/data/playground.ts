@@ -73,7 +73,7 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: true,
     relatedApp: 'Biquadia',
     relatedAppUrl: 'https://biquadia.makerportal.ai',
-    status: 'planned',
+    status: 'live',
   },
   {
     slug: 'head-tracked-stereo-pan',
@@ -85,7 +85,7 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: true,
     relatedApp: 'MotionLink',
     relatedAppUrl: 'https://makersportal.com/apps/motionlink',
-    status: 'planned',
+    status: 'live',
   },
   {
     slug: 'coreml-model-size-calculator',
@@ -97,7 +97,7 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: true,
     relatedApp: 'Notiary',
     relatedAppUrl: 'https://notiary.makerportal.ai',
-    status: 'planned',
+    status: 'live',
   },
   {
     slug: 'ble-gatt-visualizer',
@@ -108,8 +108,8 @@ export const playground: PlaygroundEntry[] = [
     pillarHint: 'ios-craft',
     isGrounded: true,
     relatedApp: 'BLExAR',
-    relatedAppUrl: 'https://makersportal.com/apps/blexar',
-    status: 'planned',
+    relatedAppUrl: 'https://blexar.makerportal.ai',
+    status: 'live',
   },
   {
     slug: 'agentic-dsp-pipeline',
@@ -121,7 +121,7 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: true,
     relatedApp: 'AuraLinter',
     relatedAppUrl: 'https://auralinter.makerportal.ai',
-    status: 'planned',
+    status: 'live',
   },
   {
     slug: 'chladni-cymatics',

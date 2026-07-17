@@ -1,0 +1,212 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+
+const title = 'CoreML Model Size & Quantization Calculator — Exact on-device footprint | MakerPortal';
+const description = 'Deterministic byte-size math across fp32/fp16/int8/int4 quantization — the exact arithmetic behind an on-device model’s real footprint, no throughput guesswork, same checks Notiary uses before shipping.';
+const canonical = new URL('/playground/coreml-model-size-calculator', Astro.site);
+
+const swiftLoad = `import CoreML
+let model = try MLModel(contentsOf: url)
+let sizeBytes = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as! Int
+// Quantized: check weight descriptions
+if let prog = try? MLModelStructure(contentsOf: url) { /* inspect */ }`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'CoreML Model Size Calculator',
+  url: canonical.toString(),
+  applicationCategory: 'DeveloperApplication',
+  description,
+  isPartOf: { '@type': 'SoftwareApplication', name: 'Notiary', url: 'https://notiary.makerportal.ai' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'CoreML Model Size Calculator', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="CoreML Model Size & Quantization Calculator"
+    lead="Exact on-device footprint math, no throughput guesswork. Enter parameter count or per-layer shapes, pick quantization, and get deterministic bytes — what Notiary checks before bundling a model for ANE."
+    pillarHint="on-device-ai"
+    isGrounded={true}
+    relatedApp="Notiary"
+    relatedAppUrl="https://notiary.makerportal.ai"
+  >
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div class="rounded-[20px] border border-border bg-card-bg p-6">
+            <h2 class="text-[1.1rem] font-semibold">Model definition</h2>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <label class="block"><span class="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">Preset</span>
+                <select id="preset" class="tool-input">
+                  <option value="custom">Custom</option>
+                  <option value="smollm2-360m">SmolLM2 360M (Thumb-Dash) — 360M params</option>
+                  <option value="whisper-tiny">Whisper Tiny — 39M</option>
+                  <option value="bert-base">BERT Base — 110M</option>
+                  <option value="llama-7b">Llama 7B (reference) — 6.7B</option>
+                  <option value="mobilenetv3">MobileNetV3 Large — 5.4M</option>
+                  <option value="yolo-nas-s">YOLO-NAS S — 19M</option>
+                </select>
+              </label>
+              <label class="block"><span class="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">Total parameters (M)</span>
+                <input id="param-m" type="number" step="0.1" value="360" class="tool-input" />
+              </label>
+              <label class="block"><span class="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">Vocab / non-matmul overhead (M params)</span>
+                <input id="overhead-m" type="number" step="0.1" value="8" class="tool-input" />
+              </label>
+              <label class="block"><span class="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">Activation buffer (MB) — worst case tile</span>
+                <input id="act-mb" type="number" step="1" value="64" class="tool-input" />
+              </label>
+              <label class="block col-span-2"><span class="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">Layer breakdown (optional, one per line: name, params M)</span>
+                <textarea id="layers" rows="5" class="tool-input font-mono text-[0.75rem]" placeholder="embed, 32M&#10;12 x transformer block: qkv 6M each&#10;..."></textarea>
+              </label>
+            </div>
+
+            <h3 class="mt-8 text-[0.95rem] font-semibold">Quantization</h3>
+            <div class="mt-3 grid grid-cols-2 gap-3 text-[0.8rem]">
+              <label class="flex items-center gap-2"><input type="checkbox" data-q="fp32" checked /> FP32 — 4 B/param</label>
+              <label class="flex items-center gap-2"><input type="checkbox" data-q="fp16" checked /> FP16 — 2 B</label>
+              <label class="flex items-center gap-2"><input type="checkbox" data-q="bf16" /> BF16 — 2 B</label>
+              <label class="flex items-center gap-2"><input type="checkbox" data-q="int8" checked /> INT8 — 1 B</label>
+              <label class="flex items-center gap-2"><input type="checkbox" data-q="int4" checked /> INT4 — 0.5 B</label>
+              <label class="flex items-center gap-2"><input type="checkbox" data-q="int2" /> INT2 — 0.25 B</label>
+              <label class="flex items-center gap-2"><input type="checkbox" data-q="binary" /> Binary — 0.125 B</label>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <label class="block"><span class="font-mono text-[0.62rem] uppercase">CoreML overhead factor (metadata, graph)</span><input id="overhead-factor" type="range" min="1" max="1.4" step="0.01" value="1.08" class="w-full" /><span id="overhead-factor-v" class="font-mono text-[0.72rem]">1.08×</span></label>
+              <label class="block"><span class="font-mono text-[0.62rem] uppercase">Weight packing efficiency (INT4 block)</span><input id="packing" type="range" min="0.85" max="1" step="0.01" value="0.96" class="w-full" /><span id="packing-v" class="font-mono text-[0.72rem]">0.96×</span></label>
+            </div>
+
+            <div class="mt-6 flex gap-2"><button id="calc" class="rounded-full bg-primary-text px-5 py-2 text-[0.82rem] font-bold text-canvas">Recalculate</button><button id="export-json" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.75rem]">Export JSON</button></div>
+          </div>
+
+          <div>
+            <div class="rounded-[20px] border border-border bg-card-bg p-6">
+              <h3 class="font-semibold">Deterministic footprint</h3>
+              <p class="mt-1 text-[0.78rem] text-muted-text">No latency guesses. Just bytes = params × bytesPerParam × overheadFactor. ANE tile = activation buffer.</p>
+              <div id="results" class="mt-5 grid grid-cols-1 gap-3"></div>
+              <div class="mt-6 rounded-[12px] border border-border bg-canvas p-4 font-mono text-[0.72rem]">
+                <p class="font-semibold uppercase tracking-[0.08em] text-muted-text">Formula</p>
+                <pre class="mt-2 whitespace-pre-wrap">bytes = Σ(layers) params * bytesPerElement * overheadFactor / packingEfficiency
+FP32: 4, FP16/BF16:2, INT8:1, INT4:0.5, INT2:0.25
+Total on-disk ≈ weights + 3-12% CoreML protobuf + activation working set
+ANE residency ≈ min(total, activationTile*2 + quantizedWeightsTile)
+Compression ratio = fp32Size / quantizedSize</pre>
+              </div>
+            </div>
+
+            <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5">
+              <div class="flex items-center justify-between"><p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Swift — size check (Notiary)</p><button class="copy-btn" data-copy-target="code-swift">Copy</button></div>
+              <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
+                <Code id="code-swift" code={swiftLoad} lang="swift" theme="github-dark" />
+              </div>
+              <p class="mt-4 text-[0.82rem] leading-[1.6] text-muted-text"><strong>Why not latency?</strong> On-device AI latency depends on ANE vs GPU scheduling, thermal state, and model’s op mix (MatMul vs LayerNorm). Any online calculator that prints “12 ms” is fabricating. We only print what is deterministic: bytes. For Notiary, a 360M model at INT4 = 360M×0.5B = 180 MB raw, ×1.08 overhead ≈ 194 MB on-disk, +64 MB activation tile = ~258 MB peak residency — fits in 6 GB iPhone, not in 3 GB extension limit, hence the app’s streaming loader.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.5rem 0.6rem;font-size:0.85rem;color:var(--mp-text)}
+  .tool-input:focus{outline:none;border-color:var(--mp-cta);box-shadow:0 0 0 3px color-mix(in srgb,var(--mp-cta) 20%,transparent)}
+  .copy-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.3rem 0.8rem;font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--mp-muted)}
+  .copy-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
+  input[type=range]{accent-color:var(--mp-cta)}
+</style>
+
+<script>
+// @ts-nocheck
+function initCoreML(){
+  const paramEl=document.getElementById('param-m'), overheadEl=document.getElementById('overhead-m'), actEl=document.getElementById('act-mb'), layersEl=document.getElementById('layers'), presetEl=document.getElementById('preset'), overheadFactorEl=document.getElementById('overhead-factor'), overheadFactorV=document.getElementById('overhead-factor-v'), packingEl=document.getElementById('packing'), packingV=document.getElementById('packing-v'), resultsEl=document.getElementById('results'), calcBtn=document.getElementById('calc'), exportBtn=document.getElementById('export-json');
+  if(!paramEl || paramEl.dataset.init) return; paramEl.dataset.init='true';
+
+  const presets={
+    'smollm2-360m':{params:360, overhead:8, act:64},
+    'whisper-tiny':{params:39, overhead:2, act:32},
+    'bert-base':{params:110, overhead:4, act:48},
+    'llama-7b':{params:6700, overhead:120, act:512},
+    'mobilenetv3':{params:5.4, overhead:0.3, act:16},
+    'yolo-nas-s':{params:19, overhead:1, act:24},
+  };
+
+  function fmtBytes(b){
+    if(b>=1e12) return (b/1e12).toFixed(2)+' TB';
+    if(b>=1e9) return (b/1e9).toFixed(2)+' GB ('+(b/1024/1024).toFixed(0)+' MB)';
+    if(b>=1e6) return (b/1e6).toFixed(1)+' MB';
+    if(b>=1e3) return (b/1e3).toFixed(1)+' KB';
+    return b+' B';
+  }
+  function bytesFor(paramsM, bpe, overheadFactor, packing){
+    const params=paramsM*1e6;
+    return params*bpe*overheadFactor/packing;
+  }
+
+  function render(){
+    const paramsM=parseFloat(paramEl.value)||0;
+    const overheadM=parseFloat(overheadEl.value)||0;
+    const actMB=parseFloat(actEl.value)||0;
+    const overheadFactor=parseFloat(overheadFactorEl.value)||1.08;
+    const packing=parseFloat(packingEl.value)||0.96;
+    overheadFactorV.textContent=overheadFactor.toFixed(2)+'×'; packingV.textContent=packing.toFixed(2)+'×';
+    const qTypes=Array.from(document.querySelectorAll('input[data-q]:checked')).map(el=>el.dataset.q);
+    const mapBPE={fp32:4, fp16:2, bf16:2, int8:1, int4:0.5, int2:0.25, binary:0.125};
+
+    resultsEl.innerHTML='';
+    let fp32Bytes=bytesFor(paramsM,4,overheadFactor,1);
+    qTypes.forEach(q=>{
+      const bpe=mapBPE[q];
+      const packEff = (q==='int4'||q==='int2'||q==='binary')? packing : 1;
+      const bytes=bytesFor(paramsM,bpe,overheadFactor,packEff);
+      const totalWithAct = bytes + actMB*1e6;
+      const ratio=fp32Bytes/(bytes||1);
+      const div=document.createElement('div');
+      div.className='flex items-center justify-between rounded-[12px] border border-border bg-canvas p-3';
+      div.innerHTML=`<div><p class="font-mono text-[0.75rem] font-bold uppercase">${q} — ${bpe} B/param</p><p class="mt-1 font-mono text-[0.7rem] text-muted-text">${fmtBytes(bytes)} weights + ${actMB} MB act = ${fmtBytes(totalWithAct)} peak • overhead ${overheadM}M extra ≈ ${fmtBytes(bytesFor(overheadM,bpe,overheadFactor,packEff))}</p></div><div class="text-right"><p class="font-mono text-[0.85rem] font-semibold">${fmtBytes(bytes)}</p><p class="font-mono text-[0.65rem] text-muted-text">×${ratio.toFixed(2)} vs fp32</p></div>`;
+      resultsEl.appendChild(div);
+    });
+    // extra note for INT4 practical
+    const note=document.createElement('div');
+    note.className='rounded-[12px] border border-amber-200/50 bg-amber-50 p-3 text-[0.75rem] leading-[1.5] text-amber-900';
+    note.innerHTML=`<strong>Practical check (Thumb-Dash):</strong> 360M SmolLM2 at INT4 = 360M×0.5=180 MB raw weights. With 1.08× CoreML overhead and 0.96 packing → ${(bytesFor(360,0.5,1.08,0.96)/1e6).toFixed(1)} MB on-disk. Add 64 MB activation tile → ${(bytesFor(360,0.5,1.08,0.96)/1e6+64).toFixed(0)} MB peak. iOS app limit ~4 GB, extension limit ~ 1 GB, ANE SRAM per layer ~ 8 MB. This is why Thumb-Dash streams layers and uses 8-bit KV cache.`;
+    resultsEl.appendChild(note);
+  }
+
+  presetEl.addEventListener('change', ()=>{
+    const p=presets[presetEl.value];
+    if(p){ paramEl.value=p.params; overheadEl.value=p.overhead; actEl.value=p.act; render(); }
+  });
+  [paramEl,overheadEl,actEl,overheadFactorEl,packingEl].forEach(el=>el.addEventListener('input', render));
+  document.querySelectorAll('input[data-q]').forEach(el=>el.addEventListener('change', render));
+  calcBtn.addEventListener('click', render);
+  exportBtn.addEventListener('click', ()=>{
+    const data={paramsM:parseFloat(paramEl.value), overheadM:parseFloat(overheadEl.value), actMB:parseFloat(actEl.value), overheadFactor:parseFloat(overheadFactorEl.value), packing:parseFloat(packingEl.value), quants:Array.from(document.querySelectorAll('input[data-q]:checked')).map(e=>e.dataset.q)};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='coreml-footprint.json'; a.click(); URL.revokeObjectURL(url);
+  });
+  document.querySelectorAll('.copy-btn').forEach(b=>{ b.addEventListener('click', async()=>{ const id=b.dataset.copyTarget; const el=document.getElementById(id); if(!el) return; try{ await navigator.clipboard.writeText(el.textContent||''); const o=b.textContent; b.textContent='Copied'; setTimeout(()=>b.textContent=o,1200);}catch{} }); });
+  render();
+  document.addEventListener('astro:before-swap', ()=>{}, {once:true});
+}
+document.addEventListener('astro:page-load', initCoreML);
+initCoreML();
+</script>

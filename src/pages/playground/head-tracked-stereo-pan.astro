@@ -1,0 +1,386 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+
+const title = 'Head-Tracked Stereo Pan — Rotate a virtual head, hear the pan move | MakerPortal';
+const description = 'Combines the quaternion yaw output with a live StereoPannerNode demo — spatial audio and head tracking in one shareable toy, same math as MotionLink.';
+const canonical = new URL('/playground/head-tracked-stereo-pan', Astro.site);
+
+const swiftCode = `func updateListener(from q: CMQuaternion, listener: AVAudioEnvironmentNode) {
+    // CMQuaternion -> forward vector for listener orientation
+    let fwd = simd_float3(
+        x: Float(2*(q.x*q.z + q.w*q.y)),
+        y: Float(2*(q.y*q.z - q.w*q.x)),
+        z: Float(1 - 2*(q.x*q.x + q.y*q.y))
+    )
+    listener.listenerAngularOrientation = AVAudioMakeAngularOrientation(fwd)
+}`;
+
+const jsCode = `// JS: yaw -> StereoPannerNode (simple)
+// For full 3D, use PannerNode + AudioListener orientation from quaternion
+function quatToYaw(q){ // same as quaternion-euler page
+  const yaw = Math.atan2(2*(q.w*q.z + q.x*q.y), 1-2*(q.y*q.y + q.z*q.z));
+  return yaw;
+}
+const panner = audioCtx.createStereoPanner();
+panner.pan.value = Math.sin(yaw); // -1 left, 1 right
+// 3D: listener forward from quat
+const fwd = [2*(q.x*q.z+q.w*q.y), 2*(q.y*q.z-q.w*q.x), 1-2*(q.x*q.x+q.y*q.y)];
+audioCtx.listener.forwardX.value = fwd[0];
+audioCtx.listener.forwardY.value = fwd[1];
+audioCtx.listener.forwardZ.value = fwd[2];`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Head-Tracked Stereo Pan',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  description,
+  isPartOf: { '@type': 'SoftwareApplication', name: 'MotionLink', url: 'https://makersportal.com/apps/motionlink' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Head-Tracked Stereo Pan', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Head-Tracked Stereo Pan"
+    lead="Rotate a virtual head, hear the pan move. Yaw from the quaternion converter drives a live StereoPannerNode + 3D PannerNode — the exact head-tracking → spatial-audio link MotionLink uses to keep audio locked in space as you turn."
+    pillarHint="dsp-audio"
+    isGrounded={true}
+    relatedApp="MotionLink"
+    relatedAppUrl="https://makersportal.com/apps/motionlink"
+    relatedFieldNote="motionlink-headphone-motion-api"
+  >
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <h2 class="text-[1.2rem] font-semibold">Virtual head (from quaternion)</h2>
+            <p class="mt-2 max-w-xl text-[0.85rem] leading-[1.6] text-muted-text">Drag to rotate. Left/right = yaw (Z), up/down = pitch (Y), Shift = roll (X). Same math as <a href="/playground/quaternion-euler-converter" class="text-brand-anchor">quaternion converter</a>. Red = nose (+X forward), green = left ear (+Y), blue = up (+Z). At 0°,0°,0° you see top-front isometric.</p>
+            <div class="mt-4 overflow-hidden rounded-[20px] border border-border bg-card-bg">
+              <canvas id="head-canvas" width="520" height="400" class="block w-full touch-none"></canvas>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-3 font-mono text-[0.75rem]">
+              <label>Yaw°<input id="yaw" type="range" min="-180" max="180" step="0.5" value="0" class="mt-1 w-full" /><span id="yaw-v" class="block text-[0.85rem] font-semibold">0°</span></label>
+              <label>Pitch°<input id="pitch" type="range" min="-80" max="80" step="0.5" value="0" class="mt-1 w-full" /><span id="pitch-v" class="block text-[0.85rem] font-semibold">0°</span></label>
+              <label>Roll°<input id="roll" type="range" min="-60" max="60" step="0.5" value="0" class="mt-1 w-full" /><span id="roll-v" class="block text-[0.85rem] font-semibold">0°</span></label>
+            </div>
+            <div class="mt-3 flex gap-2">
+              <button id="head-reset" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase">Reset 0°</button>
+              <button id="head-left" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase">Look left -60°</button>
+              <button id="head-right" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase">Look right 60°</button>
+            </div>
+          </div>
+          <div>
+            <h2 class="text-[1.2rem] font-semibold">Spatial audio — hear it</h2>
+            <p class="mt-2 max-w-xl text-[0.85rem] leading-[1.6] text-muted-text">Source is fixed in front of you. As you yaw your head, the sound stays world-locked — it pans to the ear opposite your turn. This is how MotionLink + Biquadia keep a live mix stable while you move.</p>
+
+            <div class="mt-4 rounded-[16px] border border-border bg-canvas p-4">
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="src-type" class="rounded-full border border-border bg-card-bg px-3 py-2 font-mono text-[0.72rem]"><option value="white">White noise (best for pan hearing)</option><option value="pink">Pink noise</option><option value="tone">440 Hz tone</option><option value="music">Synth loop (2 tones)</option></select>
+                <button id="audio-toggle" class="rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas">Play</button>
+                <button id="bypass" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.8rem]">Bypass: OFF</button>
+                <span id="audio-state" class="font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text/70">stopped</span>
+              </div>
+
+              <div class="mt-5">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-muted-text">Stereo pan (-1 left → 1 right)</p>
+                <div class="mt-2 h-[28px] overflow-hidden rounded-full border border-border bg-elevated">
+                  <div id="pan-bar" class="h-full w-1/2 origin-left bg-[#b8324f] transition-all" style="width:50%"></div>
+                </div>
+                <div class="mt-1 flex justify-between font-mono text-[0.65rem]"><span>L</span><span id="pan-val">0.00</span><span>R</span></div>
+              </div>
+
+              <div class="mt-5 grid grid-cols-2 gap-3 font-mono text-[0.7rem]">
+                <div class="rounded-[10px] border border-border bg-card-bg p-3"><p class="uppercase tracking-[0.08em] text-muted-text">Listener forward (from quat)</p><pre id="fwd-out" class="mt-1 text-[0.72rem]">0,0,1</pre></div>
+                <div class="rounded-[10px] border border-border bg-card-bg p-3"><p class="uppercase tracking-[0.08em] text-muted-text">Simple pan = sin(yaw)</p><pre id="simple-out" class="mt-1 text-[0.72rem]">0</pre></div>
+              </div>
+
+              <div class="mt-5 rounded-[10px] border border-border bg-card-bg p-3 font-mono text-[0.7rem]">
+                <p class="uppercase tracking-[0.08em] text-muted-text">3D Panner position (source fixed world-locked)</p>
+                <p class="mt-1 text-[0.75rem]">Source at (1, 0, 0) world = in front of head at 0° yaw. Listener at origin, orientation from quaternion.</p>
+                <pre id="pos-out" class="mt-2 text-[0.72rem]">yaw 0° → pan 0</pre>
+              </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-4">
+              <div><div class="flex items-center justify-between"><p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">JS — quaternion to listener</p><button class="copy-btn" data-copy-target="code-js">Copy</button></div><div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]"><Code id="code-js" code={jsCode} lang="js" theme="github-dark" /></div></div>
+              <div><div class="flex items-center justify-between"><p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Swift — MotionLink</p><button class="copy-btn" data-copy-target="code-swift">Copy</button></div><div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]"><Code id="code-swift" code={swiftCode} lang="swift" theme="github-dark" /></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .copy-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.3rem 0.8rem;font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--mp-muted)}
+  .copy-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
+  input[type=range]{accent-color:var(--mp-cta)}
+</style>
+
+<script>
+// @ts-nocheck
+function initHeadPan(){
+  const canvasEl=document.getElementById('head-canvas');
+  if(!canvasEl || canvasEl.dataset.init) return; canvasEl.dataset.init='true';
+  const canvas=canvasEl; const ctx=canvas.getContext('2d');
+  const dpr=Math.min(window.devicePixelRatio||1,2); const CW=canvas.width, CH=canvas.height;
+  canvas.width=CW*dpr; canvas.height=CH*dpr; canvas.style.width=CW+'px'; canvas.style.height=CH+'px'; ctx.scale(dpr,dpr);
+  const scale=Math.min(CW,CH)*0.9;
+  const ORIGIN_X=CW*0.5, ORIGIN_Y=CH*0.46;
+
+  // math
+  const deg2rad=d=>d*Math.PI/180, rad2deg=r=>r*180/Math.PI;
+  function quatFromEuler(yaw,pitch,roll){
+    const cy=Math.cos(yaw*0.5), sy=Math.sin(yaw*0.5);
+    const cp=Math.cos(pitch*0.5), sp=Math.sin(pitch*0.5);
+    const cr=Math.cos(roll*0.5), sr=Math.sin(roll*0.5);
+    return {x:sr*cp*cy - cr*sp*sy, y:cr*sp*cy+sr*cp*sy, z:cr*cp*sy - sr*sp*cy, w:cr*cp*cy+sr*sp*sy};
+  }
+  function quatToMat(x,y,z,w){
+    const xx=x*x,yy=y*y,zz=z*z, xy=x*y,xz=x*z,yz=y*z, wx=w*x,wy=w*y,wz=w*z;
+    return [1-2*(yy+zz),2*(xy-wz),2*(xz+wy), 2*(xy+wz),1-2*(xx+zz),2*(yz-wx), 2*(xz-wy),2*(yz+wx),1-2*(xx+yy)];
+  }
+  function mulMat(a,b){return [a[0]*b[0]+a[1]*b[3]+a[2]*b[6],a[0]*b[1]+a[1]*b[4]+a[2]*b[7],a[0]*b[2]+a[1]*b[5]+a[2]*b[8], a[3]*b[0]+a[4]*b[3]+a[5]*b[6],a[3]*b[1]+a[4]*b[4]+a[5]*b[7],a[3]*b[2]+a[4]*b[5]+a[5]*b[8], a[6]*b[0]+a[7]*b[3]+a[8]*b[6],a[6]*b[1]+a[7]*b[4]+a[8]*b[7],a[6]*b[2]+a[7]*b[5]+a[8]*b[8]];}
+  function mulMatVec(m,v){return [m[0]*v[0]+m[1]*v[1]+m[2]*v[2], m[3]*v[0]+m[4]*v[1]+m[5]*v[2], m[6]*v[0]+m[7]*v[1]+m[8]*v[2]];}
+  function rotX(r){const c=Math.cos(r),s=Math.sin(r);return [1,0,0,0,c,-s,0,s,c];}
+  function rotY(r){const c=Math.cos(r),s=Math.sin(r);return [c,0,s,0,1,0,-s,0,c];}
+  function rotZ(r){const c=Math.cos(r),s=Math.sin(r);return [c,-s,0,s,c,0,0,0,1];}
+  const VIEW=mulMat(rotX(deg2rad(-28)), mulMat(rotY(deg2rad(-18)), rotZ(deg2rad(28))));
+
+  function quatNormalize(q){const m=Math.hypot(q.x,q.y,q.z,q.w); return m>1e-9?{x:q.x/m,y:q.y/m,z:q.z/m,w:q.w/m}:{x:0,y:0,z:0,w:1};}
+  function quatMul(a,b){return {w:a.w*b.w-a.x*b.x-a.y*b.y-a.z*b.z, x:a.w*b.x+a.x*b.w+a.y*b.z-a.z*b.y, y:a.w*b.y-a.x*b.z+a.y*b.w+a.z*b.x, z:a.w*b.z+a.x*b.y-a.y*b.x+a.z*b.w};}
+  function quatFromAxis(axis,ang){const ha=ang*0.5,s=Math.sin(ha);return {x:axis[0]*s,y:axis[1]*s,z:axis[2]*s,w:Math.cos(ha)};}
+
+  // head model: simple sphere + nose + ears
+  function buildHead(){
+    const verts=[], faces=[];
+    const R=0.35;
+    const latBands=18, longBands=24;
+    for(let lat=0;lat<=latBands;lat++){
+      const theta=lat*Math.PI/latBands;
+      const sinT=Math.sin(theta), cosT=Math.cos(theta);
+      for(let lon=0;lon<=longBands;lon++){
+        const phi=lon*2*Math.PI/longBands;
+        const sinP=Math.sin(phi), cosP=Math.cos(phi);
+        const x=cosP*sinT, y=sinP*sinT, z=cosT;
+        // map: head forward +X is nose direction: we build with X forward? Our sphere in X forward? Currently x from sinT*cosP is radial, but we want forward +X = nose. So we will author with X = cosT? Let's just make forward X = x? Actually we want head forward +X, so nose along +X. Sphere coordinate: we want +X to be front. So x = cos? Let's author with x = cosT? Simpler: we already have model Y up Z up confusion. We'll just build sphere and then map [x,y,z] where x=original x? We'll map such that forward is +X, left +Y, up +Z, same as drone convention.
+        // Using spherical coords where +Z up = cosT, forward X = sinT*cosP, left Y = sinT*sinP
+        verts.push([sinT*cosP*R, sinT*sinP*R, cosT*R]);
+      }
+    }
+    for(let lat=0;lat<latBands;lat++){
+      for(let lon=0;lon<longBands;lon++){
+        const first=(lat*(longBands+1))+lon;
+        const second=first+longBands+1;
+        faces.push({verts:[first,second,first+1], color:[200,200,205]});
+        faces.push({verts:[second,second+1,first+1], color:[200,200,205]});
+      }
+    }
+    // nose: small cone along +X
+    const noseBase=verts.length;
+    const noseLen=0.18, noseR=0.06;
+    const noseTip=[R+noseLen,0,0];
+    verts.push(noseTip);
+    const noseCircle=8;
+    for(let i=0;i<noseCircle;i++){
+      const a=i*2*Math.PI/noseCircle;
+      verts.push([R, Math.cos(a)*noseR, Math.sin(a)*noseR]);
+    }
+    for(let i=0;i<noseCircle;i++){
+      const j=(i+1)%noseCircle;
+      faces.push({verts:[noseBase, noseBase+1+i, noseBase+1+j], color:[210,62,72], isNose:true});
+    }
+    // ears: small cylinders at Y = +/- R
+    const earR=0.07, earLen=0.04;
+    for(const side of [-1,1]){
+      const base=verts.length;
+      const cy=side*(R+0.02);
+      // simple small box ear
+      verts.push([0+earR, cy-earR, -0.05],[0+earR, cy+earR, -0.05],[0+earR, cy+earR, 0.05],[0+earR, cy-earR, 0.05],
+                 [-earR, cy-earR, -0.05],[-earR, cy+earR, -0.05],[-earR, cy+earR, 0.05],[-earR, cy-earR, 0.05]);
+      const col = side>0?[120,180,130]:[120,180,130];
+      faces.push({verts:[base,base+1,base+2,base+3], color:col});
+      faces.push({verts:[base+4,base+7,base+6,base+5], color:col});
+      faces.push({verts:[base,base+4,base+5,base+1], color:col});
+      faces.push({verts:[base+1,base+5,base+6,base+2], color:col});
+      faces.push({verts:[base+2,base+6,base+7,base+3], color:col});
+      faces.push({verts:[base+3,base+7,base+4,base], color:col});
+    }
+    return {verts, faces};
+  }
+  const headModel=buildHead();
+
+  function getTheme(){return {border:getComputedStyle(document.documentElement).getPropertyValue('--mp-border').trim()||'rgba(0,0,0,0.1)', text:getComputedStyle(document.documentElement).getPropertyValue('--mp-text').trim()||'#222'};}
+
+  function renderHead(rotMat){
+    const tc=getTheme();
+    ctx.clearRect(0,0,CW,CH);
+    const glow=ctx.createRadialGradient(ORIGIN_X, ORIGIN_Y-10,0, ORIGIN_X, ORIGIN_Y-10, scale*0.6);
+    glow.addColorStop(0,'rgba(130,160,200,0.08)'); glow.addColorStop(0.6,'rgba(130,160,200,0.03)'); glow.addColorStop(1,'rgba(130,160,200,0)');
+    ctx.fillStyle=glow; ctx.fillRect(0,0,CW,CH);
+    const finalMat=mulMat(VIEW, rotMat);
+    const transformed=headModel.verts.map(v=>mulMatVec(finalMat,v));
+    const projected=transformed.map(v=>({x:ORIGIN_X+v[0]*scale, y:ORIGIN_Y - v[1]*scale, z:v[2]}));
+    const faceData=headModel.faces.map((f,fi)=>{
+      const pts=f.verts.map(vi=>projected[vi]);
+      const avgZ=pts.reduce((s,p)=>s+p.z,0)/pts.length;
+      const p0=transformed[f.verts[0]], p1=transformed[f.verts[1]], p2=transformed[f.verts[2]];
+      const e1=[p1[0]-p0[0],p1[1]-p0[1],p1[2]-p0[2]], e2=[p2[0]-p0[0],p2[1]-p0[1],p2[2]-p0[2]];
+      const n=[e1[1]*e2[2]-e1[2]*e2[1], e1[2]*e2[0]-e1[0]*e2[2], e1[0]*e2[1]-e1[1]*e2[0]];
+      const l=Math.hypot(...n); if(l>0){ n[0]/=l; n[1]/=l; n[2]/=l; }
+      return {fi,pts,avgZ,normal:n};
+    });
+    faceData.sort((a,b)=>a.avgZ-b.avgZ);
+    // axes
+    const axes=[{dir:[0.5,0,0],color:'rgba(220,68,68,0.72)',label:'X nose'},{dir:[0,0.5,0],color:'rgba(60,185,90,0.72)',label:'Y left'},{dir:[0,0,0.5],color:'rgba(65,110,230,0.72)',label:'Z up'}];
+    const origin={x:ORIGIN_X,y:ORIGIN_Y};
+    for(const ax of axes){
+      const tip=mulMatVec(finalMat, ax.dir);
+      ctx.strokeStyle=ax.color; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(origin.x,origin.y); ctx.lineTo(origin.x+tip[0]*scale, origin.y-tip[1]*scale); ctx.stroke();
+      ctx.fillStyle=ax.color; ctx.font='10px ui-monospace'; ctx.fillText(ax.label, origin.x+tip[0]*scale+6, origin.y-tip[1]*scale);
+    }
+    for(const fd of faceData){
+      if(fd.normal[2]<=0.0 && !fd.fi) continue; // slight cull, keep most for sphere
+      if(fd.normal[2]<=-0.2) continue;
+      const face=headModel.faces[fd.fi];
+      const pts=fd.pts;
+      const shade=Math.max(0, fd.normal[0]*0.3+fd.normal[1]*0.4+fd.normal[2]*0.8);
+      const base=face.color;
+      const r=Math.min(255, Math.round(base[0]* (0.45+shade*0.55)));
+      const g=Math.min(255, Math.round(base[1]* (0.45+shade*0.55)));
+      const b=Math.min(255, Math.round(base[2]* (0.45+shade*0.55)));
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y); ctx.closePath();
+      ctx.fillStyle=face.isNose?`rgb(${base[0]},${base[1]},${base[2]})`:`rgb(${r},${g},${b})`;
+      ctx.globalAlpha=face.isNose?1:0.95; ctx.fill(); ctx.globalAlpha=1;
+      if(!face.isNose){ ctx.strokeStyle='rgba(0,0,0,0.08)'; ctx.lineWidth=0.5; ctx.stroke(); }
+    }
+  }
+
+  const yawEl=document.getElementById('yaw'), pitchEl=document.getElementById('pitch'), rollEl=document.getElementById('roll');
+  const yawV=document.getElementById('yaw-v'), pitchV=document.getElementById('pitch-v'), rollV=document.getElementById('roll-v');
+  const fwdOut=document.getElementById('fwd-out'), simpleOut=document.getElementById('simple-out'), posOut=document.getElementById('pos-out');
+  const panBar=document.getElementById('pan-bar'), panVal=document.getElementById('pan-val');
+
+  let currentQuat={x:0,y:0,z:0,w:1};
+  function updateAll(){
+    const yaw=deg2rad(parseFloat(yawEl.value)||0), pitch=deg2rad(parseFloat(pitchEl.value)||0), roll=deg2rad(parseFloat(rollEl.value)||0);
+    const q=quatFromEuler(yaw,pitch,roll);
+    currentQuat=quatNormalize(q);
+    const mat=quatToMat(currentQuat.x,currentQuat.y,currentQuat.z,currentQuat.w);
+    renderHead(mat);
+    yawV.textContent=yawEl.value+'°'; pitchV.textContent=pitchEl.value+'°'; rollV.textContent=rollEl.value+'°';
+    // listener forward
+    const fwd=[2*(currentQuat.x*currentQuat.z+currentQuat.w*currentQuat.y), 2*(currentQuat.y*currentQuat.z-currentQuat.w*currentQuat.x), 1-2*(currentQuat.x*currentQuat.x+currentQuat.y*currentQuat.y)];
+    fwdOut.textContent=fwd.map(n=>n.toFixed(3)).join(', ');
+    const pan=Math.sin(yaw); // simple
+    simpleOut.textContent=pan.toFixed(3);
+    panBar.style.width=((pan+1)/2*100).toFixed(1)+'%';
+    panVal.textContent=pan.toFixed(2);
+    posOut.textContent=`yaw ${rad2deg(yaw).toFixed(0)}° → simple pan ${pan.toFixed(2)} (L -1, R 1) • 3D listener forward tracked`;
+    // update audio panner if playing
+    if(audioCtx){
+      try{
+        audioCtx.listener.forwardX.value=fwd[0]; audioCtx.listener.forwardY.value=fwd[1]; audioCtx.listener.forwardZ.value=fwd[2];
+        if(stereoPanner) stereoPanner.pan.value=pan;
+        if(pannerNode){
+          // keep source front world-locked: source at (1,0,0) in world, listener at origin oriented by quat
+          // For PannerNode, we don't move source, we move listener orientation, so pan is automatic via HRTF? We'll also set simple pan as fallback
+        }
+      }catch{}
+    }
+  }
+
+  // drag
+  const wrap=canvas.parentElement; let dragging=false, sx=0, sy=0, startQuat={x:0,y:0,z:0,w:1};
+  wrap.addEventListener('pointerdown', e=>{ dragging=true; sx=e.clientX; sy=e.clientY; startQuat={...currentQuat}; wrap.setPointerCapture(e.pointerId); });
+  wrap.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx=(e.clientX-sx)*0.008, dy=(e.clientY-sy)*0.008;
+    let dq;
+    if(e.shiftKey) dq=quatFromAxis([1,0,0], -dx);
+    else { const yq=quatFromAxis([0,0,1], -dx); const pq=quatFromAxis([0,1,0], dy); dq=quatMul(yq,pq); }
+    const nq=quatNormalize(quatMul(dq,startQuat));
+    // convert back to euler for sliders
+    const yaw=Math.atan2(2*(nq.w*nq.z+nq.x*nq.y),1-2*(nq.y*nq.y+nq.z*nq.z));
+    const pitch=Math.asin(Math.max(-1,Math.min(1,2*(nq.w*nq.y-nq.z*nq.x))));
+    const roll=Math.atan2(2*(nq.w*nq.x+nq.y*nq.z),1-2*(nq.x*nq.x+nq.y*nq.y));
+    yawEl.value=rad2deg(yaw).toFixed(1); pitchEl.value=rad2deg(pitch).toFixed(1); rollEl.value=rad2deg(roll).toFixed(1);
+    updateAll();
+  });
+  function endDrag(e){ dragging=false; try{ if(wrap.hasPointerCapture(e.pointerId)) wrap.releasePointerCapture(e.pointerId);}catch{} }
+  wrap.addEventListener('pointerup', endDrag); wrap.addEventListener('pointercancel', endDrag);
+
+  yawEl.addEventListener('input', updateAll); pitchEl.addEventListener('input', updateAll); rollEl.addEventListener('input', updateAll);
+  document.getElementById('head-reset').addEventListener('click', ()=>{ yawEl.value=0; pitchEl.value=0; rollEl.value=0; updateAll(); });
+  document.getElementById('head-left').addEventListener('click', ()=>{ yawEl.value=-60; updateAll(); });
+  document.getElementById('head-right').addEventListener('click', ()=>{ yawEl.value=60; updateAll(); });
+
+  // audio
+  let audioCtx=null, sourceNode=null, stereoPanner=null, pannerNode=null, gainNode=null, isPlaying=false, bypass=false;
+  const playBtn=document.getElementById('audio-toggle'), bypassBtn=document.getElementById('bypass'), stateEl=document.getElementById('audio-state'), srcSel=document.getElementById('src-type');
+  function ensureCtx(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+  function makeWhite(){ const ctx=ensureCtx(); const len=ctx.sampleRate*3; const buf=ctx.createBuffer(1,len,ctx.sampleRate); const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1; return buf; }
+  function makePink(){ const ctx=ensureCtx(); const len=ctx.sampleRate*3; const buf=ctx.createBuffer(1,len,ctx.sampleRate); const d=buf.getChannelData(0); let b0,b1,b2,b3,b4,b5,b6; b0=b1=b2=b3=b4=b5=b6=0; for(let i=0;i<len;i++){ const w=Math.random()*2-1; b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.969*b2+w*0.153852; b3=0.8665*b3+w*0.3104856; b4=0.55*b4+w*0.5329522; b5=-0.7616*b5-w*0.016898; d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; } return buf; }
+  async function start(){
+    const ctx=ensureCtx(); await ctx.resume();
+    stop();
+    gainNode=ctx.createGain(); gainNode.gain.value=0.3; gainNode.connect(ctx.destination);
+    stereoPanner=ctx.createStereoPanner(); pannerNode=ctx.createPanner(); pannerNode.panningModel='HRTF'; pannerNode.distanceModel='inverse'; pannerNode.refDistance=1; pannerNode.positionX.value=1; pannerNode.positionY.value=0; pannerNode.positionZ.value=0;
+    // chain: source -> panner -> stereo -> gain
+    const t=srcSel.value;
+    if(t==='tone'){
+      const osc=ctx.createOscillator(); osc.frequency.value=440; osc.type='sine'; sourceNode=osc; osc.connect(pannerNode); pannerNode.connect(stereoPanner); stereoPanner.connect(gainNode); osc.start();
+    } else if(t==='music'){
+      const osc1=ctx.createOscillator(); const osc2=ctx.createOscillator(); const g=ctx.createGain(); g.gain.value=0.5;
+      osc1.frequency.value=220; osc2.frequency.value=330; osc1.type='sawtooth'; osc2.type='sine';
+      osc1.connect(g); osc2.connect(g); g.connect(pannerNode); pannerNode.connect(stereoPanner); stereoPanner.connect(gainNode);
+      osc1.start(); osc2.start(); sourceNode={stop:()=>{try{osc1.stop();}catch{} try{osc2.stop();}catch{}}, disconnect:()=>{try{g.disconnect();}catch{}}};
+    } else {
+      const buf=t==='pink'?makePink():makeWhite(); const src=ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+      sourceNode=src; src.connect(pannerNode); pannerNode.connect(stereoPanner); stereoPanner.connect(gainNode); src.start();
+    }
+    isPlaying=true; playBtn.textContent='Stop'; stateEl.textContent='playing';
+    updateAll();
+  }
+  function stop(){
+    try{ sourceNode?.stop?.(); }catch{} try{ sourceNode?.disconnect?.(); }catch{} try{ pannerNode?.disconnect(); }catch{} try{ stereoPanner?.disconnect(); }catch{} try{ gainNode?.disconnect(); }catch{}
+    sourceNode=null; isPlaying=false; playBtn.textContent='Play'; stateEl.textContent='stopped';
+  }
+  playBtn.addEventListener('click', ()=>{ isPlaying?stop():start(); });
+  bypassBtn.addEventListener('click', ()=>{
+    bypass=!bypass; bypassBtn.textContent='Bypass: '+(bypass?'ON':'OFF');
+    if(audioCtx && pannerNode && stereoPanner && gainNode && sourceNode){
+      try{ sourceNode.disconnect(); pannerNode.disconnect(); stereoPanner.disconnect(); }catch{}
+      if(bypass){ sourceNode.connect(gainNode); }
+      else { sourceNode.connect(pannerNode); pannerNode.connect(stereoPanner); stereoPanner.connect(gainNode); }
+    }
+  });
+  srcSel.addEventListener('change', ()=>{ if(isPlaying){ stop(); start(); }});
+
+  document.querySelectorAll('.copy-btn').forEach(b=>{ b.addEventListener('click', async()=>{ const id=b.dataset.copyTarget; const el=document.getElementById(id); if(!el) return; try{ await navigator.clipboard.writeText(el.textContent||''); const o=b.textContent; b.textContent='Copied'; setTimeout(()=>b.textContent=o,1200);}catch{} }); });
+
+  updateAll();
+  document.addEventListener('astro:before-swap', ()=>{ stop(); try{audioCtx?.close();}catch{} }, {once:true});
+}
+document.addEventListener('astro:page-load', initHeadPan);
+initHeadPan();
+</script>

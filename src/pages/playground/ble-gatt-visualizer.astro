@@ -1,0 +1,271 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+
+const title = 'BLE GATT / CSV Frame Visualizer — How raw bytes become a row | MakerPortal';
+const description = 'Interactive look at the HM-10/nRF52 UART bridge BLExAR talks to — services, characteristics, and the byte-level framing behind CSV export. See GATT hierarchy, UART fragmentation, and CSV parsing live.';
+const canonical = new URL('/playground/ble-gatt-visualizer', Astro.site);
+
+const swiftGATT = `let uartService = CBUUID(string: "FFE0") // HM-10
+let uartChar    = CBUUID(string: "FFE1")
+func peripheral(_ p: CBPeripheral, didDiscoverServices e: Error?) {
+  p.discoverCharacteristics([uartChar], for: service)
+}
+func peripheral(_ p: CBPeripheral, didUpdateValueFor c: CBCharacteristic, error: Error?) {
+  guard let data = c.value else { return }
+  // BLExAR framing: \\n-delimited ASCII, e.g. "1234,23.5,1023\\n"
+  lineBuffer.append(data)
+  while let nl = lineBuffer.firstIndex(of: 0x0A) { /* parse CSV */ }
+}`;
+
+const arduinoSnippet = `// Arduino -> HM-10 UART -> BLE -> iOS CSV
+void loop() {
+  float t = millis()/1000.0;
+  int   a = analogRead(A0);
+  Serial.print(t,3); Serial.print(',');
+  Serial.print(a);   Serial.print('\\n');
+  delay(50); // 20 Hz
+}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'BLE GATT Visualizer',
+  url: canonical.toString(),
+  applicationCategory: 'DeveloperApplication',
+  description,
+  isPartOf: { '@type': 'SoftwareApplication', name: 'BLExAR', url: 'https://makersportal.com/apps/blexar' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'BLE GATT Visualizer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="BLE GATT / CSV Frame Visualizer"
+    lead="How raw serial bytes become a CSV row. Explore HM-10 (FFE0/FFE1) and nRF52 UART (6E400001/002/003) GATT hierarchy, watch UART packets fragment across BLE notifications, and see the exact newline-delimited ASCII → CSV → file parsing BLExAR uses."
+    pillarHint="ios-craft"
+    isGrounded={true}
+    relatedApp="BLExAR"
+    relatedAppUrl="https://blexar.makerportal.ai"
+  >
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr_340px]">
+          <!-- GATT Tree -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">GATT Services</h3>
+            <div class="mt-3 flex gap-2"><button data-stack="hm10" class="stack-btn rounded-full bg-primary-text px-3 py-1 text-[0.7rem] font-bold text-canvas">HM-10</button><button data-stack="nrf52" class="stack-btn rounded-full border border-border bg-elevated px-3 py-1 text-[0.7rem]">nRF52</button><button data-stack="custom" class="stack-btn rounded-full border border-border bg-elevated px-3 py-1 text-[0.7rem]">Custom</button></div>
+            <div id="gatt-tree" class="mt-4 font-mono text-[0.72rem] leading-[1.5]"></div>
+            <div class="mt-4 rounded-[10px] border border-border bg-canvas p-3 text-[0.72rem] leading-[1.5] text-muted-text">
+              <p class="font-semibold text-primary-text/80">BLExAR strategy</p>
+              <p>1) Scan for FFE0 or 6E400001 → 2) discover FFE1 / 6E400002 (RX) & 003 (TX) → 3) setNotifyValue(true) → 4) accumulate Data until 0x0A → 5) UTF8 → split(',') → CSV row → file. No length prefix, just newline. If fragment splits mid-number, buffer holds until NL.</p>
+            </div>
+          </div>
+
+          <!-- Byte Stream -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">UART byte stream → frames</h3>
+            <p class="mt-1 text-[0.78rem] text-muted-text">Type raw ASCII below. It will be chunked into BLE notifications (MTU 20 for HM-10, 185 for nRF52) and reassembled into CSV rows. Try injecting noise.</p>
+
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <label class="block"><span class="font-mono text-[0.62rem] uppercase text-muted-text">MTU</span><select id="mtu" class="tool-input"><option value="20">20 B (HM-10 legacy)</option><option value="185" selected>185 B (nRF52, iOS 10+)</option><option value="512">512 B (BLE 5)</option></select></label>
+              <label class="block"><span class="font-mono text-[0.62rem] uppercase text-muted-text">Sample data rate Hz</span><input id="rate" type="number" value="20" class="tool-input" /></label>
+            </div>
+
+            <label class="mt-4 block"><span class="font-mono text-[0.62rem] uppercase text-muted-text">Raw serial input (ASCII, \\n delimited)</span>
+              <textarea id="raw-input" rows="5" class="tool-input font-mono text-[0.78rem]">0.000,512,23.5
+0.050,515,23.6
+0.100,510,23.5
+0.150,518,23.7
+0.200,520,23.7
+</textarea>
+            </label>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button id="btn-fuzz" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.7rem] uppercase">Inject 1 corrupt byte</button>
+              <button id="btn-split" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.7rem] uppercase">Show fragmentation</button>
+              <button id="btn-reset" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.7rem] uppercase">Reset example</button>
+            </div>
+
+            <div class="mt-5">
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-muted-text">BLE notifications (hex + ASCII)</p>
+              <div id="notif-out" class="mt-2 max-h-[220px] overflow-auto rounded-[10px] border border-border bg-canvas p-3 font-mono text-[0.7rem] leading-[1.6]"></div>
+            </div>
+
+            <div class="mt-4">
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-muted-text">Reassembly buffer (lineBuffer)</p>
+              <pre id="buffer-out" class="mt-2 min-h-[60px] rounded-[10px] border border-border bg-canvas p-3 font-mono text-[0.72rem]"></pre>
+            </div>
+          </div>
+
+          <!-- CSV -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Parsed CSV rows</h3>
+            <p class="mt-1 text-[0.75rem] text-muted-text">BLExAR writes exactly these rows to file. No extra quoting because values are numeric.</p>
+            <div id="csv-out" class="mt-3 overflow-auto rounded-[10px] border border-border bg-canvas">
+              <table class="w-full text-left font-mono text-[0.72rem]"><thead class="border-b border-border bg-elevated/40"><tr><th class="p-2">t</th><th class="p-2">ADC</th><th class="p-2">Temp</th><th class="p-2">valid?</th></tr></thead><tbody id="csv-body"></tbody></table>
+            </div>
+            <div class="mt-4 flex gap-2"><button id="btn-export" class="rounded-full bg-primary-text px-4 py-1.5 text-[0.75rem] font-bold text-canvas">Export CSV</button><span id="csv-stats" class="font-mono text-[0.68rem] text-muted-text"></span></div>
+
+            <div class="mt-6 rounded-[12px] border border-amber-200/50 bg-amber-50 p-3 text-[0.75rem] leading-[1.5] text-amber-900">
+              <strong>Gotcha:</strong> HM-10 at 20 B MTU splits "0.100,510,23.5\n" (14 B) across packets only when previous packet had leftover, but nRF52 at 185 B can batch 10+ rows per notification → higher throughput, less wakeups, better battery. BLExAR auto-detects MTU via `maximumWriteValueLength`.
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-3">
+              <div><div class="flex items-center justify-between"><p class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">Arduino (sender)</p><button class="copy-btn" data-copy-target="code-arduino">Copy</button></div><div class="mt-1 overflow-x-auto rounded-[10px] [&_pre]:!m-0 [&_pre]:!rounded-[10px] [&_pre]:!p-3 [&_pre]:text-[0.72rem]"><Code id="code-arduino" code={arduinoSnippet} lang="cpp" theme="github-dark" /></div></div>
+              <div><div class="flex items-center justify-between"><p class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">iOS (GATT + reassembly, BLExAR)</p><button class="copy-btn" data-copy-target="code-swift">Copy</button></div><div class="mt-1 overflow-x-auto rounded-[10px] [&_pre]:!m-0 [&_pre]:!rounded-[10px] [&_pre]:!p-3 [&_pre]:text-[0.72rem]"><Code id="code-swift" code={swiftGATT} lang="swift" theme="github-dark" /></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.5rem 0.6rem;font-size:0.85rem;color:var(--mp-text)}
+  .tool-input:focus{outline:none;border-color:var(--mp-cta);box-shadow:0 0 0 3px color-mix(in srgb,var(--mp-cta) 20%,transparent)}
+  .copy-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.25rem 0.6rem;font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em}
+  .copy-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
+  .stack-btn{border:1px solid transparent}
+</style>
+
+<script>
+// @ts-nocheck
+function initBLE(){
+  const gattTree=document.getElementById('gatt-tree'), mtuEl=document.getElementById('mtu'), rateEl=document.getElementById('rate'), rawEl=document.getElementById('raw-input'), notifOut=document.getElementById('notif-out'), bufferOut=document.getElementById('buffer-out'), csvBody=document.getElementById('csv-body'), csvStats=document.getElementById('csv-stats');
+  const btnFuzz=document.getElementById('btn-fuzz'), btnSplit=document.getElementById('btn-split'), btnReset=document.getElementById('btn-reset'), btnExport=document.getElementById('btn-export');
+  if(!gattTree || gattTree.dataset.init) return; gattTree.dataset.init='true';
+
+  const stacks={
+    hm10:{name:'HM-10', services:[{uuid:'FFE0', name:'UART Service (vendor)', chars:[{uuid:'FFE1', name:'UART RX+TX (notify+writeWithoutResponse)', props:['writeWithoutResponse','notify']}]} , {uuid:'180A', name:'Device Info', chars:[{uuid:'2A24', name:'Model Number', props:['read']}]}]},
+    nrf52:{name:'Nordic UART (NUS)', services:[{uuid:'6E400001-B5A3-F393-E0A9-E50E24DCCA9E', name:'Nordic UART Service', chars:[{uuid:'6E400002-B5A3-F393-E0A9-E50E24DCCA9E', name:'RX (central→periph, write)', props:['write','writeWithoutResponse']},{uuid:'6E400003-B5A3-F393-E0A9-E50E24DCCA9E', name:'TX (periph→central, notify)', props:['notify']}]}]},
+    custom:{name:'Custom BLExAR ext', services:[{uuid:'6E400001...', name:'NUS', chars:[{uuid:'6E400002...', name:'RX', props:['write']},{uuid:'6E400003...', name:'TX', props:['notify']},{uuid:'6E400004...', name:'CSV Control (write) — START/STOP', props:['write']}]},{uuid:'180F', name:'Battery', chars:[{uuid:'2A19', name:'Battery Level', props:['notify','read']}]}]}
+  };
+  let current='hm10';
+  function renderTree(){
+    const s=stacks[current];
+    let html=`<div class="font-semibold">${s.name}</div>`;
+    s.services.forEach(svc=>{
+      html+=`<div class="mt-2"><div class="text-primary-cta">Service ${svc.uuid.slice(0,8)} — ${svc.name}</div>`;
+      svc.chars.forEach(ch=>{
+        html+=`<div class="ml-3 mt-1 border-l border-border pl-2"><div>Char ${ch.uuid.slice(0,8)} — ${ch.name}</div><div class="text-muted-text/70">${ch.props.join(' | ')}</div></div>`;
+      });
+      html+=`</div>`;
+    });
+    gattTree.innerHTML=html;
+  }
+  document.querySelectorAll('.stack-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.stack-btn').forEach(b=>{ b.classList.remove('bg-primary-text','text-canvas'); b.classList.add('border','border-border','bg-elevated'); });
+      btn.classList.add('bg-primary-text','text-canvas'); btn.classList.remove('border','bg-elevated');
+      current=btn.dataset.stack; renderTree();
+    });
+  });
+  renderTree();
+
+  function chunkBytes(str, mtu){
+    const enc=new TextEncoder(); const bytes=enc.encode(str);
+    const chunks=[];
+    for(let i=0;i<bytes.length;i+=mtu){ chunks.push(bytes.slice(i,i+mtu)); }
+    return chunks;
+  }
+  function hexDump(u8){
+    return Array.from(u8).map(b=>b.toString(16).padStart(2,'0')).join(' ');
+  }
+  function asciiSafe(u8){
+    return Array.from(u8).map(b=>{
+      if(b===10) return '↵\\n';
+      if(b<32||b>126) return '·';
+      return String.fromCharCode(b);
+    }).join('');
+  }
+
+  function process(){
+    const raw=rawEl.value;
+    const mtu=parseInt(mtuEl.value,10)||20;
+    const chunks=chunkBytes(raw, mtu);
+    // render notifications
+    notifOut.innerHTML='';
+    chunks.forEach((c,i)=>{
+      const div=document.createElement('div');
+      div.className='border-b border-border/60 py-1';
+      div.innerHTML=`<span class="text-muted-text">#${i}</span> <span class="text-primary-cta">[${c.length}B]</span> <span class="text-[0.65rem]">${hexDump(c)}</span> <span class="ml-2 rounded bg-elevated px-1">${asciiSafe(c)}</span>`;
+      notifOut.appendChild(div);
+    });
+    // reassembly simulating BLExAR lineBuffer
+    let lineBuffer='';
+    let rows=[];
+    let bufferLog='';
+    chunks.forEach((c,i)=>{
+      const dec=new TextDecoder(); const txt=dec.decode(c);
+      lineBuffer+=txt;
+      bufferLog+=`After chunk #${i} buffer=${JSON.stringify(lineBuffer).slice(0,120)}\n`;
+      let nl;
+      while((nl=lineBuffer.indexOf('\n'))!==-1){
+        const line=lineBuffer.slice(0,nl).trim();
+        lineBuffer=lineBuffer.slice(nl+1);
+        if(line.length>0) rows.push(line);
+      }
+    });
+    bufferOut.textContent=bufferLog+`\nRemaining buffer (partial line): ${JSON.stringify(lineBuffer)}`;
+    // parse CSV
+    csvBody.innerHTML='';
+    let valid=0, invalid=0;
+    rows.forEach(r=>{
+      const parts=r.split(',');
+      const isValid=parts.length>=2 && !isNaN(parseFloat(parts[0]));
+      if(isValid) valid++; else invalid++;
+      const tr=document.createElement('tr'); tr.className='border-b border-border/40';
+      tr.innerHTML=`<td class="p-2">${parts[0]||''}</td><td class="p-2">${parts[1]||''}</td><td class="p-2">${parts[2]||''}</td><td class="p-2">${isValid?'✓':'✗ '+(parts.length)}</td>`;
+      if(!isValid) tr.classList.add('bg-red-50');
+      csvBody.appendChild(tr);
+    });
+    csvStats.textContent=`${rows.length} rows, ${valid} valid, ${invalid} invalid, ${chunks.length} BLE notifs, MTU ${mtu}`;
+  }
+
+  rawEl.addEventListener('input', process);
+  mtuEl.addEventListener('change', process);
+  btnFuzz.addEventListener('click', ()=>{
+    const s=rawEl.value;
+    const pos=Math.floor(Math.random()*s.length);
+    const corrupt=s.slice(0,pos)+String.fromCharCode(0)+s.slice(pos+1);
+    rawEl.value=corrupt;
+    process();
+  });
+  btnSplit.addEventListener('click', ()=>{
+    // force tricky split: ensure newline at MTU boundary
+    const base="0.123,999,12.3\n".repeat(5);
+    rawEl.value=base;
+    mtuEl.value="20";
+    process();
+  });
+  btnReset.addEventListener('click', ()=>{
+    rawEl.value=`0.000,512,23.5\n0.050,515,23.6\n0.100,510,23.5\n0.150,518,23.7\n0.200,520,23.7\n`;
+    process();
+  });
+  btnExport.addEventListener('click', ()=>{
+    const rows=Array.from(csvBody.querySelectorAll('tr')).map(tr=>Array.from(tr.querySelectorAll('td')).slice(0,3).map(td=>td.textContent).join(',')).join('\n');
+    const blob=new Blob([rows],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='blexar_export.csv'; a.click(); URL.revokeObjectURL(url);
+  });
+  document.querySelectorAll('.copy-btn').forEach(b=>{ b.addEventListener('click', async()=>{ const id=b.dataset.copyTarget; const el=document.getElementById(id); if(!el) return; try{ await navigator.clipboard.writeText(el.textContent||''); const o=b.textContent; b.textContent='Copied'; setTimeout(()=>b.textContent=o,1200);}catch{} }); });
+  process();
+}
+document.addEventListener('astro:page-load', initBLE);
+initBLE();
+</script>

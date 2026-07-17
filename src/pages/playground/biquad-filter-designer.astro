@@ -1,0 +1,571 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+
+const title = 'Biquad Filter Designer — Hear a cascade, not just see a curve | MakerPortal';
+const description = 'Design a cascade of biquad filters with live Web Audio preview, magnitude + phase plots, and exact Direct Form II Transposed code — the real DSP core from Biquadia.';
+const canonical = new URL('/playground/biquad-filter-designer', Astro.site);
+
+const df2tJS = `// Direct Form II Transposed — one biquad stage
+// y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
+// State: z1 = b1*x[n-1]+b2*x[n-2]-a1*y[n-1]-a2*y[n-2], z2 = b2*x[n-1]-a2*y[n-1]
+function biquadProcess(x, b0,b1,b2,a1,a2, state){
+  const y = b0*x + state[0];
+  state[0] = b1*x - a1*y + state[1];
+  state[1] = b2*x - a2*y;
+  return y;
+}
+// Cascade: for (const stage of cascade) x = biquadProcess(x, ...stage.coeffs, stage.state);`;
+
+const swiftSnippet = `// Swift — same DF2T, stereo-safe
+struct Biquad {
+  var b0,b1,b2,a1,a2: Double
+  var z1: Double = 0, z2: Double = 0
+  mutating func process(_ x: Double) -> Double {
+    let y = b0 * x + z1
+    z1 = b1 * x - a1 * y + z2
+    z2 = b2 * x - a2 * y
+    return y
+  }
+}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Biquad Filter Designer',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any',
+  description,
+  isPartOf: { '@type': 'SoftwareApplication', name: 'Biquadia', url: 'https://biquadia.makerportal.ai' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Biquad Filter Designer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Biquad Filter Designer"
+    lead="Hear a cascade, not just see a curve. Design 1–4 biquads in series, watch the exact magnitude + phase of the total chain, and preview live on real audio — white noise, oscillator, or mic — using the same DF2T core Biquadia ships."
+    pillarHint="dsp-audio"
+    isGrounded={true}
+    relatedApp="Biquadia"
+    relatedAppUrl="https://biquadia.makerportal.ai"
+  >
+    <section class="border-b border-border" aria-labelledby="designer-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <h2 id="designer-title" class="text-[clamp(1.35rem,3vw,1.7rem)] font-[650] tracking-[-0.03em]">Cascade</h2>
+          <div class="flex items-center gap-2">
+            <button type="button" id="add-stage" class="rounded-full bg-primary-text px-4 py-2 text-[0.78rem] font-bold text-canvas hover:opacity-90">+ Add stage</button>
+            <button type="button" id="clear-stages" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.78rem] font-semibold text-muted-text hover:text-primary-text">Reset to 1 lowpass</button>
+            <select id="sample-rate" class="rounded-full border border-border bg-card-bg px-3 py-2 font-mono text-[0.72rem]"><option value="48000">48 kHz</option><option value="44100">44.1 kHz</option></select>
+          </div>
+        </div>
+
+        <div id="stages" class="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2"></div>
+
+        <div class="mt-10 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="font-semibold">Frequency response (total cascade)</h3>
+            <div class="flex items-center gap-2 font-mono text-[0.7rem]">
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm bg-[#b8324f]"></span>Mag dB</span>
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm bg-[#4a7bb8]"></span>Phase °</span>
+              <label class="ml-3 flex items-center gap-1"><input type="checkbox" id="show-phase" checked /> Phase</label>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+            <div class="overflow-hidden rounded-[14px] border border-border bg-canvas">
+              <canvas id="mag-canvas" width="800" height="320" class="block h-[320px] w-full"></canvas>
+            </div>
+            <div class="rounded-[14px] border border-border bg-canvas p-4 font-mono text-[0.75rem]">
+              <p class="font-semibold text-[0.7rem] uppercase tracking-[0.1em] text-muted-text">Current chain coefficients (normalized, a0=1)</p>
+              <pre id="coeff-out" class="mt-3 max-h-[280px] overflow-auto whitespace-pre-wrap text-[0.72rem] leading-[1.5]"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <h3 class="font-semibold">Live audio preview — Biquadia-style</h3>
+          <p class="mt-1 max-w-2xl text-[0.82rem] leading-[1.5] text-muted-text">Uses Web Audio <code>IIRFilterNode</code> with the exact coefficients above. Pick a source, hit play, toggle bypass to hear the chain.</p>
+          <div class="mt-5 flex flex-wrap items-center gap-3">
+            <select id="source-type" class="rounded-full border border-border bg-canvas px-3 py-2 font-mono text-[0.75rem]">
+              <option value="white">White noise</option>
+              <option value="pink">Pink noise</option>
+              <option value="sine">Sine oscillator (440 Hz)</option>
+              <option value="sweep">Sine sweep (20–20k, 8s)</option>
+            </select>
+            <button id="audio-play" class="rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas">Play</button>
+            <button id="audio-bypass" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.8rem]">Bypass: OFF</button>
+            <span id="audio-status" class="font-mono text-[0.7rem] uppercase tracking-[0.08em] text-muted-text/70">stopped</span>
+            <input id="audio-gain" type="range" min="0" max="1" step="0.01" value="0.35" class="w-[120px]" />
+            <span class="font-mono text-[0.7rem]">Gain</span>
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2 font-mono text-[0.7rem] text-muted-text">
+            <span id="latency-note"></span>
+          </div>
+        </div>
+
+        <div class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">DF2T — JavaScript</p><button type="button" class="copy-btn" data-copy-target="code-js">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-js" code={df2tJS} lang="js" theme="github-dark" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">DF2T — Swift (Biquadia)</p><button type="button" class="copy-btn" data-copy-target="code-swift">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-swift" code={swiftSnippet} lang="swift" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
+          <p class="font-semibold text-primary-text">How we compute</p>
+          <p class="mt-2">RBJ Audio EQ Cookbook (Robert Bristow-Johnson). For each stage: w0=2πf0/Fs, α=sin(w0)/(2Q). Shelf uses A=10^(dBgain/40), √A·α. Coeffs divided by a0 → a0=1. Frequency response: H(e^jω)= (b0+b1 e^-jω+b2 e^-j2ω)/(1+a1 e^-jω+a2 e^-j2ω). Cascade magnitude adds in dB, phase sums. Same pipeline Biquadia verifies with <code>clang++</code>-checked kernels — this page uses identical math, only the audio path differs (Web Audio IIRFilterNode vs. Metal/Accelerate on-device).</p>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .copy-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.3rem 0.8rem;font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--mp-muted);transition:color 0.15s,border-color 0.15s}
+  .copy-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
+  input[type=range]{accent-color:var(--mp-cta)}
+  .tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.45rem 0.6rem;font-size:0.85rem;color:var(--mp-text)}
+  .tool-input:focus{outline:none;border-color:var(--mp-cta);box-shadow:0 0 0 3px color-mix(in srgb,var(--mp-cta) 20%,transparent)}
+  .stage-card{border-radius:16px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:14px}
+  .pill{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.25rem 0.6rem;font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em}
+</style>
+
+<script>
+// @ts-nocheck
+function initBiquad(){
+  const stagesEl = document.getElementById('stages');
+  const addBtn = document.getElementById('add-stage');
+  const clearBtn = document.getElementById('clear-stages');
+  const srEl = document.getElementById('sample-rate');
+  const magCanvas = document.getElementById('mag-canvas');
+  const coeffOut = document.getElementById('coeff-out');
+  const showPhase = document.getElementById('show-phase');
+  if(!stagesEl || !magCanvas || stagesEl.dataset.init) return;
+  stagesEl.dataset.init='true';
+  const mCtx = magCanvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  const W = magCanvas.width, H = magCanvas.height;
+  magCanvas.width = W*dpr; magCanvas.height = H*dpr;
+  magCanvas.style.width=W+'px'; magCanvas.style.height=H+'px';
+  mCtx.scale(dpr,dpr);
+
+  /** @type {{type:string,freq:number,q:number,gain:number}[]} */
+  let chain = [{type:'lowpass', freq:1000, q:0.7071, gain:0}];
+
+  function clamp(n,lo,hi){return Math.max(lo,Math.min(hi,n));}
+
+  // RBJ coefficients
+  function coeffsFor(type,freq,q,gain,Fs){
+    const w0 = 2*Math.PI*freq/Fs;
+    const cosw0 = Math.cos(w0);
+    const sinw0 = Math.sin(w0);
+    const A = Math.pow(10,gain/40);
+    const sqrtA = Math.sqrt(A);
+    let alpha, b0,b1,b2,a0,a1,a2;
+    // default Q handling
+    const Q = q<=0 ? 0.0001 : q;
+    switch(type){
+      case 'lowpass':
+        alpha = sinw0/(2*Q);
+        b0=(1-cosw0)/2; b1=1-cosw0; b2=(1-cosw0)/2;
+        a0=1+alpha; a1=-2*cosw0; a2=1-alpha;
+        break;
+      case 'highpass':
+        alpha=sinw0/(2*Q);
+        b0=(1+cosw0)/2; b1=-(1+cosw0); b2=(1+cosw0)/2;
+        a0=1+alpha; a1=-2*cosw0; a2=1-alpha;
+        break;
+      case 'bandpass': // constant 0dB peak
+        alpha=sinw0/(2*Q);
+        b0=alpha; b1=0; b2=-alpha;
+        a0=1+alpha; a1=-2*cosw0; a2=1-alpha;
+        break;
+      case 'notch':
+        alpha=sinw0/(2*Q);
+        b0=1; b1=-2*cosw0; b2=1;
+        a0=1+alpha; a1=-2*cosw0; a2=1-alpha;
+        break;
+      case 'allpass':
+        alpha=sinw0/(2*Q);
+        b0=1-alpha; b1=-2*cosw0; b2=1+alpha;
+        a0=1+alpha; a1=-2*cosw0; a2=1-alpha;
+        break;
+      case 'peaking':
+        alpha=sinw0/(2*Q);
+        b0=1+alpha*A; b1=-2*cosw0; b2=1-alpha*A;
+        a0=1+alpha/A; a1=-2*cosw0; a2=1-alpha/A;
+        break;
+      case 'lowshelf': {
+        alpha=sinw0/2*Math.sqrt((A+1/A)*(1/1-1)+2); // S=1
+        b0=A*((A+1)-(A-1)*cosw0+2*sqrtA*alpha);
+        b1=2*A*((A-1)-(A+1)*cosw0);
+        b2=A*((A+1)-(A-1)*cosw0-2*sqrtA*alpha);
+        a0=(A+1)+(A-1)*cosw0+2*sqrtA*alpha;
+        a1=-2*((A-1)+(A+1)*cosw0);
+        a2=(A+1)+(A-1)*cosw0-2*sqrtA*alpha;
+        break;
+      }
+      case 'highshelf': {
+        alpha=sinw0/2*Math.sqrt((A+1/A)*(1/1-1)+2);
+        b0=A*((A+1)+(A-1)*cosw0+2*sqrtA*alpha);
+        b1=-2*A*((A-1)+(A+1)*cosw0);
+        b2=A*((A+1)+(A-1)*cosw0-2*sqrtA*alpha);
+        a0=(A+1)-(A-1)*cosw0+2*sqrtA*alpha;
+        a1=2*((A-1)+(A+1)*cosw0);
+        a2=(A+1)-(A-1)*cosw0-2*sqrtA*alpha;
+        break;
+      }
+      default:
+        alpha=sinw0/(2*Q); b0=1; b1=0; b2=0; a0=1; a1=0; a2=0;
+    }
+    // normalize
+    b0/=a0; b1/=a0; b2/=a0; a1/=a0; a2/=a0; a0=1;
+    return {b0,b1,b2,a0,a1,a2, A, alpha};
+  }
+
+  function freqResponse(coeffs, f, Fs){
+    const w = 2*Math.PI*f/Fs;
+    const cosw = Math.cos(w), cos2w=Math.cos(2*w);
+    const sinw = Math.sin(w), sin2w=Math.sin(2*w);
+    // e^-jw = cosw - j sinw
+    // numerator: b0 + b1 e^-jw + b2 e^-j2w
+    let nr = coeffs.b0 + coeffs.b1*cosw + coeffs.b2*cos2w;
+    let ni = -coeffs.b1*sinw - coeffs.b2*sin2w;
+    let dr = 1 + coeffs.a1*cosw + coeffs.a2*cos2w;
+    let di = -coeffs.a1*sinw - coeffs.a2*sin2w;
+    // complex division (nr+j ni)/(dr+j di) but ni,di are actually imaginary with sign already? above ni is imag part
+    // So (nr+ j ni)/(dr+ j di)
+    const denom = dr*dr+di*di || 1e-12;
+    const re = (nr*dr+ni*di)/denom;
+    const im = (ni*dr - nr*di)/denom;
+    const mag = Math.hypot(re,im);
+    const phase = Math.atan2(im,re);
+    return {mag, phase, re, im};
+  }
+
+  function totalResponse(freq, Fs){
+    let mag=1, phase=0, reTotal=1, imTotal=0;
+    for(const st of chain){
+      const c = coeffsFor(st.type, st.freq, st.q, st.gain, Fs);
+      const r = freqResponse(c,freq,Fs);
+      // multiply complex
+      const newRe = reTotal*r.re - imTotal*r.im;
+      const newIm = reTotal*r.im + imTotal*r.re;
+      reTotal=newRe; imTotal=newIm;
+      mag *= r.mag;
+      phase += r.phase;
+    }
+    // wrap phase to -pi..pi for display? keep unwrapped sum but we will plot wrapped
+    return {mag, phase, re:reTotal, im:imTotal};
+  }
+
+  function logFreqSteps(minF,maxF,count){
+    const out=[];
+    for(let i=0;i<count;i++){
+      const t=i/(count-1);
+      const f = minF*Math.pow(maxF/minF,t);
+      out.push(f);
+    }
+    return out;
+  }
+
+  function renderPlots(){
+    const Fs = parseFloat(srEl.value)||48000;
+    const width=W, height=H;
+    const ctx=mCtx;
+    ctx.clearRect(0,0,width,height);
+    // grid
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#f8f4ed';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,width,height);
+    // grid lines
+    const freqsGrid=[20,50,100,200,500,1000,2000,5000,10000,20000];
+    const minF=20, maxF=20000;
+    function xForF(f){ return Math.log(f/minF)/Math.log(maxF/minF)*width; }
+    ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.lineWidth=1;
+    for(const f of freqsGrid){
+      if(f<minF||f>maxF) continue;
+      const x=xForF(f);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,height); ctx.stroke();
+    }
+    // horizontal dB grid -24..24
+    function yForDb(db){ // map -36..36 to height
+      const minDb=-36,maxDb=36;
+      return height - (db-minDb)/(maxDb-minDb)*height;
+    }
+    const dbGrid=[-24,-18,-12,-6,0,6,12,18,24];
+    for(const db of dbGrid){
+      const y=yForDb(db);
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(width,y); ctx.strokeStyle=db===0?'rgba(0,0,0,0.15)':'rgba(0,0,0,0.06)'; ctx.stroke();
+    }
+    // compute response
+    const steps=400;
+    const freqSteps=logFreqSteps(minF,maxF,steps);
+    const mags=freqSteps.map(f=>{ const r=totalResponse(f,Fs); return 20*Math.log10(r.mag||1e-12); });
+    const phases=freqSteps.map(f=>{ const r=totalResponse(f,Fs); return r.phase*180/Math.PI; });
+    // magnitude plot
+    ctx.beginPath(); ctx.strokeStyle='#b8324f'; ctx.lineWidth=2;
+    for(let i=0;i<steps;i++){
+      const x=xForF(freqSteps[i]); const y=yForDb(clamp(mags[i],-36,36));
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    if(showPhase.checked){
+      // phase -180..180 mapped to same height? Use secondary scale: -180 at bottom, 180 at top? Map -180..180 to height
+      function yForPhase(ph){ const minP=-180,maxP=180; return height - (ph-minP)/(maxP-minP)*height; }
+      // grid for phase
+      ctx.strokeStyle='rgba(0,0,0,0.04)'; ctx.setLineDash([4,4]);
+      for(const ph of [-90,0,90]){ const y=yForPhase(ph); ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(width,y); ctx.stroke();}
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.strokeStyle='#4a7bb8'; ctx.lineWidth=1.5;
+      for(let i=0;i<steps;i++){
+        const x=xForF(freqSteps[i]); const y=yForPhase(((phases[i]+540)%360)-180); // wrap -180..180
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    // labels
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.font='10px ui-monospace, monospace';
+    for(const f of [20,100,1000,10000]){ const x=xForF(f); ctx.fillText(f>=1000? (f/1000)+'k' : String(f), x+2, height-4); }
+    // update coeff text
+    let txt='';
+    chain.forEach((st,i)=>{
+      const c=coeffsFor(st.type,st.freq,st.q,st.gain,Fs);
+      txt+=`Stage ${i+1} ${st.type} f=${st.freq}Hz Q=${st.q} gain=${st.gain}dB\n`;
+      txt+=`  b0=${c.b0.toFixed(6)} b1=${c.b1.toFixed(6)} b2=${c.b2.toFixed(6)}\n`;
+      txt+=`  a1=${c.a1.toFixed(6)} a2=${c.a2.toFixed(6)}\n\n`;
+    });
+    // total at 1k
+    const at1k=totalResponse(1000,Fs);
+    txt+=`Total @1k: ${ (20*Math.log10(at1k.mag)).toFixed(2)} dB, phase ${(at1k.phase*180/Math.PI).toFixed(1)}°\n`;
+    coeffOut.textContent=txt;
+  }
+
+  function renderStages(){
+    stagesEl.innerHTML='';
+    chain.forEach((st,idx)=>{
+      const card=document.createElement('div');
+      card.className='stage-card';
+      card.innerHTML=`
+        <div class="flex items-center justify-between">
+          <span class="pill">Stage ${idx+1}</span>
+          <button type="button" class="pill hover:!border-red-300" data-remove="${idx}">Remove</button>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <label class="block"><span class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text">Type</span>
+            <select data-field="type" data-idx="${idx}" class="tool-input">
+              <option value="lowpass">lowpass</option><option value="highpass">highpass</option>
+              <option value="bandpass">bandpass</option><option value="notch">notch</option>
+              <option value="allpass">allpass</option><option value="peaking">peaking</option>
+              <option value="lowshelf">lowshelf</option><option value="highshelf">highshelf</option>
+            </select>
+          </label>
+          <label class="block"><span class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text">Freq Hz</span>
+            <input type="number" data-field="freq" data-idx="${idx}" class="tool-input" min="20" max="20000" step="1" value="${st.freq}" />
+          </label>
+          <label class="block"><span class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text">Q / S=1</span>
+            <input type="range" data-field="q" data-idx="${idx}" min="0.1" max="18" step="0.01" value="${st.q}" class="w-full" />
+            <span class="font-mono text-[0.7rem]">${st.q}</span>
+          </label>
+          <label class="block"><span class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text">Gain dB (peak/shelf)</span>
+            <input type="range" data-field="gain" data-idx="${idx}" min="-24" max="24" step="0.1" value="${st.gain}" class="w-full" />
+            <span class="font-mono text-[0.7rem]">${st.gain}dB</span>
+          </label>
+        </div>`;
+      stagesEl.appendChild(card);
+      const sel=card.querySelector(`select[data-field="type"]`);
+      sel.value=st.type;
+      // disable gain where irrelevant? Keep but visual hint
+      const gainRow=card.querySelectorAll('label')[3];
+      if(['lowpass','highpass','bandpass','notch','allpass'].includes(st.type)) gainRow.style.opacity='0.4';
+    });
+    // attach listeners
+    stagesEl.querySelectorAll('select[data-field], input[data-field]').forEach(el=>{
+      el.addEventListener('input',(e)=>{
+        const idx=parseInt(e.target.dataset.idx,10);
+        const field=e.target.dataset.field;
+        let v=e.target.value;
+        if(field==='freq') v=parseFloat(v)||20;
+        if(field==='q') v=parseFloat(v)||0.707;
+        if(field==='gain') v=parseFloat(v)||0;
+        chain[idx][field]=v;
+        // update label spans
+        renderStages(); renderPlots(); rebuildAudioChain();
+      });
+    });
+    stagesEl.querySelectorAll('button[data-remove]').forEach(btn=>{
+      btn.addEventListener('click',()=>{ const idx=parseInt(btn.dataset.remove,10); if(chain.length>1){ chain.splice(idx,1); renderStages(); renderPlots(); rebuildAudioChain(); }});
+    });
+  }
+
+  // Audio
+  let audioCtx=null, sourceNode=null, gainNode=null, iirNodes=[], isPlaying=false, isBypass=false, oscNode=null, sweepOsc=null;
+  const playBtn=document.getElementById('audio-play');
+  const bypassBtn=document.getElementById('audio-bypass');
+  const statusEl=document.getElementById('audio-status');
+  const sourceSel=document.getElementById('source-type');
+  const gainSlider=document.getElementById('audio-gain');
+  const latencyNote=document.getElementById('latency-note');
+
+  function ensureCtx(){
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate: parseFloat(srEl.value)||48000});
+    return audioCtx;
+  }
+  function makeWhiteNoiseBuffer(ctx, seconds=4){
+    const len=ctx.sampleRate*seconds;
+    const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+    const data=buf.getChannelData(0);
+    for(let i=0;i<len;i++) data[i]=Math.random()*2-1;
+    return buf;
+  }
+  function makePinkNoiseBuffer(ctx, seconds=4){
+    const len=ctx.sampleRate*seconds;
+    const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+    const data=buf.getChannelData(0);
+    let b0,b1,b2,b3,b4,b5,b6; b0=b1=b2=b3=b4=b5=b6=0;
+    for(let i=0;i<len;i++){
+      const white=Math.random()*2-1;
+      b0=0.99886*b0+white*0.0555179;
+      b1=0.99332*b1+white*0.0750759;
+      b2=0.96900*b2+white*0.153852;
+      b3=0.86650*b3+white*0.3104856;
+      b4=0.55000*b4+white*0.5329522;
+      b5=-0.7616*b5-white*0.016898;
+      data[i]=(b0+b1+b2+b3+b4+b5+b6+white*0.5362)*0.11;
+      b6=white*0.115926;
+    }
+    return buf;
+  }
+  function rebuildAudioChain(){
+    if(!audioCtx || !isPlaying) return;
+    // disconnect existing
+    try{ iirNodes.forEach(n=>{ try{n.disconnect();}catch{}}); }catch{}
+    iirNodes=[];
+    const Fs=audioCtx.sampleRate;
+    // build new chain
+    let prev = sourceNode;
+    chain.forEach(st=>{
+      const c=coeffsFor(st.type, st.freq, st.q, st.gain, Fs);
+      try{
+        const iir=audioCtx.createIIRFilter([c.b0,c.b1,c.b2],[1,c.a1,c.a2]);
+        if(prev) prev.connect(iir);
+        prev=iir;
+        iirNodes.push(iir);
+      }catch(e){
+        // fallback to BiquadFilterNode for unsupported (some browsers restrict IIR)
+        const bq=audioCtx.createBiquadFilter();
+        bq.type=st.type; bq.frequency.value=st.freq; bq.Q.value=st.q; bq.gain.value=st.gain;
+        if(prev) prev.connect(bq);
+        prev=bq; iirNodes.push(bq);
+      }
+    });
+    if(prev && gainNode) prev.connect(gainNode);
+    if(isBypass){
+      // bypass: source -> gain directly
+      try{ sourceNode.disconnect(); }catch{}
+      sourceNode.connect(gainNode);
+      iirNodes.forEach(n=>{ try{n.disconnect();}catch{}});
+    }
+  }
+
+  async function startAudio(){
+    const ctx=ensureCtx();
+    await ctx.resume();
+    stopAudio();
+    const type=sourceSel.value;
+    gainNode=ctx.createGain(); gainNode.gain.value=parseFloat(gainSlider.value)||0.35; gainNode.connect(ctx.destination);
+    if(type==='sine'){
+      oscNode=ctx.createOscillator(); oscNode.frequency.value=440; oscNode.type='sine';
+      sourceNode=oscNode;
+      rebuildAudioChain();
+      if(!isBypass){ oscNode.connect(iirNodes[0]||gainNode); } else oscNode.connect(gainNode);
+      oscNode.start();
+    } else if(type==='sweep'){
+      oscNode=ctx.createOscillator(); oscNode.type='sine'; oscNode.frequency.value=20;
+      const now=ctx.currentTime;
+      oscNode.frequency.exponentialRampToValueAtTime(20000, now+8);
+      sourceNode=oscNode;
+      rebuildAudioChain();
+      if(!isBypass) oscNode.connect(iirNodes[0]||gainNode); else oscNode.connect(gainNode);
+      oscNode.start(); oscNode.stop(now+8.2);
+      setTimeout(()=>{ if(isPlaying) stopAudio(); }, 8500);
+    } else {
+      const buf = type==='pink' ? makePinkNoiseBuffer(ctx,5) : makeWhiteNoiseBuffer(ctx,5);
+      const src=ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+      sourceNode=src;
+      rebuildAudioChain();
+      if(!isBypass) src.connect(iirNodes[0]||gainNode); else src.connect(gainNode);
+      src.start();
+    }
+    isPlaying=true; statusEl.textContent='playing • '+(isBypass?'bypassed':'filtered');
+    latencyNote.textContent=`Ctx ${ctx.sampleRate}Hz, baseLatency ${ (ctx.baseLatency||0).toFixed(4)}s`;
+    playBtn.textContent='Stop';
+  }
+  function stopAudio(){
+    try{ if(oscNode){ oscNode.stop(); oscNode.disconnect(); } }catch{}
+    try{ if(sourceNode){ sourceNode.stop?.(); sourceNode.disconnect(); } }catch{}
+    try{ if(gainNode) gainNode.disconnect(); }catch{}
+    try{ iirNodes.forEach(n=>n.disconnect()); }catch{}
+    oscNode=null; sourceNode=null; gainNode=null; iirNodes=[];
+    if(isPlaying){ isPlaying=false; statusEl.textContent='stopped'; playBtn.textContent='Play'; }
+  }
+
+  playBtn.addEventListener('click', ()=>{ if(isPlaying) stopAudio(); else startAudio(); });
+  bypassBtn.addEventListener('click', ()=>{
+    isBypass=!isBypass;
+    bypassBtn.textContent='Bypass: '+(isBypass?'ON':'OFF');
+    if(isPlaying){
+      // reconnect
+      const ctx=audioCtx;
+      try{ sourceNode.disconnect(); }catch{}
+      try{ iirNodes.forEach(n=>n.disconnect()); }catch{}
+      if(isBypass){ sourceNode.connect(gainNode); }
+      else { rebuildAudioChain(); }
+      statusEl.textContent='playing • '+(isBypass?'bypassed':'filtered');
+    }
+  });
+  gainSlider.addEventListener('input', ()=>{ if(gainNode) gainNode.gain.value=parseFloat(gainSlider.value); });
+  sourceSel.addEventListener('change', ()=>{ if(isPlaying){ stopAudio(); startAudio(); }});
+  srEl.addEventListener('change', ()=>{ renderPlots(); if(audioCtx) { /* will use new Fs on rebuild */ rebuildAudioChain(); } });
+  showPhase.addEventListener('change', renderPlots);
+  addBtn.addEventListener('click', ()=>{ if(chain.length<4){ chain.push({type:'peaking', freq:2000, q:1, gain:6}); renderStages(); renderPlots(); rebuildAudioChain(); }});
+  clearBtn.addEventListener('click', ()=>{ chain=[{type:'lowpass', freq:1000, q:0.7071, gain:0}]; renderStages(); renderPlots(); rebuildAudioChain(); });
+
+  // copy
+  document.querySelectorAll('.copy-btn').forEach(btn=>{
+    btn.addEventListener('click', async()=>{
+      const id=btn.dataset.copyTarget; const el=id?document.getElementById(id):null; if(!el) return;
+      try{ await navigator.clipboard.writeText(el.textContent||''); const o=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=o,1200);}catch{}
+    });
+  });
+
+  renderStages(); renderPlots();
+  document.addEventListener('astro:before-swap', ()=>{ stopAudio(); try{audioCtx?.close();}catch{} }, {once:true});
+}
+document.addEventListener('astro:page-load', initBiquad);
+initBiquad();
+</script>

@@ -108,19 +108,19 @@ const breadcrumbSchema = {
             <div class="mt-5 grid grid-cols-2 gap-4">
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">x</span>
-                <input type="number" step="0.001" id="q-x" value="0.2393" class="tool-input" />
+                <input type="number" step="0.001" id="q-x" value="0" class="tool-input" />
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">y</span>
-                <input type="number" step="0.001" id="q-y" value="0.1893" class="tool-input" />
+                <input type="number" step="0.001" id="q-y" value="0" class="tool-input" />
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">z</span>
-                <input type="number" step="0.001" id="q-z" value="0.0381" class="tool-input" />
+                <input type="number" step="0.001" id="q-z" value="0" class="tool-input" />
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">w</span>
-                <input type="number" step="0.001" id="q-w" value="0.9515" class="tool-input" />
+                <input type="number" step="0.001" id="q-w" value="1" class="tool-input" />
               </label>
             </div>
             <p id="q-norm-note" class="mt-3 text-[0.72rem] text-muted-text">Magnitude: 1.0000 (already unit length)</p>
@@ -146,15 +146,15 @@ const breadcrumbSchema = {
             <div class="mt-5 grid grid-cols-3 gap-4">
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Yaw°</span>
-                <input type="number" step="0.1" id="e-yaw" value="10" class="tool-input" />
+                <input type="number" step="0.1" id="e-yaw" value="0" class="tool-input" />
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Pitch°</span>
-                <input type="number" step="0.1" id="e-pitch" value="20" class="tool-input" />
+                <input type="number" step="0.1" id="e-pitch" value="0" class="tool-input" />
               </label>
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Roll°</span>
-                <input type="number" step="0.1" id="e-roll" value="30" class="tool-input" />
+                <input type="number" step="0.1" id="e-roll" value="0" class="tool-input" />
               </label>
             </div>
             <div class="mt-8 grid grid-cols-4 gap-3 border-t border-border pt-5 font-mono" aria-live="polite">
@@ -607,8 +607,11 @@ const breadcrumbSchema = {
   canvas.style.height = `${CH}px`;
   ctx.scale(dpr, dpr);
 
-  const scale = Math.min(CW, CH) * 0.72;
+  const scale = Math.min(CW, CH) * 0.66;
   const droneModel = buildDroneModel();
+  // Center origin slightly above geometric center to make room for shadow
+  const ORIGIN_X = CW * 0.5;
+  const ORIGIN_Y = CH * 0.46;
 
   // ====================================================================
   // Fixed isometric view matrix (camera orbit)
@@ -784,10 +787,10 @@ const breadcrumbSchema = {
     // Transform all vertices into camera space
     const transformed = droneModel.verts.map((v) => mulMat3Vec3(finalMatrix, v));
 
-    // Orthographic projection: camera X→screen right, Y→up
+    // Orthographic projection: camera X→screen right, Y→up — centered at ORIGIN
     const projected = transformed.map((v) => ({
-      x: CW / 2 + v[0] * scale,
-      y: CH / 2 - v[1] * scale,
+      x: ORIGIN_X + v[0] * scale,
+      y: ORIGIN_Y - v[1] * scale,
       z: v[2],
     }));
 
@@ -824,15 +827,15 @@ const breadcrumbSchema = {
     ctx.save();
     ctx.globalAlpha = 0.08;
     const shadowGrad = ctx.createRadialGradient(
-      CW / 2 + shadowOffX, shadowY, 0,
-      CW / 2 + shadowOffX, shadowY, scale * 0.42
+      ORIGIN_X + shadowOffX, shadowY, 0,
+      ORIGIN_X + shadowOffX, shadowY, scale * 0.42
     );
     shadowGrad.addColorStop(0, tc.text);
     shadowGrad.addColorStop(0.7, tc.text);
     shadowGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = shadowGrad;
     ctx.beginPath();
-    ctx.ellipse(CW / 2 + shadowOffX, shadowY, scale * 0.42, scale * 0.06, 0, 0, Math.PI * 2);
+    ctx.ellipse(ORIGIN_X + shadowOffX, shadowY, scale * 0.42, scale * 0.06, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
@@ -843,7 +846,7 @@ const breadcrumbSchema = {
       { dir: [0, axisLen, 0], color: 'rgba(60,185,90,0.72)', label: 'Y·left' },
       { dir: [0, 0, axisLen], color: 'rgba(65,110,230,0.72)', label: 'Z·up' },
     ];
-    const origin = { x: CW / 2, y: CH / 2 };
+    const origin = { x: ORIGIN_X, y: ORIGIN_Y };
 
     for (const axis of axes) {
       const tip = mulMat3Vec3(finalMatrix, axis.dir);
@@ -949,8 +952,8 @@ const breadcrumbSchema = {
       const angle = armAngles[ai];
       const tipPos: Vec3 = [Math.cos(angle) * armEndDist, -Math.sin(angle) * armEndDist, 0.022 + 0.042 + 0.008];
       const tTip = mulMat3Vec3(finalMatrix, tipPos);
-      const sx = CW / 2 + tTip[0] * scale;
-      const sy = CH / 2 - tTip[1] * scale;
+      const sx = ORIGIN_X + tTip[0] * scale;
+      const sy = ORIGIN_Y - tTip[1] * scale;
 
       // Only draw blur disc if motor top is facing viewer (in camera space)
       const motorNorm = mulMat3Vec3(finalMatrix, [0, 0, 1]);
