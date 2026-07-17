@@ -116,7 +116,11 @@ const breadcrumbSchema = {
   interface Pt { x: number; y: number; }
   interface Term { re: number; im: number; freq: number; amp: number; phase: number; }
 
-  const canvas = document.getElementById('fourier-canvas') as HTMLCanvasElement;
+  function initFourierEpicycles() {
+  const canvasElement = document.getElementById('fourier-canvas') as HTMLCanvasElement | null;
+  if (!canvasElement || canvasElement.dataset.initialized === 'true') return;
+  const canvas = canvasElement;
+  canvas.dataset.initialized = 'true';
   const ctx = canvas.getContext('2d')!;
   const slider = document.getElementById('term-slider') as HTMLInputElement;
   const termReadout = document.getElementById('term-readout') as HTMLElement;
@@ -148,10 +152,11 @@ const breadcrumbSchema = {
   }
   let ctaColor = resolveCtaColor();
   let textColor = resolveTextColor();
-  new MutationObserver(() => {
+  const themeObserver = new MutationObserver(() => {
     ctaColor = resolveCtaColor();
     textColor = resolveTextColor();
-  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   let isDrawing = false;
   let rawPoints: Pt[] = [];
@@ -159,6 +164,7 @@ const breadcrumbSchema = {
   let trail: Pt[] = [];
   let animHandle = 0;
   let loopStart = 0;
+  let destroyed = false;
 
   function canvasPoint(clientX: number, clientY: number): Pt {
     const rect = canvas.getBoundingClientRect();
@@ -253,6 +259,7 @@ const breadcrumbSchema = {
   }
 
   function animate() {
+    if (destroyed) return;
     const M = Math.min(parseInt(slider.value, 10) || 1, terms.length);
     termReadout.textContent = `${M} / ${terms.length}`;
     const centroid = (terms as Term[] & { centroid?: Pt }).centroid ?? { x: W / 2, y: H / 2 };
@@ -322,11 +329,15 @@ const breadcrumbSchema = {
     ctx.stroke();
   });
 
-  canvas.addEventListener('pointerup', () => {
+  function finishDrawing() {
     if (!isDrawing) return;
     isDrawing = false;
     finalizePath(rawPoints);
-  });
+  }
+
+  canvas.addEventListener('pointerup', finishDrawing);
+  canvas.addEventListener('pointercancel', finishDrawing);
+  canvas.addEventListener('lostpointercapture', finishDrawing);
 
   slider.addEventListener('input', () => {
     trail = [];
@@ -441,4 +452,13 @@ const breadcrumbSchema = {
   });
 
   presetStar.click();
+  document.addEventListener('astro:before-swap', () => {
+    destroyed = true;
+    cancelAnimationFrame(animHandle);
+    themeObserver.disconnect();
+  }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initFourierEpicycles);
+  initFourierEpicycles();
 </script>

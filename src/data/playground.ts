@@ -56,6 +56,14 @@ export const playground: PlaygroundEntry[] = [
     status: 'live',
   },
   {
+    slug: 'double-pendulum',
+    title: 'Double Pendulum + Phase Space',
+    tagline: 'Chaotic motion, painted as pure geometry',
+    description: 'A double pendulum you can perturb, with a live phase-space plot painting the chaos as geometry alongside it.',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
     slug: 'biquad-filter-designer',
     title: 'Biquad Filter Designer',
     tagline: 'Hear a cascade, not just see a curve',
@@ -113,14 +121,6 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: true,
     relatedApp: 'AuraLinter',
     relatedAppUrl: 'https://auralinter.makerportal.ai',
-    status: 'planned',
-  },
-  {
-    slug: 'double-pendulum',
-    title: 'Double Pendulum + Phase Space',
-    tagline: 'Chaotic motion, painted as pure geometry',
-    description: 'A double pendulum you can perturb, with a live phase-space plot painting the chaos as geometry alongside it.',
-    isGrounded: false,
     status: 'planned',
   },
   {

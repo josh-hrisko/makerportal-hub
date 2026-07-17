@@ -1,0 +1,743 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Double Pendulum + Phase Space — Interactive Chaos | MakerPortal';
+const description =
+  'Perturb a live double pendulum and watch deterministic chaos unfold beside its phase-space portrait, using fixed-step RK4 integration and live energy-drift diagnostics.';
+const canonical = new URL('/playground/double-pendulum', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Double Pendulum + Phase Space', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Double Pendulum + Phase Space"
+    lead="Two rigid links, four state variables, and no randomness. Drag either bob, release it, and watch nearby initial conditions separate into chaos while the phase portrait paints the system’s hidden geometry."
+  >
+    <section class="border-b border-border" aria-labelledby="simulation-title">
+      <div class="mx-auto max-w-[76rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 id="simulation-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Deterministic chaos, live</h2>
+            <p id="pendulum-status" class="mt-2 max-w-2xl text-[0.88rem] leading-[1.55] text-muted-text">Running. Drag either mass to choose new initial angles; the faint shadow starts just 0.006° away.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="sim-btn is-active" id="run-toggle" aria-pressed="true">Pause</button>
+            <button type="button" class="sim-btn" id="restart-btn">Restart</button>
+            <button type="button" class="sim-btn" id="clear-trails-btn">Clear paint</button>
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div class="canvas-card">
+            <div class="canvas-label-row">
+              <span>Configuration space</span>
+              <span>Drag the bobs</span>
+            </div>
+            <canvas id="pendulum-canvas" width="560" height="560" aria-label="Interactive double pendulum; drag either circular mass to change its angle"></canvas>
+          </div>
+          <div class="canvas-card">
+            <div class="canvas-label-row">
+              <span>Phase space</span>
+              <span>θ versus angular velocity</span>
+            </div>
+            <canvas id="phase-canvas" width="560" height="560" aria-label="Live phase-space portrait for both pendulum links"></canvas>
+          </div>
+        </div>
+
+        <div class="mt-5 grid gap-5 rounded-[20px] border border-border bg-card-bg p-5 lg:grid-cols-[1.35fr_1fr] lg:p-6">
+          <div>
+            <div class="flex flex-wrap gap-2" aria-label="Initial condition presets">
+              <button type="button" class="preset-btn is-active" data-preset="chaos">Classic chaos</button>
+              <button type="button" class="preset-btn" data-preset="flip">Double flip</button>
+              <button type="button" class="preset-btn" data-preset="calm">Calm orbit</button>
+              <button type="button" class="preset-btn" data-preset="asymmetric">Asymmetric</button>
+            </div>
+
+            <div class="mt-5 grid gap-5 sm:grid-cols-2">
+              <label class="control-label" for="theta1-slider">
+                <span>θ₁ initial angle</span><output id="theta1-readout">120.0°</output>
+                <input type="range" id="theta1-slider" min="-180" max="180" step="0.5" value="120" />
+              </label>
+              <label class="control-label" for="theta2-slider">
+                <span>θ₂ initial angle</span><output id="theta2-readout">−10.0°</output>
+                <input type="range" id="theta2-slider" min="-180" max="180" step="0.5" value="-10" />
+              </label>
+              <label class="control-label" for="speed-slider">
+                <span>Simulation speed</span><output id="speed-readout">1.00×</output>
+                <input type="range" id="speed-slider" min="0.25" max="2" step="0.05" value="1" />
+              </label>
+              <label class="control-label" for="damping-slider">
+                <span>Air damping</span><output id="damping-readout">0.000</output>
+                <input type="range" id="damping-slider" min="0" max="0.08" step="0.002" value="0" />
+              </label>
+            </div>
+          </div>
+
+          <dl class="grid grid-cols-2 gap-3 font-mono text-[0.75rem]" aria-live="off">
+            <div class="metric-card"><dt>θ₁ / ω₁</dt><dd id="state-one">—</dd></div>
+            <div class="metric-card"><dt>θ₂ / ω₂</dt><dd id="state-two">—</dd></div>
+            <div class="metric-card"><dt>Energy drift</dt><dd id="energy-drift">—</dd></div>
+            <div class="metric-card"><dt>Twin separation</dt><dd id="twin-separation">—</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="math-title">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Why the motion becomes unpredictable</h2>
+        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <p>
+            The system is deterministic: the same state produces the same future every time. But its equations are nonlinear and coupled. The acceleration of each arm depends on both angles and both angular velocities, so an initial difference of only <strong class="text-primary-text">10<sup>−4</sup> radians</strong> can grow until the shadow trajectory has no visible relationship to the original.
+          </p>
+          <p>
+            The right panel plots each link’s angle against its angular velocity. Repeating loops indicate regular motion; folding, stretching bands reveal chaotic flow. Angle wraps at ±π, so a trajectory crossing that boundary is intentionally split instead of drawing a false line across the chart.
+          </p>
+        </div>
+        <div class="mt-7 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">State vector</p>
+            <p class="mt-2">x = [ θ₁, θ₂, ω₁, ω₂ ]</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">The coupled acceleration equations are integrated at a fixed 1/240 s timestep with classical fourth-order Runge–Kutta (RK4).</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Energy diagnostic</p>
+            <p class="mt-2">E = T(θ, ω) + V(θ)</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">With damping at zero, the live drift readout exposes numerical error. RK4 keeps it small without hiding it behind a correction step.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .sim-btn,
+  .preset-btn {
+    min-height: 2.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.45rem 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .sim-btn:hover,
+  .preset-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-border-strong);
+  }
+  .sim-btn.is-active,
+  .preset-btn.is-active {
+    color: var(--mp-canvas);
+    border-color: var(--mp-text);
+    background: var(--mp-text);
+  }
+  .canvas-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mp-border);
+    border-radius: 20px;
+    background: var(--mp-card);
+  }
+  .canvas-label-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--mp-border);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mp-muted);
+  }
+  #pendulum-canvas,
+  #phase-canvas {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    background: var(--mp-canvas);
+  }
+  #pendulum-canvas {
+    cursor: grab;
+    touch-action: none;
+  }
+  #pendulum-canvas:active { cursor: grabbing; }
+  .control-label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .control-label output { color: var(--mp-text); }
+  .control-label input {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--mp-cta);
+  }
+  .metric-card,
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem;
+  }
+  .metric-card dt,
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .metric-card dd {
+    margin-top: 0.35rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .math-card {
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+</style>
+
+<script>
+  interface State {
+    theta1: number;
+    theta2: number;
+    omega1: number;
+    omega2: number;
+  }
+  interface PhasePoint extends State {}
+  interface TrailPoint { x: number; y: number; }
+
+  function initDoublePendulum() {
+    const canvasElement = document.getElementById('pendulum-canvas') as HTMLCanvasElement | null;
+    const phaseCanvasElement = document.getElementById('phase-canvas') as HTMLCanvasElement | null;
+    if (!canvasElement || !phaseCanvasElement || canvasElement.dataset.initialized === 'true') return;
+    const canvas = canvasElement;
+    const phaseCanvas = phaseCanvasElement;
+    canvas.dataset.initialized = 'true';
+
+    const ctx = canvas.getContext('2d')!;
+    const phaseCtx = phaseCanvas.getContext('2d')!;
+    const W = 560;
+    const H = 560;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for (const item of [canvas, phaseCanvas]) {
+      item.width = W * dpr;
+      item.height = H * dpr;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    phaseCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const theta1Slider = document.getElementById('theta1-slider') as HTMLInputElement;
+    const theta2Slider = document.getElementById('theta2-slider') as HTMLInputElement;
+    const speedSlider = document.getElementById('speed-slider') as HTMLInputElement;
+    const dampingSlider = document.getElementById('damping-slider') as HTMLInputElement;
+    const theta1Readout = document.getElementById('theta1-readout')!;
+    const theta2Readout = document.getElementById('theta2-readout')!;
+    const speedReadout = document.getElementById('speed-readout')!;
+    const dampingReadout = document.getElementById('damping-readout')!;
+    const stateOneEl = document.getElementById('state-one')!;
+    const stateTwoEl = document.getElementById('state-two')!;
+    const energyDriftEl = document.getElementById('energy-drift')!;
+    const separationEl = document.getElementById('twin-separation')!;
+    const statusEl = document.getElementById('pendulum-status')!;
+    const runToggle = document.getElementById('run-toggle') as HTMLButtonElement;
+    const restartBtn = document.getElementById('restart-btn') as HTMLButtonElement;
+    const clearTrailsBtn = document.getElementById('clear-trails-btn') as HTMLButtonElement;
+    const presetButtons = document.querySelectorAll<HTMLButtonElement>('[data-preset]');
+
+    const G = 9.81;
+    const MASS_1 = 1;
+    const MASS_2 = 1;
+    const LENGTH_1 = 1;
+    const LENGTH_2 = 1;
+    const DRAW_LENGTH_1 = 150;
+    const DRAW_LENGTH_2 = 150;
+    const PIVOT_X = W / 2;
+    const PIVOT_Y = 96;
+    const PHYSICS_DT = 1 / 240;
+    const TWIN_OFFSET = 1e-4;
+    const MAX_TRAIL = 1800;
+    const degToRad = (degrees: number) => degrees * Math.PI / 180;
+    const radToDeg = (radians: number) => radians * 180 / Math.PI;
+    const wrapAngle = (angle: number) => ((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+    const formatSigned = (value: number, digits: number) => `${value < 0 ? '−' : ''}${Math.abs(value).toFixed(digits)}`;
+
+    function resolveColor(name: string, fallback: string): string {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+    }
+    let colors = {
+      canvas: resolveColor('--mp-canvas', '#f8f4ed'),
+      text: resolveColor('--mp-text', '#16202e'),
+      muted: resolveColor('--mp-muted', '#4a5d6f'),
+      border: resolveColor('--mp-border-strong', 'rgba(22,32,46,0.22)'),
+      cta: resolveColor('--mp-cta', '#b8324f'),
+      blue: '#327ea8',
+      card: resolveColor('--mp-card', '#ffffff'),
+    };
+    const themeObserver = new MutationObserver(() => {
+      colors = {
+        canvas: resolveColor('--mp-canvas', '#f8f4ed'),
+        text: resolveColor('--mp-text', '#16202e'),
+        muted: resolveColor('--mp-muted', '#4a5d6f'),
+        border: resolveColor('--mp-border-strong', 'rgba(22,32,46,0.22)'),
+        cta: resolveColor('--mp-cta', '#b8324f'),
+        blue: document.documentElement.dataset.theme === 'dark' ? '#69b7df' : '#327ea8',
+        card: resolveColor('--mp-card', '#ffffff'),
+      };
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    let initialTheta1 = degToRad(120);
+    let initialTheta2 = degToRad(-10);
+    let state: State;
+    let twinState: State;
+    let baselineEnergy = 0;
+    let running = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let simulationSpeed = 1;
+    let damping = 0;
+    let accumulator = 0;
+    let lastFrameTime = performance.now();
+    let animationFrameId = 0;
+    let destroyed = false;
+    let sampleCounter = 0;
+    let phaseTrail: PhasePoint[] = [];
+    let bobTrail: TrailPoint[] = [];
+    let twinBobTrail: TrailPoint[] = [];
+    let draggingBob: 0 | 1 | 2 = 0;
+    let resumeAfterDrag = false;
+
+    function acceleration(s: State): { alpha1: number; alpha2: number } {
+      const delta = s.theta1 - s.theta2;
+      const denominatorCommon = 2 * MASS_1 + MASS_2 - MASS_2 * Math.cos(2 * delta);
+      const alpha1 = (
+        -G * (2 * MASS_1 + MASS_2) * Math.sin(s.theta1)
+        - MASS_2 * G * Math.sin(s.theta1 - 2 * s.theta2)
+        - 2 * Math.sin(delta) * MASS_2 * (
+          s.omega2 * s.omega2 * LENGTH_2 +
+          s.omega1 * s.omega1 * LENGTH_1 * Math.cos(delta)
+        )
+      ) / (LENGTH_1 * denominatorCommon) - damping * s.omega1;
+      const alpha2 = (
+        2 * Math.sin(delta) * (
+          s.omega1 * s.omega1 * LENGTH_1 * (MASS_1 + MASS_2)
+          + G * (MASS_1 + MASS_2) * Math.cos(s.theta1)
+          + s.omega2 * s.omega2 * LENGTH_2 * MASS_2 * Math.cos(delta)
+        )
+      ) / (LENGTH_2 * denominatorCommon) - damping * s.omega2;
+      return { alpha1, alpha2 };
+    }
+
+    function derivative(s: State): State {
+      const { alpha1, alpha2 } = acceleration(s);
+      return { theta1: s.omega1, theta2: s.omega2, omega1: alpha1, omega2: alpha2 };
+    }
+
+    function addScaled(base: State, delta: State, scale: number): State {
+      return {
+        theta1: base.theta1 + delta.theta1 * scale,
+        theta2: base.theta2 + delta.theta2 * scale,
+        omega1: base.omega1 + delta.omega1 * scale,
+        omega2: base.omega2 + delta.omega2 * scale,
+      };
+    }
+
+    function rk4(s: State, dt: number): State {
+      const k1 = derivative(s);
+      const k2 = derivative(addScaled(s, k1, dt / 2));
+      const k3 = derivative(addScaled(s, k2, dt / 2));
+      const k4 = derivative(addScaled(s, k3, dt));
+      return {
+        theta1: s.theta1 + dt * (k1.theta1 + 2 * k2.theta1 + 2 * k3.theta1 + k4.theta1) / 6,
+        theta2: s.theta2 + dt * (k1.theta2 + 2 * k2.theta2 + 2 * k3.theta2 + k4.theta2) / 6,
+        omega1: s.omega1 + dt * (k1.omega1 + 2 * k2.omega1 + 2 * k3.omega1 + k4.omega1) / 6,
+        omega2: s.omega2 + dt * (k1.omega2 + 2 * k2.omega2 + 2 * k3.omega2 + k4.omega2) / 6,
+      };
+    }
+
+    function energy(s: State): number {
+      const delta = s.theta1 - s.theta2;
+      const kinetic =
+        0.5 * (MASS_1 + MASS_2) * LENGTH_1 * LENGTH_1 * s.omega1 * s.omega1
+        + 0.5 * MASS_2 * LENGTH_2 * LENGTH_2 * s.omega2 * s.omega2
+        + MASS_2 * LENGTH_1 * LENGTH_2 * s.omega1 * s.omega2 * Math.cos(delta);
+      const potential =
+        -(MASS_1 + MASS_2) * G * LENGTH_1 * Math.cos(s.theta1)
+        - MASS_2 * G * LENGTH_2 * Math.cos(s.theta2);
+      return kinetic + potential;
+    }
+
+    function bobPositions(s: State) {
+      const x1 = PIVOT_X + DRAW_LENGTH_1 * Math.sin(s.theta1);
+      const y1 = PIVOT_Y + DRAW_LENGTH_1 * Math.cos(s.theta1);
+      const x2 = x1 + DRAW_LENGTH_2 * Math.sin(s.theta2);
+      const y2 = y1 + DRAW_LENGTH_2 * Math.cos(s.theta2);
+      return { x1, y1, x2, y2 };
+    }
+
+    function updateControls() {
+      const theta1Degrees = radToDeg(wrapAngle(initialTheta1));
+      const theta2Degrees = radToDeg(wrapAngle(initialTheta2));
+      theta1Slider.value = theta1Degrees.toFixed(1);
+      theta2Slider.value = theta2Degrees.toFixed(1);
+      theta1Readout.textContent = `${formatSigned(theta1Degrees, 1)}°`;
+      theta2Readout.textContent = `${formatSigned(theta2Degrees, 1)}°`;
+      speedReadout.textContent = `${simulationSpeed.toFixed(2)}×`;
+      dampingReadout.textContent = damping.toFixed(3);
+    }
+
+    function clearTrails() {
+      phaseTrail = [];
+      bobTrail = [];
+      twinBobTrail = [];
+      sampleCounter = 0;
+    }
+
+    function resetSimulation(clear = true) {
+      state = { theta1: initialTheta1, theta2: initialTheta2, omega1: 0, omega2: 0 };
+      twinState = { theta1: initialTheta1, theta2: initialTheta2 + TWIN_OFFSET, omega1: 0, omega2: 0 };
+      baselineEnergy = energy(state);
+      accumulator = 0;
+      if (clear) clearTrails();
+      updateControls();
+    }
+
+    function setRunning(next: boolean) {
+      running = next;
+      runToggle.textContent = running ? 'Pause' : 'Play';
+      runToggle.classList.toggle('is-active', running);
+      runToggle.setAttribute('aria-pressed', String(running));
+      statusEl.textContent = running
+        ? 'Running. Drag either mass to choose new initial angles; the faint shadow starts just 0.006° away.'
+        : 'Paused. Drag a mass or adjust the initial-angle sliders, then press Play.';
+      lastFrameTime = performance.now();
+    }
+
+    function stepPhysics() {
+      state = rk4(state, PHYSICS_DT);
+      twinState = rk4(twinState, PHYSICS_DT);
+      sampleCounter++;
+      if (sampleCounter % 4 !== 0) return;
+      phaseTrail.push({ ...state });
+      const primary = bobPositions(state);
+      const twin = bobPositions(twinState);
+      bobTrail.push({ x: primary.x2, y: primary.y2 });
+      twinBobTrail.push({ x: twin.x2, y: twin.y2 });
+      if (phaseTrail.length > MAX_TRAIL) phaseTrail.shift();
+      if (bobTrail.length > MAX_TRAIL) bobTrail.shift();
+      if (twinBobTrail.length > MAX_TRAIL) twinBobTrail.shift();
+    }
+
+    function drawBackground(targetCtx: CanvasRenderingContext2D) {
+      targetCtx.clearRect(0, 0, W, H);
+      targetCtx.fillStyle = colors.canvas;
+      targetCtx.fillRect(0, 0, W, H);
+      targetCtx.strokeStyle = colors.border;
+      targetCtx.lineWidth = 0.5;
+      targetCtx.globalAlpha = 0.18;
+      for (let p = 40; p < W; p += 40) {
+        targetCtx.beginPath(); targetCtx.moveTo(p, 0); targetCtx.lineTo(p, H); targetCtx.stroke();
+        targetCtx.beginPath(); targetCtx.moveTo(0, p); targetCtx.lineTo(W, p); targetCtx.stroke();
+      }
+      targetCtx.globalAlpha = 1;
+    }
+
+    function strokeTrail(targetCtx: CanvasRenderingContext2D, points: TrailPoint[], color: string, alpha: number, width: number) {
+      if (points.length < 2) return;
+      targetCtx.beginPath();
+      targetCtx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) targetCtx.lineTo(points[i].x, points[i].y);
+      targetCtx.strokeStyle = color;
+      targetCtx.globalAlpha = alpha;
+      targetCtx.lineWidth = width;
+      targetCtx.stroke();
+      targetCtx.globalAlpha = 1;
+    }
+
+    function drawPendulum() {
+      drawBackground(ctx);
+      const main = bobPositions(state);
+      const twin = bobPositions(twinState);
+
+      const glow = ctx.createRadialGradient(PIVOT_X, PIVOT_Y + 120, 0, PIVOT_X, PIVOT_Y + 120, 270);
+      glow.addColorStop(0, 'rgba(184,50,79,0.055)');
+      glow.addColorStop(1, 'rgba(184,50,79,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+
+      strokeTrail(ctx, twinBobTrail, colors.blue, 0.25, 1.2);
+      strokeTrail(ctx, bobTrail, colors.cta, 0.58, 1.8);
+
+      ctx.strokeStyle = colors.blue;
+      ctx.globalAlpha = 0.25;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(PIVOT_X, PIVOT_Y); ctx.lineTo(twin.x1, twin.y1); ctx.lineTo(twin.x2, twin.y2); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      ctx.strokeStyle = colors.text;
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(PIVOT_X, PIVOT_Y); ctx.lineTo(main.x1, main.y1); ctx.lineTo(main.x2, main.y2); ctx.stroke();
+
+      ctx.fillStyle = colors.card;
+      ctx.strokeStyle = colors.cta;
+      ctx.lineWidth = 4;
+      for (const [x, y, radius] of [[main.x1, main.y1, 15], [main.x2, main.y2, 18]] as [number, number, number][]) {
+        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+      ctx.fillStyle = colors.text;
+      ctx.beginPath(); ctx.arc(PIVOT_X, PIVOT_Y, 7, 0, Math.PI * 2); ctx.fill();
+
+      ctx.font = '600 11px ui-monospace, SFMono-Regular, monospace';
+      ctx.fillStyle = colors.muted;
+      ctx.fillText('m₁', main.x1 + 20, main.y1 - 12);
+      ctx.fillText('m₂', main.x2 + 22, main.y2 - 14);
+    }
+
+    function phaseCoordinates(theta: number, omega: number, omegaRange: number): TrailPoint {
+      const margin = 48;
+      const plotW = W - margin * 2;
+      const plotH = H - margin * 2;
+      return {
+        x: margin + ((wrapAngle(theta) + Math.PI) / (2 * Math.PI)) * plotW,
+        y: margin + (1 - (Math.max(-omegaRange, Math.min(omegaRange, omega)) + omegaRange) / (2 * omegaRange)) * plotH,
+      };
+    }
+
+    function drawPhaseSeries(link: 1 | 2, color: string, omegaRange: number) {
+      if (phaseTrail.length < 2) return;
+      phaseCtx.strokeStyle = color;
+      phaseCtx.lineWidth = 1.5;
+      phaseCtx.globalAlpha = 0.72;
+      phaseCtx.beginPath();
+      let previous = phaseCoordinates(
+        link === 1 ? phaseTrail[0].theta1 : phaseTrail[0].theta2,
+        link === 1 ? phaseTrail[0].omega1 : phaseTrail[0].omega2,
+        omegaRange,
+      );
+      phaseCtx.moveTo(previous.x, previous.y);
+      for (let i = 1; i < phaseTrail.length; i++) {
+        const point = phaseCoordinates(
+          link === 1 ? phaseTrail[i].theta1 : phaseTrail[i].theta2,
+          link === 1 ? phaseTrail[i].omega1 : phaseTrail[i].omega2,
+          omegaRange,
+        );
+        if (Math.abs(point.x - previous.x) > W * 0.45) phaseCtx.moveTo(point.x, point.y);
+        else phaseCtx.lineTo(point.x, point.y);
+        previous = point;
+      }
+      phaseCtx.stroke();
+      phaseCtx.globalAlpha = 1;
+    }
+
+    function drawPhaseSpace() {
+      drawBackground(phaseCtx);
+      const omegaMax = phaseTrail.reduce((max, point) => Math.max(max, Math.abs(point.omega1), Math.abs(point.omega2)), 0);
+      const omegaRange = Math.max(4, Math.min(14, Math.ceil(omegaMax / 2) * 2 || 4));
+      const margin = 48;
+      const plotSize = W - margin * 2;
+
+      phaseCtx.strokeStyle = colors.border;
+      phaseCtx.globalAlpha = 0.7;
+      phaseCtx.lineWidth = 1;
+      phaseCtx.strokeRect(margin, margin, plotSize, plotSize);
+      phaseCtx.beginPath();
+      phaseCtx.moveTo(W / 2, margin); phaseCtx.lineTo(W / 2, H - margin);
+      phaseCtx.moveTo(margin, H / 2); phaseCtx.lineTo(W - margin, H / 2);
+      phaseCtx.stroke();
+      phaseCtx.globalAlpha = 1;
+
+      drawPhaseSeries(2, colors.blue, omegaRange);
+      drawPhaseSeries(1, colors.cta, omegaRange);
+
+      const currentOne = phaseCoordinates(state.theta1, state.omega1, omegaRange);
+      const currentTwo = phaseCoordinates(state.theta2, state.omega2, omegaRange);
+      for (const [point, color] of [[currentOne, colors.cta], [currentTwo, colors.blue]] as [TrailPoint, string][]) {
+        phaseCtx.fillStyle = color;
+        phaseCtx.beginPath(); phaseCtx.arc(point.x, point.y, 4, 0, Math.PI * 2); phaseCtx.fill();
+      }
+
+      phaseCtx.fillStyle = colors.muted;
+      phaseCtx.font = '11px ui-monospace, SFMono-Regular, monospace';
+      phaseCtx.textAlign = 'center';
+      phaseCtx.fillText('−π', margin, H - 24);
+      phaseCtx.fillText('θ', W / 2, H - 24);
+      phaseCtx.fillText('+π', W - margin, H - 24);
+      phaseCtx.save();
+      phaseCtx.translate(17, H / 2);
+      phaseCtx.rotate(-Math.PI / 2);
+      phaseCtx.fillText(`ω  (±${omegaRange} rad/s)`, 0, 0);
+      phaseCtx.restore();
+
+      phaseCtx.textAlign = 'left';
+      phaseCtx.fillStyle = colors.cta;
+      phaseCtx.fillText('θ₁ / ω₁', margin + 10, margin + 20);
+      phaseCtx.fillStyle = colors.blue;
+      phaseCtx.fillText('θ₂ / ω₂', margin + 82, margin + 20);
+    }
+
+    function updateMetrics() {
+      const currentEnergy = energy(state);
+      const energyScale = Math.max(1, Math.abs(baselineEnergy));
+      const driftPercent = ((currentEnergy - baselineEnergy) / energyScale) * 100;
+      const separation = Math.hypot(
+        wrapAngle(state.theta1 - twinState.theta1),
+        wrapAngle(state.theta2 - twinState.theta2),
+      );
+      stateOneEl.textContent = `${formatSigned(radToDeg(wrapAngle(state.theta1)), 1)}° / ${formatSigned(state.omega1, 2)}`;
+      stateTwoEl.textContent = `${formatSigned(radToDeg(wrapAngle(state.theta2)), 1)}° / ${formatSigned(state.omega2, 2)}`;
+      energyDriftEl.textContent = damping === 0 ? `${formatSigned(driftPercent, 4)}%` : 'dissipating';
+      separationEl.textContent = `${separation.toExponential(2)} rad`;
+    }
+
+    function renderFrame(frameTime: number) {
+      if (destroyed) return;
+      const elapsed = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
+      lastFrameTime = frameTime;
+      if (running && !document.hidden && !draggingBob) {
+        accumulator += elapsed * simulationSpeed;
+        let safety = 0;
+        while (accumulator >= PHYSICS_DT && safety < 48) {
+          stepPhysics();
+          accumulator -= PHYSICS_DT;
+          safety++;
+        }
+      }
+      drawPendulum();
+      drawPhaseSpace();
+      updateMetrics();
+      animationFrameId = requestAnimationFrame(renderFrame);
+    }
+
+    function canvasPoint(event: PointerEvent): TrailPoint {
+      const rect = canvas.getBoundingClientRect();
+      return { x: (event.clientX - rect.left) * W / rect.width, y: (event.clientY - rect.top) * H / rect.height };
+    }
+
+    canvas.addEventListener('pointerdown', (event) => {
+      const point = canvasPoint(event);
+      const bobs = bobPositions(state);
+      const d1 = Math.hypot(point.x - bobs.x1, point.y - bobs.y1);
+      const d2 = Math.hypot(point.x - bobs.x2, point.y - bobs.y2);
+      if (Math.min(d1, d2) > 38) return;
+      draggingBob = d2 <= d1 ? 2 : 1;
+      resumeAfterDrag = running;
+      setRunning(false);
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (!draggingBob) return;
+      const point = canvasPoint(event);
+      if (draggingBob === 1) {
+        initialTheta1 = Math.atan2(point.x - PIVOT_X, point.y - PIVOT_Y);
+      } else {
+        const firstBob = bobPositions({ theta1: initialTheta1, theta2: initialTheta2, omega1: 0, omega2: 0 });
+        initialTheta2 = Math.atan2(point.x - firstBob.x1, point.y - firstBob.y1);
+      }
+      resetSimulation();
+      presetButtons.forEach((button) => button.classList.remove('is-active'));
+    });
+
+    function endDrag(event: PointerEvent) {
+      if (!draggingBob) return;
+      draggingBob = 0;
+      if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (resumeAfterDrag) setRunning(true);
+    }
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+    canvas.addEventListener('lostpointercapture', () => {
+      if (!draggingBob) return;
+      draggingBob = 0;
+      if (resumeAfterDrag) setRunning(true);
+    });
+
+    runToggle.addEventListener('click', () => setRunning(!running));
+    restartBtn.addEventListener('click', () => resetSimulation());
+    clearTrailsBtn.addEventListener('click', clearTrails);
+
+    for (const slider of [theta1Slider, theta2Slider]) {
+      slider.addEventListener('input', () => {
+        initialTheta1 = degToRad(parseFloat(theta1Slider.value));
+        initialTheta2 = degToRad(parseFloat(theta2Slider.value));
+        resetSimulation();
+        presetButtons.forEach((button) => button.classList.remove('is-active'));
+      });
+    }
+    speedSlider.addEventListener('input', () => {
+      simulationSpeed = parseFloat(speedSlider.value);
+      updateControls();
+    });
+    dampingSlider.addEventListener('input', () => {
+      damping = parseFloat(dampingSlider.value);
+      baselineEnergy = energy(state);
+      updateControls();
+    });
+
+    const presets: Record<string, [number, number]> = {
+      chaos: [120, -10],
+      flip: [170, 175],
+      calm: [25, 40],
+      asymmetric: [92, -128],
+    };
+    presetButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const preset = presets[button.dataset.preset ?? 'chaos'];
+        initialTheta1 = degToRad(preset[0]);
+        initialTheta2 = degToRad(preset[1]);
+        resetSimulation();
+        presetButtons.forEach((candidate) => candidate.classList.toggle('is-active', candidate === button));
+      });
+    });
+
+    function handleVisibilityChange() { lastFrameTime = performance.now(); }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    resetSimulation();
+    setRunning(running);
+    drawPendulum();
+    drawPhaseSpace();
+    animationFrameId = requestAnimationFrame(renderFrame);
+
+    document.addEventListener('astro:before-swap', () => {
+      destroyed = true;
+      cancelAnimationFrame(animationFrameId);
+      themeObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initDoublePendulum);
+  initDoublePendulum();
+</script>
