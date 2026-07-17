@@ -6,7 +6,7 @@ import PlaygroundShell from '../../components/PlaygroundShell.astro';
 const title = 'Quaternion to Euler Angle Converter (and back) — Swift, verified round-trip | MakerPortal';
 const description =
   `Convert quaternion attitude to yaw/pitch/roll and back, with a live 3D orientation preview and copyable Swift — the exact math from MotionLink\u2019s CMHeadphoneMotionManager handling.`;
-const canonical = new URL('/tools/quaternion-euler-converter', Astro.site);
+const canonical = new URL('/playground/quaternion-euler-converter', Astro.site);
 
 const quatToEulerSwift = `func yawPitchRoll(from q: CMQuaternion) -> (yaw: Double, pitch: Double, roll: Double) {
     let yaw = atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
@@ -78,15 +78,15 @@ const breadcrumbSchema = {
           </div>
           <dl class="grid grid-cols-3 gap-6 font-mono text-center sm:gap-10" aria-live="polite">
             <div>
-              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Yaw</dt>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Yaw · Z</dt>
               <dd id="preview-yaw" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
             </div>
             <div>
-              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Pitch</dt>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Pitch · Y</dt>
               <dd id="preview-pitch" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
             </div>
             <div>
-              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Roll</dt>
+              <dt class="text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Roll · X</dt>
               <dd id="preview-roll" class="mt-1 text-[1.4rem] font-semibold text-primary-text">0.00°</dd>
             </div>
           </dl>
@@ -277,6 +277,11 @@ const breadcrumbSchema = {
 </style>
 
 <script>
+  function initQuaternionPreview() {
+  const pageCanvas = document.getElementById('quat-canvas') as HTMLCanvasElement | null;
+  if (!pageCanvas || pageCanvas.dataset.initialized === 'true') return;
+  pageCanvas.dataset.initialized = 'true';
+
   // ====================================================================
   // Math core — identical to the Swift functions and the converter panels
   // ====================================================================
@@ -573,13 +578,19 @@ const breadcrumbSchema = {
     faces.push({ verts: [noseStart + 2, noseStart + 1, noseStart], color: noseColor, isNose: true });
     faces.push({ verts: [noseStart + 3, noseStart + 2, noseStart], color: noseColor, isNose: true });
 
-    return { verts, faces };
+    // The procedural mesh above is authored in an X-Z ground plane with Y up.
+    // Euler Z-Y-X convention instead expects the vehicle body in X-Y with Z up:
+    // roll about X, pitch about Y, and yaw about the vertical Z axis. This is a
+    // proper +90° X-axis basis rotation (not an Euler remap), so the quaternion
+    // and its rotation matrix remain the single source of orientation truth.
+    const bodyFrameVerts = verts.map(([x, y, z]) => [x, -z, y] as Vec3);
+    return { verts: bodyFrameVerts, faces };
   }
 
   // ====================================================================
   // HiDPI Canvas Setup
   // ====================================================================
-  const canvas = document.getElementById('quat-canvas') as HTMLCanvasElement;
+  const canvas = pageCanvas;
   const ctx = canvas.getContext('2d')!;
   const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x for performance
   const CW = canvas.width;   // CSS logical pixels (520)
@@ -760,9 +771,9 @@ const breadcrumbSchema = {
 
     // --- Ground shadow (projected ellipse that tracks rotation) ---
     const shadowY = CH * 0.82;
-    // Use the rotated Y-axis to shift shadow position
-    const rotY = mulMat3Vec3(rotMatrix, [0, 1, 0]);
-    const shadowOffX = rotY[0] * scale * 0.08;
+    // Z is the vehicle's vertical axis in the Z-Y-X yaw/pitch/roll convention.
+    const rotZ = mulMat3Vec3(rotMatrix, [0, 0, 1]);
+    const shadowOffX = rotZ[0] * scale * 0.08;
     ctx.save();
     ctx.globalAlpha = 0.07;
     const shadowGrad = ctx.createRadialGradient(
@@ -881,13 +892,13 @@ const breadcrumbSchema = {
     const armEndDist = 0.56;
     for (let ai = 0; ai < 4; ai++) {
       const angle = armAngles[ai];
-      const tipPos: Vec3 = [Math.cos(angle) * armEndDist, 0.022 + 0.042 + 0.008, Math.sin(angle) * armEndDist];
+      const tipPos: Vec3 = [Math.cos(angle) * armEndDist, -Math.sin(angle) * armEndDist, 0.022 + 0.042 + 0.008];
       const tTip = mulMat3Vec3(rotMatrix, tipPos);
       const sx = CW / 2 + tTip[0] * scale;
       const sy = CH / 2 - tTip[1] * scale;
 
       // Only draw blur disc if motor top is facing viewer
-      const motorNorm = mulMat3Vec3(rotMatrix, [0, 1, 0]);
+      const motorNorm = mulMat3Vec3(rotMatrix, [0, 0, 1]);
       if (motorNorm[2] > -0.1) {
         const discR = 0.15 * scale;
         const discGrad = ctx.createRadialGradient(sx, sy, discR * 0.15, sx, sy, discR);
@@ -1016,12 +1027,12 @@ const breadcrumbSchema = {
 
     let dragQuat: Quat;
     if (e.shiftKey) {
-      // Shift → roll around the Z axis (forward/back direction)
-      dragQuat = quatFromAxisAngle([0, 0, 1], -dx);
+      // Shift → roll about the vehicle's forward X axis.
+      dragQuat = quatFromAxisAngle([1, 0, 0], -dx);
     } else {
-      // Normal drag: yaw around Y axis, pitch around X axis
-      const yawQuat = quatFromAxisAngle([0, 1, 0], -dx);
-      const pitchQuat = quatFromAxisAngle([1, 0, 0], dy);
+      // Match the converter's Z-Y-X convention: yaw about vertical Z, pitch about Y.
+      const yawQuat = quatFromAxisAngle([0, 0, 1], -dx);
+      const pitchQuat = quatFromAxisAngle([0, 1, 0], dy);
       dragQuat = quatMul(yawQuat, pitchQuat);
     }
 
@@ -1053,17 +1064,22 @@ const breadcrumbSchema = {
     updatePreview(newQuat, 'Drag interaction');
   });
 
-  canvasWrap.addEventListener('pointerup', (e) => {
+  function endQuaternionDrag(e: PointerEvent) {
     isDragging = false;
-    canvasWrap.releasePointerCapture(e.pointerId);
-  });
+    if (canvasWrap.hasPointerCapture(e.pointerId)) canvasWrap.releasePointerCapture(e.pointerId);
+  }
 
-  canvasWrap.addEventListener('pointercancel', (e) => {
-    isDragging = false;
-    canvasWrap.releasePointerCapture(e.pointerId);
-  });
+  canvasWrap.addEventListener('pointerup', endQuaternionDrag);
+  canvasWrap.addEventListener('pointercancel', endQuaternionDrag);
+  canvasWrap.addEventListener('lostpointercapture', () => { isDragging = false; });
 
   // Initial render
   recomputeFromEuler();
   recomputeFromQuaternion();
+  }
+
+  // Bundled Astro scripts execute once; page-load makes the tool initialize
+  // again when this route is revisited through the site's view transitions.
+  document.addEventListener('astro:page-load', initQuaternionPreview);
+  initQuaternionPreview();
 </script>

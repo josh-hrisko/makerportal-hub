@@ -94,25 +94,6 @@ const currentOwnerId = getPathOwner(path);
 
 const isPrimaryActive = (item: { id: string }) => currentOwnerId === item.id;
 
-// Compatibility wrapper for older call signatures
-const isNavItemActive = (
-  hrefOrItem: string | { id: string; href: string },
-  columns?: { links: { href: string }[] }[],
-  itemId?: string,
-) => {
-  if (typeof hrefOrItem === 'object' && hrefOrItem && 'id' in hrefOrItem) {
-    return currentOwnerId === (hrefOrItem as any).id;
-  }
-  if (itemId) return currentOwnerId === itemId;
-  if (columns) {
-    const clean = normalizeHref(hrefOrItem as string);
-    const primary = primaryNav.find((p) => normalizeHref(p.href) === clean);
-    if (primary) return currentOwnerId === primary.id;
-    return false;
-  }
-  return isActiveExact(hrefOrItem as string) || isActive(hrefOrItem as string);
-};
-
 // Helper for mobile sub-menu dedup: only first exact match of a given clean href gets active
 // Use Set<any> to allow Set without generic in JSX context (avoids <string> JSX parsing issue)
 const markActiveOnce = (href: string, seen: Set<any>) => {

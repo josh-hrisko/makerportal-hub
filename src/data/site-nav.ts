@@ -169,8 +169,8 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Store',
         links: [
           { label: 'All products', href: '/shop', description: 'Digital goods' },
-          { label: 'Code packs', href: '/shop#code', description: 'Archives & starters' },
-          { label: 'Templates', href: '/shop#templates', description: 'UI & project kits' },
+          { label: 'Code packs', href: '/shop#products', description: 'Archives & starters' },
+          { label: 'Templates', href: '/shop#products', description: 'UI & project kits' },
         ],
       },
       {

@@ -73,7 +73,6 @@ console.log("\n---- Orbit Edge Cases ----");
 const GM = 398600.4418;
 const EARTH_RADIUS_KM = 6378.137;
 function testOrbit(ecc, meanAnom, a) {
-  const nRadS = Math.sqrt(GM / (a*a*a));
   let M = meanAnom;
   let E = M;
   for (let i = 0; i < 15; i++) E -= (E - ecc * Math.sin(E) - M) / (1 - ecc * Math.cos(E));

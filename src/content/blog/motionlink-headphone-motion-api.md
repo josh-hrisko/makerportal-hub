@@ -40,4 +40,4 @@ None of this is exotic. It's the kind of friction that costs an afternoon the fi
 
 MotionLink pairs specifically with [AirPods Pro](/resources#gear) — the Headphone Motion API only reports data from H1/W1-chip headphones, which is why that's the one gear pick tied to this build on `/resources`. If you're building anything in the [`ios-craft`](/resources#trending) space that touches CoreMotion, the quaternion clamp above is worth stealing outright.
 
-Want to see the math live instead of reading it? The [quaternion ↔ Euler converter](/tools/quaternion-euler-converter) runs both directions with a live 3D orientation preview and copyable Swift for each.
+Want to see the math live instead of reading it? The [quaternion ↔ Euler converter](/playground/quaternion-euler-converter) runs both directions with a live 3D orientation preview and copyable Swift for each.

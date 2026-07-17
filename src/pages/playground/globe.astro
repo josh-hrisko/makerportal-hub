@@ -3,7 +3,6 @@ import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import weatherData from '../../data/weather.json';
 import satelliteData from '../../data/satellite.json';
-import { weatherCodeLabel } from '../../data/weather-codes';
 
 const title = 'Live Earth — Real Coastlines, Real Weather, Real ISS Orbit | MakerPortal';
 const description =
@@ -40,7 +39,8 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
           <button type="button" class="mode-btn is-active" data-mode="daynight">Day / Night</button>
           <button type="button" class="mode-btn" data-mode="weather">Live Weather</button>
           <button type="button" class="mode-btn" data-mode="satellite">ISS Tracker</button>
-          <button type="button" class="mode-btn ml-auto" id="style-toggle">Wireframe</button>
+          <button type="button" class="mode-btn ml-auto" id="animation-toggle" aria-pressed="true">Pause rotation</button>
+          <button type="button" class="mode-btn" id="style-toggle">Wireframe</button>
         </div>
 
         <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_18rem]">
@@ -51,7 +51,11 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
           <div class="rounded-[20px] border border-border bg-card-bg p-5">
             <div data-panel="daynight">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Day / Night</p>
-              <p class="mt-2 text-[0.85rem] leading-[1.6] text-muted-text">The terminator line is computed from the real subsolar point for your current date and time — not an animation loop, actual astronomy (solar declination + Greenwich hour angle).</p>
+              <p class="mt-2 text-[0.85rem] leading-[1.6] text-muted-text">The terminator and lighting are updated continuously from your clock using the Sun’s apparent position and Greenwich sidereal time.</p>
+              <dl class="mt-4 grid grid-cols-1 gap-3 font-mono text-[0.75rem]">
+                <div><dt class="text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Live UTC</dt><dd id="earth-utc" class="mt-0.5 font-semibold text-primary-text">—</dd></div>
+                <div><dt class="text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Subsolar point</dt><dd id="subsolar-point" class="mt-0.5 font-semibold text-primary-text">—</dd></div>
+              </dl>
             </div>
             <div data-panel="weather" class="hidden">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Live Weather</p>
@@ -121,7 +125,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
   }
 </style>
 
-<script define:vars={{ weatherCities: weatherData.cities, satelliteTle: { line1: satelliteData.line1, line2: satelliteData.line2 } }}>
+<script is:inline define:vars={{ weatherCities: weatherData.cities, satelliteTle: { line1: satelliteData.line1, line2: satelliteData.line2 } }}>
   window.__globeData = { weatherCities, satelliteTle };
 </script>
 
@@ -129,7 +133,11 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
   interface Pt { x: number; y: number; }
   interface LandFeature { geometry: { coordinates: number[][][] } }
 
-  const canvas = document.getElementById('globe-canvas') as HTMLCanvasElement;
+  function initGlobe() {
+  const canvas = document.getElementById('globe-canvas') as HTMLCanvasElement | null;
+  if (!canvas || canvas.dataset.initialized === 'true') return;
+  canvas.dataset.initialized = 'true';
+
   const ctx = canvas.getContext('2d')!;
   const W = canvas.width;
   const H = canvas.height;
@@ -156,7 +164,8 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     elevated: resolveColor('--mp-elevated', '#e8dfd1'),
     card: resolveColor('--mp-card', '#ffffff'),
   };
-  new MutationObserver(() => {
+  let shadeThemeRevision = 0;
+  const themeObserver = new MutationObserver(() => {
     colors = {
       text: resolveColor('--mp-text', '#16202e'),
       muted: resolveColor('--mp-muted', '#4a5d6f'),
@@ -165,7 +174,9 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
       elevated: resolveColor('--mp-elevated', '#e8dfd1'),
       card: resolveColor('--mp-card', '#ffffff'),
     };
-  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    shadeThemeRevision++;
+  });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   // =====================================================================
   // Orthographic projection with view parameters
@@ -467,13 +478,27 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
   // Real astronomy: subsolar point + terminator great circle
   // =====================================================================
   function subsolarPoint(date: Date): { decl: number; lon: number } {
-    const start = Date.UTC(date.getUTCFullYear(), 0, 0);
-    const dayOfYear = (date.getTime() - start) / 86400000;
-    const decl = -23.44 * Math.cos(deg2rad((360 / 365) * (dayOfYear + 10)));
-    const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-    let lon = -(utcHours - 12) * 15;
-    if (lon > 180) lon -= 360;
-    if (lon < -180) lon += 360;
+    // Apparent solar coordinates (Meeus/NOAA low-order solar model). Unlike a
+    // noon-at-Greenwich shortcut, this includes the equation of time and moves
+    // smoothly at millisecond precision.
+    const jd = date.getTime() / 86400000 + 2440587.5;
+    const T = (jd - 2451545.0) / 36525;
+    const meanLon = ((280.46646 + T * (36000.76983 + 0.0003032 * T)) % 360 + 360) % 360;
+    const meanAnomaly = deg2rad(((357.52911 + T * (35999.05029 - 0.0001537 * T)) % 360 + 360) % 360);
+    const equationOfCenter =
+      Math.sin(meanAnomaly) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
+      Math.sin(2 * meanAnomaly) * (0.019993 - 0.000101 * T) +
+      Math.sin(3 * meanAnomaly) * 0.000289;
+    const omega = deg2rad(125.04 - 1934.136 * T);
+    const apparentLon = deg2rad(meanLon + equationOfCenter - 0.00569 - 0.00478 * Math.sin(omega));
+    const obliquity0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - 0.001813 * T))) / 60) / 60;
+    const obliquity = deg2rad(obliquity0 + 0.00256 * Math.cos(omega));
+    const rightAscension = Math.atan2(Math.cos(obliquity) * Math.sin(apparentLon), Math.cos(apparentLon));
+    const decl = rad2deg(Math.asin(Math.sin(obliquity) * Math.sin(apparentLon)));
+
+    const gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000;
+    const longitudeRaw = rad2deg(rightAscension) - gmst;
+    const lon = ((longitudeRaw + 180) % 360 + 360) % 360 - 180;
     return { decl, lon };
   }
 
@@ -506,9 +531,76 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     return points;
   }
 
-  function isDaylight(latDeg: number, lonDeg: number, decl: number, ssLon: number): boolean {
-    const phi = deg2rad(latDeg), d = deg2rad(decl), dl = deg2rad(lonDeg - ssLon);
-    return Math.sin(phi) * Math.sin(d) + Math.cos(phi) * Math.cos(d) * Math.cos(dl) > 0;
+  // Render one exact solar-hemisphere mask and place the terminator stroke on
+  // its dot(sun, surface) = 0 boundary. This avoids classifying an entire land
+  // polygon by its centroid, which made coast colors disagree with the line.
+  const SHADE_SIZE = 256;
+  const nightShadeCanvas = document.createElement('canvas');
+  nightShadeCanvas.width = SHADE_SIZE;
+  nightShadeCanvas.height = SHADE_SIZE;
+  const nightShadeCtx = nightShadeCanvas.getContext('2d')!;
+  let lastShadeLambda = Number.NaN;
+  let lastShadeSolarMinute = -1;
+  let renderedThemeRevision = -1;
+
+  function longitudeDelta(a: number, b: number): number {
+    return Math.abs(((a - b + 540) % 360) - 180);
+  }
+
+  function updateNightShade(date: Date, decl: number, ssLon: number) {
+    const solarMinute = Math.floor(date.getTime() / 60000);
+    const needsUpdate =
+      !Number.isFinite(lastShadeLambda) ||
+      longitudeDelta(lambda0, lastShadeLambda) >= 0.2 ||
+      solarMinute !== lastShadeSolarMinute ||
+      renderedThemeRevision !== shadeThemeRevision;
+    if (!needsUpdate) return;
+
+    const sun = toVec3(decl, ssLon);
+    const centerLon = deg2rad(lambda0);
+    const east: [number, number, number] = [-Math.sin(centerLon), Math.cos(centerLon), 0];
+    const up: [number, number, number] = [
+      -sinPhi0 * Math.cos(centerLon),
+      -sinPhi0 * Math.sin(centerLon),
+      cosPhi0,
+    ];
+    const view: [number, number, number] = [
+      cosPhi0 * Math.cos(centerLon),
+      cosPhi0 * Math.sin(centerLon),
+      sinPhi0,
+    ];
+    const sunEast = sun[0] * east[0] + sun[1] * east[1] + sun[2] * east[2];
+    const sunUp = sun[0] * up[0] + sun[1] * up[1] + sun[2] * up[2];
+    const sunView = sun[0] * view[0] + sun[1] * view[1] + sun[2] * view[2];
+    const darkTheme = document.documentElement.dataset.theme === 'dark';
+    const nightRgb = darkTheme ? [0, 5, 14] : [9, 24, 47];
+    const image = nightShadeCtx.createImageData(SHADE_SIZE, SHADE_SIZE);
+
+    for (let py = 0; py < SHADE_SIZE; py++) {
+      const sy = 1 - ((py + 0.5) / SHADE_SIZE) * 2;
+      for (let px = 0; px < SHADE_SIZE; px++) {
+        const sx = ((px + 0.5) / SHADE_SIZE) * 2 - 1;
+        const radial2 = sx * sx + sy * sy;
+        if (radial2 > 1) continue;
+        const towardViewer = Math.sqrt(Math.max(0, 1 - radial2));
+        const solarDot = sx * sunEast + sy * sunUp + towardViewer * sunView;
+        if (solarDot >= 0) continue;
+        const i = (py * SHADE_SIZE + px) * 4;
+        image.data[i] = nightRgb[0];
+        image.data[i + 1] = nightRgb[1];
+        image.data[i + 2] = nightRgb[2];
+        image.data[i + 3] = Math.round((darkTheme ? 0.48 : 0.44) * 255 + Math.min(1, -solarDot) * 42);
+      }
+    }
+    nightShadeCtx.putImageData(image, 0, 0);
+    lastShadeLambda = lambda0;
+    lastShadeSolarMinute = solarMinute;
+    renderedThemeRevision = shadeThemeRevision;
+  }
+
+  function drawNightShade(date: Date, decl: number, ssLon: number) {
+    updateNightShade(date, decl, ssLon);
+    ctx.drawImage(nightShadeCanvas, CX - R, CY - R, R * 2, R * 2);
   }
 
   // =====================================================================
@@ -574,10 +666,16 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
   // Land data
   // =====================================================================
   let land: LandFeature[] = [];
-  fetch('/data/world-land-110m.json')
-    .then((r) => r.json())
+  const landAbortController = new AbortController();
+  fetch('/data/world-land-110m.json', { signal: landAbortController.signal })
+    .then((r) => {
+      if (!r.ok) throw new Error(`Coastline request failed: ${r.status}`);
+      return r.json();
+    })
     .then((geojson) => { land = geojson.features; })
-    .catch(() => { land = []; });
+    .catch((error) => {
+      if ((error as Error).name !== 'AbortError') land = [];
+    });
 
   // =====================================================================
   // Mode state
@@ -596,6 +694,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     mode = next;
     modeButtons.forEach((b) => b.classList.toggle('is-active', b.dataset.mode === next));
     (Object.keys(panels) as Mode[]).forEach((k) => panels[k].classList.toggle('hidden', k !== next));
+    draw();
   }
 
   modeButtons.forEach((btn) => btn.addEventListener('click', () => setMode(btn.dataset.mode as Mode)));
@@ -632,10 +731,21 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
   }
 
   const issTrail: Pt[] = [];
+  let issTrailTimestamp = -1;
   const issLatEl = document.getElementById('iss-lat')!;
   const issLonEl = document.getElementById('iss-lon')!;
   const issAltEl = document.getElementById('iss-alt')!;
   const issSpeedEl = document.getElementById('iss-speed')!;
+  const earthUtcEl = document.getElementById('earth-utc')!;
+  const subsolarPointEl = document.getElementById('subsolar-point')!;
+
+  let autoRotate = true;
+  const animationToggle = document.getElementById('animation-toggle') as HTMLButtonElement;
+  animationToggle.addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    animationToggle.textContent = autoRotate ? 'Pause rotation' : 'Play rotation';
+    animationToggle.setAttribute('aria-pressed', String(autoRotate));
+  });
 
   let renderWireframe = true;
   const styleToggle = document.getElementById('style-toggle') as HTMLButtonElement;
@@ -665,6 +775,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     ctx.arc(CX, CY, R, 0, Math.PI * 2);
     ctx.fillStyle = colors.elevated;
     ctx.fill();
+    ctx.strokeStyle = colors.border;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -704,56 +815,36 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
 
     const now = new Date();
     const { decl, lon: ssLon } = subsolarPoint(now);
+    earthUtcEl.textContent = now.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
+    subsolarPointEl.textContent = `${Math.abs(decl).toFixed(2)}°${decl >= 0 ? 'N' : 'S'}, ${Math.abs(ssLon).toFixed(2)}°${ssLon >= 0 ? 'E' : 'W'}`;
 
     // Land — with true spherical clipping
     for (const feature of land) {
       for (const ring of feature.geometry.coordinates) {
-        // Compute centroid for day/night shading
-        let centroidLat = 0, centroidLon = 0;
-        for (const [lon, lat] of ring) {
-          centroidLat += lat;
-          centroidLon += lon;
-        }
-        centroidLat /= ring.length;
-        centroidLon /= ring.length;
-        const lit = mode === 'daynight' ? isDaylight(centroidLat, centroidLon, decl, ssLon) : true;
-
         // Clip the ring against the visible hemisphere
         const clipped = clipRing(ring);
         if (clipped.length < 3) continue;
 
         if (renderWireframe) {
-          // Draw as wireframe strokes with correct limb arc direction
-          const wfCentroid = clippedInteriorCentroid(clipped);
-          ctx.beginPath();
-          ctx.moveTo(clipped[0].x, clipped[0].y);
-          for (let i = 1; i < clipped.length; i++) {
-            const prev = clipped[i - 1];
-            const curr = clipped[i];
-            if (prev.onLimb && curr.onLimb) {
-              // Arc along the limb with centroid-directed arc choice
-              const a1 = Math.atan2(prev.y - CY, prev.x - CX);
-              const a2 = Math.atan2(curr.y - CY, curr.x - CX);
-              const ccw = chooseLimbArc(a1, a2, wfCentroid);
-              ctx.arc(CX, CY, R, a1, a2, ccw);
-            } else {
-              ctx.lineTo(curr.x, curr.y);
-            }
-          }
-          ctx.strokeStyle = mode === 'daynight' ? (lit ? colors.text : colors.muted) : colors.text;
+          drawClippedPolygon(clipped);
+          ctx.strokeStyle = colors.text;
           ctx.lineWidth = 1;
-          ctx.globalAlpha = mode === 'daynight' ? (lit ? 0.7 : 0.2) : 0.4;
+          ctx.globalAlpha = mode === 'daynight' ? 0.72 : 0.4;
           ctx.stroke();
         } else {
           // Draw as filled polygons with limb arcs for clean edges
           drawClippedPolygon(clipped);
-          ctx.fillStyle = mode === 'daynight' ? (lit ? colors.text : colors.muted) : colors.text;
-          ctx.globalAlpha = mode === 'daynight' ? (lit ? 0.85 : 0.35) : 0.55;
+          ctx.fillStyle = colors.text;
+          ctx.globalAlpha = mode === 'daynight' ? 0.82 : 0.55;
           ctx.fill();
         }
         ctx.globalAlpha = 1;
       }
     }
+
+    // The lighting mask covers ocean, land, and graticule together, so the
+    // visible color boundary is mathematically identical to the terminator.
+    if (mode === 'daynight') drawNightShade(now, decl, ssLon);
 
     // Terminator — with proper clipping
     if (mode === 'daynight') {
@@ -791,8 +882,17 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     if (mode === 'satellite') {
       const nowMs = Date.now();
       const posNow = propagate(issElems, nowMs);
-      issTrail.push({ x: posNow.lat, y: posNow.lon });
-      if (issTrail.length > 60) issTrail.shift();
+      const currentSecond = Math.floor(nowMs / 1000);
+      if (currentSecond !== issTrailTimestamp) {
+        issTrail.length = 0;
+        // A useful 25-minute ground track, sampled coarsely enough to remain
+        // light but long enough for orbital motion to be immediately legible.
+        for (let offsetSeconds = -25 * 60; offsetSeconds <= 0; offsetSeconds += 30) {
+          const trailPos = propagate(issElems, nowMs + offsetSeconds * 1000);
+          issTrail.push({ x: trailPos.lat, y: trailPos.lon });
+        }
+        issTrailTimestamp = currentSecond;
+      }
 
       // Clip the ISS trail
       const trailCoords = issTrail.map((t) => ({ lat: t.x, lon: t.y }));
@@ -843,14 +943,53 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
     const dx = e.clientX - dragStartX;
     lambda0 = lambdaAtDragStart - dx * 0.3;
   });
-  canvas.addEventListener('pointerup', () => {
-    isDragging = false;
-  });
 
-  function loop() {
-    if (!isDragging) lambda0 += 0.04;
-    draw();
-    requestAnimationFrame(loop);
+  function endDrag() {
+    isDragging = false;
   }
-  loop();
+
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('lostpointercapture', endDrag);
+  window.addEventListener('blur', endDrag);
+
+  const AUTO_ROTATION_DEG_PER_SECOND = 2.4;
+  let lastFrameTime = performance.now();
+  let animationFrameId = 0;
+  let destroyed = false;
+
+  function loop(frameTime: number) {
+    if (destroyed) return;
+    // Clamp long gaps after background-tab throttling so the globe resumes
+    // smoothly instead of jumping or appearing to have stopped.
+    const deltaSeconds = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
+    lastFrameTime = frameTime;
+    if (!isDragging && autoRotate && !document.hidden) {
+      lambda0 = ((lambda0 + AUTO_ROTATION_DEG_PER_SECOND * deltaSeconds + 540) % 360) - 180;
+    }
+    draw();
+    animationFrameId = requestAnimationFrame(loop);
+  }
+  draw();
+  animationFrameId = requestAnimationFrame(loop);
+
+  function handleVisibilityChange() {
+    lastFrameTime = performance.now();
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  document.addEventListener('astro:before-swap', () => {
+    destroyed = true;
+    cancelAnimationFrame(animationFrameId);
+    landAbortController.abort();
+    themeObserver.disconnect();
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('blur', endDrag);
+  }, { once: true });
+  }
+
+  // Keep initialization reliable when this route is entered more than once
+  // through Astro's client-side view transitions.
+  document.addEventListener('astro:page-load', initGlobe);
+  initGlobe();
 </script>

@@ -137,7 +137,6 @@ function buildSocialCard() {
   const W = 1200;
   const H = 630;
   // Oversized, faint decorative mark bleeding off the top-right corner for depth
-  const bigMark = centeredMarkTransform(1, 0); // unit mark, we scale manually below
   const decorScale = 26;
   const decorCx = markBBox.minX + (markBBox.maxX - markBBox.minX) / 2;
   const decorCy = markBBox.minY + (markBBox.maxY - markBBox.minY) / 2;
