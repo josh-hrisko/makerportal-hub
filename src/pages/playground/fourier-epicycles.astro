@@ -36,6 +36,10 @@ const breadcrumbSchema = {
           <div class="flex gap-2">
             <button type="button" class="pill-btn" id="preset-circle">Circle</button>
             <button type="button" class="pill-btn" id="preset-star">Star</button>
+            <button type="button" class="pill-btn" id="preset-lemniscate">Infinity</button>
+            <button type="button" class="pill-btn" id="preset-heart">Heart</button>
+            <button type="button" class="pill-btn" id="preset-spiral">Spiral</button>
+            <button type="button" class="pill-btn" id="preset-mp">MP</button>
             <button type="button" class="pill-btn" id="clear-btn">Draw again</button>
           </div>
         </div>
@@ -56,10 +60,21 @@ const breadcrumbSchema = {
       <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="explainer-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">What's actually happening</h2>
         <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          Your drawing is resampled to evenly spaced points and treated as a sequence of complex numbers (x + iy). A discrete Fourier transform turns that into a set of rotating vectors — each with its own frequency, amplitude, and phase. Chain them tip-to-tail and let them spin: the last tip traces your original path, exactly, once every term is included. Drop terms and you get a smoothed approximation — the same tradeoff spectral analysis makes when it keeps the dominant frequencies and discards the rest.
+          Your drawing is captured as a sequence of 2D coordinates. We treat the canvas as a complex plane, where each point is a complex number: <code class="text-primary-cta">z = x + i·y</code>. 
         </p>
+        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
+          By applying a <strong>Discrete Fourier Transform (DFT)</strong>, we decompose your spatial drawing into a series of pure circular motions (epicycles). The DFT calculates a set of complex coefficients (<code class="text-primary-cta">X<sub>k</sub></code>), where each coefficient corresponds to a specific frequency. The <em>magnitude</em> of the coefficient determines the radius of that circle, and the <em>angle</em> determines its starting phase.
+        </p>
+        <div class="mt-6 rounded-[16px] border border-border bg-elevated/40 p-5 font-mono text-[0.85rem] leading-[1.6] text-muted-text">
+          <p class="mb-1 font-semibold text-primary-text">Discrete Fourier Transform (Analysis)</p>
+          <p class="mb-3 text-[0.7rem] text-muted-text/80">// Extracts the frequency components (X_k) from the N spatial points</p>
+          <p>X<sub>k</sub> = &Sigma; (x<sub>n</sub> + i&middot;y<sub>n</sub>) &middot; e<sup>-i&middot;2&pi;&middot;k&middot;n / N</sup></p>
+          <p class="mt-5 mb-1 font-semibold text-primary-text">Epicycle Path Reconstruction (Synthesis)</p>
+          <p class="mb-3 text-[0.7rem] text-muted-text/80">// Chains the rotating vectors tip-to-tail to redraw the path over time 't'</p>
+          <p>p(t) = (1/N) &Sigma; X<sub>k</sub> &middot; e<sup>i&middot;2&pi;&middot;k&middot;t / N</sup></p>
+        </div>
         <p class="mt-4 max-w-2xl text-[0.85rem] leading-[1.6] text-muted-text/80">
-          It's the same frequency-domain idea Biquadia applies to audio — <a href="/blog/inside-biquadia" class="text-brand-anchor hover:text-primary-text">spectra, filters, and the character of a signal</a> — just visualized on a 2D drawing instead of a sound wave.
+          When we chain these rotating vectors tip-to-tail, the final tip traces your exact path. If we drop the highest frequency terms (the smallest, fastest, jittery circles), we get a smoothed approximation of your drawing. This is the exact same math used in audio compression and signal filtering—just visualized on a 2D canvas.
         </p>
       </div>
     </section>
@@ -109,6 +124,10 @@ const breadcrumbSchema = {
   const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
   const presetCircle = document.getElementById('preset-circle') as HTMLButtonElement;
   const presetStar = document.getElementById('preset-star') as HTMLButtonElement;
+  const presetLemniscate = document.getElementById('preset-lemniscate') as HTMLButtonElement;
+  const presetHeart = document.getElementById('preset-heart') as HTMLButtonElement;
+  const presetSpiral = document.getElementById('preset-spiral') as HTMLButtonElement;
+  const presetMp = document.getElementById('preset-mp') as HTMLButtonElement;
 
   const W = canvas.width;
   const H = canvas.height;
@@ -346,5 +365,80 @@ const breadcrumbSchema = {
     loadPreset(pts);
   });
 
-  resetCanvas();
+  presetLemniscate.addEventListener('click', () => {
+    const pts: Pt[] = [];
+    const a = 180;
+    const cx = W / 2;
+    const cy = H / 2;
+    for (let i = 0; i < 100; i++) {
+      const t = (i / 100) * Math.PI * 2;
+      const x = (a * Math.cos(t)) / (1 + Math.sin(t) * Math.sin(t));
+      const y = (a * Math.sin(t) * Math.cos(t)) / (1 + Math.sin(t) * Math.sin(t));
+      pts.push({ x: cx + x, y: cy + y });
+    }
+    loadPreset(pts);
+  });
+
+  presetHeart.addEventListener('click', () => {
+    const pts: Pt[] = [];
+    const cx = W / 2;
+    const cy = H / 2;
+    const scale = 8;
+    for (let i = 0; i < 100; i++) {
+      const t = (i / 100) * Math.PI * 2;
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+      pts.push({ x: cx + x * scale, y: cy + y * scale });
+    }
+    loadPreset(pts);
+  });
+
+  presetSpiral.addEventListener('click', () => {
+    const pts: Pt[] = [];
+    const cx = W / 2;
+    const cy = H / 2;
+    const loops = 4;
+    for (let i = 0; i < 100; i++) {
+      const t = (i / 100) * Math.PI * 2 * loops;
+      const r = 5 + (120 / (Math.PI * 2 * loops)) * t;
+      pts.push({ x: cx + r * Math.cos(t), y: cy + r * Math.sin(t) });
+    }
+    // Walk back to center to close it
+    const last = pts[pts.length - 1];
+    pts.push({ x: cx + (last.x - cx) * 0.1, y: cy + (last.y - cy) * 0.1 });
+    loadPreset(pts);
+  });
+
+  presetMp.addEventListener('click', () => {
+    const pts: Pt[] = [];
+    const cx = W / 2;
+    const cy = H / 2;
+    
+    // M
+    pts.push({x: cx - 100, y: cy + 100});
+    pts.push({x: cx - 100, y: cy - 100});
+    pts.push({x: cx - 50, y: cy});
+    pts.push({x: cx, y: cy - 100});
+    pts.push({x: cx, y: cy + 100});
+    
+    // Connect to P
+    pts.push({x: cx + 40, y: cy + 100});
+    
+    // P stem up
+    pts.push({x: cx + 40, y: cy - 100});
+    
+    // P bowl (approximated with a few points)
+    pts.push({x: cx + 70, y: cy - 100});
+    pts.push({x: cx + 90, y: cy - 80});
+    pts.push({x: cx + 90, y: cy - 20});
+    pts.push({x: cx + 70, y: cy});
+    pts.push({x: cx + 40, y: cy});
+    
+    // P stem down
+    pts.push({x: cx + 40, y: cy + 100});
+    
+    loadPreset(pts);
+  });
+
+  presetStar.click();
 </script>
