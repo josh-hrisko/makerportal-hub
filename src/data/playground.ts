@@ -136,9 +136,10 @@ export const playground: PlaygroundEntry[] = [
     slug: 'n-body-choreography',
     title: 'N-Body Orbital Choreography',
     tagline: 'Gravity, three bodies, and a stable dance',
-    description: 'A gravity sandbox with known stable choreographies (figure-eight orbits) you can nudge into chaos.',
+    description:
+      'Three equal masses chasing each other around the proven figure-eight orbit, integrated with a 4th-order symplectic scheme — plus Lagrange’s unstable triangle, hierarchical systems, and a nudge button that races your perturbed system against an unperturbed ghost.',
     isGrounded: false,
-    status: 'planned',
+    status: 'live',
   },
   {
     slug: 'conformal-mapping',

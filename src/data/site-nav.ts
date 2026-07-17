@@ -278,6 +278,7 @@ export const hubRoutes: { path: string; priority: string; changefreq: string }[]
   { path: '/playground/globe', priority: '0.75', changefreq: 'daily' },
   { path: '/playground/double-pendulum', priority: '0.75', changefreq: 'monthly' },
   { path: '/playground/chladni-cymatics', priority: '0.75', changefreq: 'monthly' },
+  { path: '/playground/n-body-choreography', priority: '0.75', changefreq: 'monthly' },
   { path: '/shop', priority: '0.9', changefreq: 'weekly' },
   { path: '/watch', priority: '0.85', changefreq: 'weekly' },
   { path: '/about', priority: '0.85', changefreq: 'monthly' },
