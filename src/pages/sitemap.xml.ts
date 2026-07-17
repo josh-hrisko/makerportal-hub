@@ -20,6 +20,7 @@ interface SitemapEntry {
 
 export const GET: APIRoute = async () => {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const journals = await getCollection('journal');
   const today = new Date().toISOString();
 
   const entries: SitemapEntry[] = [
@@ -34,6 +35,12 @@ export const GET: APIRoute = async () => {
       lastmod: (post.data.updatedAt ?? post.data.publishedAt).toISOString(),
       changefreq: 'monthly',
       priority: '0.8',
+    })),
+    ...journals.map((j) => ({
+      url: `https://www.makerportal.ai/journal/${j.id}`,
+      lastmod: (j.data.generatedAt ? new Date(j.data.generatedAt).toISOString() : today),
+      changefreq: 'daily',
+      priority: '0.7',
     })),
     // Product hosts (canonical on subdomains)
     ...apps.map((app) => {

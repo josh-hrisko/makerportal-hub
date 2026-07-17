@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# Prevent overlapping scheduled runs from racing on direct push to main.
+concurrency:
+  group: globe-data-digest
+  cancel-in-progress: false
+
 jobs:
   digest:
     runs-on: ubuntu-latest
@@ -15,6 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+          # fetch-depth 1 is enough for diff check against HEAD; no need for full history.
 
       - uses: actions/setup-node@v4
         with:
@@ -28,6 +34,10 @@ jobs:
 
       - name: Push updates directly if changed
         run: |
+          # git diff --quiet exits 1 when tracked files have modifications,
+          # 0 when clean. The '!' inverts so we enter the commit path on changes.
+          # Both files are tracked in git; any new file would need 'git status' check,
+          # but these are long-lived (not new).
           if ! git diff --quiet -- src/data/weather.json src/data/satellite.json; then
             git config user.name "makerportal-bot"
             git config user.email "actions@users.noreply.github.com"

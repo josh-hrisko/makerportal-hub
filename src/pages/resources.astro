@@ -123,13 +123,13 @@ const tools = [
     </div>
   </section>
 
-  {/* Signals we're tracking (D-012/D-013/D-017): data is src/data/trends.json, produced
-      daily by the gated digest pipeline and merged via PR — nothing here fetches at
-      runtime. Thumbnails are self-hosted /trends/*.webp (never hotlinked — the
-      "no tracking" claim below depends on that). Items without a thumbnail get a
-      pillar-tinted fallback tile. Fixed aspect boxes = no CLS; no backdrop-filter (D-006).
-      Gear re-ranking (D-017): trending pillars from this feed re-order the Gear section
-      below — same 50 human-curated ASINs, only sort order changes. */}
+  {/* Signals we're tracking (D-012/D-013/D-017): data is src/content/journal/YYYY-MM-DD.json
+      (persistent daily journal collection), latest entry surfaced here. Produced daily
+      by the gated digest pipeline and merged via PR — nothing here fetches at runtime.
+      Thumbnails are self-hosted /trends/*.webp (never hotlinked — the "no tracking"
+      claim depends on that). Items without thumbnail get pillar-tinted fallback.
+      Fixed aspect boxes = no CLS; no backdrop-filter (D-006). Gear re-ranking (D-017):
+      trending pillars from this feed re-order Gear below — same 50 curated ASINs, only sort changes. */}
   {trending.length > 0 && featuredSignal && (
     <section id="trending" class="border-b border-border" aria-labelledby="trending-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">

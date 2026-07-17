@@ -1,8 +1,8 @@
 /**
  * Weather digest orchestrator — fetches real current conditions for a curated
  * city list, writes src/data/weather.json. Runs from
- * .github/workflows/weather-digest.yml; a human merges the PR before it
- * reaches the Globe tool (build-time static data, no runtime fetch on the hub).
+ * .github/workflows/globe-data-digest.yml (combined weather + TLE); pushes
+ * directly to main when changed (build-time static data, no runtime fetch on the hub).
  */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';

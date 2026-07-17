@@ -6,136 +6,230 @@ import { pillarMeta, fallbackPillar, sourceLabels } from '../../data/trends';
 import type { TrendItem } from '../../data/trends';
 
 const journals = await getCollection('journal');
-// Sort journal entries by date (id) descending
+// Sort journal entries by date (id) descending — YYYY-MM-DD lexical = chrono
 const sortedJournals = journals.sort((a, b) => b.id.localeCompare(a.id));
 
 const title = 'Signals Journal — Daily Trend Backlog | MakerPortal';
 const description =
-  'Persistent historical backlog of daily scans tracking public discussion on on-device AI, iOS platform craft, and DSP.';
+  'Persistent historical backlog of daily scans tracking public discussion on on-device AI, iOS platform craft, and DSP. Every day saved, searchable, and reviewable.';
 
 const formatDate = (dateStr: string) => {
   return new Date(dateStr + 'T12:00:00Z').toLocaleDateString('en-US', {
+    weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
     timeZone: 'UTC',
   });
 };
+const formatShort = (dateStr: string) =>
+  new Date(dateStr + 'T12:00:00Z').toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
 
 const pillarOf = (tag: string) => pillarMeta[tag] ?? fallbackPillar;
+const signalBars = (score: number) => Math.max(1, Math.min(5, Math.round(score / 3)));
+
+// Archive metrics
+const totalSignals = sortedJournals.reduce((sum, j) => sum + (j.data.items as TrendItem[]).length, 0);
+const dateRange = sortedJournals.length > 0 ? `${sortedJournals[sortedJournals.length - 1].id} → ${sortedJournals[0].id}` : null;
+const avgSignals = sortedJournals.length ? Math.round(totalSignals / sortedJournals.length) : 0;
 ---
 
 <Layout title={title} description={description}>
   <HubShell
     kicker="Learn · Signals Journal · Archive"
     title="Daily Signals Archive"
-    lead="A persistent chronological backlog of automated scans tracking on-device AI, iOS platform craft, and DSP. Ephemeral trends, saved for permanent analysis."
+    lead="A persistent chronological backlog of automated scans tracking on-device AI, iOS platform craft, and DSP. Ephemeral trends, saved for permanent analysis — each day reviewable, each signal scored."
     status="Journal"
   >
     <Fragment slot="hero-actions">
       <div class="mt-8 flex flex-wrap gap-3">
-        <a href="/resources" class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Resource hub</a>
+        <a href="/resources#trending" class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Live signals →</a>
         <a href="/blog" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Field notes</a>
       </div>
+      {sortedJournals.length > 0 && (
+        <div class="mt-10 grid grid-cols-3 gap-3 max-w-[28rem] rounded-[16px] border border-border bg-card-bg/70 p-3 backdrop-blur-sm">
+          <div class="rounded-[12px] bg-canvas px-3 py-2.5">
+            <p class="font-mono text-[0.55rem] uppercase tracking-[0.14em] text-muted-text">Entries</p>
+            <p class="mt-1 text-[1.15rem] font-bold tracking-tight text-primary-text">{sortedJournals.length}</p>
+          </div>
+          <div class="rounded-[12px] bg-canvas px-3 py-2.5">
+            <p class="font-mono text-[0.55rem] uppercase tracking-[0.14em] text-muted-text">Total signals</p>
+            <p class="mt-1 text-[1.15rem] font-bold tracking-tight text-primary-text">{totalSignals}</p>
+          </div>
+          <div class="rounded-[12px] bg-canvas px-3 py-2.5">
+            <p class="font-mono text-[0.55rem] uppercase tracking-[0.14em] text-muted-text">Avg / day</p>
+            <p class="mt-1 text-[1.15rem] font-bold tracking-tight text-primary-text">{avgSignals}</p>
+          </div>
+        </div>
+      )}
+      {dateRange && (
+        <p class="mt-4 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Range · {dateRange} · UTC daily 14:00</p>
+      )}
     </Fragment>
   </HubShell>
 
-  <section class="border-b border-border bg-canvas">
+  <section class="border-b border-border bg-canvas" aria-labelledby="archive-title">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 id="archive-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">All scans</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Newest first. Each entry keeps its full signal list, scores, thumbnails, and source corroboration. View daily report for full grid with image hover and pillar filters.</p>
+        </div>
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text">
+          <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle" aria-hidden="true"></span>
+          Journal · {sortedJournals.length} days
+        </p>
+      </div>
+
       {sortedJournals.length === 0 ? (
-        <div class="rounded-[24px] border border-border bg-card-bg p-8 text-center">
-          <p class="text-lg text-muted-text">No journal entries found. The daily scanning pipeline will populate this archive soon.</p>
+        <div class="mt-12 rounded-[24px] border border-dashed border-border bg-card-bg/50 p-12 text-center">
+          <div class="mx-auto max-w-md">
+            <div class="mx-auto flex size-12 items-center justify-center rounded-full border border-border bg-canvas">
+              <span class="text-[1.2rem]" aria-hidden="true">◉</span>
+            </div>
+            <h3 class="mt-4 text-[1.1rem] font-semibold text-primary-text">Archive warming up</h3>
+            <p class="mt-2 text-[0.9rem] leading-[1.6] text-muted-text">No journal entries found yet. The daily scanning pipeline will populate this archive on next scheduled run (daily 14:00 UTC). Check <a href="/resources" class="text-brand-anchor hover:text-primary-text underline decoration-border underline-offset-4">/resources</a> for live signals.</p>
+          </div>
         </div>
       ) : (
-        <div class="flex flex-col gap-10">
-          {sortedJournals.map((entry) => {
-            const dateStr = entry.id;
-            const formattedDate = formatDate(dateStr);
-            const items = entry.data.items as TrendItem[];
-            // Sort to get top 3 signals for preview
-            const topThree = [...items].sort((a, b) => b.score - a.score).slice(0, 3);
-            
-            // Gather all unique tags in this daily run
-            const uniqueTags = [...new Set(items.flatMap(item => item.tags ?? []))].slice(0, 5);
+        <div class="relative mt-12">
+          {/* Timeline spine — desktop only */}
+          <div aria-hidden="true" class="pointer-events-none absolute left-[1.15rem] top-3 bottom-3 hidden w-px bg-gradient-to-b from-border via-border to-transparent lg:block"></div>
 
-            return (
-              <article class="surface-card group overflow-hidden rounded-[24px] border border-border bg-card-bg p-6 transition-all hover:border-[var(--mp-border-strong)] hover:bg-elevated sm:p-8">
-                <div class="flex flex-col gap-6 lg:flex-row lg:justify-between lg:items-start">
-                  
-                  {/* Left: Metadata & summary */}
-                  <div class="flex-1">
-                    <p class="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-primary-cta">
-                      {dateStr}
-                    </p>
-                    <h2 class="mt-2 text-2xl font-bold tracking-tight text-primary-text group-hover:text-primary-cta">
-                      <a href={`/journal/${dateStr}`}>{formattedDate}</a>
-                    </h2>
-                    <p class="mt-2 text-[0.875rem] text-muted-text">
-                      Tracked {items.length} signals across developer circles.
-                    </p>
-                    
-                    {/* Tags row */}
-                    {uniqueTags.length > 0 && (
-                      <div class="mt-4 flex flex-wrap gap-2">
-                        {uniqueTags.map(tag => {
-                          const p = pillarOf(tag);
-                          return (
-                            <span 
-                              class="inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-wider text-muted-text"
-                            >
-                              <span class="h-1.5 w-1.5 rounded-full" style={`background: ${p.color};`} />
-                              {p.label}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                    
-                    <div class="mt-6">
-                      <a 
-                        href={`/journal/${dateStr}`} 
-                        class="inline-flex min-h-9 items-center rounded-full bg-elevated border border-border px-4 text-[0.8rem] font-semibold text-primary-text hover:border-brand-anchor hover:text-brand-anchor"
-                      >
-                        View full daily report ({items.length} signals) →
-                      </a>
+          <div class="flex flex-col gap-6">
+            {sortedJournals.map((entry, idx) => {
+              const dStr = entry.id;
+              const latest = idx === 0;
+              const items = entry.data.items as TrendItem[];
+              const uniqueTags = [...new Set(items.flatMap((item: any) => item.tags ?? []))];
+              const topTag = uniqueTags[0];
+              const accentCol = topTag ? pillarOf(topTag).color : '#4C6492';
+              const tagCounts = {} as any;
+              for (const it of items) for (const t of (it as any).tags ?? []) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
+              const sortedTagEntries = Object.entries(tagCounts).sort((a: any,b: any) => (b[1] as number)-(a[1] as number)).slice(0,4);
+              const topThreePreview = [...items].sort((a, b) => b.score - a.score).slice(0, 3);
+
+              return (
+                <article class="group relative flex gap-5">
+                  {/* Timeline dot */}
+                  <div class="relative hidden shrink-0 lg:flex lg:flex-col lg:items-center">
+                    <div class={`mt-8 size-[0.9rem] rounded-full border-2 bg-canvas shadow-sm transition-all group-hover:scale-110 ${latest ? 'border-primary-cta' : 'border-border group-hover:border-[var(--mp-border-strong)]'}`} style={latest ? `box-shadow: 0 0 0 4px color-mix(in srgb, ${accentCol} 18%, transparent);` : ''}>
+                      {latest && <span class="absolute inset-[3px] rounded-full bg-primary-cta"></span>}
                     </div>
                   </div>
 
-                  {/* Right: Top 3 signals inline list */}
-                  <div class="w-full border-t border-border pt-6 lg:w-[32rem] lg:border-t-0 lg:pt-0 lg:border-l lg:pl-8">
-                    <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text mb-4">
-                      Top Signals for this day
-                    </h3>
-                    <ul class="flex flex-col gap-4">
-                      {topThree.map(item => (
-                        <li class="flex items-start justify-between gap-4">
-                          <div class="min-w-0">
-                            <a 
-                              href={item.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              class="text-[0.9rem] font-medium leading-[1.4] text-primary-text hover:text-primary-cta truncate block"
-                            >
-                              {item.title}
-                            </a>
-                            <span class="font-mono text-[0.58rem] text-muted-text uppercase tracking-wider">
-                              {item.domain} · {(item.sources ?? [item.source]).map(s => sourceLabels[s]).join(' + ')}
-                            </span>
-                          </div>
-                          <span class="flex-shrink-0 font-mono text-[0.7rem] bg-canvas border border-border px-2 py-0.5 rounded text-muted-text">
-                            Score: {item.score}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <div class="flex-1 overflow-hidden rounded-[24px] border border-border bg-card-bg transition-all duration-300 hover:border-[var(--mp-border-strong)] hover:shadow-[0_16px_40px_-16px_rgba(0,0,0,0.18)] hover:-translate-y-[1px]">
+                    <div class="flex flex-col lg:flex-row">
+                      {/* Left meta */}
+                      <div class="relative flex-1 p-6 sm:p-8">
+                        {/* Accent top bar */}
+                        <div class="pointer-events-none absolute inset-x-0 top-0 h-[3px] rounded-t-[24px]" style={`background: linear-gradient(90deg, ${accentCol}, color-mix(in srgb, ${accentCol} 12%, transparent)); opacity: 0.9;`} aria-hidden="true"></div>
 
-                </div>
-              </article>
-            );
-          })}
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span class={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.14em] ${latest ? 'bg-primary-cta text-white' : 'bg-elevated border border-border text-muted-text'}`}>
+                            {latest && <span class="size-1 rounded-full bg-white animate-pulse" aria-hidden="true"></span>}
+                            {dStr} {latest && '· Latest'}
+                          </span>
+                          <span class="font-mono text-[0.6rem] text-muted-text">{items.length} signals</span>
+                        </div>
+
+                        <h2 class="mt-4 text-[clamp(1.15rem,2.2vw,1.5rem)] font-bold leading-[1.25] tracking-[-0.02em] text-primary-text">
+                          <a href={`/journal/${dStr}`} class="group/title inline-flex items-center gap-2 hover:text-primary-cta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-card-bg rounded">
+                            <span>{formatDate(dStr)}</span>
+                            <span aria-hidden="true" class="translate-y-[1px] text-[0.9em] opacity-60 transition-transform group-hover/title:translate-x-0.5 group-hover/title:opacity-100">→</span>
+                          </a>
+                        </h2>
+
+                        <p class="mt-2 max-w-[42ch] text-[0.9rem] leading-[1.6] text-muted-text">
+                          {formatShort(dStr)} scan captured <strong class="font-semibold text-primary-text">{items.length}</strong> developer signals. Top pillar {topTag ? <span class="inline-flex items-center gap-1"><span class="size-1.5 rounded-full" style={`background:${accentCol}`}></span> {pillarOf(topTag).label}</span> : 'mixed'}.
+                        </p>
+
+                        {sortedTagEntries.length > 0 && (
+                          <div class="mt-5 flex flex-wrap gap-2">
+                            {sortedTagEntries.map((pair: any) => {
+                              const tag = pair[0];
+                              const count = pair[1];
+                              const meta = pillarOf(tag);
+                              return (
+                                <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas px-2.5 py-1 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">
+                                  <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>
+                                  {meta.label} · {count}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div class="mt-6 flex flex-wrap gap-2">
+                          <a href={`/journal/${dStr}`} class="inline-flex min-h-[2.35rem] items-center gap-1.5 rounded-full bg-primary-text px-4 text-[0.8rem] font-semibold text-canvas transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
+                            View full report
+                            <span aria-hidden="true">→</span>
+                          </a>
+                          <span class="inline-flex min-h-[2.35rem] items-center rounded-full border border-border bg-elevated/60 px-3.5 font-mono text-[0.65rem] text-muted-text">
+                            {formatShort(dStr)} • {items.length} items
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Top 3 signals */}
+                      <div class="w-full border-t border-border bg-[color-mix(in_srgb,var(--mp-card-bg)_96%,var(--mp-canvas))] lg:w-[30rem] lg:border-l lg:border-t-0">
+                        <div class="p-6 sm:p-7">
+                          <h3 class="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">
+                            <span>Top signals</span>
+                            <span class="rounded-full bg-canvas border border-border px-2 py-0.5 text-[0.55rem]">Score weighted</span>
+                          </h3>
+                          <ul class="mt-4 flex flex-col gap-3">
+                            {topThreePreview.map((item: any) => {
+                              const pillar = pillarOf(item.tags[0] ?? '');
+                              const bars = signalBars(item.score);
+                              return (
+                                <li class="group/item flex gap-3 rounded-[14px] border border-transparent p-2.5 -mx-2.5 transition-colors hover:border-border hover:bg-canvas">
+                                  <div class="mt-1 hidden size-1.5 shrink-0 rounded-full sm:block" style={`background:${pillar.color}`} aria-hidden="true"></div>
+                                  <div class="min-w-0 flex-1">
+                                    <a href={item.url} target="_blank" rel="noopener noreferrer" class="line-clamp-2 text-[0.9rem] font-medium leading-[1.4] text-primary-text decoration-border underline-offset-4 hover:text-primary-cta hover:underline">
+                                      {item.title}
+                                    </a>
+                                    <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                      {item.domain && <span class="rounded-full bg-elevated border border-border px-2 py-0.5 font-mono text-[0.55rem] text-muted-text">{item.domain}</span>}
+                                      <span class="font-mono text-[0.55rem] uppercase tracking-[0.08em] text-muted-text">{(item.sources ?? [item.source]).map((s: any) => (sourceLabels as any)[s]).join(' + ')}</span>
+                                      <span class="ml-auto hidden items-end gap-[2px] sm:inline-flex" role="img" aria-label={`Signal ${bars} of 5`}>
+                                        {[1,2,3,4,5].map(n => (
+                                          <span class="w-[3px] rounded-sm" style={`height:${3+n*1.8}px; background:${n<=bars ? pillar.color : 'var(--mp-border)'};`} aria-hidden="true"></span>
+                                        ))}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span class="hidden shrink-0 font-mono text-[0.6rem] text-muted-text sm:block">{item.score}</span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                          {items.length > 3 && (
+                            <a href={`/journal/${dStr}`} class="mt-4 inline-flex text-[0.75rem] font-medium text-muted-text hover:text-primary-text">+ {items.length - 3} more signals in full report →</a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
   </section>
+
+  <style>
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
 </Layout>

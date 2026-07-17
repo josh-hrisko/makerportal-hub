@@ -1,9 +1,8 @@
 /**
  * ISS TLE digest orchestrator — writes src/data/satellite.json with the raw
- * TLE lines. Runs from .github/workflows/satellite-tle.yml; a human merges
- * the PR before it reaches the Globe tool. The tool itself does simplified
- * two-body orbital propagation client-side from these committed elements —
- * no runtime fetch, no live tracking API call.
+ * TLE lines. Runs from .github/workflows/globe-data-digest.yml (combined weather + TLE);
+ * pushes directly to main when changed. The Globe tool does simplified two-body
+ * orbital propagation client-side from these committed elements — no runtime fetch.
  */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';

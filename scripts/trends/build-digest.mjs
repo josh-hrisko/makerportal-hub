@@ -1,10 +1,10 @@
 /**
- * Weekly trend digest orchestrator — fetches Bluesky/HN/Reddit candidates,
+ * Daily trend digest orchestrator — fetches Bluesky/HN/Reddit candidates,
  * runs them through the gate/score/select pipeline (pipeline.mjs), writes
- * src/data/trends.json plus a markdown summary used as the review PR body.
- * Runs from .github/workflows/trends-digest.yml; a human merges the PR
- * before anything reaches /resources (build-time static data, no runtime
- * fetch on the hub itself).
+ * src/content/journal/YYYY-MM-DD.json plus a markdown summary used as the
+ * review PR body. Runs from .github/workflows/trends-digest.yml; a human
+ * merges the PR before anything reaches /resources or /journal (build-time
+ * static data, no runtime fetch on the hub itself).
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -70,9 +70,9 @@ function scoreBreakdown(c) {
 
 function renderSummary(picked, funnel, timestamp) {
   const lines = [
-    'Automated weekly trend scan (Bluesky, Hacker News, Reddit). **Review before merging** — ',
-    'merging publishes these to the /resources "Signals we\'re tracking" section. Prune anything ',
-    'the gates missed by editing `src/data/trends.json` in this PR, then merge.',
+    'Automated daily trend scan (Bluesky, Hacker News, Reddit). **Review before merging** — ',
+    'merging publishes this day to the /journal archive and surfaces the latest entry on /resources "Signals we\'re tracking". Prune anything ',
+    'the gates missed by editing `src/content/journal/YYYY-MM-DD.json` in this PR, then merge.',
     '',
     `**Funnel:** ${funnel.fetched} fetched → ${funnel.deduped} after dedupe → ${funnel.gated} passed gates` +
       `${Object.keys(funnel.dropped).length ? ` (dropped: ${Object.entries(funnel.dropped).map(([r, n]) => `${n} ${r}`).join(', ')})` : ''} → ${funnel.selected} selected`,

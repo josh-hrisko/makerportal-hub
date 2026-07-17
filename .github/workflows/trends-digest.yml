@@ -28,6 +28,7 @@ jobs:
         run: node --test scripts/trends/pipeline.test.mjs
 
       - name: Build trend digest
+        # Writes src/content/journal/YYYY-MM-DD.json + summary md
         run: node scripts/trends/build-digest.mjs
         env:
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
