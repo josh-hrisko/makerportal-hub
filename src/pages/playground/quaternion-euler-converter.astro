@@ -7,7 +7,8 @@ import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links
 
 const gear = affiliateLinks
   .filter((link) => link.relatedTo?.includes('motionlink') || link.relatedTo?.includes('quaternion-euler-converter'))
-  .map(resolveAffiliateLink);
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.id === 'airpods-pro-3' ? -1 : b.id === 'airpods-pro-3' ? 1 : 0));
 const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
 const title = 'Quaternion to Euler Angle Converter (and back) — Swift, verified round-trip | MakerPortal';
@@ -99,7 +100,7 @@ const faqSchema = {
 
   <PlaygroundShell
     title="Quaternion ↔ Euler Converter"
-    lead="Convert quaternion attitude to yaw/pitch/roll and back, both directions, live. Same round-trip-verified formulas — including the gimbal-lock clamp — as MotionLink's CMHeadphoneMotionManager handling."
+    lead="Convert quaternion attitude to yaw/pitch/roll and back, both directions, live. The same round-trip-verified formulas MotionLink uses for CMHeadphoneMotionManager, including the gimbal-lock clamp."
     pillarHint="ios-craft"
     isGrounded={true}
     relatedApp="MotionLink"
@@ -110,7 +111,10 @@ const faqSchema = {
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live preview</h2>
         <p class="max-w-2xl text-[0.95rem] text-muted-text">
-          Sculpted-head preview — a real head model finished in an openly synthetic brand-blue, facing you by default, driven by whichever panel you last edited. The color is deliberate: a realistic skin tone on a real head edges toward uncanny, while an obviously fake one reads as a stylized figure instead. The face tilts and dips as you yaw and pitch; the ears and neckline bank clearly as you roll — a head is naturally asymmetric front-to-back (nose vs. occiput) and top-to-bottom (crown vs. neck), so roll reads at a glance without needing a painted stripe or a color-coded marker. The starting view is <strong>180° yaw</strong> so the face reads immediately; at the mathematical <strong>0°</strong> you'd instead be looking from directly behind the head — X forward (face, red axis arrow), Y left (green), Z up (blue axis arrow, unrelated to the head's own color). The rotation matrix is built <strong>directly from the quaternion</strong> — no intermediate Euler decomposition. Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll around the head's own nose-to-back axis, no matter how it's currently pitched or yawed.
+          Drag left/right to yaw, up/down to pitch. Hold <strong>Shift</strong> to roll around the head's own nose-to-back axis, regardless of current orientation. The rotation matrix is built directly from the quaternion, with no intermediate Euler decomposition. Axes: <strong>+X</strong> forward (red), <strong>+Y</strong> left (green), <strong>+Z</strong> up (blue). The default <strong>180° yaw</strong> shows the face; "Reset to 0°" puts the camera behind the head, the true mathematical zero.
+        </p>
+        <p class="mt-2 max-w-2xl text-[0.82rem] text-muted-text/80">
+          See also: <a href="/playground/head-tracked-stereo-pan" class="text-brand-anchor hover:text-primary-text">Head-Tracked Stereo Pan</a>, which uses this same quaternion-to-yaw extraction to drive spatial audio.
         </p>
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <p id="preview-source" class="font-mono text-[0.72rem] uppercase tracking-[0.1em] text-muted-text/70">From Quaternion → Euler panel</p>
@@ -149,7 +153,7 @@ const faqSchema = {
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div class="rounded-[20px] border border-border bg-card-bg p-6 sm:p-7">
             <h3 class="text-[1.05rem] font-semibold text-primary-text">Quaternion → Euler</h3>
-            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">Same as <code>yawPitchRoll(from:)</code> below. Arbitrary input is auto-normalized to unit length first.</p>
+            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">Implements <code>yawPitchRoll(from:)</code> below. Non-unit input is normalized before conversion.</p>
             <div class="mt-5 grid grid-cols-2 gap-4">
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">x</span>
@@ -187,7 +191,7 @@ const faqSchema = {
 
           <div class="rounded-[20px] border border-border bg-card-bg p-6 sm:p-7">
             <h3 class="text-[1.05rem] font-semibold text-primary-text">Euler → Quaternion</h3>
-            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">The reverse direction — <code>quaternion(fromYaw:pitch:roll:)</code> below. Degrees in, unit quaternion out.</p>
+            <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text">Implements <code>quaternion(fromYaw:pitch:roll:)</code> below. Degrees in, unit quaternion out.</p>
             <div class="mt-5 grid grid-cols-3 gap-4">
               <label class="block">
                 <span class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-muted-text">Yaw°</span>
@@ -228,21 +232,21 @@ const faqSchema = {
     <section class="border-b border-border" aria-labelledby="math-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math and physics, in full</h2>
-        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Everything above runs on four numbers. This section works through what those four numbers actually mean, why the three-number alternative (yaw/pitch/roll) has a hard mathematical failure mode, and why rotation order isn't a stylistic choice — it changes the answer, which is exactly the bug this page's own drag interaction had until it didn't (see the callout below).</p>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every conversion above reduces to four numbers. This section covers what they encode, why the three-number representation (yaw/pitch/roll) has a hard singularity, and why rotation order changes the answer. That last point caused a real bug in this page's own drag interaction, documented below with the numeric proof.</p>
 
         <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <h3 class="text-[1.15rem] font-[650] text-primary-text">What a quaternion actually is</h3>
-            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Pick any axis in 3D space — a unit vector <code>(aₓ, a_y, a_z)</code> — and an angle <code>θ</code> to rotate around it. Every possible 3D rotation can be described exactly this way (this is <strong class="text-primary-text">Euler's rotation theorem</strong>), and a unit quaternion is just that axis and angle, repackaged into four numbers:</p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Pick any axis in 3D space, a unit vector <code>(aₓ, a_y, a_z)</code>, and an angle <code>θ</code> to rotate around it. <strong class="text-primary-text">Euler's rotation theorem</strong> guarantees that every 3D rotation can be expressed this way. A unit quaternion packs that axis and angle into four numbers:</p>
             <div class="mt-5 math-card">
               <p class="math-label">Axis–angle form</p>
               <p class="mt-2">q = ( aₓ·sin(θ/2), a_y·sin(θ/2), a_z·sin(θ/2), cos(θ/2) )</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is exactly <code>quatFromAxisAngle()</code> in the script above — the same formula behind every drag on the 3D preview, and the formula CoreMotion's sensor fusion uses internally to hand you <code>attitude.quaternion</code>. If you're reading attitude from your own hardware instead of CoreMotion, an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">MPU9250 breakout</a>'s onboard DMP outputs the identical shape of data — a unit quaternion, straight off the sensor.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is <code>quatFromAxisAngle()</code> in the script above, the same formula CoreMotion's sensor fusion uses internally to produce <code>attitude.quaternion</code>. If you're reading attitude from hardware instead of CoreMotion, an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">MPU9250 breakout</a>'s onboard DMP outputs the identical data shape: a unit quaternion, straight off the sensor.</p>
             </div>
             <div class="mt-4 math-card">
               <p class="math-label">Unit constraint</p>
               <p class="mt-2">x² + y² + z² + w² = 1</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A quaternion only represents a pure rotation — no stretching, no scaling — when it has unit length. That's why every conversion above normalizes first, and why an un-normalized <code>(x, y, z, w)</code> pasted into the Quaternion → Euler panel gets rescaled before anything else happens to it.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A quaternion represents a pure rotation (no stretching, no scaling) only at unit length. Every conversion above normalizes first; pasting a non-unit <code>(x, y, z, w)</code> into the Quaternion → Euler panel triggers rescaling before any math runs.</p>
             </div>
           </div>
           <div class="rounded-[20px] border border-border bg-card-bg p-6">
@@ -293,29 +297,31 @@ const faqSchema = {
           </div>
           <div class="lg:order-1">
             <h3 class="text-[1.15rem] font-[650] text-primary-text">Why Euler angles break: gimbal lock</h3>
-            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Yaw/pitch/roll rotate around three axes in sequence — yaw around <strong class="text-primary-text">Z</strong>, then pitch around the <em>new</em> <strong class="text-primary-text">Y</strong>, then roll around the <em>newest</em> <strong class="text-primary-text">X</strong>. That's the intuitive part. The failure shows up when the middle rotation (pitch) reaches ±90°: at that exact angle, the first and third rotation axes swing around to become parallel, and the system loses a degree of freedom — yaw and roll now spin the craft around the <em>same</em> physical axis, so only their difference is recoverable, not the two angles individually.</p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Yaw/pitch/roll apply three rotations in sequence: yaw around <strong class="text-primary-text">Z</strong>, then pitch around the rotated <strong class="text-primary-text">Y</strong>, then roll around the twice-rotated <strong class="text-primary-text">X</strong>. When pitch reaches ±90°, the first and third axes become parallel. The system loses a degree of freedom: yaw and roll now rotate around the same physical axis, and only their difference is recoverable.</p>
             <div class="mt-5 math-card">
               <p class="math-label">Verified, not asserted</p>
               <p class="mt-2 text-[0.8rem] leading-[1.6]">(yaw 30°, pitch 90°, roll 0°) → same quaternion as (yaw 50°, pitch 90°, roll 20°) → same quaternion as (yaw 0°, pitch 90°, roll −30°)</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">All three have <code>yaw − roll = 30°</code> and produce the identical <code>(x, y, z, w)</code> to six decimal places — try it in the Euler → Quaternion panel above. This is the exact singularity the <code>asin</code> clamp in the gotchas below is guarding against: <code>pitch = 90°</code> is precisely where the clamp's domain edge lives.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">All three have <code>yaw − roll = 30°</code> and produce identical <code>(x, y, z, w)</code> values to six decimal places. This is the singularity the <code>asin</code> clamp guards against: <code>pitch = 90°</code> is exactly where the domain edge lives.</p>
+              <button type="button" class="gimbal-example-btn mt-3 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="30" data-pitch="90" data-roll="0">Load (30°, 90°, 0°)</button>
+              <button type="button" class="gimbal-example-btn ml-2 mt-3 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="50" data-pitch="90" data-roll="20">Load (50°, 90°, 20°)</button>
             </div>
           </div>
         </div>
 
         <div class="mt-14">
           <h3 class="text-[1.15rem] font-[650] text-primary-text">Composing rotations: why multiplication order matters</h3>
-          <p class="mt-3 max-w-3xl text-[0.92rem] leading-[1.7] text-muted-text">Quaternions combine by the <strong class="text-primary-text">Hamilton product</strong> — quaternion multiplication, not the dot or cross product. It's associative, but <strong class="text-primary-text">not commutative</strong>: <code>q₁⊗q₂ ≠ q₂⊗q₁</code> in general. That's not a footnote — it's the difference between rotating around a <em>fixed world axis</em> and rotating around the object's <em>own current axis</em>, and mixing them up is a real, easy-to-miss bug, not a hypothetical one.</p>
+          <p class="mt-3 max-w-3xl text-[0.92rem] leading-[1.7] text-muted-text">Quaternions compose via the <strong class="text-primary-text">Hamilton product</strong> (quaternion multiplication). The product is associative but <strong class="text-primary-text">not commutative</strong>: <code>q₁⊗q₂ ≠ q₂⊗q₁</code> in general. The order determines whether a rotation is applied in the fixed world frame or the object's own body frame. Confusing the two is a common source of bugs, including one on this page.</p>
           <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div class="math-card">
               <p class="math-label">Hamilton product</p>
               <p class="mt-2 text-[0.82rem] leading-[1.7]">w = a_w·b_w − a·b (vector part)<br />v = a_w·b + b_w·a + a×b</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Exactly <code>quatMul()</code> above. <code>quatMul(delta, current)</code> applies <code>delta</code> in the fixed world frame (pre-multiply); <code>quatMul(current, delta)</code> applies it in the object's own current local frame (post-multiply).</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Implemented as <code>quatMul()</code> above. <code>quatMul(delta, current)</code> applies <code>delta</code> in the world frame (pre-multiply). <code>quatMul(current, delta)</code> applies it in the object's local frame (post-multiply).</p>
             </div>
             <div class="math-card">
               <p class="math-label">A real bug this caused</p>
               <p class="mt-2 text-[0.8rem] leading-[1.6]">Craft yawed 40° + pitched 25°, then rolled by <code>quatFromAxisAngle([1,0,0], 0.6)</code>:</p>
               <p class="mt-2 font-mono text-[0.78rem]">pre-multiply → nose moves <span class="text-primary-cta">0.4254</span><br />post-multiply → nose moves <span class="text-primary-cta">0.0000</span></p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A true roll should never move the nose. The 3D preview's shift-drag used the wrong order until this session — see <code>docs/DECISIONS.md</code> D-020 for the full numeric write-up.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A true roll never moves the nose. This page's shift-drag used the wrong multiplication order until the bug was caught. See <code>docs/DECISIONS.md</code> D-020 for the full numeric write-up.</p>
             </div>
           </div>
         </div>
@@ -358,7 +364,7 @@ const faqSchema = {
               </tr>
             </tbody>
           </table>
-          <p class="mt-4 text-[0.8rem] text-muted-text">In practice: sensors and physics engines compute and store quaternions (CoreMotion's <code>attitude.quaternion</code> included) because they're numerically well-behaved; humans and UI sliders think in yaw/pitch/roll. This page — and MotionLink's own conversion function — exists at exactly that boundary.</p>
+          <p class="mt-4 text-[0.8rem] text-muted-text">Sensors and physics engines store quaternions because they're numerically stable. Humans think in yaw/pitch/roll. This page sits at that boundary, and so does MotionLink's conversion function.</p>
         </div>
       </div>
     </section>
@@ -369,21 +375,21 @@ const faqSchema = {
         <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Gimbal-lock clamp</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Floating-point drift can push the pitch <code>asin</code> argument fractionally outside <code>[-1, 1]</code>, returning <code>NaN</code> that silently propagates downstream. Clamp it — the tool above does, try feeding it an extreme quaternion.</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Floating-point drift can push the pitch <code>asin</code> argument outside <code>[-1, 1]</code>, producing <code>NaN</code> that propagates silently. Always clamp. Try feeding an extreme quaternion into the converter above to see the clamp in action.</p>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Relative reference frame</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">On real hardware (<code>CMHeadphoneMotionManager</code>), the "zero" orientation is wherever the headphones were facing when tracking started — not gravity/north-referenced. This calculator has no such frame; that gotcha only applies on-device.</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">On real hardware (<code>CMHeadphoneMotionManager</code>), the "zero" orientation is wherever the headphones were facing when tracking started, not gravity- or north-referenced. This calculator has no implicit frame; that gotcha only applies on-device.</p>
           </div>
         </div>
         <p class="mt-6 text-[0.85rem] text-muted-text">Full writeup, including why this cost an afternoon on real AirPods Pro: <a href="/blog/motionlink-headphone-motion-api" class="text-brand-anchor hover:text-primary-text">the field note →</a></p>
       </div>
     </section>
 
-    <section aria-labelledby="code-title">
+    <section class="border-b border-border" aria-labelledby="code-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Swift, both directions</h2>
-        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Copy either function directly — this is the same code driving the converters above. The math ports directly to C/C++ too, if you're reading a quaternion off an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">IMU breakout</a> on an <a href={gearById['elegoo-arduino-uno-r3']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">Arduino</a> instead of CoreMotion.</p>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Copy either function directly. The math ports to C/C++ unchanged if you're reading quaternions from an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">IMU breakout</a> on an <a href={gearById['elegoo-arduino-uno-r3']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">Arduino</a> instead of CoreMotion.</p>
         <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
             <div class="flex items-center justify-between">
@@ -412,7 +418,7 @@ const faqSchema = {
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
           <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
           <AffiliateDisclosure class="mt-3 max-w-2xl" />
-          <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {gear.map((item) => (
               <div class="flex items-start gap-3 rounded-[14px] border border-border bg-card-bg p-4">
                 {item.image && (
@@ -794,6 +800,15 @@ const faqSchema = {
 
     let currentQuat: Quat = { x: 0, y: 0, z: 0, w: 1 };
 
+    // URL hash state: update the URL fragment on every orientation change
+    function updateHash(yawDeg: number, pitchDeg: number, rollDeg: number) {
+      const y = parseFloat(yawDeg.toFixed(1));
+      const p = parseFloat(pitchDeg.toFixed(1));
+      const r = parseFloat(rollDeg.toFixed(1));
+      const hash = `yaw=${y}&pitch=${p}&roll=${r}`;
+      history.replaceState(null, '', `#${hash}`);
+    }
+
     function updatePreview(q: Quat, source: string) {
       currentQuat = quatNormalize(q);
       
@@ -806,6 +821,7 @@ const faqSchema = {
       previewPitch.textContent = fmtDeg(pitch);
       previewRoll.textContent = fmtDeg(roll);
       if (previewSource) previewSource.textContent = `From ${source} panel`;
+      updateHash(degFromRad(yaw), degFromRad(pitch), degFromRad(roll));
     }
 
     function recomputeFromQuaternion() {
@@ -967,8 +983,35 @@ const faqSchema = {
       recomputeFromEuler();
     });
 
+    // Gimbal lock example buttons
+    document.querySelectorAll<HTMLButtonElement>('.gimbal-example-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        eYaw.value = btn.dataset.yaw ?? '0';
+        ePitch.value = btn.dataset.pitch ?? '0';
+        eRoll.value = btn.dataset.roll ?? '0';
+        recomputeFromEuler();
+      });
+    });
+
+    // URL hash state: read on init if present
+    function readHashState(): { yaw: number; pitch: number; roll: number } | null {
+      const hash = location.hash.replace('#', '');
+      if (!hash) return null;
+      const params = new URLSearchParams(hash);
+      const y = parseFloat(params.get('yaw') ?? '');
+      const p = parseFloat(params.get('pitch') ?? '');
+      const r = parseFloat(params.get('roll') ?? '');
+      if (isNaN(y) || isNaN(p) || isNaN(r)) return null;
+      return { yaw: y, pitch: p, roll: r };
+    }
+
+    const hashState = readHashState();
+    if (hashState) {
+      eYaw.value = hashState.yaw.toString();
+      ePitch.value = hashState.pitch.toString();
+      eRoll.value = hashState.roll.toString();
+    }
     recomputeFromEuler();
-    recomputeFromQuaternion();
   }
 
   document.addEventListener('astro:page-load', initQuaternionPreview);
