@@ -52,6 +52,32 @@ export function engagementBonus(n) {
   return Math.min(4, Math.floor(Math.log2(1 + Math.max(0, n || 0))));
 }
 
+/** Recency bonus — fresh signals outrank stale evergreen posts.
+ *  Strong bias toward last 48h, gentle decay to 7d, penalty beyond 10d.
+ *  This is the core fix for "all journal reports are identical" — without it,
+ *  a high-scoring 10-day-old HN post would win every day for 14 days.
+ */
+export function recencyBonus(publishedAt, now = Date.now()) {
+  if (!publishedAt) return 0;
+  const ageMs = now - new Date(publishedAt).getTime();
+  if (Number.isNaN(ageMs)) return 0;
+  const ageDays = ageMs / 864e5;
+  if (ageDays < 1) return 8;
+  if (ageDays < 2) return 5;
+  if (ageDays < 3) return 3;
+  if (ageDays < 5) return 1;
+  if (ageDays < 7) return 0;
+  if (ageDays < 10) return -1;
+  return -3;
+}
+
+/** Check if a candidate's canonical URL was recently published in the journal archive. */
+export function isRecentlySeen(candidate, seenSet) {
+  if (!seenSet || seenSet.size === 0) return false;
+  const key = canonicalUrl(candidate.externalUrl ?? candidate.url);
+  return seenSet.has(key);
+}
+
 /** Attach pillar tags + raw keyword hit count. */
 export function annotate(candidate) {
   const { tags, score: hits } = scoreText(`${candidate.title ?? ''} ${candidate.text ?? ''}`);
@@ -100,14 +126,20 @@ export function gateCandidate(c, now = Date.now()) {
   return { ok: true };
 }
 
-/** Relevance-dominant score: keyword hits lead, artifacts + corroboration help, engagement tie-breaks. */
-export function scoreCandidate(c) {
+/** Relevance-dominant score: keyword hits lead, artifacts + corroboration help, engagement tie-breaks, recency boosts.
+ *  Score = hits*3 + artifact +3 + corroboration*3 + engagement(0-4) + recency(-3..8) + (-100 if recently seen)
+ */
+export function scoreCandidate(c, now = Date.now(), opts = {}) {
   const corroboration = (c.sources?.length ?? 1) - 1;
+  const seenSet = opts.seenSet ?? opts.recentlySeen;
+  const seenPenalty = seenSet && isRecentlySeen(c, seenSet) ? -100 : 0;
   return (
     (c.hits ?? 0) * 3 +
     (isArtifactUrl(c.externalUrl) ? 3 : 0) +
     corroboration * 3 +
-    engagementBonus(c.engagement)
+    engagementBonus(c.engagement) +
+    recencyBonus(c.publishedAt, now) +
+    seenPenalty
   );
 }
 
@@ -160,18 +192,26 @@ function hostOf(url) {
   }
 }
 
-export function runPipeline(candidates, now = Date.now()) {
+export function runPipeline(candidates, now = Date.now(), opts = {}) {
+  // opts can be a Set directly (legacy) or { seenSet, ... }
+  const seenSet = opts instanceof Set ? opts : opts.seenSet ?? opts.recentlySeen ?? null;
   const annotated = candidates.map(annotate);
   const deduped = dedupeCandidates(annotated);
   const dropped = {};
   const gated = [];
   for (const c of deduped) {
+    // Hard-dedupe against recent journal history if provided — skip entirely
+    // for items seen in last N days. This is what prevents identical daily reports.
+    if (seenSet && isRecentlySeen(c, seenSet)) {
+      dropped['recently-seen'] = (dropped['recently-seen'] ?? 0) + 1;
+      continue;
+    }
     const { ok, reason } = gateCandidate(c, now);
     if (ok) gated.push(c);
     else dropped[reason] = (dropped[reason] ?? 0) + 1;
   }
-  const scored = gated.map((c) => ({ ...c, score: scoreCandidate(c) }));
-  const selected = selectDigest(scored);
+  const scored = gated.map((c) => ({ ...c, score: scoreCandidate(c, now, { seenSet }) }));
+  const selected = selectDigest(scored, opts);
   return {
     items: selected.map(toTrendItem),
     selected,

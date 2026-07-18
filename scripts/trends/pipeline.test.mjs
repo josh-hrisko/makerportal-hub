@@ -64,19 +64,20 @@ test('off-topic politics post with one incidental keyword is gated', () => {
   assert.equal(gateCandidate(c, NOW).ok, false);
 });
 
-test('substantive paper announcement passes and gets artifact bonus', () => {
+test('substantive paper announcement passes and gets artifact + recency bonus', () => {
   const c = annotate(ANE_PAPER);
   assert.ok(c.hits >= 2, `expected >=2 hits, got ${c.hits}`);
   assert.equal(gateCandidate(c, NOW).ok, true);
-  // 2 hits * 3 + artifact 3 + engagement log2(6)|0 = 2  →  11
-  assert.equal(scoreCandidate({ ...c, sources: ['bluesky'] }), 11);
+  // 2 hits *3=6 + artifact 3 + engagement log2(6)=2 + recency (<3d)=3 → 14
+  const expected = 6 + 3 + 2 + 3;
+  assert.equal(scoreCandidate({ ...c, sources: ['bluesky'] }, NOW), expected);
 });
 
 test('joke post can never outrank the paper regardless of likes', () => {
   const paper = annotate(ANE_PAPER);
   const joke = annotate({ ...KEBAB, externalUrl: 'https://example.com/kebab', engagement: 1e9 });
-  // even if the joke somehow passed gates, capped engagement keeps it below
-  assert.ok(scoreCandidate(paper) > scoreCandidate(joke));
+  // even if the joke somehow passed gates, capped engagement + relevance keeps it below
+  assert.ok(scoreCandidate(paper, NOW) > scoreCandidate(joke, NOW));
 });
 
 // ── Gates ────────────────────────────────────────────────────────────────
@@ -136,9 +137,9 @@ test('same link across sources merges into one corroborated item', () => {
   const merged = dedupeCandidates([a, b]);
   assert.equal(merged.length, 1);
   assert.deepEqual([...merged[0].sources].sort(), ['bluesky', 'hackernews']);
-  // corroboration adds +3 on top of hits/artifact/engagement
-  const solo = scoreCandidate({ ...b, sources: ['hackernews'] });
-  assert.equal(scoreCandidate(merged[0]), solo + 3);
+  // corroboration adds +3 on top of hits/artifact/engagement/recency
+  const solo = scoreCandidate({ ...b, sources: ['hackernews'] }, NOW);
+  assert.equal(scoreCandidate(merged[0], NOW), solo + 3);
 });
 
 // ── Scoring bounds ───────────────────────────────────────────────────────
@@ -173,6 +174,65 @@ test('selection enforces per-pillar, per-author, and total caps', () => {
   assert.equal(picked.length, 6);
   assert.equal(picked.filter((c) => c.author === 'prolific').length, 2);
   assert.ok(picked.filter((c) => c.tags[0] === 'dsp-audio').length <= 4);
+});
+
+// ── Recency & freshness ──────────────────────────────────────────────────
+
+test('recencyBonus: fresh items outrank stale evergreen', async () => {
+  const { recencyBonus } = await import('./pipeline.mjs');
+  assert.equal(recencyBonus(daysAgo(0.5), NOW), 8);
+  assert.equal(recencyBonus(daysAgo(1.5), NOW), 5);
+  assert.equal(recencyBonus(daysAgo(2.5), NOW), 3);
+  assert.equal(recencyBonus(daysAgo(4), NOW), 1);
+  assert.equal(recencyBonus(daysAgo(8), NOW), -1);
+  assert.equal(recencyBonus(daysAgo(12), NOW), -3);
+});
+
+test('recently seen URLs are dropped to prevent identical daily reports', () => {
+  const paper = {
+    id: 'hackernews-999',
+    source: 'hackernews',
+    title: 'Show HN: Velora – On-device macOS dictation',
+    url: 'https://github.com/sushilk1991/velora',
+    author: 'sushilk1991',
+    publishedAt: daysAgo(1),
+    text: 'Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)',
+    externalUrl: 'https://github.com/sushilk1991/velora',
+    engagement: 200,
+  };
+  const seen = new Set(['https://github.com/sushilk1991/velora']);
+  const { items, stats } = runPipeline([paper], NOW, { seenSet: seen });
+  assert.equal(items.length, 0);
+  assert.equal(stats.dropped['recently-seen'], 1);
+});
+
+test('fresh item outranks stale item with same hits after recency fix', () => {
+  const fresh = {
+    id: 'hn-fresh',
+    source: 'hackernews',
+    title: 'Local LLM runner via OpenJDK',
+    url: 'https://github.com/projectargus-cc/libargus.cc',
+    author: 'fresh-author',
+    publishedAt: daysAgo(0.5),
+    text: 'Local LLM runner via OpenJDK Panama FFM',
+    externalUrl: 'https://github.com/projectargus-cc/libargus.cc',
+    engagement: 10,
+  };
+  const stale = {
+    id: 'hn-stale',
+    source: 'hackernews',
+    title: 'Local LLM runner via OpenJDK',
+    url: 'https://github.com/projectargus-cc/libargus.cc-old',
+    author: 'stale-author',
+    publishedAt: daysAgo(10),
+    text: 'Local LLM runner via OpenJDK Panama FFM',
+    externalUrl: 'https://github.com/projectargus-cc/libargus.cc-old',
+    engagement: 500, // high engagement but old
+  };
+  const { items } = runPipeline([fresh, stale], NOW);
+  // Fresh should win despite lower engagement because recency + fresh gate
+  assert.ok(items.length >= 1);
+  assert.equal(items[0].id, 'hn-fresh');
 });
 
 // ── End to end ───────────────────────────────────────────────────────────

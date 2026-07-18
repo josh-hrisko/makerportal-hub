@@ -5,7 +5,7 @@
 import { SEARCH_QUERIES } from './keywords.mjs';
 
 const ENDPOINT = 'https://hn.algolia.com/api/v1/search';
-const SINCE_DAYS = 14;
+const SINCE_DAYS = 7;
 
 export async function fetchHackerNews() {
   const sinceUnix = Math.floor(Date.now() / 1000) - SINCE_DAYS * 24 * 60 * 60;

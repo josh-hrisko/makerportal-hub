@@ -8,14 +8,14 @@
  * /journal/YYYY-MM-DD (D-022) — the gate tests, not a human PR, are the
  * pre-publish safety net. Build-time static data, no runtime fetch on the hub.
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fetchBluesky } from './fetch-bluesky.mjs';
 import { fetchHackerNews } from './fetch-hn.mjs';
 // Reddit disabled (D-023) — no API credentials (self-service access closed, D-011).
 // fetch-reddit.mjs is retained; re-enable by restoring this import + the sources entry below.
 // import { fetchReddit } from './fetch-reddit.mjs';
-import { runPipeline, isArtifactUrl, engagementBonus } from './pipeline.mjs';
+import { runPipeline, isArtifactUrl, engagementBonus, canonicalUrl } from './pipeline.mjs';
 import { enrichWithImages } from './enrich-images.mjs';
 
 const dateStr = new Date().toISOString().split('T')[0];
@@ -23,6 +23,64 @@ const OUT_DIR = join(process.cwd(), 'src', 'content', 'journal');
 mkdirSync(OUT_DIR, { recursive: true });
 const OUT_PATH = join(OUT_DIR, `${dateStr}.json`);
 const SUMMARY_PATH = join(process.cwd(), 'trend-digest-summary.md'); // gitignored, Actions step summary
+
+// ── Load recent journal history for deduplication ────────────────────────
+// Collect canonical URLs from the last 7 days (or last 3 entries) to avoid
+// republishing identical reports. This is the fix for "all 4 journal pages
+// are almost identical" — the old pipeline had no memory.
+function loadRecentSeen(days = 7) {
+  const seen = new Set();
+  try {
+    const files = readdirSync(OUT_DIR)
+      .filter((f) => f.endsWith('.json'))
+      .sort()
+      .reverse(); // newest first
+    const cutoff = Date.now() - days * 864e5;
+    let counted = 0;
+    for (const file of files) {
+      if (counted >= 3) break; // also cap to last 3 entries to allow churn after a week gap
+      const fileDate = file.replace('.json', '');
+      const fileTime = Date.parse(`${fileDate}T12:00:00Z`);
+      if (!Number.isNaN(fileTime) && fileTime < cutoff) {
+        // If we already have at least one file, keep going until we have 3,
+        // otherwise stop when older than cutoff
+        if (counted > 0) {
+          // still allow up to 3 even if beyond cutoff, to avoid empty set on sparse history
+        } else {
+          continue;
+        }
+      }
+      try {
+        const raw = readFileSync(join(OUT_DIR, file), 'utf-8');
+        const data = JSON.parse(raw);
+        for (const item of data.items ?? []) {
+          // Use both id and canonical URL forms for robustness
+          if (item.id) seen.add(item.id);
+          const u = item.url || item.id;
+          if (u) {
+            try {
+              seen.add(canonicalUrl(u));
+            } catch {}
+            seen.add(u);
+          }
+          // Also add external canonical if we can infer from url host
+          // (trend items store domain but not raw externalUrl separately)
+        }
+        counted++;
+      } catch {
+        // ignore unreadable file
+      }
+    }
+  } catch {
+    // OUT_DIR may not exist on first run
+  }
+  return seen;
+}
+
+const recentSeen = loadRecentSeen(7);
+if (recentSeen.size > 0) {
+  console.log(`[history] ${recentSeen.size} URLs/ids seen in recent journal entries (last 3 files / 7d) will be excluded`);
+}
 
 const sources = [
   { name: 'bluesky', run: fetchBluesky },
@@ -42,7 +100,7 @@ results.forEach((result, i) => {
   }
 });
 
-const { items: bareItems, selected, stats } = runPipeline(candidates);
+const { items: bareItems, selected, stats } = runPipeline(candidates, Date.now(), { seenSet: recentSeen });
 const items = await enrichWithImages(bareItems);
 
 const generatedAt = new Date().toISOString();
