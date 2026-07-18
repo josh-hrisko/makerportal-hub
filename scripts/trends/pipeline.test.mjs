@@ -254,3 +254,29 @@ test('runPipeline: paper in, joke and politics out', () => {
   );
   assert.equal(items[0].domain, 'arxiv.org');
 });
+
+test('curated Bluesky post with 1 hit and no link passes gates and substance check', () => {
+  const curatedPost = bsky('curated1', {
+    text: 'Working on a new Swift concurrency project today.',
+    curated: true,
+  });
+  const c = annotate(curatedPost);
+  assert.equal(c.hits, 1); // "swift concurrency"
+  assert.equal(gateCandidate(c, NOW).ok, true);
+});
+
+test('curated status is merged in deduplication', () => {
+  const p1 = bsky('dup1', {
+    text: 'Working on a new Swift concurrency project today.',
+    curated: true,
+  });
+  const p2 = bsky('dup1', {
+    text: 'Working on a new Swift concurrency project today.',
+    curated: false,
+  });
+  const annotated = [annotate(p1), annotate(p2)];
+  const deduped = dedupeCandidates(annotated);
+  assert.equal(deduped.length, 1);
+  assert.equal(deduped[0].curated, true);
+});
+

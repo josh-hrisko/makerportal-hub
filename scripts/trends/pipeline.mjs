@@ -104,6 +104,7 @@ export function dedupeCandidates(candidates) {
       hits: Math.max(prev.hits ?? 0, c.hits ?? 0),
       externalUrl: prev.externalUrl ?? c.externalUrl,
       sources: [...new Set([...prev.sources, c.source])],
+      curated: prev.curated || c.curated || false,
     });
   }
   return [...byUrl.values()];
@@ -116,11 +117,15 @@ export function gateCandidate(c, now = Date.now()) {
     return { ok: false, reason: 'stale' };
   }
   const sources = c.sources ?? [c.source];
-  const minHits = Math.min(...sources.map((s) => MIN_HITS[s] ?? 1));
+  let minHits = Math.min(...sources.map((s) => MIN_HITS[s] ?? 1));
+  if (c.curated) {
+    minHits = 1; // curated feeds are high-signal, bypass strict search filters
+  }
   if ((c.hits ?? 0) < minHits) return { ok: false, reason: 'relevance-floor' };
   // Substance: a Bluesky-only post must link out to something writable-about,
   // or carry enough text to be a thread worth reading. Kills joke posts.
-  if (sources.every((s) => s === 'bluesky') && !c.externalUrl && (c.text ?? '').length < 280) {
+  // Curated posts bypass this substance limit because they are already vetted sources.
+  if (sources.every((s) => s === 'bluesky') && !c.externalUrl && (c.text ?? '').length < 280 && !c.curated) {
     return { ok: false, reason: 'substance' };
   }
   return { ok: true };
@@ -149,7 +154,7 @@ export function selectDigest(candidates, opts = {}) {
     maxTotal = MAX_TOTAL,
     maxPerPillar = MAX_PER_PILLAR,
     maxPerAuthor = MAX_PER_AUTHOR,
-    maxPerSource = 8,
+    maxPerSource = 6,
   } = opts;
   const sorted = [...candidates].sort(
     (a, b) => b.score - a.score || new Date(b.publishedAt) - new Date(a.publishedAt),

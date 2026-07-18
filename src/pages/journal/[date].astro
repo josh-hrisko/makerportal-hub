@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import HubShell from '../../components/HubShell.astro';
 import { pillarMeta, fallbackPillar, sourceLabels } from '../../data/trends';
-import type { TrendItem } from '../../data/trends';
+import type { TrendItem, TrendSource } from '../../data/trends';
 
 export async function getStaticPaths() {
   const journals = await getCollection('journal');
@@ -61,6 +61,16 @@ const description = `Daily developer trends and public discussion signals for ${
 const pillarCounts = {} as any;
 for (const t of items) for (const tag of (t as any).tags ?? []) pillarCounts[tag] = (pillarCounts[tag] ?? 0) + 1;
 const pillarEntries = Object.entries(pillarCounts).sort((a: any,b: any) => (b[1] as number)-(a[1] as number));
+
+// Source distribution for filter bar
+const sourceCounts = {} as any;
+for (const t of items) {
+  const sources = (t.sources ?? [t.source]) as string[];
+  for (const src of sources) {
+    sourceCounts[src] = (sourceCounts[src] ?? 0) + 1;
+  }
+}
+const sourceEntries = Object.entries(sourceCounts).sort((a: any, b: any) => (b[1] as number) - (a[1] as number));
 const uniqueSources = [...new Set(items.flatMap((i: any) => i.sources ?? [i.source]))];
 ---
 
@@ -94,22 +104,43 @@ const uniqueSources = [...new Set(items.flatMap((i: any) => i.sources ?? [i.sour
     </Fragment>
   </HubShell>
 
-  {/* Pillar filter bar — client-side filter (no framework) */}
-  {pillarEntries.length > 0 && (
-    <div class="sticky top-[3.875rem] z-30 border-b border-border bg-canvas/95">
+  {/* Combined filter bar — client-side filter (no framework) */}
+  {(pillarEntries.length > 0 || sourceEntries.length > 0) && (
+    <div class="sticky top-[3.875rem] z-30 border-b border-border bg-canvas/95 backdrop-blur-sm">
       <div class="mx-auto max-w-[88rem] px-5 py-3 sm:px-8 lg:px-10">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="mr-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Filter:</span>
-          <button data-filter="all" class="filter-pill active inline-flex items-center gap-1.5 rounded-full border bg-primary-text border-primary-text px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-canvas">All · {items.length}</button>
-          {pillarEntries.map(([tag, count]) => {
-            const meta = pillarMeta[tag] ?? fallbackPillar;
-            return (
-              <button data-filter={tag} class="filter-pill inline-flex items-center gap-1.5 rounded-full border border-border bg-card-bg px-3 py-1 text-[0.7rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text" data-color={meta.color}>
-                <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>
-                {meta.label} · {count}
-              </button>
-            );
-          })}
+        <div class="flex flex-wrap items-center justify-between gap-y-3 gap-x-6">
+          {/* Pillars */}
+          {pillarEntries.length > 0 && (
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="mr-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Pillar:</span>
+              <button data-filter="all" class="filter-pill active inline-flex items-center gap-1.5 rounded-full border bg-primary-text border-primary-text px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-canvas">All · {items.length}</button>
+              {pillarEntries.map(([tag, count]) => {
+                const meta = pillarMeta[tag] ?? fallbackPillar;
+                return (
+                  <button data-filter={tag} class="filter-pill inline-flex items-center gap-1.5 rounded-full border border-border bg-card-bg px-3 py-1 text-[0.7rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text" data-color={meta.color}>
+                    <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>
+                    {meta.label} · {count}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Sources */}
+          {sourceEntries.length > 0 && (
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="mr-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Source:</span>
+              <button data-source-filter="all" class="source-pill active inline-flex items-center gap-1.5 rounded-full border bg-primary-text border-primary-text px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-canvas">All</button>
+              {sourceEntries.map(([src, count]) => {
+                const label = sourceLabels[src as TrendSource] ?? src;
+                return (
+                  <button data-source-filter={src} class="source-pill inline-flex items-center gap-1.5 rounded-full border border-border bg-card-bg px-3 py-1 text-[0.7rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">
+                    {label} · {count}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -141,6 +172,7 @@ const uniqueSources = [...new Set(items.flatMap((i: any) => i.sources ?? [i.sour
           rel="noopener noreferrer"
           class="group mt-8 grid overflow-hidden rounded-[24px] border border-border bg-card-bg shadow-[0_8px_30px_-16px_rgba(0,0,0,0.2)] transition-all hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.25)] hover:-translate-y-[1px] md:grid-cols-[1.15fr_1fr]"
           data-tags={featuredSignal.tags.join(' ')}
+          data-sources={(featuredSignal.sources ?? [featuredSignal.source]).join(' ')}
         >
           <div class="relative aspect-[16/10] overflow-hidden md:aspect-auto md:min-h-[18rem]">
             {featuredSignal.image ? (
@@ -194,7 +226,7 @@ const uniqueSources = [...new Set(items.flatMap((i: any) => i.sources ?? [i.sour
           {restSignals.map((item) => {
             const pillar = pillarOf(item);
             return (
-              <li class="signal-card" data-tags={item.tags.join(' ')}>
+              <li class="signal-card" data-tags={item.tags.join(' ')} data-sources={(item.sources ?? [item.source]).join(' ')}>
                 <a
                   href={item.url}
                   target="_blank"
@@ -272,13 +304,16 @@ const uniqueSources = [...new Set(items.flatMap((i: any) => i.sources ?? [i.sour
   )}
 
   <script>
-    // Pillar filter — light vanilla JS, no framework
-    const pills = document.querySelectorAll('.filter-pill');
-    // Include featured signal if present (it has data-tags attr directly on <a>)
+    // Pillar and Source filter — light vanilla JS, no framework
+    const pillarPills = document.querySelectorAll('.filter-pill');
+    const sourcePills = document.querySelectorAll('.source-pill');
     const featured = document.querySelector('a[data-tags].group') as HTMLElement | null;
 
-    function setActive(filter: string) {
-      pills.forEach(p => {
+    let activePillar = 'all';
+    let activeSource = 'all';
+
+    function setPillarActive(filter: string) {
+      pillarPills.forEach(p => {
         const isActive = p.getAttribute('data-filter') === filter;
         p.classList.toggle('active', isActive);
         if (isActive) {
@@ -291,22 +326,56 @@ const uniqueSources = [...new Set(items.flatMap((i: any) => i.sources ?? [i.sour
       });
     }
 
-    pills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const filter = pill.getAttribute('data-filter') || 'all';
-        setActive(filter);
-        const allSignalCards = document.querySelectorAll('.signal-card');
-        allSignalCards.forEach(card => {
-          const tags = (card.getAttribute('data-tags') || '').split(' ');
-          const show = filter === 'all' || tags.includes(filter);
-          (card as HTMLElement).style.display = show ? '' : 'none';
-        });
-        // Also toggle featured visibility if it doesn't match
-        if (featured) {
-          const fTags = (featured.getAttribute('data-tags') || '').split(' ');
-          const fShow = filter === 'all' || fTags.includes(filter);
-          (featured as HTMLElement).style.display = fShow ? '' : 'none';
+    function setSourceActive(filter: string) {
+      sourcePills.forEach(p => {
+        const isActive = p.getAttribute('data-source-filter') === filter;
+        p.classList.toggle('active', isActive);
+        if (isActive) {
+          p.classList.add('bg-primary-text','border-primary-text','text-canvas');
+          p.classList.remove('bg-card-bg','border-border','text-muted-text');
+        } else {
+          p.classList.remove('bg-primary-text','border-primary-text','text-canvas');
+          p.classList.add('bg-card-bg','border-border','text-muted-text');
         }
+      });
+    }
+
+    function updateFilters() {
+      const allSignalCards = document.querySelectorAll('.signal-card');
+      allSignalCards.forEach(card => {
+        const tags = (card.getAttribute('data-tags') || '').split(' ');
+        const sources = (card.getAttribute('data-sources') || '').split(' ');
+        
+        const matchesPillar = activePillar === 'all' || tags.includes(activePillar);
+        const matchesSource = activeSource === 'all' || sources.includes(activeSource);
+        
+        (card as HTMLElement).style.display = (matchesPillar && matchesSource) ? '' : 'none';
+      });
+
+      if (featured) {
+        const fTags = (featured.getAttribute('data-tags') || '').split(' ');
+        const fSources = (featured.getAttribute('data-sources') || '').split(' ');
+        
+        const matchesPillar = activePillar === 'all' || fTags.includes(activePillar);
+        const matchesSource = activeSource === 'all' || fSources.includes(activeSource);
+        
+        featured.style.display = (matchesPillar && matchesSource) ? '' : 'none';
+      }
+    }
+
+    pillarPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        activePillar = pill.getAttribute('data-filter') || 'all';
+        setPillarActive(activePillar);
+        updateFilters();
+      });
+    });
+
+    sourcePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        activeSource = pill.getAttribute('data-source-filter') || 'all';
+        setSourceActive(activeSource);
+        updateFilters();
       });
     });
   </script>

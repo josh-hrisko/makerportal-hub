@@ -11,6 +11,7 @@
 import { writeFileSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fetchBluesky } from './fetch-bluesky.mjs';
+import { fetchBlueskyCurated } from './fetch-bluesky-curated.mjs';
 import { fetchHackerNews } from './fetch-hn.mjs';
 import { fetchGitHub } from './fetch-github.mjs';
 import { fetchArxiv } from './fetch-arxiv.mjs';
@@ -88,6 +89,7 @@ if (recentSeen.size > 0) {
 
 const sources = [
   { name: 'bluesky', run: fetchBluesky },
+  { name: 'bluesky-curated', run: fetchBlueskyCurated },
   { name: 'hackernews', run: fetchHackerNews },
   { name: 'github', run: fetchGitHub },
   { name: 'arxiv', run: fetchArxiv },

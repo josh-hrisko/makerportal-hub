@@ -44,6 +44,40 @@ export const SEARCH_QUERIES = [
   'on-device vision',
 ];
 
+/**
+ * Curated list of high-signal Bluesky handles relevant to the MakerPortal pillars
+ * (Swift/iOS craft, local-first, on-device AI/ML, and Audio/DSP).
+ */
+export const BLUESKY_CURATED_HANDLES = [
+  'natpanferova.bsky.social',      // Swift/iOS
+  'inside.com',                    // Tech/industry insights
+  'centricular.com',               // GStreamer, Audio/Video DSP
+  'chimeces.bsky.social',          // Web Audio/DSP
+  'khronos.bsky.social',           // WebGL/Metal/GPU specs
+  'dgregor.bsky.social',           // Swift Compiler
+  'jckarter.bsky.social',          // Joe Groff (Swift compiler/language)
+  'lapcatsoftware.bsky.social',    // Jeff Johnson (macOS/iOS craft)
+  'dimsumthinking.bsky.social',    // Daniel Steinberg (Swift/SwiftUI)
+  'twostraws.bsky.social',         // Paul Hudson (Hacking with Swift)
+  'merowing.info.bsky.social',     // Krzysztof Zabłocki (iOS craft)
+  'pathofleast.bsky.social',       // iOS/Swift performance
+  'steipete.bsky.social',          // Peter Steinberger (iOS engine craft)
+  'ctietze.bsky.social',           // Christian Tietze (macOS/iOS developer)
+  'rhonabwy.bsky.social',          // iOS/macOS dev
+  'mxcl.bsky.social',              // Max Howell (Homebrew/PromiseKit)
+  'cocoaphony.bsky.social',        // Rob Napier (Swift/iOS architecture)
+  'brentsimmons.bsky.social',      // Brent Simmons (NetNewsWire, RSS/iOS pioneer)
+  'paranoiaparts.bsky.social',     // Hardware/Audio/DSP
+  'sounddesign.bsky.social',       // Audio/DSP/sound design
+  'audiotool.bsky.social',         // Web audio/synth engines
+  'simonw.bsky.social',            // Simon Willison (LLMs, Datasette)
+  'karpathy.bsky.social',          // Andrej Karpathy (Deep learning, LLMs)
+  'clattner.bsky.social',          // Chris Lattner (LLVM, Swift, Mojo)
+  'alexcrichton.bsky.social',      // Rust/Wasm compiler dev
+  'swyx.bsky.social',              // Latent Space AI, LLM developer space
+  'dhh.bsky.social',               // Rails, local-first advocate
+];
+
 /** Returns matched pillar tags for a piece of text, empty array if irrelevant. */
 export function scoreText(text) {
   const lower = ` ${text.toLowerCase()} `;
@@ -58,3 +92,4 @@ export function scoreText(text) {
   }
   return { tags, score };
 }
+
