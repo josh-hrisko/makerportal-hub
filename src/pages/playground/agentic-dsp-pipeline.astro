@@ -7,11 +7,7 @@ const title = 'Agentic DSP Pipeline — Record → Retrieve → Generate → Ver
 const description = 'A clickable walk through AuraLinter’s real multi-agent loop: RAG retrieval over DSP textbooks, LangGraph codegen, and clang++ verification of the generated C++ kernel.';
 const canonical = new URL('/playground/agentic-dsp-pipeline', Astro.site);
 
-const retrievalCode = `// RAG — retrieve top-k chunks over DSP textbooks vector store
-const query = "biquad lowpass RBJ cookbook Q 0.707";
-const hits = await vectorStore.similaritySearch(query, {k:5, filter:{source:"RBJ+Oppenheim"}});
-// hits: [RBJ eq. 12 lowpass, Oppenheim Fig 6.4 DF2T, Smith Ch.12 stability]
-`;
+
 
 const generateCode = `// LangGraph node: generate C++ biquad from retrieved context
 // Prompt includes: userIntent + retrievedChunks + previousAttempts

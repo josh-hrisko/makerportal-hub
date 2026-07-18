@@ -174,8 +174,8 @@ function initBiquad(){
   magCanvas.style.width=W+'px'; magCanvas.style.height=H+'px';
   mCtx.scale(dpr,dpr);
 
-  /** @type {{type:string,freq:number,q:number,gain:number}[]} */
-  let chain = [{type:'lowpass', freq:1000, q:0.7071, gain:0}];
+  type FilterStage = { type: string; freq: number; q: number; gain: number; };
+  let chain: FilterStage[] = [{type:'lowpass', freq:1000, q:0.7071, gain:0}];
 
   function clamp(n,lo,hi){return Math.max(lo,Math.min(hi,n));}
 
