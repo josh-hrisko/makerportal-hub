@@ -202,8 +202,12 @@ test('recently seen URLs are dropped to prevent identical daily reports', () => 
   };
   const seen = new Set(['https://github.com/sushilk1991/velora']);
   const { items, stats } = runPipeline([paper], NOW, { seenSet: seen });
-  assert.equal(items.length, 0);
-  assert.equal(stats.dropped['recently-seen'], 1);
+  // Now penalized instead of hard-dropped to avoid skipping days (user pref)
+  assert.equal(items.length, 1);
+  assert.equal(stats.recentlySeenInPool, 1);
+  assert.equal(stats.repeatsInSelected, 1);
+  // Score should be heavily penalized (<0)
+  assert.ok(items[0].score < 0);
 });
 
 test('fresh item outranks stale item with same hits after recency fix', () => {

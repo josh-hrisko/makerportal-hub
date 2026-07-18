@@ -49,7 +49,7 @@ export async function fetchBluesky() {
   const seen = new Map();
 
   for (const query of SEARCH_QUERIES) {
-    const url = `${endpoint}?q=${encodeURIComponent(query)}&limit=25&sort=top`;
+    const url = `${endpoint}?q=${encodeURIComponent(query)}&limit=50&sort=top`;
     const res = await fetch(url, { headers });
     if (!res.ok) {
       console.warn(`[bluesky] query "${query}" failed: ${res.status}`);

@@ -41,9 +41,11 @@ jobs:
         # journal file when gating leaves nothing, so an empty day never publishes.
         run: node scripts/trends/build-digest.mjs
         env:
-          # Reddit disabled (D-023) — no API credentials. Bluesky + Hacker News only.
+          # 5 sources: Bluesky (auth required, else 403) + HN + GitHub + arXiv + Lobsters
+          # Reddit disabled (D-023) — no API credentials.
           BLUESKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish that day's journal entry directly if changed
         run: |

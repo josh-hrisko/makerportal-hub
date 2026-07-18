@@ -12,7 +12,7 @@ export async function fetchHackerNews() {
   const seen = new Map();
 
   for (const query of SEARCH_QUERIES) {
-    const url = `${ENDPOINT}?query=${encodeURIComponent(query)}&tags=story&numericFilters=created_at_i>${sinceUnix}&hitsPerPage=20`;
+    const url = `${ENDPOINT}?query=${encodeURIComponent(query)}&tags=story&numericFilters=created_at_i>${sinceUnix}&hitsPerPage=50`;
     const res = await fetch(url);
     if (!res.ok) {
       console.warn(`[hn] query "${query}" failed: ${res.status}`);

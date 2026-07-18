@@ -52,7 +52,11 @@ function parseItem(raw) {
   };
 }
 
-async function getItemsBatch(asins, token) {
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function getItemsBatch(asins, token, attempt = 0) {
   const res = await fetch(`${API_BASE}/catalog/v1/getItems`, {
     method: 'POST',
     headers: {
@@ -77,7 +81,15 @@ async function getItemsBatch(asins, token) {
     }),
   });
   if (!res.ok) {
-    throw new Error(`getItems failed: ${res.status} ${(await res.text().catch(() => '')).slice(0, 300)}`);
+    const body = (await res.text().catch(() => '')).slice(0, 500);
+    // Retry on 429 / 5xx with exponential backoff
+    if ((res.status === 429 || res.status >= 500) && attempt < 3) {
+      const delay = 1500 * Math.pow(2, attempt) + Math.random() * 500;
+      console.warn(`[amazon] getItems ${res.status} — retry ${attempt + 1}/3 in ${Math.round(delay)}ms: ${body.slice(0, 120)}`);
+      await sleep(delay);
+      return getItemsBatch(asins, token, attempt + 1);
+    }
+    throw new Error(`getItems failed: ${res.status} ${body}`);
   }
   const data = await res.json();
   return (data.itemsResult?.items ?? []).map(parseItem).filter(Boolean);
@@ -96,7 +108,18 @@ export async function fetchAmazonItems(asins) {
   const items = [];
   for (let i = 0; i < asins.length; i += BATCH_SIZE) {
     const batch = asins.slice(i, i + BATCH_SIZE);
-    items.push(...(await getItemsBatch(batch, token)));
+    if (i > 0) {
+      // Gentle throttle — Amazon Creators API is rate-limited (docs say ~1 req/sec)
+      await sleep(1200);
+    }
+    try {
+      const batchItems = await getItemsBatch(batch, token);
+      console.log(`[amazon] batch ${i / BATCH_SIZE + 1}: ${batchItems.length}/${batch.length} items`);
+      items.push(...batchItems);
+    } catch (err) {
+      console.error(`[amazon] batch ${i / BATCH_SIZE + 1} failed after retries: ${err.message} — continuing with remaining`);
+      // Continue to next batch rather than failing whole run
+    }
   }
   return items;
 }

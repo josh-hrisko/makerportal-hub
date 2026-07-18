@@ -1,234 +1,127 @@
 {
-  "generatedAt": "2026-07-18T15:00:23.382Z",
+  "generatedAt": "2026-07-18T15:46:22.232Z",
   "items": [
     {
-      "id": "hackernews-48944208",
-      "source": "hackernews",
-      "title": "Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)",
-      "url": "https://github.com/sushilk1991/velora",
-      "author": "sushilk1991",
-      "publishedAt": "2026-07-17T07:07:38Z",
+      "id": "github-1149307294",
+      "source": "github",
+      "title": "speech-swift – AI speech toolkit for Apple Silicon — ASR, TTS, speech-to-speech, VAD, and diarization powered by MLX and CoreML",
+      "url": "https://github.com/soniqo/speech-swift",
+      "author": "soniqo",
+      "publishedAt": "2026-07-18T12:52:38Z",
       "tags": [
         "on-device-ai",
-        "local-llm",
-        "privacy-arch"
+        "metal-ane"
       ],
-      "score": 13,
+      "score": 24,
       "domain": "github.com",
       "sources": [
-        "hackernews"
+        "github"
       ],
-      "image": "/trends/hackernews-48944208.webp"
+      "image": "/trends/github-1149307294.webp"
     },
     {
-      "id": "hackernews-48907681",
-      "source": "hackernews",
-      "title": "Show HN: Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
-      "url": "https://github.com/projectargus-cc/libargus.cc",
-      "author": "KingJoker",
-      "publishedAt": "2026-07-14T14:40:46Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 13,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48907681.webp"
-    },
-    {
-      "id": "hackernews-48894351",
-      "source": "hackernews",
-      "title": "Show HN: Biscotti – on-device meeting transcription for macOS",
-      "url": "https://news.ycombinator.com/item?id=48894351",
-      "author": "scosman",
-      "publishedAt": "2026-07-13T15:38:26Z",
+      "id": "github-1089922766",
+      "source": "github",
+      "title": "swift-2026-course – 🚀 Complete Swift & Apple Platforms 2026 guide: iOS 26, ML, Foundation Models, SwiftUI, Xcode 26, monetization strategie",
+      "url": "https://github.com/durellwilson/swift-2026-course",
+      "author": "durellwilson",
+      "publishedAt": "2026-07-18T13:04:38Z",
       "tags": [
         "on-device-ai",
-        "local-llm",
+        "ios-craft"
+      ],
+      "score": 23,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1089922766.webp"
+    },
+    {
+      "id": "github-1212294710",
+      "source": "github",
+      "title": "Parrot – 🦜 Free, open-source macOS meeting recorder — real-time transcription, 100% on-device, no cloud, no API costs. Built wit",
+      "url": "https://github.com/turantekin/Parrot",
+      "author": "turantekin",
+      "publishedAt": "2026-07-17T14:16:33Z",
+      "tags": [
+        "on-device-ai",
         "ios-craft",
         "privacy-arch"
       ],
-      "score": 13,
+      "score": 23,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1212294710.webp"
+    },
+    {
+      "id": "github-1264692184",
+      "source": "github",
+      "title": "coreai-model-zoo – Community model zoo for Apple Core AI (iOS/macOS 27): 49 models — LLM, VLM, OCR, ASR, TTS, image/video/music gen, foreca",
+      "url": "https://github.com/john-rocky/coreai-model-zoo",
+      "author": "john-rocky",
+      "publishedAt": "2026-07-18T15:35:52Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1264692184.webp"
+    },
+    {
+      "id": "github-541831874",
+      "source": "github",
+      "title": "onnx2tf – A tool for converting ONNX files to LiteRT/TFLite/TensorFlow, PyTorch native code (nn.Module), TorchScript (.pt), state_",
+      "url": "https://github.com/PINTO0309/onnx2tf",
+      "author": "PINTO0309",
+      "publishedAt": "2026-07-18T14:45:23Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-541831874.webp"
+    },
+    {
+      "id": "github-1283313140",
+      "source": "github",
+      "title": "CielView-Metal-SuperRes – Next-Gen EXhentai & nHentai Viewer 2026: AI Upscale, Metal GPU, iPad Spread",
+      "url": "https://github.com/OzgeGulerKoc/CielView-Metal-SuperRes",
+      "author": "OzgeGulerKoc",
+      "publishedAt": "2026-07-18T14:44:52Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "hackernews-48957761",
+      "source": "hackernews",
+      "title": "Show HN: Cashzilla – a local-first finance app (Android)",
+      "url": "https://news.ycombinator.com/item?id=48957761",
+      "author": "brauhaus",
+      "publishedAt": "2026-07-18T12:58:41Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 15,
       "domain": "news.ycombinator.com",
       "sources": [
         "hackernews"
       ]
-    },
-    {
-      "id": "hackernews-48929747",
-      "source": "hackernews",
-      "title": "Running Gemma4 on Apple Neural Engine",
-      "url": "https://rockyshikoku.medium.com/running-gemma4-on-apple-neural-engine-79fa0cb39dd2",
-      "author": "nmfisher",
-      "publishedAt": "2026-07-16T02:33:38Z",
-      "tags": [
-        "on-device-ai",
-        "metal-ane"
-      ],
-      "score": 11,
-      "domain": "rockyshikoku.medium.com",
-      "sources": [
-        "bluesky",
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48929747.webp"
-    },
-    {
-      "id": "hackernews-48898478",
-      "source": "hackernews",
-      "title": "Open source on-device AI apps (and counting), no cloud, works offline",
-      "url": "https://github.com/zetic-ai/awesome-on-device-ai-apps",
-      "author": "rishabh121108",
-      "publishedAt": "2026-07-13T20:36:54Z",
-      "tags": [
-        "on-device-ai",
-        "privacy-arch"
-      ],
-      "score": 11,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ]
-    },
-    {
-      "id": "hackernews-48861746",
-      "source": "hackernews",
-      "title": "Show HN: SpeechCompass – speaker direction for captioning group conversations",
-      "url": "https://github.com/google-deepmind/speech-compass/",
-      "author": "olwal",
-      "publishedAt": "2026-07-10T16:01:26Z",
-      "tags": [
-        "on-device-ai",
-        "dsp-audio"
-      ],
-      "score": 11,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48861746.webp"
-    },
-    {
-      "id": "bluesky-3mqlmuvrv6k2u",
-      "source": "bluesky",
-      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
-      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
-      "author": "natpanferova.bsky.social",
-      "publishedAt": "2026-07-14T06:56:44.666Z",
-      "tags": [
-        "ios-craft"
-      ],
-      "score": 10,
-      "domain": "books.nilcoalescing.com",
-      "sources": [
-        "bluesky"
-      ],
-      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
-    },
-    {
-      "id": "hackernews-48819513",
-      "source": "hackernews",
-      "title": "GPU-accelerated context memory for on-device AI agents on Apple Silicon",
-      "url": "https://github.com/christopherkarani/ContextCore",
-      "author": "christkarani",
-      "publishedAt": "2026-07-07T15:52:23Z",
-      "tags": [
-        "on-device-ai",
-        "metal-ane"
-      ],
-      "score": 10,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48819513.webp"
-    },
-    {
-      "id": "bluesky-3mquwmfur3s2f",
-      "source": "bluesky",
-      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
-      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
-      "author": "nilcoalescing.com",
-      "publishedAt": "2026-07-17T23:44:54.611Z",
-      "tags": [
-        "ios-craft"
-      ],
-      "score": 9,
-      "domain": "nilcoalescing.com",
-      "sources": [
-        "bluesky"
-      ],
-      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
-    },
-    {
-      "id": "bluesky-3mqo5s7fgk222",
-      "source": "bluesky",
-      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
-      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
-      "author": "centricular.com",
-      "publishedAt": "2026-07-15T07:04:47.168Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 9,
-      "domain": "centricular.com",
-      "sources": [
-        "bluesky"
-      ],
-      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
-    },
-    {
-      "id": "hackernews-48844268",
-      "source": "hackernews",
-      "title": "LLama.cpp Got Screwd",
-      "url": "https://github.com/ggml-org/llama.cpp/discussions/25482",
-      "author": "trilogic",
-      "publishedAt": "2026-07-09T11:40:16Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 9,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48844268.webp"
-    },
-    {
-      "id": "hackernews-48843409",
-      "source": "hackernews",
-      "title": "Relm – local LLMs as base-R objects, with interpretability",
-      "url": "https://github.com/Vadale/R-ebirth",
-      "author": "grauk",
-      "publishedAt": "2026-07-09T09:58:28Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 9,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48843409.webp"
-    },
-    {
-      "id": "hackernews-48918840",
-      "source": "hackernews",
-      "title": "Show HN: AI-CLI – tiny C terminal assistant powered by local LLM",
-      "url": "https://github.com/vkataev/ai-cli",
-      "author": "novaRom",
-      "publishedAt": "2026-07-15T10:46:18Z",
-      "tags": [
-        "local-llm"
-      ],
-      "score": 8,
-      "domain": "github.com",
-      "sources": [
-        "hackernews"
-      ],
-      "image": "/trends/hackernews-48918840.webp"
     },
     {
       "id": "hackernews-48946283",
@@ -240,7 +133,7 @@
       "tags": [
         "local-llm"
       ],
-      "score": 7,
+      "score": 12,
       "domain": "github.com",
       "sources": [
         "hackernews"
@@ -248,87 +141,207 @@
       "image": "/trends/hackernews-48946283.webp"
     },
     {
-      "id": "hackernews-48829604",
+      "id": "hackernews-48946222",
       "source": "hackernews",
-      "title": "Show HN: Comcent CE – An open-source self-hosted Voice Infrastructure platform",
-      "url": "https://github.com/comcent-io/comcent-ce",
-      "author": "pavanputhra",
-      "publishedAt": "2026-07-08T09:22:23Z",
+      "title": "Show HN: A sandbox for running real jailbreak techniques against local LLMs",
+      "url": "https://github.com/joshfischer1108/jailbreak-lab",
+      "author": "joshfischer1108",
+      "publishedAt": "2026-07-17T11:54:03Z",
       "tags": [
-        "privacy-arch"
+        "local-llm"
       ],
-      "score": 7,
+      "score": 12,
       "domain": "github.com",
       "sources": [
         "hackernews"
       ],
-      "image": "/trends/hackernews-48829604.webp"
+      "image": "/trends/hackernews-48946222.webp"
     },
     {
-      "id": "hackernews-48822627",
+      "id": "hackernews-48925332",
       "source": "hackernews",
-      "title": "Squish, a local LLM inference server for Apple Silicon",
-      "url": "https://squish.run/blog/local-llm-fast-enough/",
-      "author": "wscholl",
-      "publishedAt": "2026-07-07T19:35:56Z",
+      "title": "LHIC – A local-first browser agent with 30ms latency and $0 LLM cost",
+      "url": "https://github.com/chengmatt416/LHIC",
+      "author": "pinyencheng",
+      "publishedAt": "2026-07-15T18:45:36Z",
       "tags": [
-        "metal-ane",
+        "privacy-arch"
+      ],
+      "score": 11,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48925332.webp"
+    },
+    {
+      "id": "hackernews-48931429",
+      "source": "hackernews",
+      "title": "Show HN: Trellis2.c – Local 3D generation with Vulkan and CUDA",
+      "url": "https://github.com/Wimacs/trellis2.c",
+      "author": "wimaxs",
+      "publishedAt": "2026-07-16T07:39:49Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 10,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48883305",
+      "source": "hackernews",
+      "title": "Show HN: Juggler – an open-source GUI coding agent, by the creator of JUCE",
+      "url": "https://github.com/juggler-ai/juggler",
+      "author": "julesrms",
+      "publishedAt": "2026-07-12T18:28:15Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 10,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48883305.webp"
+    },
+    {
+      "id": "hackernews-48918840",
+      "source": "hackernews",
+      "title": "Show HN: AI-CLI – tiny C terminal assistant powered by local LLM",
+      "url": "https://github.com/vkataev/ai-cli",
+      "author": "novaRom",
+      "publishedAt": "2026-07-15T10:46:18Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 9,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48918840.webp"
+    },
+    {
+      "id": "arxiv-2607.13278v2",
+      "source": "arxiv",
+      "title": "Adapting Diffusion-Based Music Synthesis to Speech and Singing Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.13278v2",
+      "author": "Ben Maman",
+      "publishedAt": "2026-07-14T21:29:17Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 9,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "image": "/trends/arxiv-2607.13278v2.webp"
+    },
+    {
+      "id": "arxiv-2607.11706v1",
+      "source": "arxiv",
+      "title": "VoxENES 2026: Benchmarking Generalization of Speech Spoofing Detectors Against LLM-Era TTS and Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.11706v1",
+      "author": "Aastha Sharma",
+      "publishedAt": "2026-07-13T15:35:29Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 8,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "image": "/trends/arxiv-2607.11706v1.webp"
+    },
+    {
+      "id": "arxiv-2607.07015v1",
+      "source": "arxiv",
+      "title": "EscFOA: Enhancing Spatial Learning for Visually Impaired Learners via Generative Spatial Audio in 360-Degree Educational Environments",
+      "url": "http://arxiv.org/abs/2607.07015v1",
+      "author": "Ziyu Luo",
+      "publishedAt": "2026-07-08T05:17:26Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 8,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "image": "/trends/arxiv-2607.07015v1.webp"
+    },
+    {
+      "id": "hackernews-48923291",
+      "source": "hackernews",
+      "title": "Hedos – Local models in one native Mac app (llama.cpp, MLX, diffusers)",
+      "url": "https://www.hedos.ai/",
+      "author": "theiskaa",
+      "publishedAt": "2026-07-15T16:27:20Z",
+      "tags": [
         "local-llm"
       ],
       "score": 7,
-      "domain": "squish.run",
+      "domain": "hedos.ai",
       "sources": [
         "hackernews"
       ],
-      "image": "/trends/hackernews-48822627.webp"
+      "image": "/trends/hackernews-48923291.webp"
     },
     {
-      "id": "hackernews-48814952",
-      "source": "hackernews",
-      "title": "Show HN: Fast, native Mac file manager (filters, fuzzy find, 9 MB, no Electron)",
-      "url": "https://whimfiles.com",
-      "author": "whimbyte",
-      "publishedAt": "2026-07-07T08:12:12Z",
+      "id": "arxiv-2607.10183v2",
+      "source": "arxiv",
+      "title": "Automated Tensor Scheduling for Hybrid CPU-GPU LLM Inference on Consumer Devices",
+      "url": "http://arxiv.org/abs/2607.10183v2",
+      "author": "Yangyijian Liu",
+      "publishedAt": "2026-07-11T08:00:05Z",
       "tags": [
-        "metal-ane"
+        "local-llm"
       ],
       "score": 7,
-      "domain": "whimfiles.com",
+      "domain": "arxiv.org",
       "sources": [
-        "hackernews"
-      ]
+        "arxiv"
+      ],
+      "image": "/trends/arxiv-2607.10183v2.webp"
     },
     {
-      "id": "hackernews-48877051",
-      "source": "hackernews",
-      "title": "Bring seamless PQC encryption into every messenger you already use",
-      "url": "https://news.ycombinator.com/item?id=48877051",
-      "author": "kvasilev",
-      "publishedAt": "2026-07-12T00:10:39Z",
+      "id": "arxiv-2607.08800v1",
+      "source": "arxiv",
+      "title": "Dual-BEATs: Unlocking Zero-Shot Stereo Audio Perception in Audio Large Language Models via Dithering",
+      "url": "http://arxiv.org/abs/2607.08800v1",
+      "author": "Shuo-Chun Lin",
+      "publishedAt": "2026-07-09T03:10:16Z",
       "tags": [
-        "privacy-arch"
+        "dsp-audio"
+      ],
+      "score": 7,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "image": "/trends/arxiv-2607.08800v1.webp"
+    },
+    {
+      "id": "arxiv-2607.05276v1",
+      "source": "arxiv",
+      "title": "ProPS: Prompted Profile Synthesis for Natural Language-Conditioned Speaker Embedding Distributions",
+      "url": "http://arxiv.org/abs/2607.05276v1",
+      "author": "Thomas Thebaud",
+      "publishedAt": "2026-07-06T16:21:34Z",
+      "tags": [
+        "dsp-audio"
       ],
       "score": 5,
-      "domain": "news.ycombinator.com",
+      "domain": "arxiv.org",
       "sources": [
-        "hackernews"
-      ]
-    },
-    {
-      "id": "hackernews-48787415",
-      "source": "hackernews",
-      "title": "EyesOff Spots Shoulder Surfers Using a Privacy-First Approach",
-      "url": "https://www.eyesoff.app/blog/how-eyesoff-spots-shoulder-surfers/",
-      "author": "Two_hands",
-      "publishedAt": "2026-07-04T18:02:56Z",
-      "tags": [
-        "privacy-arch"
+        "arxiv"
       ],
-      "score": 4,
-      "domain": "eyesoff.app",
-      "sources": [
-        "hackernews"
-      ]
+      "image": "/trends/arxiv-2607.05276v1.webp"
     }
   ]
 }

@@ -12,7 +12,10 @@ export const PILLARS = {
   'privacy-arch': ['privacy-first', 'zero telemetry', 'local-first', 'no cloud', 'offline-first'],
 };
 
-/** Query terms sent to each source's search endpoint — kept short/native, unlike the matcher phrases above. */
+/** Query terms sent to each source's search endpoint — kept short/native, unlike the matcher phrases above.
+ *  Expanded to 24 queries (was 10) to increase candidate diversity and avoid
+ *  identical daily reports. Includes iOS craft, DSP, and on-device pillars.
+ */
 export const SEARCH_QUERIES = [
   'CoreML',
   'Apple Neural Engine',
@@ -24,6 +27,21 @@ export const SEARCH_QUERIES = [
   'spatial audio',
   'generative audio',
   'privacy-first app',
+  // Added for freshness / broader coverage (2026-07-18 revamp)
+  'CoreML quantization',
+  'Swift concurrency',
+  'on-device transcription',
+  'Metal Performance Shaders',
+  'voice conversion kNN',
+  'biquad filter DSP',
+  'ANE latency',
+  'indie iOS shipping',
+  'App Store review',
+  'local-first sync',
+  'Whisper on-device',
+  'GGUF quantization',
+  'real-time audio DSP',
+  'on-device vision',
 ];
 
 /** Returns matched pillar tags for a piece of text, empty array if irrelevant. */

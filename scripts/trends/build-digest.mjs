@@ -12,6 +12,9 @@ import { writeFileSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fetchBluesky } from './fetch-bluesky.mjs';
 import { fetchHackerNews } from './fetch-hn.mjs';
+import { fetchGitHub } from './fetch-github.mjs';
+import { fetchArxiv } from './fetch-arxiv.mjs';
+import { fetchLobsters } from './fetch-lobsters.mjs';
 // Reddit disabled (D-023) — no API credentials (self-service access closed, D-011).
 // fetch-reddit.mjs is retained; re-enable by restoring this import + the sources entry below.
 // import { fetchReddit } from './fetch-reddit.mjs';
@@ -85,6 +88,9 @@ if (recentSeen.size > 0) {
 const sources = [
   { name: 'bluesky', run: fetchBluesky },
   { name: 'hackernews', run: fetchHackerNews },
+  { name: 'github', run: fetchGitHub },
+  { name: 'arxiv', run: fetchArxiv },
+  { name: 'lobsters', run: fetchLobsters },
   // { name: 'reddit', run: fetchReddit }, // disabled — see D-023 / note above
 ];
 

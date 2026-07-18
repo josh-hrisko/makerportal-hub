@@ -14,8 +14,8 @@ export const MAX_PER_PILLAR = 6;
 export const MAX_PER_AUTHOR = 2;
 export const MAX_AGE_DAYS = 14;
 
-/** Bluesky search is raw firehose; HN/Reddit results are already community-curated. */
-const MIN_HITS = { bluesky: 2, hackernews: 1, reddit: 1 };
+/** Bluesky search is raw firehose; HN/Reddit/GitHub/arXiv/Lobsters are community-curated. */
+const MIN_HITS = { bluesky: 2, hackernews: 1, reddit: 1, github: 1, arxiv: 1, lobsters: 1 };
 
 /** Primary sources you can actually cite in a field note. */
 const ARTIFACT_DOMAINS = ['arxiv.org', 'github.com', 'developer.apple.com', 'huggingface.co'];
@@ -149,20 +149,25 @@ export function selectDigest(candidates, opts = {}) {
     maxTotal = MAX_TOTAL,
     maxPerPillar = MAX_PER_PILLAR,
     maxPerAuthor = MAX_PER_AUTHOR,
+    maxPerSource = 8,
   } = opts;
   const sorted = [...candidates].sort(
     (a, b) => b.score - a.score || new Date(b.publishedAt) - new Date(a.publishedAt),
   );
   const perPillar = new Map();
   const perAuthor = new Map();
+  const perSource = new Map();
   const picked = [];
   for (const c of sorted) {
     if (picked.length >= maxTotal) break;
     const pillar = c.tags?.[0] ?? 'untagged';
     if ((perPillar.get(pillar) ?? 0) >= maxPerPillar) continue;
     if (c.author && (perAuthor.get(c.author) ?? 0) >= maxPerAuthor) continue;
+    const src = c.source ?? 'unknown';
+    if ((perSource.get(src) ?? 0) >= maxPerSource) continue;
     perPillar.set(pillar, (perPillar.get(pillar) ?? 0) + 1);
     if (c.author) perAuthor.set(c.author, (perAuthor.get(c.author) ?? 0) + 1);
+    perSource.set(src, (perSource.get(src) ?? 0) + 1);
     picked.push(c);
   }
   return picked;
@@ -200,18 +205,24 @@ export function runPipeline(candidates, now = Date.now(), opts = {}) {
   const dropped = {};
   const gated = [];
   for (const c of deduped) {
-    // Hard-dedupe against recent journal history if provided — skip entirely
-    // for items seen in last N days. This is what prevents identical daily reports.
-    if (seenSet && isRecentlySeen(c, seenSet)) {
-      dropped['recently-seen'] = (dropped['recently-seen'] ?? 0) + 1;
-      continue;
-    }
     const { ok, reason } = gateCandidate(c, now);
     if (ok) gated.push(c);
     else dropped[reason] = (dropped[reason] ?? 0) + 1;
   }
+  // Score with recency + seen penalty — seen items get -100, so they only
+  // surface if there is *no* fresh content (avoids skipping days, per user pref).
   const scored = gated.map((c) => ({ ...c, score: scoreCandidate(c, now, { seenSet }) }));
+  // For stats, count how many were penalized as recently-seen
+  let recentlySeenPenalized = 0;
+  if (seenSet) {
+    for (const c of gated) if (isRecentlySeen(c, seenSet)) recentlySeenPenalized++;
+  }
   const selected = selectDigest(scored, opts);
+  // Count how many selected were actually fresh vs repeat
+  let repeatInSelected = 0;
+  if (seenSet) {
+    for (const c of selected) if (isRecentlySeen(c, seenSet)) repeatInSelected++;
+  }
   return {
     items: selected.map(toTrendItem),
     selected,
@@ -221,6 +232,8 @@ export function runPipeline(candidates, now = Date.now(), opts = {}) {
       gated: gated.length,
       selected: selected.length,
       dropped,
+      recentlySeenInPool: recentlySeenPenalized,
+      repeatsInSelected: repeatInSelected,
     },
   };
 }
