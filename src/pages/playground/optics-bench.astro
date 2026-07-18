@@ -1,11 +1,34 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('optics-bench'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => a.title.localeCompare(b.title));
+// No optics gear is currently available in affiliate-links; gear will be empty.
+// const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
 const title = 'Ray-Matrix Optics Bench — ABCD Paraxial Ray Tracing & Laser Cavity Stability | MakerPortal';
 const description =
   'Trace paraxial rays through a cascade of lenses, mirrors, and free space with 2×2 ABCD ray-transfer matrices. Read the system matrix and effective focal length, image an object, and test two-mirror laser resonators against the g1·g2 stability criterion — all computed live in your browser.';
 const canonical = new URL('/playground/optics-bench', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Ray-Matrix Optics Bench',
+  url: canonical.toString(),
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -23,16 +46,20 @@ const faqs = [
     a: 'In paraxial (small-angle) optics a ray is described by its height y and slope θ. Every optical element — a length of free space, a thin lens, a curved mirror — acts on that pair through a 2×2 matrix [[A, B], [C, D]]. Cascading elements just multiplies their matrices, so an entire optical system collapses to a single 2×2 matrix. It is the standard first-order design tool for imaging systems and laser cavities.',
   },
   {
-    q: 'Why is the determinant of the system matrix 1?',
-    a: 'For a system that begins and ends in the same medium, the determinant equals the ratio of input to output refractive index, which is 1. It is a useful sanity check: if your cascade does not come out to det ≈ 1, an element is wrong.',
+    q: 'What does the g₁·g₂ stability criterion mean?',
+    a: 'For a two-mirror laser cavity define g₁ = 1 − L/R₁ and g₂ = 1 − L/R₂. The cavity is stable — rays stay bounded round-trip after round-trip — when 0 ≤ g₁·g₂ ≤ 1. Outside that region rays walk off the mirrors. Edge cases like plane-parallel (g₁·g₂ ≈ 1) and confocal (g₁·g₂ = 0) are sensitive to alignment in practice. The equivalent check on the round-trip matrix is |(A+D)/2| ≤ 1 and both are evaluated live in the resonator tab.',
   },
   {
-    q: 'What makes a laser resonator stable?',
-    a: 'A two-mirror cavity is stable when a ray bouncing back and forth stays bounded rather than walking off the mirrors. In terms of the g-parameters gᵢ = 1 − L/Rᵢ, that condition is 0 ≤ g1·g2 ≤ 1. Equivalently the round-trip matrix must have |(A+D)/2| ≤ 1. The plane-parallel and confocal cavities sit exactly on the edge of that region.',
+    q: 'Why does the paraxial approximation work?',
+    a: 'The paraxial approximation replaces sinθ with θ and tanθ with θ, which is accurate to better than 1% for angles under about 8° (0.14 rad). Since most imaging systems and laser cavities operate with shallow ray angles, this linearization captures real-world behavior remarkably well. It is what lets you replace Snell\'s law at each surface with a simple matrix multiplication.',
   },
   {
-    q: 'What are the limitations of ABCD ray tracing?',
-    a: 'It is strictly first-order: it assumes small angles, ignores all aberrations (spherical, coma, chromatic), treats lenses as infinitely thin unless you build up a thick lens from interfaces, and says nothing about diffraction at apertures. It is exact in the paraxial limit and superb for layout and cavity design, but it is not a substitute for full ray-tracing or wave-optics software when aberrations matter.',
+    q: 'How do real lenses differ from these ideal ABCD matrices?',
+    a: 'The thin lens matrix assumes zero thickness and perfect focusing — no spherical aberration, no coma, no chromatic focal shift. A real lens has thickness, curved surfaces with higher-order figure errors, wavelength-dependent refractive index, and diffraction at its aperture. ABCD matrices give you the first-order layout (where things focus, magnification); a full ray-tracing or wave-optics package adds the aberrations on top.',
+  },
+  {
+    q: 'Why should the determinant of the system matrix be 1?',
+    a: 'For a system that begins and ends in the same medium (e.g. air → air), the determinant equals the ratio of input to output refractive index — unity. It is a useful numerical sanity check: if your cascade does not come out to det = AD − BC ≈ 1, an element value or ordering is wrong. Floating-point arithmetic may show 0.9999 or 1.0001 but a 0.5 or 2.0 means you lost a factor somewhere.',
   },
 ];
 
@@ -41,11 +68,29 @@ const faqSchema = {
   '@type': 'FAQPage',
   mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
 };
-import Math from '../../components/Math.astro';
+
+const opticsCoreTypeScript = `export function systemMatrix(elements: Matrix2[]): Matrix2 {
+  let m = { ...identity };
+  for (const el of elements) m = multiply(el, m);
+  return m;
+}
+
+export function traceRay(m: Matrix2, ray: Ray): Ray {
+  return {
+    y: m.A * ray.y + m.B * ray.theta,
+    theta: m.C * ray.y + m.D * ray.theta,
+  };
+}
+
+export function effectiveFocalLength(m: Matrix2): number {
+  if (m.C === 0) return Infinity;
+  return -1 / m.C;
+}`;
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
@@ -176,6 +221,72 @@ import Math from '../../components/Math.astro';
       </div>
     </section>
 
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel above answers to the math below. Here is what each piece of the two-panel instrument is actually doing, and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The ray-bench canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Optical axis and grid.</strong> The horizontal centerline is the optical axis (<Math math="y=0" />). The canvas auto-scales its vertical extent so the outermost ray never clips, and the axis stays centered regardless of element count or fan width.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Lens markers.</strong> Converging lenses (<Math math="f \gt 0" />) show convex arrowheads pointing outward; diverging (<Math math="f \lt 0" />) show concave arrowheads pointing inward. Colour is the anchor blue. A label "<code>f=</code>" marks the focal length in mm.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Mirror lines.</strong> Curved mirrors are drawn at their unfolded position (the reflection is folded into the forward-propagating convention). Convex/concave is shown via the <code>R=</code> label; colour is the brand pink. A flat mirror (<Math math="R \to \infty" />) collapses to the identity matrix and draws no optical power, so a cavity with <Math math="R=\pm400" /> is functionally flat here.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Ray traces.</strong> Nine rays per mode. Collimated mode fans a range of input heights at <Math math="\theta=0" />; point-source mode fans a range of angles from <Math math="y=0" />. Each ray is stepped element-by-element through <code>traceRay()</code> — no approximation besides the paraxial limit built into the matrices themselves.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Element cascade (matrix multiplication order).</strong> The system matrix is built as <Math math="M_{\text{sys}} = M_n \cdots M_2 M_1" /> where <Math math="M_1" /> is the first element light hits (rightmost in the product). Each added element left-multiplies the accumulator. The order is not commutative — reversing it gives wrong physics, as the gotchas below explain.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, readouts, and cavity mode</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Element types.</strong> Gap is <code>freeSpace(d)</code> with matrix <Math math="\begin{bmatrix}1 &amp; d \\ 0 &amp; 1\end{bmatrix}" />. Lens is <code>thinLens(f)</code> with matrix <Math math="\begin{bmatrix}1 &amp; 0 \\ -1/f &amp; 1\end{bmatrix}" />. Mirror is <code>curvedMirror(R)</code> with <Math math="C = -2/R" />, effectively a lens of <Math math="f = R/2" />. All values in mm on the UI, converted to meters for the optics functions.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Presets.</strong> Single lens (<Math math="f=100" /> mm, <Math math="u=150" /> mm), 4f relay (two <Math math="f=100" /> mm lenses separated by <Math math="2f" /> — unity magnification, afocal), and Keplerian telescope (<Math math="f_1=200,\, f_2=50" /> mm separated by <Math math="f_1 + f_2" />). Click any preset to load its elements and redraw.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Readouts.</strong> System matrix <Math math="[A, B; C, D]" /> with <Math math="B" /> in mm, determinant <Math math="AD - BC" /> (should read 1), effective focal length <Math math="EFL = -1/C" /> (shows "afocal" if <Math math="C=0" />), total track length. The imaging panel below solves <Math math="B=0" /> for image distance <Math math="v" /> given object distance <Math math="u" /> and the system matrix.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Cavity mode.</strong> The second tab computes the round-trip matrix through two mirrors plus free space, extracts <Math math="g_1, g_2" /> and their product, checks stability, and plots the cavity on the <Math math="(g_1, g_2)" /> plane with the hyperbolic stable region shaded. Edge cavities (<Math math="g_1 g_2 \approx 0" /> or <Math math="\approx 1" />) show "edge" in place of beam sizes — the Gaussian mode diverges at the boundary.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Render loop.</strong> There is no idle <code>requestAnimationFrame</code> spin. The canvases re-render on any element change, slider move, preset load, tab switch, or theme mutation. The pixel-shaded stability region on the cavity canvas is pre-computed into an <code>ImageData</code> buffer each render — no per-pixel math during idle.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The ABCD matrix cascade</p>
+              <Math math="M_{\text{sys}} = M_n \cdots M_2 M_1 = \begin{bmatrix} A &amp; B \\ C &amp; D \end{bmatrix}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">The image-formation condition <Math math="B = 0" /> yields <Math math="v = -A / C" />. Magnification is the <Math math="A" /> element of the full object-to-image matrix: <Math math="M = \operatorname{FreeSpace}(v) \cdot M_{\text{sys}} \cdot \operatorname{FreeSpace}(u)" />. If <Math math="C = 0" /> the system is afocal — no real image forms at finite distance.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section aria-labelledby="method-title">
       <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
@@ -262,6 +373,139 @@ import Math from '../../components/Math.astro';
         </p>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Paraxial rays only</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The ABCD method replaces <Math math="\sin\theta \approx \theta" /> and <Math math="\tan\theta \approx \theta" />, which holds to better than 1% for angles under about 8° (0.14 rad). Feed a 30° ray into these matrices and the output is not just wrong — it violates Snell's law entirely, since the matrix assumes linearity that only exists for small angles. The canvas exaggerates ray heights to fill the viewport; the math underneath still assumes shallow slopes. If your real system has steep bends, switch to sequential ray-tracing or a non-sequential Monte Carlo engine.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Matrix order is NOT commutative</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text"><Math math="M_1 M_2 \neq M_2 M_1" />. The system matrix is built by left-multiplying each successive element: <Math math="M_{\text{sys}} = M_n \cdots M_2 M_1" />, where <Math math="M_1" /> is the first element light hits. If you stack the element-dialog entries top-to-bottom but multiply them bottom-to-top, you have secretly reversed your optical train. The real consequence: a lens then a gap yields a different system matrix than a gap then a lens — and the focal point moves. The add-element buttons and preset loaders here always build in the correct left-to-right order, but if you reorder rows manually and don't understand the right-to-left multiplication convention, the readouts will silently disagree with your drawing.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">TypeScript, the core engine</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Three pure functions from <code class="text-primary-cta">src/lib/optics.ts</code> do the heavy lifting. They have no DOM, no framework, no side effects — drop them into any TypeScript project.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">systemMatrix · traceRay · effectiveFocalLength</p>
+            <button type="button" class="copy-btn" data-copy-target="code-optics-core">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-optics-core" code={opticsCoreTypeScript} lang="typescript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Optics bench stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Optics hardware
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -320,6 +564,49 @@ import Math from '../../components/Math.astro';
   }
   .el-row button:hover { color: var(--mp-cta); border-color: var(--mp-cta); }
   input[type='range'] { accent-color: var(--mp-cta); }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 
 <script>

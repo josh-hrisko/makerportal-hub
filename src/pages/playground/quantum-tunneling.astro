@@ -1,11 +1,24 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import Math from '../../components/Math.astro';
 
 const title = 'Quantum Tunneling Simulator — 1D Schrödinger Equation, Crank–Nicolson | MakerPortal';
 const description =
   'Launch a Gaussian wave packet at a potential barrier and watch it split, reflect, and tunnel through in real time. Solves the 1D time-dependent Schrödinger equation with the unitary Crank–Nicolson method, with live transmission and reflection probabilities checked against the exact rectangular-barrier formula.';
 const canonical = new URL('/playground/quantum-tunneling', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Quantum Tunneling Simulator',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -31,8 +44,12 @@ const faqs = [
     a: 'Above the barrier the particle is not guaranteed to pass — the barrier edges act like a thin film, and the transmitted amplitude interferes with itself. At energies where the barrier width is a half-integer number of wavelengths the transmission hits 100% (resonant transmission); between those it dips. The live number tracks the exact rectangular-barrier formula.',
   },
   {
-    q: 'What are the limitations of this simulation?',
-    a: 'It is a single particle in one dimension on a finite uniform grid in natural units (ħ = m = 1), with hard walls softened by an absorbing layer to suppress edge reflections. The absorbing layer slightly breaks the otherwise exact unitarity near the boundaries. It captures the real time-dependent Schrödinger dynamics but is not a many-body, three-dimensional, or relativistic solver.',
+    q: 'How is probability normalization maintained?',
+    a: 'The Crank–Nicolson scheme is unitary to machine precision for a real potential — each step preserves ∫|ψ|² dx exactly. However, the absorbing boundary layers at the domain edges use a negative imaginary potential that deliberately removes amplitude, so total norm drifts slowly downward from 1. The simulation rescales the |ψ|² vertical axis every 25 frames to keep the waveform visible, and the norm readout shows the current total live so you can gauge how much has leaked into the absorbers.',
+  },
+  {
+    q: 'Why are absorbing boundaries needed and how do they work?',
+    a: 'The spatial domain is finite with Dirichlet walls (ψ = 0 at x = ±70). Without absorbing layers, any amplitude that reaches the edge reflects back inward, contaminating the transmitted and reflected signals. Quadratic imaginary-potential wells near both edges gradually damp the wavefunction before it hits the hard wall, suppressing reflections at the cost of slowly eroding total probability. Practical runs should stay under ~2000 time steps to keep the norm above 0.99.',
   },
 ];
 
@@ -41,10 +58,86 @@ const faqSchema = {
   '@type': 'FAQPage',
   mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
 };
+
+const crankNicolsonCode = `export class CrankNicolson1D {
+  readonly n: number;
+  readonly dx: number;
+  readonly dt: number;
+  psi: ComplexArray;
+
+  constructor(x: Float64Array, dt: number, Vre: Float64Array, Vim?: Float64Array) {
+    this.n = x.length;
+    this.dx = x[1] - x[0];
+    this.dt = dt;
+    this.Vre = Vre;
+    this.Vim = Vim ?? new Float64Array(this.n);
+    this.psi = { re: new Float64Array(this.n), im: new Float64Array(this.n) };
+    // LHS off-diagonal: a = −i·dt/(4 dx²) — constant, symmetric
+    this.aRe = 0;
+    this.aIm = -this.dt / (4 * this.dx * this.dx);
+    // Precompute LHS main diagonal b_j = 1 + i·dt/2·(1/dx² + V_j)
+    this.bRe = new Float64Array(this.n - 2);
+    this.bIm = new Float64Array(this.n - 2);
+    for (let j = 0; j < this.n - 2; j++) {
+      const diagKin = 1 / (this.dx * this.dx);
+      this.bRe[j] = 1 + (this.dt / 2) * -this.Vim[j + 1];
+      this.bIm[j] = (this.dt / 2) * (diagKin + this.Vre[j + 1]);
+    }
+  }
+
+  step(): void {
+    // Build RHS d = (I − i·dt/2 H) ψ^n over interior nodes
+    const dRe = new Float64Array(this.n - 2);
+    const dIm = new Float64Array(this.n - 2);
+    for (let j = 1; j <= this.n - 2; j++) {
+      const hRe = 1/this.dx**2 + this.Vre[j];
+      const hIm = this.Vim[j];
+      const mRe = 1 + (this.dt / 2) * hIm;
+      const mIm = -(this.dt / 2) * hRe;
+      let rr = mRe * this.psi.re[j] - mIm * this.psi.im[j];
+      let ii = mRe * this.psi.im[j] + mIm * this.psi.re[j];
+      const off = this.dt / (4 * this.dx * this.dx);
+      rr += -off * (this.psi.im[j-1] + this.psi.im[j+1]);
+      ii +=  off * (this.psi.re[j-1] + this.psi.re[j+1]);
+      dRe[j-1] = rr;
+      dIm[j-1] = ii;
+    }
+    // Thomas algorithm — O(N), no matrix inversion
+    const sol = thomasSolveComplex(
+      this.aRe, this.aIm, this.bRe, this.bIm,
+      this.aRe, this.aIm, dRe, dIm
+    );
+    for (let j = 1; j <= this.n - 2; j++) {
+      this.psi.re[j] = sol.re[j - 1];
+      this.psi.im[j] = sol.im[j - 1];
+    }
+    this.psi.re[0] = this.psi.im[0] = 0;
+    this.psi.re[this.n - 1] = this.psi.im[this.n - 1] = 0;
+  }
+}
+
+export function rectangularBarrierTransmission(
+  E: number, V0: number, L: number
+): number {
+  if (E <= 0) return 0;
+  if (V0 <= 0) return 1;
+  // E ≈ V₀: removable singularity — use limit form
+  if (Math.abs(E - V0) < 1e-9 * Math.max(1, V0))
+    return 1 / (1 + (V0**2 * L**2) / (2 * E));
+  if (E < V0) {
+    const kappa = Math.sqrt(2 * (V0 - E));
+    const s = Math.sinh(kappa * L);
+    return 1 / (1 + (V0**2 * s**2) / (4 * E * (V0 - E)));
+  }
+  const k2 = Math.sqrt(2 * (E - V0));
+  const s = Math.sin(k2 * L);
+  return 1 / (1 + (V0**2 * s**2) / (4 * E * (E - V0)));
+}`;
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
@@ -105,8 +198,74 @@ const faqSchema = {
               <div class="readout"><dt>Exact T (plane wave)</dt><dd id="ro-Tana">—</dd></div>
             </div>
             <p class="text-[0.78rem] leading-[1.55] text-muted-text/80">
-              The live reflected/transmitted split is the actual wave-packet result; the exact <em>T</em> is the textbook plane-wave transmission at energy E = k₀²/2. They agree best for a narrow packet (large σ in position ⇒ sharp energy), and differ when a broad energy spread straddles the barrier top.
+              The live reflected/transmitted split is the actual wave-packet result; the exact <em>T</em> is the textbook plane-wave transmission at energy <Math math="E = k_0^2/2" />. They agree best for a narrow packet (large σ in position ⇒ sharp energy), and differ when a broad energy spread straddles the barrier top.
             </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel on the canvas answers to the physics below. Here is what each visual element and control is actually doing, and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The wavefunction canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The <Math math="|\psi|^2" /> filled area.</strong> Probability density encoded as a filled translucent region under the waveform envelope. The brighter the fill, the more likely the particle is found at that position. The upper stroke traces the density outline — peak height is the most probable location.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The potential barrier rectangle.</strong> A semi-transparent box spanning the barrier width at the scaled <Math math="V_0" /> height. The horizontal energy dashed line (anchor blue) sits at <Math math="E = k_0^2/2" /> and visually answers the central question: is the particle energy above or below the barrier?</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The Re/Im toggle overlay.</strong> When enabled, two faint waveforms — blue for <Math math="\operatorname{Re}(\psi)" /> and pink for <Math math="\operatorname{Im}(\psi)" /> — are drawn behind the probability density. Their relative phase encodes the local momentum: crest-aligned means moving right, crest-opposed means moving left. The primary diagnostic for interference patterns.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Absorbing boundary layers.</strong> Quadratic imaginary-potential wells at the <Math math="[-70, -56]" /> and <Math math="[56, 70]" /> domain edges silently damp incoming amplitude. The wavefunction never sees a hard wall — it fades into the absorber instead, preventing the spurious reflections that would otherwise corrupt the transmitted and reflected readouts.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> Every frame advances 4 Crank–Nicolson steps (<Math math="\Delta t = 0.02" /> each, so 0.08 time units per frame). Every 25 frames the vertical scale auto-adjusts via a smooth lerp so the wavefunction always fills ~62% of the canvas height, preventing it from flattening as it spreads or shrinking as the absorber eats amplitude.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">Tridiagonal system solved every step — Thomas algorithm, O(N)</p>
+              <Math math="b_j\psi_j^{n+1} + a\psi_{j-1}^{n+1} + a\psi_{j+1}^{n+1} = d_j" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">For each interior grid point <Math math="j = 1,\ldots, N-2" />, with <Math math="a = -\frac{i\Delta t}{4(\Delta x)^2}" />, <Math math="b_j = 1 + \frac{i\Delta t}{2}\bigl(\frac{1}{(\Delta x)^2} + V_j\bigr)" />, and RHS <Math math="d_j = \bigl[(I - \frac{i\Delta t}{2}H)\psi^n\bigr]_j" />. The matrix is tridiagonal because the kinetic operator couples only nearest neighbors. The Thomas algorithm solves it exactly in one forward sweep and one backward sweep — precisely two passes over the grid, no iteration, no matrix inversion.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, readouts, and physics</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Sliders.</strong> Four controls: barrier height <Math math="V_0" /> (0–20), barrier width (0.2–10), packet momentum <Math math="k_0" /> (0.5–8), and packet width <Math math="\sigma" /> (1–10). Each slider input rebuilds the potential, re-initializes the wavefunction from <Math math="x_0 = -35" />, and restarts the clock.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Physics regime label.</strong> Computed live: <Math math="E = k_0^2/2" />. If <Math math="E \lt V_0" /> the label reads "tunneling (E &lt; V₀)", if <Math math="E \gt V_0" /> it reads "over-barrier (E &gt; V₀)", and at equality it reads "at barrier top". This is the regime switch between exponential decay inside the barrier and resonant transmission above it.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Readout cards.</strong> Four live numbers: Reflected (<Math math="\int_{-\infty}^{w/2}|\psi|^2 dx" /> left of the barrier), Inside barrier (within the walls), Transmitted (right of the barrier), and Exact T (the textbook plane-wave formula at energy E). The live and exact values converge for narrow packets in momentum space, and diverge when a broad energy spread straddles the barrier top.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Auto-rescale viewport.</strong> The <Math math="|\psi|^2" /> peak is tracked every frame and the vertical scale factor <Math math="\alpha" /> is lerped toward keeping it at 62% of the canvas height. The smooth factor (15% per rescale tick, every 25 frames) prevents jarring jumps while preventing the waveform from disappearing as it spreads or the absorber eats amplitude.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Play / Pause / Relaunch / Re/Im.</strong> Play toggles the animation loop. Relaunch resets the wavefunction and re-reads all slider values — the equivalent of setting up a new experiment. Show Re/Im overlays the real (blue) and imaginary (pink) parts of <Math math="\psi" /> behind the probability density, revealing the phase structure that <Math math="|\psi|^2" /> alone hides.</p>
+              </li>
+            </ol>
           </div>
         </div>
       </div>
@@ -116,8 +275,34 @@ const faqSchema = {
       <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
         <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          We solve i∂ψ/∂t = (−½∂²/∂x² + V)ψ in natural units (ħ = m = 1) on a uniform grid. Crank–Nicolson advances (I + i·dt/2·H)ψⁿ⁺¹ = (I − i·dt/2·H)ψⁿ — the Cayley approximation to the exact propagator exp(−iH·dt). Because that operator is unitary, ∫|ψ|² is conserved to machine precision; each step is a tridiagonal complex solve via the Thomas algorithm. A thin imaginary (absorbing) potential at the domain edges soaks up outgoing amplitude so the walls do not reflect it back.
+          We solve <Math math="i\frac{\partial\psi}{\partial t} = \bigl(-\frac{1}{2}\frac{\partial^2}{\partial x^2} + V\bigr)\psi" /> in natural units (<Math math="\hbar = m = 1" />) on a uniform grid. Crank–Nicolson advances <Math math="(I + i\frac{\Delta t}{2}H)\psi^{n+1} = (I - i\frac{\Delta t}{2}H)\psi^n" /> — the Cayley approximation to the exact propagator <Math math="e^{-iH\Delta t}" />. Because that operator is unitary, <Math math="\int|\psi|^2 dx" /> is conserved to machine precision; each step is a tridiagonal complex solve via the Thomas algorithm. A thin imaginary (absorbing) potential at the domain edges soaks up outgoing amplitude so the walls do not reflect it back.
         </p>
+        <div class="mt-6 grid grid-cols-1 gap-4">
+          <div class="math-card">
+            <p class="math-label">Time-dependent Schrödinger equation (ħ = m = 1)</p>
+            <Math math="i\frac{\partial\psi}{\partial t} = \left(-\frac{1}{2}\frac{\partial^2}{\partial x^2} + V(x)\right)\psi" display class="mt-2" />
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">In natural units the de Broglie wavelength is <Math math="\lambda = 2\pi/k" />, so <Math math="k_0 = 3" /> corresponds to <Math math="\lambda \approx 2.1" /> — well resolved on the <Math math="\Delta x \approx 0.14" /> grid.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Crank–Nicolson propagator (Cayley form)</p>
+            <Math math="(I + \frac{i\Delta t}{2}H)\psi^{n+1} = (I - \frac{i\Delta t}{2}H)\psi^n" display class="mt-2" />
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">Unitary to machine precision: <Math math="\|\psi^{n+1}\| = \|\psi^n\|" /> for real <Math math="V" />. Unconditionally stable — no CFL constraint on <Math math="\Delta t" />, unlike explicit schemes that blow up unless <Math math="\Delta t \lt (\Delta x)^2" />.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Transmission coefficient — below barrier (<Math math="E \lt V_0" />)</p>
+            <Math math="T = \frac{1}{1 + \frac{V_0^2\sinh^2(\kappa w)}{4E(V_0 - E)}},\qquad \kappa = \sqrt{2(V_0 - E)}" display class="mt-2" />
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">Exponential decay inside the barrier: <Math math="\psi \propto e^{-\kappa x}" />. For <Math math="\kappa w \gg 1" /> (wide/tall barrier), <Math math="T \approx \frac{16E(V_0-E)}{V_0^2}e^{-2\kappa w}" /> — the classic Gamow factor.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Transmission coefficient — above barrier (<Math math="E \gt V_0" />)</p>
+            <Math math="T = \frac{1}{1 + \frac{V_0^2\sin^2(k_2 w)}{4E(E - V_0)}},\qquad k_2 = \sqrt{2(E - V_0)}" display class="mt-2" />
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">Resonant transmission at <Math math="T = 1" /> when <Math math="k_2 w = n\pi" /> — the barrier acts as a Fabry–Pérot etalon. Between resonances the transmission dips but never vanishes.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Numerical parameters</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.6]"><Math math="N = 1000" /> grid points on domain <Math math="[-70, 70]" /> with <Math math="\Delta x = 140/999 \approx 0.1401" />. Time step <Math math="\Delta t = 0.02" />. Four Crank–Nicolson steps per animation frame (× requestAnimationFrame at ≈ 60 Hz) gives ~5 seconds of simulated physics per wall-clock second. The absorbing boundary uses quadratic imaginary-potential caps <Math math="V_{\text{im}} = -2.5 f^2" /> over the outermost 14 units on each side.</p>
+          </div>
+        </div>
         <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-semibold text-primary-text">What is faithful</p>
@@ -131,6 +316,57 @@ const faqSchema = {
         <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
           The solver lives in <code class="text-primary-cta">src/lib/quantum.ts</code> (Crank–Nicolson stepper, complex Thomas solver, exact rectangular-barrier transmission), unit-tested for norm conservation and the analytic transmission limits.
         </p>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Absorbing boundaries eat probability</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The quadratic imaginary-potential caps at the domain edges (<Math math="V_{\text{im}}(x) = -2.5f^2" />, where <Math math="f = (d_{\text{edge}} - |x - x_{\text{wall}}|)/d_{\text{edge}}" /> with <Math math="d_{\text{edge}} = 14" />) deliberately leak amplitude to suppress wall reflections. The norm readout shows the drift — it starts at 1.000 and gradually falls. Keep runs under ~2000 time steps for a norm above 0.99. Longer runs see the wavefunction visibly shrink as the absorbers consume it from both ends.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta"><Math math="E \approx V_0" /> resonance</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">When the packet energy sits exactly at the barrier height, the exact T formulas for <Math math="E \lt V_0" /> and <Math math="E \gt V_0" /> both approach a removable singularity — <Math math="\sinh(\kappa w) \to \kappa w" /> and <Math math="\sin(k_2 w) \to k_2 w" /> as <Math math="\kappa, k_2 \to 0" />. The code handles this with a separate limit branch (<Math math="T = 1/(1 + V_0^2 w^2/(2E))" />), but the numerical wave-packet dynamics at this boundary are sensitive: even a small energy spread puts part of the packet above and part below the barrier, so the live split and the exact formula can disagree more than usual.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">TypeScript — the Crank–Nicolson stepper</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The full solver lives in <code class="text-primary-cta">src/lib/quantum.ts</code>. Here is the core class and the exact transmission formula — pure functions with zero dependencies beyond a <code class="text-primary-cta">Float64Array</code>.</p>
+        <div class="mt-8">
+          <div>
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">CrankNicolson1D + rectangularBarrierTransmission</p>
+              <button type="button" class="copy-btn" data-copy-target="code-crank-nicolson">Copy</button>
+            </div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+              <Code id="code-crank-nicolson" code={crankNicolsonCode} lang="typescript" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   </PlaygroundShell>
@@ -150,6 +386,38 @@ const faqSchema = {
   .live-lab { font-family: var(--font-mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mp-muted); }
   .live-val { font-weight: 700; color: var(--mp-text); font-size: 0.96rem; }
   input[type='range'] { accent-color: var(--mp-cta); }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
 </style>
 
 <script>
@@ -376,4 +644,20 @@ function initQuantumTunneling() {
 
 document.addEventListener('astro:page-load', initQuantumTunneling);
 initQuantumTunneling();
+</script>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copyTarget;
+      const codeEl = targetId ? document.getElementById(targetId) : null;
+      if (!codeEl) return;
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent ?? '');
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      } catch {}
+    });
+  });
 </script>
