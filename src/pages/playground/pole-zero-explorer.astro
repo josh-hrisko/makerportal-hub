@@ -1,0 +1,921 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Pole-Zero Filter Explorer — z-Plane, Frequency Response & Audio | MakerPortal';
+const description = 'Drag poles and zeros on the z-plane and watch the exact frequency response update in real time — magnitude, phase, and live audio preview, all computed from the transfer function geometry.';
+const canonical = new URL('/playground/pole-zero-explorer', Astro.site);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Pole-Zero Filter Explorer',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Pole-Zero Filter Explorer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Pole-Zero Filter Explorer"
+    lead="Drag poles and zeros on the z-plane. Watch the frequency response compute in real time from the exact transfer function H(z) — not an approximation. Preview the filter on live audio with Web Audio IIRFilterNode."
+    pillarHint="dsp-audio"
+  >
+    <section class="border-b border-border" aria-labelledby="explorer-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 id="explorer-title" class="sr-only">Pole-zero filter explorer</h2>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,440px)_1fr]">
+          <!-- Left column: z-plane canvas -->
+          <div class="rounded-[20px] border border-border bg-card-bg p-5">
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">z-Plane</p>
+              <span id="zp-coord" class="font-mono text-[0.7rem] text-muted-text/70">&nbsp;</span>
+            </div>
+            <div class="relative mt-3 overflow-hidden rounded-[14px] border border-border bg-canvas">
+              <canvas id="zp-canvas" width="420" height="420" class="block w-full touch-none" aria-label="z-plane with draggable poles and zeros"></canvas>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2 font-mono text-[0.62rem] text-muted-text">
+              <span class="inline-flex items-center gap-1"><span class="inline-block h-2 w-2 rounded-full bg-cyan-400"></span> Poles</span>
+              <span class="inline-flex items-center gap-1"><span class="inline-block h-2 w-2 rounded-full border border-orange-400 bg-transparent"></span> Zeros</span>
+              <span>× = conjugate pair</span>
+            </div>
+          </div>
+
+          <!-- Right column: controls + response -->
+          <div class="flex flex-col gap-5">
+            <!-- Filter type presets -->
+            <div class="rounded-[20px] border border-border bg-card-bg p-5">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Filter presets</p>
+              <div class="mt-3 flex flex-wrap gap-2" id="preset-buttons">
+                <button type="button" data-preset="lowpass" class="preset-btn pill-btn">Lowpass</button>
+                <button type="button" data-preset="highpass" class="preset-btn pill-btn">Highpass</button>
+                <button type="button" data-preset="bandpass" class="preset-btn pill-btn">Bandpass</button>
+                <button type="button" data-preset="notch" class="preset-btn pill-btn">Notch</button>
+                <button type="button" data-preset="allpass" class="preset-btn pill-btn">Allpass</button>
+                <button type="button" data-preset="peaking" class="preset-btn pill-btn">Peaking</button>
+              </div>
+              <p id="filter-type-label" class="mt-3 font-mono text-[0.7rem] text-muted-text">Type: —</p>
+            </div>
+
+            <!-- Manual controls -->
+            <div class="rounded-[20px] border border-border bg-card-bg p-5">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Pole position</p>
+              <div class="mt-3 grid grid-cols-2 gap-3">
+                <label class="block">
+                  <span class="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.06em] text-muted-text">
+                    <span>Radius</span><span id="pole-r-val">0.85</span>
+                  </span>
+                  <input type="range" id="pole-r-slider" min="0" max="0.995" step="0.001" value="0.85" class="mt-0.5 w-full" />
+                </label>
+                <label class="block">
+                  <span class="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.06em] text-muted-text">
+                    <span>Angle</span><span id="pole-theta-val">0.30</span>
+                  </span>
+                  <input type="range" id="pole-theta-slider" min="-3.1416" max="3.1416" step="0.001" value="0.30" class="mt-0.5 w-full" />
+                </label>
+              </div>
+              <p id="pole-readout" class="mt-2 font-mono text-[0.7rem] text-muted-text/80">r = 0.85, θ = 0.30 rad (— Hz at 48 kHz)</p>
+            </div>
+
+            <div class="rounded-[20px] border border-border bg-card-bg p-5">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Zero position</p>
+              <div class="mt-3 grid grid-cols-2 gap-3">
+                <label class="block">
+                  <span class="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.06em] text-muted-text">
+                    <span>Radius</span><span id="zero-r-val">1.00</span>
+                  </span>
+                  <input type="range" id="zero-r-slider" min="0" max="1.5" step="0.001" value="1.00" class="mt-0.5 w-full" />
+                </label>
+                <label class="block">
+                  <span class="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.06em] text-muted-text">
+                    <span>Angle</span><span id="zero-theta-val">3.14</span>
+                  </span>
+                  <input type="range" id="zero-theta-slider" min="-3.1416" max="3.1416" step="0.001" value="3.14" class="mt-0.5 w-full" />
+                </label>
+              </div>
+              <p id="zero-readout" class="mt-2 font-mono text-[0.7rem] text-muted-text/80">r = 1.00, θ = 3.14 rad (— Hz at 48 kHz)</p>
+            </div>
+
+            <!-- Biquad coefficients -->
+            <div class="rounded-[20px] border border-border bg-card-bg p-5">
+              <div class="flex items-center justify-between">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Biquad coefficients</p>
+                <button type="button" id="copy-coeffs-btn" class="copy-btn">Copy</button>
+              </div>
+              <pre id="coeff-display" class="mt-3 rounded-[10px] border border-border bg-canvas p-3 font-mono text-[0.72rem] leading-[1.6] whitespace-pre-wrap">b0 = 1.000000
+b1 = -2.000000
+b2 = 1.000000
+a1 = -1.363538
+a2 = 0.722500</pre>
+            </div>
+
+            <!-- Sample rate -->
+            <div class="flex items-center gap-3 font-mono text-[0.68rem] text-muted-text">
+              <span>Sample rate:</span>
+              <select id="sample-rate" class="rounded-full border border-border bg-card-bg px-3 py-1.5 text-[0.72rem]">
+                <option value="44100">44.1 kHz</option>
+                <option value="48000" selected>48 kHz</option>
+                <option value="96000">96 kHz</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Frequency response canvas (full width below both columns) -->
+        <div class="mt-8 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="font-semibold">Frequency response</h3>
+            <div class="flex items-center gap-2 font-mono text-[0.7rem]">
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm" style="background:#ce445d"></span>Mag dB</span>
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm" style="background:#4a7bb8"></span>Phase deg</span>
+              <label class="ml-3 flex items-center gap-1"><input type="checkbox" id="show-phase" checked /> Phase</label>
+            </div>
+          </div>
+          <div class="mt-4 overflow-hidden rounded-[14px] border border-border bg-canvas">
+            <canvas id="fr-canvas" width="900" height="400" class="block h-[400px] w-full" aria-label="Frequency response magnitude and phase plot"></canvas>
+          </div>
+        </div>
+
+        <!-- Audio preview section -->
+        <div class="mt-8 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <h3 class="font-semibold">Audio preview</h3>
+          <p class="mt-1 max-w-2xl text-[0.82rem] leading-[1.5] text-muted-text">Uses Web Audio <code>IIRFilterNode</code> with the current biquad coefficients. Click Play to start the AudioContext, then toggle bypass to compare.</p>
+          <div class="mt-5 flex flex-wrap items-center gap-3">
+            <select id="audio-source" class="rounded-full border border-border bg-canvas px-3 py-2 font-mono text-[0.75rem]">
+              <option value="white">White noise</option>
+              <option value="sweep">Sine sweep (20–20k, 8s)</option>
+            </select>
+            <button id="audio-play" class="rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas hover:opacity-90">Play</button>
+            <button id="audio-bypass" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.8rem] font-semibold text-muted-text hover:text-primary-text">Bypass: OFF</button>
+            <span id="audio-status" class="font-mono text-[0.7rem] uppercase tracking-[0.08em] text-muted-text/70">stopped</span>
+            <label class="flex items-center gap-2 font-mono text-[0.7rem] text-muted-text">
+              <span>Gain</span>
+              <input type="range" id="audio-gain" min="0" max="1" step="0.01" value="0.25" class="w-[100px]" />
+              <span id="gain-db-readout">-12.0 dB</span>
+            </label>
+          </div>
+          <p id="audio-ctx-note" class="mt-3 font-mono text-[0.7rem] text-muted-text/60">AudioContext not started — click Play</p>
+        </div>
+
+        <!-- Method & limitations section -->
+        <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
+          <p class="font-semibold text-primary-text">How it works</p>
+          <ul class="mt-2 list-disc pl-5 space-y-1">
+            <li>Each pole/zero pair represents a second-order section (biquad). The conjugate pair ensures real-valued coefficients.</li>
+            <li>Frequency response is computed directly from the transfer function <code>H(z) = (1 - 2r<sub>z</sub>cosθ<sub>z</sub>&middot;z<sup>-1</sup> + r<sub>z</sub><sup>2</sup>&middot;z<sup>-2</sup>) / (1 - 2r<sub>p</sub>cosθ<sub>p</sub>&middot;z<sup>-1</sup> + r<sub>p</sub><sup>2</sup>&middot;z<sup>-2</sup>)</code> evaluated at <code>z = e<sup>jω</sup></code> — this is the exact z-plane geometry, not an approximation.</li>
+            <li>Magnitude in dB: <code>20&middot;log<sub>10</sub>|H(e<sup>jω</sup>)|</code>. Phase: <code>arg(H(e<sup>jω</sup>))</code> in degrees.</li>
+            <li>Poles constrained to |z| &le; 0.995 for stability (poles on or outside the unit circle produce unstable filters).</li>
+            <li>Zeros can be anywhere; zeros on the unit circle produce deep nulls (notch). Zeros at the origin produce a pure resonance (bandpass).</li>
+            <li>Phase wraps at &plusmn;180&deg; (atan2). Group delay is the negative derivative of phase with respect to angular frequency.</li>
+            <li>Audio uses Web Audio <code>IIRFilterNode</code> with the exact coefficients above. <a href="/playground/biquad-filter-designer" class="text-primary-cta underline underline-offset-2">Biquad Filter Designer</a> explores RBJ EQ Cookbook coefficient math in depth.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .preset-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border, rgba(255,255,255,0.08));
+    background: var(--mp-elevated, #212d3a);
+    padding: 0.35rem 0.85rem;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mp-muted, #a8b9cc);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .preset-btn:hover {
+    color: var(--mp-text, #e8eef6);
+    border-color: var(--mp-cta, #f07a94);
+  }
+  .preset-btn.active {
+    background: var(--mp-cta, #f07a94);
+    color: #fff;
+    border-color: var(--mp-cta, #f07a94);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border, rgba(255,255,255,0.08));
+    background: var(--mp-elevated, #212d3a);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted, #a8b9cc);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text, #e8eef6);
+    border-color: var(--mp-cta, #f07a94);
+  }
+  input[type="range"] {
+    accent-color: var(--mp-cta, #f07a94);
+  }
+  #zp-canvas {
+    cursor: crosshair;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .preset-btn, .copy-btn {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+import {
+  poleZeroToCoeffs,
+  clamp,
+  freqResponse,
+  logFreqSteps,
+} from '../../lib/dsp.ts';
+import {
+  setupHiDPI,
+  resolveTheme,
+  clearCanvas,
+  drawCircle,
+  drawDbGrid,
+  drawFreqResponse,
+  drawLine,
+  drawText,
+} from '../../lib/chart-core.ts';
+
+function initPoleZeroExplorer() {
+  const zpCanvas = document.getElementById('zp-canvas') as HTMLCanvasElement | null;
+  const frCanvas = document.getElementById('fr-canvas') as HTMLCanvasElement | null;
+  if (!zpCanvas || !frCanvas || zpCanvas.dataset.init) return;
+  zpCanvas.dataset.init = 'true';
+
+  const zpCoordEl = document.getElementById('zp-coord')!;
+  const poleRVal = document.getElementById('pole-r-val')!;
+  const poleThetaVal = document.getElementById('pole-theta-val')!;
+  const zeroRVal = document.getElementById('zero-r-val')!;
+  const zeroThetaVal = document.getElementById('zero-theta-val')!;
+  const poleRSlider = document.getElementById('pole-r-slider') as HTMLInputElement;
+  const poleThetaSlider = document.getElementById('pole-theta-slider') as HTMLInputElement;
+  const zeroRSlider = document.getElementById('zero-r-slider') as HTMLInputElement;
+  const zeroThetaSlider = document.getElementById('zero-theta-slider') as HTMLInputElement;
+  const poleReadout = document.getElementById('pole-readout')!;
+  const zeroReadout = document.getElementById('zero-readout')!;
+  const coeffDisplay = document.getElementById('coeff-display')!;
+  const copyCoeffsBtn = document.getElementById('copy-coeffs-btn')!;
+  const filterTypeLabel = document.getElementById('filter-type-label')!;
+  const showPhase = document.getElementById('show-phase') as HTMLInputElement;
+  const srSelect = document.getElementById('sample-rate') as HTMLSelectElement;
+  const audioPlayBtn = document.getElementById('audio-play')!;
+  const audioBypassBtn = document.getElementById('audio-bypass')!;
+  const audioStatus = document.getElementById('audio-status')!;
+  const audioSource = document.getElementById('audio-source') as HTMLSelectElement;
+  const audioGainSlider = document.getElementById('audio-gain') as HTMLInputElement;
+  const gainDbReadout = document.getElementById('gain-db-readout')!;
+  const audioCtxNote = document.getElementById('audio-ctx-note')!;
+
+  const ZP_SIZE = 420;
+  const FR_W = 900, FR_H = 400;
+
+  const zpCtx = setupHiDPI(zpCanvas, ZP_SIZE, ZP_SIZE);
+  const frCtx = setupHiDPI(frCanvas, FR_W, FR_H);
+
+  const CPX = ZP_SIZE / 2;
+  const CPY = ZP_SIZE / 2;
+  const UNIT_R = 178;
+  const HANDLE_R = 10;
+  const HIT_R = 16;
+  const MAX_POLE_R = 0.995;
+
+  let poleR = 0.85, poleTheta = 0.30;
+  let zeroR = 1.0, zeroTheta = Math.PI;
+  let dragging: 'pole' | 'zero' | null = null;
+
+  function getFs(): number {
+    return parseFloat(srSelect.value) || 48000;
+  }
+
+  function angleToFreq(theta: number, Fs: number): number {
+    let t = theta;
+    while (t < 0) t += 2 * Math.PI;
+    while (t >= 2 * Math.PI) t -= 2 * Math.PI;
+    return (t / (2 * Math.PI)) * Fs;
+  }
+
+  function polarToCanvas(r: number, theta: number): { x: number; y: number } {
+    return {
+      x: CPX + r * Math.cos(theta) * UNIT_R,
+      y: CPY - r * Math.sin(theta) * UNIT_R,
+    };
+  }
+
+  function canvasToPolar(x: number, y: number): { r: number; theta: number } {
+    const re = (x - CPX) / UNIT_R;
+    const im = -(y - CPY) / UNIT_R;
+    return { r: Math.hypot(re, im), theta: Math.atan2(im, re) };
+  }
+
+  function detectFilterType(): string {
+    const pr = poleR, pt = poleTheta;
+    const zr = zeroR, zt = zeroTheta;
+    const pAngleMod = ((pt % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const zAngleMod = ((zt % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+    if (zr > 0.99 && Math.abs(zAngleMod - Math.PI) < 0.15 && pAngleMod < 0.6) return 'Lowpass';
+    if (zr > 0.99 && zAngleMod < 0.15 && pAngleMod > Math.PI - 0.6) return 'Highpass';
+    if (zr < 0.03) return 'Bandpass';
+    if (zr > 0.99 && Math.abs(zAngleMod - ((pAngleMod + 2 * Math.PI) % (2 * Math.PI))) < 0.25 && pr > 0.8) return 'Notch';
+    if (Math.abs(zr - 1 / pr) < 0.15 && Math.abs(((zAngleMod - pAngleMod + 2 * Math.PI) % (2 * Math.PI))) < 0.15) return 'Allpass';
+    if (zr > 0.05 && zr < pr && pr > 0.7 && Math.abs(zAngleMod - pAngleMod) < 0.3) return 'Peaking';
+    return 'Custom';
+  }
+
+  function updateReadouts() {
+    const Fs = getFs();
+    poleRVal.textContent = poleR.toFixed(2);
+    poleThetaVal.textContent = poleTheta.toFixed(2);
+    zeroRVal.textContent = zeroR.toFixed(2);
+    zeroThetaVal.textContent = zeroTheta.toFixed(2);
+
+    poleRSlider.value = String(poleR);
+    poleThetaSlider.value = String(poleTheta);
+    zeroRSlider.value = String(zeroR);
+    zeroThetaSlider.value = String(zeroTheta);
+
+    const pFreq = angleToFreq(poleTheta, Fs);
+    poleReadout.textContent = `r = ${poleR.toFixed(3)}, θ = ${poleTheta.toFixed(3)} rad (${pFreq.toFixed(0)} Hz at ${Fs / 1000} kHz)`;
+
+    const zFreq = angleToFreq(zeroTheta, Fs);
+    zeroReadout.textContent = `r = ${zeroR.toFixed(3)}, θ = ${zeroTheta.toFixed(3)} rad (${zFreq.toFixed(0)} Hz at ${Fs / 1000} kHz)`;
+
+    const type = detectFilterType();
+    filterTypeLabel.textContent = `Type: ${type}`;
+
+    const coeffs = poleZeroToCoeffs(
+      [{ r: poleR, theta: poleTheta }, { r: poleR, theta: -poleTheta }],
+      [{ r: zeroR, theta: zeroTheta }, { r: zeroR, theta: -zeroTheta }],
+    );
+    coeffDisplay.textContent =
+      `b0 = ${coeffs.b0.toFixed(6)}\n` +
+      `b1 = ${coeffs.b1.toFixed(6)}\n` +
+      `b2 = ${coeffs.b2.toFixed(6)}\n` +
+      `a1 = ${coeffs.a1.toFixed(6)}\n` +
+      `a2 = ${coeffs.a2.toFixed(6)}`;
+  }
+
+  function updateSliders() {
+    poleRSlider.value = String(poleR);
+    poleThetaSlider.value = String(poleTheta);
+    zeroRSlider.value = String(zeroR);
+    zeroThetaSlider.value = String(zeroTheta);
+  }
+
+  function drawZPlane() {
+    const theme = resolveTheme();
+    const ctx = zpCtx;
+    const w = ZP_SIZE, h = ZP_SIZE;
+
+    clearCanvas(ctx, theme, w, h);
+
+    // Unit circle
+    ctx.beginPath();
+    ctx.arc(CPX, CPY, UNIT_R, 0, Math.PI * 2);
+    ctx.strokeStyle = theme.border;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Real and imaginary axes
+    drawLine(ctx, CPX - UNIT_R - 20, CPY, CPX + UNIT_R + 20, CPY, theme.gridLine, 0.5);
+    drawLine(ctx, CPX, CPY - UNIT_R - 20, CPX, CPY + UNIT_R + 20, theme.gridLine, 0.5);
+
+    // Axis arrows
+    const arrS = 5;
+    ctx.beginPath();
+    ctx.moveTo(CPX + UNIT_R + 16, CPY);
+    ctx.lineTo(CPX + UNIT_R + 8, CPY - arrS);
+    ctx.lineTo(CPX + UNIT_R + 8, CPY + arrS);
+    ctx.closePath();
+    ctx.fillStyle = theme.muted;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(CPX, CPY - UNIT_R - 16);
+    ctx.lineTo(CPX - arrS, CPY - UNIT_R - 8);
+    ctx.lineTo(CPX + arrS, CPY - UNIT_R - 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Axis labels
+    drawText(ctx, 'Re', CPX + UNIT_R + 20, CPY + 4, theme.text, 10, 'left');
+    drawText(ctx, 'Im', CPX - 4, CPY - UNIT_R - 20, theme.text, 10, 'right');
+
+    // Frequency angle markers
+    const Fs = getFs();
+    const labelAngles = [0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4, Math.PI, -3 * Math.PI / 4, -Math.PI / 2, -Math.PI / 4];
+    for (const ang of labelAngles) {
+      const x = CPX + UNIT_R * Math.cos(ang);
+      const y = CPY - UNIT_R * Math.sin(ang);
+      drawCircle(ctx, x, y, 2, theme.muted);
+      const lx = CPX + (UNIT_R + 14) * Math.cos(ang);
+      const ly = CPY - (UNIT_R + 14) * Math.sin(ang);
+      // Skip labels that overlap with axes
+      if (Math.abs(Math.abs(ang) - Math.PI) < 0.01 || Math.abs(ang) < 0.01 || Math.abs(Math.abs(ang) - Math.PI / 2) < 0.01) continue;
+      const freqAtAngle = angleToFreq(ang, Fs);
+      const fLabel = freqAtAngle >= 1000 ? `${(freqAtAngle / 1000).toFixed(1)}k` : `${freqAtAngle.toFixed(0)}Hz`;
+      drawText(ctx, fLabel, lx, ly, theme.muted, 8, ang > Math.PI / 2 && ang < 3 * Math.PI / 2 && ang > -Math.PI / 2 && ang < Math.PI / 2 ? 'left' : 'center');
+    }
+
+    // Pole handles
+    const pTop = polarToCanvas(poleR, poleTheta);
+    const pBot = polarToCanvas(poleR, -poleTheta);
+    const poleColor = '#21d4d8'; // cyan
+    const poleStroke = '#0fa8ad';
+    drawCircle(ctx, pTop.x, pTop.y, HANDLE_R, poleColor, poleStroke, 2.5);
+    drawCircle(ctx, pBot.x, pBot.y, HANDLE_R, poleColor, poleStroke, 2.5);
+
+    // Pole connection line from center
+    ctx.setLineDash([2, 4]);
+    drawLine(ctx, CPX, CPY, pTop.x, pTop.y, poleColor, 1);
+    drawLine(ctx, CPX, CPY, pBot.x, pBot.y, poleColor, 1);
+    ctx.setLineDash([]);
+
+    // Zero handles
+    const zTop = polarToCanvas(zeroR, zeroTheta);
+    const zBot = polarToCanvas(zeroR, -zeroTheta);
+    const zeroColor = '#ff8c42'; // coral/orange
+    drawCircle(ctx, zTop.x, zTop.y, HANDLE_R, 'transparent', zeroColor, 2.5);
+    drawCircle(ctx, zBot.x, zBot.y, HANDLE_R, 'transparent', zeroColor, 2.5);
+
+    // Zero connection lines
+    ctx.setLineDash([2, 4]);
+    drawLine(ctx, CPX, CPY, zTop.x, zTop.y, zeroColor, 1);
+    drawLine(ctx, CPX, CPY, zBot.x, zBot.y, zeroColor, 1);
+    ctx.setLineDash([]);
+
+    // Dragging highlight
+    if (dragging === 'pole') {
+      ctx.beginPath();
+      ctx.arc(pTop.x, pTop.y, HANDLE_R + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = poleColor;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (dragging === 'zero') {
+      ctx.beginPath();
+      ctx.arc(zTop.x, zTop.y, HANDLE_R + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = zeroColor;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  function drawFrequencyResponse() {
+    const theme = resolveTheme();
+    const ctx = frCtx;
+    const w = FR_W, h = FR_H;
+    const Fs = getFs();
+    const coeffs = poleZeroToCoeffs(
+      [{ r: poleR, theta: poleTheta }, { r: poleR, theta: -poleTheta }],
+      [{ r: zeroR, theta: zeroTheta }, { r: zeroR, theta: -zeroTheta }],
+    );
+
+    const minF = 20, maxF = 20000;
+    const minDb = -40, maxDb = 40;
+    const steps = 600;
+    const freqs = logFreqSteps(minF, maxF, steps);
+    const mags: number[] = [];
+    const phases: number[] = [];
+
+    for (const f of freqs) {
+      const resp = freqResponse(coeffs, f, Fs);
+      mags.push(20 * Math.log10(Math.max(resp.mag, 1e-12)));
+      let ph = resp.phase * 180 / Math.PI;
+      ph = ((ph + 540) % 360) - 180;
+      phases.push(ph);
+    }
+
+    drawFreqResponse(ctx, freqs, mags, showPhase.checked ? phases : [], theme, w, h, minF, maxF, minDb, maxDb, showPhase.checked);
+    drawDbGrid(ctx, theme, w, h, minDb, maxDb);
+
+    // Axis labels
+    drawText(ctx, 'Frequency (Hz)', w / 2, h - 2, theme.muted, 9, 'center');
+    ctx.save();
+    ctx.translate(10, h / 2);
+    ctx.rotate(-Math.PI / 2);
+    drawText(ctx, 'Magnitude (dB)', 0, 0, theme.muted, 9, 'center');
+    ctx.restore();
+    if (showPhase.checked) {
+      ctx.save();
+      ctx.translate(w - 10, h / 2);
+      ctx.rotate(Math.PI / 2);
+      drawText(ctx, 'Phase (deg)', 0, 0, theme.phaseColor, 9, 'center');
+      ctx.restore();
+    }
+  }
+
+  function syncAll() {
+    updateReadouts();
+    updateSliders();
+    drawZPlane();
+    drawFrequencyResponse();
+    updateAudioFilter();
+  }
+
+  // Pointer event handling for z-plane
+  function getCanvasPos(e: PointerEvent): { x: number; y: number } {
+    const rect = zpCanvas!.getBoundingClientRect();
+    const scaleX = ZP_SIZE / rect.width;
+    const scaleY = ZP_SIZE / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }
+
+  function hitTest(x: number, y: number): 'pole' | 'zero' | null {
+    const pTop = polarToCanvas(poleR, poleTheta);
+    const distP = Math.hypot(x - pTop.x, y - pTop.y);
+    if (distP <= HIT_R) return 'pole';
+
+    const zTop = polarToCanvas(zeroR, zeroTheta);
+    const distZ = Math.hypot(x - zTop.x, y - zTop.y);
+    if (distZ <= HIT_R) return 'zero';
+
+    return null;
+  }
+
+  zpCanvas.addEventListener('pointerdown', (e: PointerEvent) => {
+    const pos = getCanvasPos(e);
+    const hit = hitTest(pos.x, pos.y);
+    if (hit) {
+      dragging = hit;
+      zpCanvas.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      drawZPlane();
+    }
+  });
+
+  zpCanvas.addEventListener('pointermove', (e: PointerEvent) => {
+    const pos = getCanvasPos(e);
+
+    if (dragging) {
+      const polar = canvasToPolar(pos.x, pos.y);
+      if (dragging === 'pole') {
+        poleTheta = polar.theta;
+        poleR = clamp(polar.r, 0, MAX_POLE_R);
+      } else if (dragging === 'zero') {
+        zeroTheta = polar.theta;
+        zeroR = Math.max(0, polar.r);
+      }
+      syncAll();
+      zpCoordEl.textContent =
+        `(${polar.r.toFixed(3)}∠${((polar.theta * 180 / Math.PI + 360) % 360).toFixed(1)}°)`;
+      return;
+    }
+
+    // Hover display
+    const hit = hitTest(pos.x, pos.y);
+    if (hit) {
+      zpCanvas.style.cursor = 'grab';
+      const polar = canvasToPolar(pos.x, pos.y);
+      zpCoordEl.textContent =
+        `(${polar.r.toFixed(3)}∠${((polar.theta * 180 / Math.PI + 360) % 360).toFixed(1)}°)`;
+    } else {
+      zpCanvas.style.cursor = 'crosshair';
+      zpCoordEl.textContent = '\u00A0';
+    }
+  });
+
+  window.addEventListener('pointerup', () => {
+    if (dragging) {
+      dragging = null;
+      zpCanvas.style.cursor = 'crosshair';
+      drawZPlane();
+    }
+  });
+
+  zpCanvas.addEventListener('pointerleave', () => {
+    zpCoordEl.textContent = '\u00A0';
+  });
+
+  // Touch support: prevent default scrolling while dragging
+  zpCanvas.addEventListener('touchstart', (e: TouchEvent) => {
+    if (e.target === zpCanvas) e.preventDefault();
+  }, { passive: false });
+
+  // Slider listeners
+  poleRSlider.addEventListener('input', () => {
+    poleR = parseFloat(poleRSlider.value);
+    syncAll();
+  });
+  poleThetaSlider.addEventListener('input', () => {
+    poleTheta = parseFloat(poleThetaSlider.value);
+    syncAll();
+  });
+  zeroRSlider.addEventListener('input', () => {
+    zeroR = parseFloat(zeroRSlider.value);
+    syncAll();
+  });
+  zeroThetaSlider.addEventListener('input', () => {
+    zeroTheta = parseFloat(zeroThetaSlider.value);
+    syncAll();
+  });
+
+  // Preset buttons
+  const presets: Record<string, { pr: number; pt: number; zr: number; zt: number }> = {
+    lowpass:  { pr: 0.85, pt: 0.30, zr: 1.0, zt: Math.PI },
+    highpass: { pr: 0.85, pt: Math.PI - 0.30, zr: 1.0, zt: 0 },
+    bandpass: { pr: 0.93, pt: Math.PI / 3, zr: 0.0, zt: 0 },
+    notch:    { pr: 0.85, pt: Math.PI / 3, zr: 1.0, zt: Math.PI / 3 },
+    allpass:  { pr: 0.8, pt: Math.PI / 4, zr: 1.25, zt: Math.PI / 4 },
+    peaking:  { pr: 0.93, pt: Math.PI / 3, zr: 0.55, zt: Math.PI / 3 },
+  };
+
+  function applyPreset(name: string) {
+    const p = presets[name];
+    if (!p) return;
+    poleR = p.pr;
+    poleTheta = p.pt;
+    zeroR = p.zr;
+    zeroTheta = p.zt;
+    syncAll();
+
+    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.querySelector(`[data-preset="${name}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.getAttribute('data-preset');
+      if (preset) applyPreset(preset);
+    });
+  });
+
+  // Sample rate
+  srSelect.addEventListener('change', () => {
+    syncAll();
+    if (audioCtx) {
+      updateAudioFilter();
+    }
+  });
+
+  // Phase visibility
+  showPhase.addEventListener('change', () => {
+    drawFrequencyResponse();
+  });
+
+  // Copy coefficients
+  copyCoeffsBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(coeffDisplay.textContent || '');
+      const orig = copyCoeffsBtn.textContent;
+      copyCoeffsBtn.textContent = 'Copied!';
+      setTimeout(() => { copyCoeffsBtn.textContent = orig; }, 1200);
+    } catch { /* clipboard unavailable */ }
+  });
+
+  // Theme observation
+  const themeObserver = new MutationObserver(() => {
+    drawZPlane();
+    drawFrequencyResponse();
+  });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // ── Audio ──
+  let audioCtx: AudioContext | null = null;
+  let sourceNode: AudioBufferSourceNode | OscillatorNode | null = null;
+  let gainNode: GainNode | null = null;
+  let iirNode: IIRFilterNode | null = null;
+  let isPlaying = false;
+  let isBypass = false;
+
+  function ensureAudioCtx(): AudioContext {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({
+        sampleRate: getFs(),
+      });
+    }
+    return audioCtx;
+  }
+
+  function makeWhiteNoiseBuffer(ctx: AudioContext, seconds = 5): AudioBuffer {
+    const len = ctx.sampleRate * seconds;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  function updateAudioFilter() {
+    if (!audioCtx || !isPlaying || !iirNode) return;
+    const coeffs = poleZeroToCoeffs(
+      [{ r: poleR, theta: poleTheta }, { r: poleR, theta: -poleTheta }],
+      [{ r: zeroR, theta: zeroTheta }, { r: zeroR, theta: -zeroTheta }],
+    );
+    try {
+      iirNode.disconnect();
+      const newIir = audioCtx.createIIRFilter(
+        [coeffs.b0, coeffs.b1, coeffs.b2],
+        [1, coeffs.a1, coeffs.a2],
+      );
+      iirNode = newIir;
+      if (sourceNode && gainNode) {
+        if (isBypass) {
+          sourceNode.disconnect();
+          sourceNode.connect(gainNode);
+        } else {
+          sourceNode.disconnect();
+          sourceNode.connect(newIir);
+          newIir.connect(gainNode);
+        }
+      }
+    } catch (e) {
+      // Fallback: use BiquadFilterNode if IIR fails
+      try { iirNode.disconnect(); } catch {}
+      const bq = audioCtx.createBiquadFilter();
+      bq.type = 'peaking';
+      bq.frequency.value = 1000;
+      bq.Q.value = 1;
+      bq.gain.value = 0;
+      iirNode = bq as any;
+      if (sourceNode && gainNode) {
+        sourceNode.disconnect();
+        sourceNode.connect(bq);
+        bq.connect(gainNode);
+      }
+    }
+  }
+
+  function stopAudio() {
+    try { sourceNode?.stop?.(); sourceNode?.disconnect(); } catch {}
+    try { iirNode?.disconnect(); } catch {}
+    try { gainNode?.disconnect(); } catch {}
+    sourceNode = null;
+    iirNode = null;
+    gainNode = null;
+    isPlaying = false;
+    audioStatus.textContent = 'stopped';
+    audioPlayBtn.textContent = 'Play';
+    audioCtxNote.textContent = 'AudioContext not started — click Play';
+  }
+
+  async function startAudio() {
+    const ctx = ensureAudioCtx();
+    await ctx.resume();
+
+    stopAudio();
+    isPlaying = true;
+    const sourceType = audioSource.value;
+
+    gainNode = ctx.createGain();
+    gainNode.gain.value = parseFloat(audioGainSlider.value) || 0.25;
+    gainNode.connect(ctx.destination);
+
+    const coeffs = poleZeroToCoeffs(
+      [{ r: poleR, theta: poleTheta }, { r: poleR, theta: -poleTheta }],
+      [{ r: zeroR, theta: zeroTheta }, { r: zeroR, theta: -zeroTheta }],
+    );
+
+    try {
+      iirNode = ctx.createIIRFilter(
+        [coeffs.b0, coeffs.b1, coeffs.b2],
+        [1, coeffs.a1, coeffs.a2],
+      );
+    } catch {
+      // fallback dummy
+      iirNode = ctx.createIIRFilter([1, 0, 0], [1, 0, 0]);
+    }
+
+    if (sourceType === 'sweep') {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = 20;
+      const now = ctx.currentTime;
+      osc.frequency.exponentialRampToValueAtTime(20000, now + 8);
+      sourceNode = osc;
+      if (!isBypass) {
+        osc.connect(iirNode);
+        iirNode.connect(gainNode);
+      } else {
+        osc.connect(gainNode);
+      }
+      osc.start();
+      osc.stop(now + 8.2);
+      const sweepTimeout = setTimeout(() => {
+        if (isPlaying) startAudio();
+      }, 8500);
+      (sourceNode as any)._sweepTimeout = sweepTimeout;
+    } else {
+      const buf = makeWhiteNoiseBuffer(ctx, 5);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      sourceNode = src;
+      if (!isBypass) {
+        src.connect(iirNode);
+        iirNode.connect(gainNode);
+      } else {
+        src.connect(gainNode);
+      }
+      src.start();
+    }
+
+    audioStatus.textContent = isBypass ? 'playing (bypassed)' : 'playing (filtered)';
+    audioPlayBtn.textContent = 'Stop';
+    audioCtxNote.textContent = `AudioContext active · ${ctx.sampleRate} Hz · baseLatency ${(ctx.baseLatency || 0).toFixed(4)}s`;
+  }
+
+  audioPlayBtn.addEventListener('click', () => {
+    if (isPlaying) {
+      // Clear sweep timeout if present
+      if (sourceNode && (sourceNode as any)._sweepTimeout) {
+        clearTimeout((sourceNode as any)._sweepTimeout);
+      }
+      stopAudio();
+    } else {
+      startAudio();
+    }
+  });
+
+  audioBypassBtn.addEventListener('click', () => {
+    isBypass = !isBypass;
+    audioBypassBtn.textContent = `Bypass: ${isBypass ? 'ON' : 'OFF'}`;
+    if (isPlaying && audioCtx && sourceNode && gainNode) {
+      try { sourceNode.disconnect(); } catch {}
+      try { iirNode?.disconnect(); } catch {}
+      if (isBypass) {
+        sourceNode.connect(gainNode);
+      } else {
+        const coeffs = poleZeroToCoeffs(
+          [{ r: poleR, theta: poleTheta }, { r: poleR, theta: -poleTheta }],
+          [{ r: zeroR, theta: zeroTheta }, { r: zeroR, theta: -zeroTheta }],
+        );
+        try {
+          iirNode = audioCtx.createIIRFilter(
+            [coeffs.b0, coeffs.b1, coeffs.b2],
+            [1, coeffs.a1, coeffs.a2],
+          );
+        } catch {
+          iirNode = audioCtx.createIIRFilter([1, 0, 0], [1, 0, 0]);
+        }
+        sourceNode.connect(iirNode);
+        iirNode.connect(gainNode);
+      }
+      audioStatus.textContent = isBypass ? 'playing (bypassed)' : 'playing (filtered)';
+    }
+  });
+
+  audioGainSlider.addEventListener('input', () => {
+    const g = parseFloat(audioGainSlider.value);
+    if (gainNode) gainNode.gain.value = g;
+    const db = g <= 0 ? -Infinity : 20 * Math.log10(g);
+    gainDbReadout.textContent = g <= 0 ? '-∞ dB' : `${db.toFixed(1)} dB`;
+  });
+
+  audioSource.addEventListener('change', () => {
+    if (isPlaying) {
+      stopAudio();
+      startAudio();
+    }
+  });
+
+  // Cleanup on page navigation
+  document.addEventListener('astro:before-swap', () => {
+    stopAudio();
+    try { audioCtx?.close(); } catch {}
+    themeObserver.disconnect();
+  }, { once: true });
+
+  // Initialize with lowpass preset
+  applyPreset('lowpass');
+  syncAll();
+}
+
+document.addEventListener('astro:page-load', initPoleZeroExplorer);
+initPoleZeroExplorer();
+</script>

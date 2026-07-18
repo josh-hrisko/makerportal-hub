@@ -1,0 +1,874 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Cone Breakup Explorer — Piston Range, Breakup & Resonances | MakerPortal';
+const description =
+  'Interactive cone breakup visualization: explore how a loudspeaker cone transitions from rigid-piston motion to modal breakup as frequency increases. Illustrative model showing radial modes, nodal circles, and frequency response — not an FEA simulation.';
+const canonical = new URL('/playground/cone-breakup', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Cone Breakup Explorer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Cone Breakup Explorer"
+    lead="An illustrative modal-shape explorer — not an FEA simulation. Explore how a circular membrane/plate transitions from rigid-piston motion to modal breakup as frequency increases. Tune material, cone diameter, and frequency to see radial modes, nodal circles, and the qualitative frequency response."
+    pillarHint="dsp-audio"
+  >
+    <!-- Model Description -->
+    <section class="border-b border-border" aria-label="Model description">
+      <div class="mx-auto max-w-[76rem] px-5 py-12 sm:px-8 lg:px-10">
+        <p class="max-w-3xl text-[0.9rem] leading-[1.7] text-muted-text">
+          This is an <strong>illustrative modal-shape explorer</strong>, not an FEA simulation.
+          A loudspeaker cone behaves as a rigid piston at low frequencies — every point on the surface moves in phase.
+          As frequency rises past the first breakup mode, radial modes appear (concentric rings moving out of phase).
+          At higher frequencies, complex modal patterns emerge with multiple nodal circles and diametral lines.
+          The breakup frequency depends on material stiffness, density, and cone geometry:
+          <code class="text-primary-cta">f<sub>breakup</sub> &prop; &radic;(E/&rho;) / D</code>,
+          where <em>E</em> is Young's modulus, <em>&rho;</em> is density, and <em>D</em> is the cone diameter.
+        </p>
+      </div>
+    </section>
+
+    <!-- Simulation Area -->
+    <section class="border-b border-border" aria-labelledby="sim-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-14 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 id="sim-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Cone breakup visualized</h2>
+            <p id="cone-status" class="mt-2 max-w-2xl text-[0.88rem] leading-[1.55] text-muted-text" aria-live="polite">Adjust frequency, material, or diameter to explore the piston-to-breakup transition.</p>
+          </div>
+          <button type="button" class="sim-btn is-active" id="anim-toggle" aria-pressed="true">Animate: On</button>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
+          <!-- Left: Cone Visualization -->
+          <div class="flex flex-col gap-6">
+            <div class="canvas-card">
+              <div class="canvas-label-row">
+                <span>Cone surface — isometric view</span>
+                <span id="cone-mode-label">Piston range</span>
+              </div>
+              <canvas
+                id="cone-canvas"
+                width="640"
+                height="480"
+                aria-label="Isometric cone breakup visualization. Shows a loudspeaker cone with modal deformation colored by displacement."
+              ></canvas>
+            </div>
+
+            <!-- Frequency Response -->
+            <div class="canvas-card">
+              <div class="canvas-label-row">
+                <span>Frequency response — illustrative on-axis</span>
+                <span>Normalized SPL (dB)</span>
+              </div>
+              <canvas
+                id="freqresp-canvas"
+                width="640"
+                height="260"
+                aria-label="Illustrative frequency response plot showing piston region, breakup onset, and modal region."
+              ></canvas>
+            </div>
+
+            <!-- Mode Shape Selector -->
+            <div>
+              <p class="control-heading">Mode shape selector</p>
+              <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Mode shape selector">
+                <button type="button" class="mode-btn is-active" data-mode="auto">
+                  <svg viewBox="0 0 48 48" class="mode-svg" aria-hidden="true"><title>Auto mode</title><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" /><text x="24" y="28" text-anchor="middle" fill="currentColor" font-size="13" font-family="ui-monospace,monospace">auto</text></svg>
+                  <span class="mode-label-text">Auto</span>
+                </button>
+                <button type="button" class="mode-btn" data-mode="1">
+                  <svg viewBox="0 0 48 48" class="mode-svg" aria-hidden="true"><title>Mode 1 — Piston</title><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" /><circle cx="24" cy="24" r="10" fill="color-mix(in srgb, currentColor 18%, transparent)" stroke="none" /></svg>
+                  <span class="mode-label-text">Mode 1<br />piston</span>
+                </button>
+                <button type="button" class="mode-btn" data-mode="2">
+                  <svg viewBox="0 0 48 48" class="mode-svg" aria-hidden="true"><title>Mode 2 — First radial, one nodal circle</title><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" /><circle cx="24" cy="24" r="11" fill="color-mix(in srgb, currentColor 18%, transparent)" stroke="none" /><circle cx="24" cy="24" r="10.5" fill="none" stroke="var(--mp-muted)" stroke-width="0.8" stroke-dasharray="2 2" /><circle cx="24" cy="24" r="5" fill="color-mix(in srgb, var(--mp-cta) 18%, transparent)" stroke="none" /></svg>
+                  <span class="mode-label-text">Mode 2<br />1st radial</span>
+                </button>
+                <button type="button" class="mode-btn" data-mode="3">
+                  <svg viewBox="0 0 48 48" class="mode-svg" aria-hidden="true"><title>Mode 3 — Second radial, two nodal circles</title><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" /><circle cx="24" cy="24" r="17" fill="color-mix(in srgb, currentColor 18%, transparent)" stroke="none" /><circle cx="24" cy="24" r="12.5" fill="none" stroke="var(--mp-muted)" stroke-width="0.8" stroke-dasharray="2 2" /><circle cx="24" cy="24" r="11" fill="color-mix(in srgb, var(--mp-cta) 18%, transparent)" stroke="none" /><circle cx="24" cy="24" r="5.5" fill="none" stroke="var(--mp-muted)" stroke-width="0.8" stroke-dasharray="2 2" /><circle cx="24" cy="24" r="4" fill="color-mix(in srgb, currentColor 18%, transparent)" stroke="none" /></svg>
+                  <span class="mode-label-text">Mode 3<br />2nd radial</span>
+                </button>
+                <button type="button" class="mode-btn" data-mode="4">
+                  <svg viewBox="0 0 48 48" class="mode-svg" aria-hidden="true"><title>Mode 4 — First diametral</title><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" /><path d="M24 4 Q24 14 14 24 Q4 34 24 44" fill="color-mix(in srgb, currentColor 18%, transparent)" stroke="none" /><path d="M24 4 Q34 14 34 24 Q34 34 24 44" fill="color-mix(in srgb, var(--mp-cta) 18%, transparent)" stroke="none" /><line x1="24" y1="4" x2="24" y2="44" stroke="var(--mp-muted)" stroke-width="0.8" stroke-dasharray="2 2" /></svg>
+                  <span class="mode-label-text">Mode 4<br />diametral</span>
+                </button>
+                <button type="button" class="mode-btn" data-mode="5">
+                  <svg viewBox="0 0 48 48" class="mode-svg" aria-hidden="true"><title>Mode 5 — Mixed radial + diametral</title><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.5" /><path d="M24 4 Q14 14 14 24 Q14 34 24 44" fill="color-mix(in srgb, currentColor 18%, transparent)" stroke="none" /><path d="M24 4 Q34 14 34 24 Q34 34 24 44" fill="color-mix(in srgb, var(--mp-cta) 18%, transparent)" stroke="none" /><line x1="24" y1="4" x2="24" y2="44" stroke="var(--mp-muted)" stroke-width="0.8" stroke-dasharray="2 2" /><circle cx="24" cy="24" r="10.5" fill="none" stroke="var(--mp-muted)" stroke-width="0.8" stroke-dasharray="2 2" /></svg>
+                  <span class="mode-label-text">Mode 5<br />mixed</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Controls + Metrics -->
+          <div class="flex flex-col gap-5">
+            <!-- Controls Card -->
+            <div class="rounded-[20px] border border-border bg-card-bg p-5 lg:p-6">
+              <div class="flex flex-wrap gap-2" aria-label="Material presets">
+                <button type="button" class="preset-btn is-active" data-material="paper">Paper</button>
+                <button type="button" class="preset-btn" data-material="polypropylene">PP</button>
+                <button type="button" class="preset-btn" data-material="aluminum">Al</button>
+                <button type="button" class="preset-btn" data-material="carbon-fiber">Carbon</button>
+                <button type="button" class="preset-btn" data-material="kevlar">Kevlar</button>
+                <button type="button" class="preset-btn" data-material="titanium">Ti</button>
+              </div>
+
+              <div class="mt-5 grid gap-4">
+                <label class="control-label" for="freq-slider">
+                  <span>Frequency</span><output id="freq-readout">800 Hz</output>
+                  <input type="range" id="freq-slider" min="1.301" max="4" step="0.001" value="2.903" aria-label="Frequency, logarithmic scale, 20 Hz to 10 kHz" />
+                </label>
+
+                <label class="control-label" for="diameter-slider">
+                  <span>Cone diameter</span><output id="diameter-readout">15 cm</output>
+                  <input type="range" id="diameter-slider" min="5" max="38" step="0.5" value="15" aria-label="Cone diameter in centimeters" />
+                </label>
+
+                <div class="flex items-center gap-3">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="override-cb" class="accent-cta size-4" />
+                    <span class="control-label !grid-cols-none !text-[0.62rem]">Override breakup freq</span>
+                  </label>
+                </div>
+
+                <label class="control-label" for="breakup-slider" id="breakup-label-wrap" style="opacity:0.5;pointer-events:none">
+                  <span>Breakup frequency</span><output id="breakup-readout">—</output>
+                  <input type="range" id="breakup-slider" min="1.301" max="4" step="0.001" value="2.903" disabled aria-label="Manual breakup frequency override" />
+                </label>
+
+                <div>
+                  <p class="control-heading">Mode selector</p>
+                  <div class="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Radial mode emphasis">
+                    <button type="button" class="preset-btn is-active" data-emphasis="auto">Auto</button>
+                    <button type="button" class="preset-btn" data-emphasis="1">1</button>
+                    <button type="button" class="preset-btn" data-emphasis="2">2</button>
+                    <button type="button" class="preset-btn" data-emphasis="3">3</button>
+                    <button type="button" class="preset-btn" data-emphasis="4">4</button>
+                    <button type="button" class="preset-btn" data-emphasis="5">5</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Metrics Cards -->
+            <dl class="grid grid-cols-2 gap-3 font-mono text-[0.75rem]" aria-live="polite">
+              <div class="metric-card"><dt>Mode</dt><dd id="metric-mode">Piston range</dd></div>
+              <div class="metric-card"><dt>Breakup freq</dt><dd id="metric-breakup">2,800 Hz</dd></div>
+              <div class="metric-card"><dt>Region</dt><dd id="metric-region">Piston</dd></div>
+              <div class="metric-card"><dt>Phase coherence</dt><dd id="metric-coherence">100%</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Method & Limitations -->
+    <section aria-labelledby="method-title">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">What this is</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55]">An illustrative modal-shape explorer — not a finite-element analysis. The cone is modeled as a simplified circular plate/membrane with trigonometric approximations of Bessel-like mode shapes. The frequency response is synthetic and qualitative.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">What it is not</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55]">This does not account for cone profile (curvilinear vs straight), surround compliance, voice-coil mass, dust cap, material anisotropy, non-uniform thickness, coupled bending/membrane waves, or directivity effects. It is an on-axis approximation for conceptual understanding.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Material properties</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55]">Young's modulus and density values are approximate literature values — actual properties vary significantly with manufacturing process, fillers, weave patterns (for composites), and temperature. The breakup scale &radic;(E/&rho;) captures the dominant material factor but omits damping.</p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Use this for</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55]">Understanding the qualitative transition from piston to breakup behavior. Exploring how diameter and material stiffness shift the breakup frequency. Visualizing mode shapes that appear in real cones. For design decisions, use measurements or proper FEA/BEA analysis.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .sim-btn,
+  .preset-btn {
+    min-height: 2.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.45rem 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+  .sim-btn:hover,
+  .preset-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-border-strong);
+  }
+  .sim-btn.is-active,
+  .preset-btn.is-active {
+    color: var(--mp-canvas);
+    border-color: var(--mp-text);
+    background: var(--mp-text);
+  }
+  .canvas-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mp-border);
+    border-radius: 20px;
+    background: var(--mp-card);
+  }
+  .canvas-label-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--mp-border);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mp-muted);
+  }
+  #cone-canvas,
+  #freqresp-canvas {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    background: var(--mp-canvas);
+  }
+  #cone-canvas {
+    aspect-ratio: 640 / 480;
+  }
+  #freqresp-canvas {
+    aspect-ratio: 640 / 260;
+  }
+  .control-label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .control-label output { color: var(--mp-text); }
+  .control-label input {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--mp-cta);
+  }
+  .control-heading {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .metric-card,
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem;
+  }
+  .metric-card dt,
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .metric-card dd {
+    margin-top: 0.35rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .math-card {
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  #breakup-label-wrap input { accent-color: var(--mp-muted); }
+  .accent-cta { accent-color: var(--mp-cta); }
+
+  .mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 14px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    min-width: 60px;
+  }
+  .mode-btn:hover {
+    border-color: var(--mp-border-strong);
+  }
+  .mode-btn.is-active {
+    border-color: var(--mp-text);
+    background: color-mix(in srgb, var(--mp-text) 12%, var(--mp-elevated));
+  }
+  .mode-svg {
+    width: 42px;
+    height: 42px;
+    color: var(--mp-text);
+  }
+  .mode-label-text {
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--mp-muted);
+    text-align: center;
+    line-height: 1.2;
+  }
+</style>
+
+<script>
+  import { setupHiDPI, resolveTheme, clearCanvas, drawCircle, drawText, drawLogFreqGrid, drawDbGrid } from '../../lib/chart-core.ts';
+
+  const MATERIALS: Record<string, { label: string; E: number; rho: number; breakup_scale: number }> = {
+    paper:        { label: 'Paper',        E: 3,    rho: 700,  breakup_scale: 1.0 },
+    polypropylene:{ label: 'Polypropylene',E: 1.5,  rho: 900,  breakup_scale: 0.7 },
+    aluminum:     { label: 'Aluminum',     E: 70,   rho: 2700, breakup_scale: 2.5 },
+    'carbon-fiber':{ label: 'Carbon fiber',E: 120,  rho: 1600, breakup_scale: 4.2 },
+    kevlar:       { label: 'Kevlar',       E: 80,   rho: 1440, breakup_scale: 3.6 },
+    titanium:     { label: 'Titanium',     E: 110,  rho: 4500, breakup_scale: 2.4 },
+  };
+
+  const REF_DIAMETER = 15;
+  const REF_BREAKUP_PAPER = 2800;
+
+  function computeBreakupFreq(materialKey: string, diameterCm: number): number {
+    const m = MATERIALS[materialKey];
+    return m.breakup_scale * REF_BREAKUP_PAPER * (REF_DIAMETER / diameterCm);
+  }
+
+  function logFreqToHz(logF: number): number {
+    return Math.pow(10, logF);
+  }
+  function hzToLogFreq(hz: number): number {
+    return Math.log10(Math.max(20, Math.min(10000, hz)));
+  }
+
+  function initConeBreakup() {
+    const coneCanvas = document.getElementById('cone-canvas') as HTMLCanvasElement | null;
+    if (!coneCanvas || coneCanvas.dataset.initialized === 'true') return;
+    coneCanvas.dataset.initialized = 'true';
+
+    const freqrespCanvas = document.getElementById('freqresp-canvas') as HTMLCanvasElement;
+
+    const animToggle = document.getElementById('anim-toggle') as HTMLButtonElement;
+    const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
+    const freqReadout = document.getElementById('freq-readout')!;
+    const diameterSlider = document.getElementById('diameter-slider') as HTMLInputElement;
+    const diameterReadout = document.getElementById('diameter-readout')!;
+    const overrideCb = document.getElementById('override-cb') as HTMLInputElement;
+    const breakupSlider = document.getElementById('breakup-slider') as HTMLInputElement;
+    const breakupReadout = document.getElementById('breakup-readout')!;
+    const breakupLabelWrap = document.getElementById('breakup-label-wrap')!;
+    const coneModeLabel = document.getElementById('cone-mode-label')!;
+    const metricMode = document.getElementById('metric-mode')!;
+    const metricBreakup = document.getElementById('metric-breakup')!;
+    const metricRegion = document.getElementById('metric-region')!;
+    const metricCoherence = document.getElementById('metric-coherence')!;
+
+    const materialButtons = document.querySelectorAll<HTMLButtonElement>('[data-material]');
+    const modeButtons = document.querySelectorAll<HTMLButtonElement>('[data-mode]');
+    const emphasisButtons = document.querySelectorAll<HTMLButtonElement>('[data-emphasis]');
+
+    let materialKey = 'paper';
+    let diameterCm = 15;
+    let logFreq = 2.903;
+    let overrideBreakup = false;
+    let manualBreakupLogF = 2.903;
+    let animating = true;
+    let selectedMode: number | 'auto' = 'auto';
+    let selectedEmphasis: number | 'auto' = 'auto';
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) { animating = false; animToggle.textContent = 'Animate: Off'; animToggle.classList.remove('is-active'); animToggle.setAttribute('aria-pressed', 'false'); }
+
+    function effectiveBreakupLogF(): number {
+      if (overrideBreakup) return manualBreakupLogF;
+      const f = computeBreakupFreq(materialKey, diameterCm);
+      return hzToLogFreq(f);
+    }
+
+    const coneCtx = setupHiDPI(coneCanvas, 640, 480);
+    const frCtx = setupHiDPI(freqrespCanvas, 640, 260);
+
+    let animPhase = 0;
+    let lastFrameTime = performance.now();
+    let animFrameId = 0;
+    let destroyed = false;
+    let freqResponseDirty = true;
+
+    function resolveMpColor(name: string, fallback: string): string {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+    }
+
+    const ISO_COS = Math.cos(Math.PI / 6);
+    const ISO_SIN = Math.sin(Math.PI / 6);
+
+    function modeShape(r: number, theta: number, mode: number): number {
+      const rn = Math.min(1, Math.max(0, r));
+      switch (mode) {
+        case 1: return 1.0;
+        case 2: return Math.cos(Math.PI * rn);
+        case 3: return Math.cos(2 * Math.PI * rn);
+        case 4: return Math.cos(theta) * Math.cos(Math.PI * rn / 2);
+        case 5: return Math.cos(2 * theta) * Math.cos(Math.PI * rn);
+        default: return 1.0;
+      }
+    }
+
+    function computeDisplacement(r: number, theta: number, bLogF: number): number {
+      const freqHz = logFreqToHz(logFreq);
+      const breakupHz = logFreqToHz(bLogF);
+      const ratio = freqHz / Math.max(1, breakupHz);
+
+      const effectiveMode = selectedMode === 'auto'
+        ? (selectedEmphasis === 'auto'
+            ? Math.max(1, Math.min(5, Math.ceil(ratio * 3)))
+            : selectedEmphasis)
+        : selectedMode;
+
+      const pistonAmp = Math.max(0, 1 - ratio);
+      const modalAmp = Math.pow(Math.max(0, ratio - 0.35), 1.2) * 1.5;
+
+      const pistonVal = 0.35 * pistonAmp;
+      const modalVal = modalAmp * modeShape(r, theta, effectiveMode);
+      return pistonVal + modalVal;
+    }
+
+    function estimatePhaseCoherence(freqHz: number, breakupHz: number): number {
+      const r = freqHz / Math.max(1, breakupHz);
+      if (r < 0.6) return 100;
+      if (r < 1.0) return Math.round(100 - (r - 0.6) * 75);
+      if (r < 2.0) return Math.round(85 - (r - 1.0) * 60);
+      return Math.max(5, Math.round(25 - (r - 2) * 8));
+    }
+
+    function currentRegion(freqHz: number, breakupHz: number): string {
+      const r = freqHz / Math.max(1, breakupHz);
+      if (r < 0.6) return 'Piston';
+      if (r < 1.05) return 'Breakup onset';
+      if (r < 2.5) return 'Modal region';
+      return 'Highly modal';
+    }
+
+    function currentModeLabel(freqHz: number, breakupHz: number): string {
+      const r = freqHz / Math.max(1, breakupHz);
+      if (r < 0.6) return 'Piston range';
+      if (r < 0.85) return 'Mode 1 onset';
+      if (r < 1.3) return 'Mode 2';
+      if (r < 2.2) return 'Mode 3';
+      if (r < 3.5) return 'Mode 4+';
+      return 'Mode 5+';
+    }
+
+    function renderCone(phase = 0) {
+      const theme = resolveTheme();
+      const cw = 640;
+      const ch = 480;
+      clearCanvas(coneCtx, theme, cw, ch);
+
+      const cx = cw * 0.55;
+      const cy = ch * 0.45;
+      const coneR = 180;
+
+      const bLogF = effectiveBreakupLogF();
+
+      const RADIAL = 36;
+      const ANGULAR = 64;
+      const numVerts = (RADIAL + 1) * (ANGULAR + 1);
+      const vertices = new Float32Array(numVerts * 3);
+      const colors = new Float32Array(numVerts * 3);
+
+      const oscillation = Math.sin(phase);
+
+      for (let i = 0; i <= RADIAL; i++) {
+        const r = i / RADIAL;
+        for (let j = 0; j <= ANGULAR; j++) {
+          const theta = (j / ANGULAR) * Math.PI * 2;
+          const idx = i * (ANGULAR + 1) + j;
+
+          const disp = computeDisplacement(r, theta, bLogF) * oscillation;
+          const z = disp * 45;
+
+          const x3d = r * coneR * Math.cos(theta);
+          const y3d = r * coneR * Math.sin(theta);
+
+          const sx = (x3d - y3d) * ISO_COS;
+          const sy = (x3d + y3d) * ISO_SIN - z;
+
+          vertices[idx * 3] = cx + sx;
+          vertices[idx * 3 + 1] = cy + sy;
+          vertices[idx * 3 + 2] = disp;
+
+          const ad = Math.abs(disp);
+          const sign = Math.sign(disp);
+          if (ad < 0.08) {
+            colors[idx * 3] = 0.94; colors[idx * 3 + 1] = 0.94; colors[idx * 3 + 2] = 0.94;
+          } else if (sign > 0) {
+            const t = Math.min(1, ad * 0.85);
+            colors[idx * 3] = 0.95;
+            colors[idx * 3 + 1] = 0.25 + (1 - t) * 0.55;
+            colors[idx * 3 + 2] = 0.25 + (1 - t) * 0.55;
+          } else {
+            const t = Math.min(1, ad * 0.85);
+            colors[idx * 3] = 0.25 + (1 - t) * 0.45;
+            colors[idx * 3 + 1] = 0.35 + (1 - t) * 0.45;
+            colors[idx * 3 + 2] = 0.88;
+          }
+        }
+      }
+
+      for (let i = 0; i < RADIAL; i++) {
+        for (let j = 0; j < ANGULAR; j++) {
+          const a = i * (ANGULAR + 1) + j;
+          const b = a + 1;
+          const c = (i + 1) * (ANGULAR + 1) + j;
+          const d = c + 1;
+
+          const ax = vertices[a * 3], ay = vertices[a * 3 + 1];
+          const bx = vertices[b * 3], by = vertices[b * 3 + 1];
+          const cxv = vertices[c * 3], cyv = vertices[c * 3 + 1];
+          const dx = vertices[d * 3], dy = vertices[d * 3 + 1];
+
+          const avgR = (colors[a * 3] + colors[b * 3] + colors[cxv * 3] + colors[d * 3]) / 4;
+          const avgG = (colors[a * 3 + 1] + colors[b * 3 + 1] + colors[cxv * 3 + 1] + colors[d * 3 + 1]) / 4;
+          const avgB = (colors[a * 3 + 2] + colors[b * 3 + 2] + colors[cxv * 3 + 2] + colors[d * 3 + 2]) / 4;
+
+          const ao = 0.85;
+          coneCtx.fillStyle = `rgba(${Math.round(avgR * 255)},${Math.round(avgG * 255)},${Math.round(avgB * 255)},${ao})`;
+          coneCtx.strokeStyle = `rgba(${Math.round(avgR * 255)},${Math.round(avgG * 255)},${Math.round(avgB * 255)},0.3)`;
+          coneCtx.lineWidth = 0.5;
+          coneCtx.beginPath();
+          coneCtx.moveTo(ax, ay);
+          coneCtx.lineTo(bx, by);
+          coneCtx.lineTo(dx, dy);
+          coneCtx.lineTo(cxv, cyv);
+          coneCtx.closePath();
+          coneCtx.fill();
+          coneCtx.stroke();
+        }
+      }
+
+      const gridColor = resolveMpColor('--mp-grid-line', 'rgba(168,185,204,0.08)');
+      coneCtx.strokeStyle = gridColor;
+      coneCtx.lineWidth = 0.6;
+      for (let ri = 0; ri <= RADIAL; ri += 3) {
+        coneCtx.beginPath();
+        for (let j = 0; j <= ANGULAR; j++) {
+          const idx = ri * (ANGULAR + 1) + j;
+          const sx = vertices[idx * 3], sy = vertices[idx * 3 + 1];
+          if (j === 0) coneCtx.moveTo(sx, sy);
+          else coneCtx.lineTo(sx, sy);
+        }
+        coneCtx.stroke();
+      }
+
+      const mutedColor = resolveMpColor('--mp-muted', '#a8b9cc');
+      coneCtx.strokeStyle = gridColor;
+      coneCtx.lineWidth = 0.5;
+      for (let j = 0; j < ANGULAR; j += 8) {
+        coneCtx.beginPath();
+        for (let i = 0; i <= RADIAL; i++) {
+          const idx = i * (ANGULAR + 1) + j;
+          const sx = vertices[idx * 3], sy = vertices[idx * 3 + 1];
+          if (i === 0) coneCtx.moveTo(sx, sy);
+          else coneCtx.lineTo(sx, sy);
+        }
+        coneCtx.stroke();
+      }
+
+      const freqHz = logFreqToHz(logFreq);
+      const breakupHz = logFreqToHz(effectiveBreakupLogF());
+      drawText(coneCtx, `f = ${freqHz.toFixed(0)} Hz`, 16, ch - 22, mutedColor, 10);
+      drawText(coneCtx, `f_b = ${breakupHz.toFixed(0)} Hz`, 16, ch - 8, mutedColor, 10);
+      drawText(coneCtx, `${MATERIALS[materialKey].label} · ${diameterCm} cm`, cw - 16, ch - 8, mutedColor, 10, 'right');
+
+      const textColor = resolveMpColor('--mp-text', '#e8eef6');
+      drawText(coneCtx, '← Positive', 20, 18, textColor, 9);
+      drawText(coneCtx, '← Negative', 20, 32, textColor, 9);
+      drawCircle(coneCtx, 8, 14, 4, 'rgba(242,80,100,0.8)');
+      drawCircle(coneCtx, 8, 28, 4, 'rgba(80,130,220,0.8)');
+      drawText(coneCtx, 'Nodal', 20, 46, textColor, 9);
+      drawCircle(coneCtx, 8, 42, 4, 'rgba(240,240,240,0.6)');
+    }
+
+    function renderFreqResponse() {
+      const theme = resolveTheme();
+      const cw = 640;
+      const ch = 260;
+      clearCanvas(frCtx, theme, cw, ch);
+
+      const bLogF = effectiveBreakupLogF();
+      const breakupHz = logFreqToHz(bLogF);
+      const freqHz = logFreqToHz(logFreq);
+
+      const minF = 20, maxF = 10000;
+      drawLogFreqGrid(frCtx, theme, cw, ch, minF, maxF);
+
+      const minDb = -12, maxDb = 12;
+      drawDbGrid(frCtx, theme, cw, ch, minDb, maxDb);
+
+      function xForF(f: number) { return (Math.log(f / minF) / Math.log(maxF / minF)) * cw; }
+      function yForDb(db: number) { return ch - ((db - minDb) / (maxDb - minDb)) * ch; }
+
+      const steps = 400;
+      const freqs: number[] = [];
+      const responses: number[] = [];
+      for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        const f = minF * Math.pow(maxF / minF, t);
+        freqs.push(f);
+        const ratio = f / Math.max(1, breakupHz);
+
+        let rsp = 0;
+        if (ratio < 0.5) {
+          rsp = 0;
+        } else if (ratio < 0.7) {
+          rsp = (ratio - 0.5) / 0.2 * 1.5;
+        } else if (ratio < 1.05) {
+          const t2 = (ratio - 0.7) / 0.35;
+          rsp = 1.5 + Math.sin(t2 * Math.PI) * 3.5;
+        } else if (ratio < 3) {
+          const env = 1 / (1 + (ratio - 1) * 0.4);
+          rsp = Math.sin(ratio * Math.PI * 3.2) * env * 5 + Math.sin(ratio * 7.1) * 2 * env;
+        } else {
+          rsp = Math.sin(ratio * 4.5) * 1.5 + Math.sin(ratio * 9.2);
+        }
+        rsp = Math.max(-10, Math.min(10, rsp));
+        responses.push(rsp);
+      }
+
+      frCtx.beginPath();
+      frCtx.strokeStyle = theme.magColor;
+      frCtx.lineWidth = 2;
+      for (let i = 0; i < steps; i++) {
+        const x = xForF(freqs[i]);
+        const y = yForDb(responses[i]);
+        if (i === 0) frCtx.moveTo(x, y); else frCtx.lineTo(x, y);
+      }
+      frCtx.stroke();
+
+      frCtx.strokeStyle = theme.muted;
+      frCtx.lineWidth = 1;
+      frCtx.setLineDash([6, 4]);
+      const bx = xForF(breakupHz);
+      frCtx.beginPath();
+      frCtx.moveTo(bx, 0);
+      frCtx.lineTo(bx, ch);
+      frCtx.stroke();
+      frCtx.setLineDash([]);
+      drawText(frCtx, `f_b = ${breakupHz.toFixed(0)} Hz`, bx + 4, 14, theme.muted, 10);
+
+      frCtx.strokeStyle = resolveMpColor('--mp-cta', '#b8324f');
+      frCtx.lineWidth = 1.6;
+      const cx = xForF(freqHz);
+      frCtx.beginPath();
+      frCtx.moveTo(cx, 0);
+      frCtx.lineTo(cx, ch);
+      frCtx.stroke();
+      drawText(frCtx, `${freqHz.toFixed(0)} Hz`, cx + 4, ch - 4, resolveMpColor('--mp-cta', '#b8324f'), 10);
+
+      const mutedCol = resolveMpColor('--mp-muted', '#a8b9cc');
+      drawText(frCtx, 'Piston', xForF(breakupHz * 0.3), yForDb(-6), mutedCol, 9, 'center');
+      drawText(frCtx, 'Breakup', xForF(breakupHz), yForDb(-6), mutedCol, 9, 'center');
+      drawText(frCtx, 'Modal', xForF(breakupHz * 2.2), yForDb(-6), mutedCol, 9, 'center');
+
+      const textCol = resolveMpColor('--mp-text', '#e8eef6');
+      frCtx.save();
+      frCtx.translate(12, ch / 2);
+      frCtx.rotate(-Math.PI / 2);
+      drawText(frCtx, 'dB (norm)', 0, 0, textCol, 10, 'center');
+      frCtx.restore();
+      drawText(frCtx, 'Frequency (Hz) — log scale', cw / 2, ch - 4, textCol, 10, 'center');
+    }
+
+    function updateMetrics() {
+      const freqHz = logFreqToHz(logFreq);
+      const breakupHz = logFreqToHz(effectiveBreakupLogF());
+      metricMode.textContent = currentModeLabel(freqHz, breakupHz);
+      metricBreakup.textContent = `${breakupHz.toFixed(0)} Hz`;
+      metricRegion.textContent = currentRegion(freqHz, breakupHz);
+      metricCoherence.textContent = `${estimatePhaseCoherence(freqHz, breakupHz)}%`;
+      coneModeLabel.textContent = currentModeLabel(freqHz, breakupHz);
+    }
+
+    function updateReadouts() {
+      const freqHz = logFreqToHz(logFreq);
+      freqReadout.textContent = freqHz >= 1000 ? `${(freqHz / 1000).toFixed(2)} kHz` : `${freqHz.toFixed(0)} Hz`;
+      freqSlider.value = logFreq.toFixed(3);
+      diameterReadout.textContent = `${diameterCm} cm`;
+      diameterSlider.value = String(diameterCm);
+
+      const bpLogF = effectiveBreakupLogF();
+      const bpHz = logFreqToHz(bpLogF);
+      breakupReadout.textContent = `${bpHz.toFixed(0)} Hz`;
+      breakupSlider.value = bpLogF.toFixed(3);
+    }
+
+    function renderAll() {
+      renderCone(animPhase);
+      renderFreqResponse();
+      updateMetrics();
+      freqResponseDirty = false;
+    }
+
+    function markMaterialButtons() {
+      materialButtons.forEach(b => {
+        b.classList.toggle('is-active', b.dataset.material === materialKey);
+      });
+    }
+
+    function markModeButtons() {
+      modeButtons.forEach(b => {
+        b.classList.toggle('is-active', b.dataset.mode === String(selectedMode));
+      });
+    }
+
+    function markEmphasisButtons() {
+      emphasisButtons.forEach(b => {
+        b.classList.toggle('is-active', b.dataset.emphasis === String(selectedEmphasis));
+      });
+    }
+
+    overrideCb.addEventListener('change', () => {
+      overrideBreakup = overrideCb.checked;
+      breakupSlider.disabled = !overrideBreakup;
+      if (overrideBreakup) {
+        breakupLabelWrap.style.opacity = '1';
+        breakupLabelWrap.style.pointerEvents = 'auto';
+        manualBreakupLogF = effectiveBreakupLogF();
+        breakupSlider.value = manualBreakupLogF.toFixed(3);
+        const bHz = logFreqToHz(manualBreakupLogF);
+        breakupReadout.textContent = `${bHz.toFixed(0)} Hz`;
+      } else {
+        breakupLabelWrap.style.opacity = '0.5';
+        breakupLabelWrap.style.pointerEvents = 'none';
+      }
+      renderAll();
+    });
+
+    freqSlider.addEventListener('input', () => {
+      logFreq = parseFloat(freqSlider.value);
+      updateReadouts();
+      renderAll();
+    });
+
+    diameterSlider.addEventListener('input', () => {
+      diameterCm = parseFloat(diameterSlider.value);
+      updateReadouts();
+      renderAll();
+    });
+
+    breakupSlider.addEventListener('input', () => {
+      manualBreakupLogF = parseFloat(breakupSlider.value);
+      const bHz = logFreqToHz(manualBreakupLogF);
+      breakupReadout.textContent = `${bHz.toFixed(0)} Hz`;
+      updateMetrics();
+      renderAll();
+    });
+
+    animToggle.addEventListener('click', () => {
+      animating = !animating;
+      animToggle.textContent = `Animate: ${animating ? 'On' : 'Off'}`;
+      animToggle.classList.toggle('is-active', animating);
+      animToggle.setAttribute('aria-pressed', String(animating));
+      lastFrameTime = performance.now();
+    });
+
+    materialButtons.forEach(b => {
+      b.addEventListener('click', () => {
+        materialKey = b.dataset.material || 'paper';
+        markMaterialButtons();
+        if (!overrideBreakup) {
+          updateReadouts();
+        }
+        renderAll();
+      });
+    });
+
+    modeButtons.forEach(b => {
+      b.addEventListener('click', () => {
+        const m = b.dataset.mode || 'auto';
+        selectedMode = m === 'auto' ? 'auto' : parseInt(m, 10);
+        markModeButtons();
+        renderAll();
+      });
+    });
+
+    emphasisButtons.forEach(b => {
+      b.addEventListener('click', () => {
+        const e = b.dataset.emphasis || 'auto';
+        selectedEmphasis = e === 'auto' ? 'auto' : parseInt(e, 10);
+        markEmphasisButtons();
+        renderAll();
+      });
+    });
+
+    function renderFrame(frameTime: number) {
+      if (destroyed) return;
+      const elapsed = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
+      lastFrameTime = frameTime;
+
+      if (animating && !document.hidden) {
+        const freqHz = logFreqToHz(logFreq);
+        animPhase += freqHz * elapsed * 2 * Math.PI;
+        renderCone(animPhase);
+      } else if (!animating && freqResponseDirty) {
+        renderFreqResponse();
+        freqResponseDirty = false;
+      }
+
+      animFrameId = requestAnimationFrame(renderFrame);
+    }
+
+    function handleVisibilityChange() { lastFrameTime = performance.now(); }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    updateReadouts();
+    renderAll();
+    animFrameId = requestAnimationFrame(renderFrame);
+
+    document.addEventListener('astro:before-swap', () => {
+      destroyed = true;
+      cancelAnimationFrame(animFrameId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initConeBreakup);
+  initConeBreakup();
+</script>

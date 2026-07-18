@@ -1,0 +1,632 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Room Mode Analyzer — Axial, Tangential & Oblique Modes | MakerPortal';
+const description =
+  'Compute every axial, tangential, and oblique room mode for a rectangular space. See the standing-wave pressure pattern overlaid on your room, count modes below the Schroeder frequency, and understand why certain bass notes boom.';
+const canonical = new URL('/playground/acoustics-room-modes', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Room Mode Analyzer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Room Mode Analyzer"
+    lead="Enter your room dimensions and see every standing-wave resonance up to a chosen frequency. Identify which modes pile up at your listening position, and explore the pressure pattern of any single eigenmode across the floor plan."
+    pillarHint="dsp-audio"
+  >
+    <section class="border-b border-border" aria-labelledby="inputs-title">
+      <div class="mx-auto max-w-[76rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="inputs-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Room geometry</h2>
+
+        <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5 lg:p-6">
+          <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <label class="control-label" for="room-lx">
+              <span>Length L<sub>x</sub> (m)</span><output id="lx-readout">5.0</output>
+              <input type="range" class="tool-input" id="room-lx" min="1" max="20" step="0.1" value="5.0" aria-label="Room length in metres" />
+            </label>
+            <label class="control-label" for="room-ly">
+              <span>Width L<sub>y</sub> (m)</span><output id="ly-readout">4.0</output>
+              <input type="range" class="tool-input" id="room-ly" min="1" max="20" step="0.1" value="4.0" aria-label="Room width in metres" />
+            </label>
+            <label class="control-label" for="room-lz">
+              <span>Height L<sub>z</sub> (m)</span><output id="lz-readout">2.8</output>
+              <input type="range" class="tool-input" id="room-lz" min="1" max="10" step="0.05" value="2.8" aria-label="Room height in metres" />
+            </label>
+            <label class="control-label" for="room-temp">
+              <span>Temperature (°C)</span><output id="temp-readout">20</output>
+              <input type="range" class="tool-input" id="room-temp" min="-10" max="45" step="1" value="20" aria-label="Air temperature in Celsius" />
+            </label>
+            <label class="control-label" for="max-freq">
+              <span>Max frequency (Hz)</span><output id="maxfreq-readout">400</output>
+              <input type="range" class="tool-input" id="max-freq" min="50" max="1000" step="10" value="400" aria-label="Maximum frequency to calculate in Hertz" />
+            </label>
+          </div>
+
+          <p class="mt-5 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-text">Listener position</p>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label class="control-label" for="listener-x">
+              <span>Listener X (m)</span><output id="listener-x-readout">2.50</output>
+              <input type="range" class="tool-input" id="listener-x" min="0" max="5" step="0.01" value="2.50" aria-label="Listener X coordinate in metres" />
+            </label>
+            <label class="control-label" for="listener-y">
+              <span>Listener Y (m)</span><output id="listener-y-readout">2.00</output>
+              <input type="range" class="tool-input" id="listener-y" min="0" max="4" step="0.01" value="2.00" aria-label="Listener Y coordinate in metres" />
+            </label>
+            <label class="control-label" for="listener-z">
+              <span>Listener Z (m)</span><output id="listener-z-readout">1.20</output>
+              <input type="range" class="tool-input" id="listener-z" min="0" max="2.8" step="0.01" value="1.20" aria-label="Listener Z coordinate in metres" />
+            </label>
+          </div>
+
+          <p class="mt-5 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-text">Source position</p>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label class="control-label" for="source-x">
+              <span>Source X (m)</span><output id="source-x-readout">1.25</output>
+              <input type="range" class="tool-input" id="source-x" min="0" max="5" step="0.01" value="1.25" aria-label="Source X coordinate in metres" />
+            </label>
+            <label class="control-label" for="source-y">
+              <span>Source Y (m)</span><output id="source-y-readout">1.00</output>
+              <input type="range" class="tool-input" id="source-y" min="0" max="4" step="0.01" value="1.00" aria-label="Source Y coordinate in metres" />
+            </label>
+            <label class="control-label" for="source-z">
+              <span>Source Z (m)</span><output id="source-z-readout">0.70</output>
+              <input type="range" class="tool-input" id="source-z" min="0" max="2.8" step="0.01" value="0.70" aria-label="Source Z coordinate in metres" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="results-title">
+      <div class="mx-auto max-w-[76rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <h2 id="results-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Results</h2>
+        </div>
+
+        <div class="mt-5">
+          <p class="eyebrow">Room metrics</p>
+          <dl class="mt-3 grid grid-cols-2 gap-3 font-mono text-[0.75rem] sm:grid-cols-3 lg:grid-cols-6" aria-live="polite">
+            <div class="metric-card"><dt>Volume</dt><dd id="metric-volume">56.0 m³</dd></div>
+            <div class="metric-card"><dt>Surface area</dt><dd id="metric-sa">90.4 m²</dd></div>
+            <div class="metric-card"><dt>Edge length</dt><dd id="metric-edges">47.2 m</dd></div>
+            <div class="metric-card"><dt>Speed of sound</dt><dd id="metric-c">343 m/s</dd></div>
+            <div class="metric-card"><dt>Schroeder f<sub>c</sub></dt><dd id="metric-schroeder">—</dd></div>
+            <div class="metric-card"><dt>Total modes</dt><dd id="metric-total">0</dd></div>
+          </dl>
+        </div>
+
+        <div class="mt-5">
+          <p class="eyebrow">Mode counts</p>
+          <dl class="mt-3 grid grid-cols-3 gap-3 font-mono text-[0.75rem]" aria-live="polite">
+            <div class="metric-card"><dt>Axial</dt><dd id="metric-axial">0</dd></div>
+            <div class="metric-card"><dt>Tangential</dt><dd id="metric-tangential">0</dd></div>
+            <div class="metric-card"><dt>Oblique</dt><dd id="metric-oblique">0</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="table-title">
+      <div class="mx-auto max-w-[76rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="table-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Modal frequency table</h2>
+        <p id="table-note" class="mt-2 text-[0.88rem] leading-[1.55] text-muted-text"></p>
+
+        <div class="mt-5 overflow-x-auto rounded-[14px] border border-border">
+          <table class="w-full font-mono text-[0.72rem] leading-[1.5]" id="modes-table" aria-live="polite">
+            <thead>
+              <tr class="border-b border-border bg-elevated/40 text-left font-semibold uppercase tracking-[0.08em] text-muted-text">
+                <th class="px-3 py-2 w-[3rem]">#</th>
+                <th class="px-3 py-2 w-[3rem]">n<sub>x</sub></th>
+                <th class="px-3 py-2 w-[3rem]">n<sub>y</sub></th>
+                <th class="px-3 py-2 w-[3rem]">n<sub>z</sub></th>
+                <th class="px-3 py-2 w-[6rem]">f (Hz)</th>
+                <th class="px-3 py-2">Type</th>
+                <th class="px-3 py-2">Pressure at listener</th>
+              </tr>
+            </thead>
+            <tbody id="modes-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="map-title">
+      <div class="mx-auto max-w-[76rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="map-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">2D Pressure map</h2>
+        <p class="mt-2 text-[0.88rem] leading-[1.55] text-muted-text">
+          Horizontal slice at listener height (z = <span id="slice-z-readout">1.20</span> m). Each cell’s colour shows the standing‑wave pressure of the selected mode.
+        </p>
+
+        <div class="mt-5 flex flex-wrap items-end gap-4">
+          <label class="control-label max-w-[18rem]" for="mode-select">
+            <span>Mode to display</span>
+            <select id="mode-select" class="tool-input mt-1 rounded-[8px] border border-border bg-elevated px-2 py-1.5 font-mono text-[0.72rem] text-primary-text"></select>
+          </label>
+          <label class="control-label max-w-[8rem]" for="grid-res-slider">
+            <span>Grid res</span><output id="grid-res-readout">40</output>
+            <input type="range" class="tool-input" id="grid-res-slider" min="15" max="60" value="40" step="5" aria-label="Pressure map grid resolution" />
+          </label>
+        </div>
+
+        <div class="mt-5 overflow-hidden rounded-[20px] border border-border bg-card-bg">
+          <div class="canvas-label-row">
+            <span>Pressure map</span>
+            <span id="map-mode-label">—</span>
+          </div>
+          <div class="p-4">
+            <svg id="pressure-svg" viewBox="0 0 640 520" class="block h-auto w-full" style="background: var(--mp-canvas);" aria-label="2D standing-wave pressure map for the selected room mode">
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="method-title">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <p>
+            Each eigenmode of a rectangular room is a standing wave whose pattern is the product of three cosines — one for each dimension. The eigenfrequencies follow the classical formula
+            <strong class="text-primary-text">f = (c/2) · √((n<sub>x</sub>/L<sub>x</sub>)² + (n<sub>y</sub>/L<sub>y</sub>)² + (n<sub>z</sub>/L<sub>z</sub>)²)</strong>
+            where n<sub>x</sub>, n<sub>y</sub>, n<sub>z</sub> are non‑negative integers (not all zero).
+          </p>
+          <p>
+            Every real room departs from this ideal picture. The walls are modelled as perfectly rigid (infinite impedance), so pressure anti‑nodes sit exactly on every boundary. Real walls absorb sound, shifting eigenfrequencies down and broadening each resonance. Tangential and oblique modes carry less energy than axials in practice because they strike more absorbing surfaces per cycle.
+          </p>
+        </div>
+        <div class="mt-7 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Schroeder frequency estimate</p>
+            <p class="mt-2">f<sub>c</sub> = 2000 · √(T<sub>60</sub> / V)</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+              T<sub>60</sub> is estimated from Sabine’s formula using an assumed average absorption coefficient ᾱ = 0.15 (typical furnished room). Below f<sub>c</sub>, individual modes are sparse and audible as discrete colouration; above f<sub>c</sub>, modal density is high enough that the room response becomes a statistical superposition.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">What is not modelled</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+              Damping (finite wall impedance), modal coupling, non‑rectangular geometry, furniture scattering, and absorption coefficients that vary with frequency. The pressure map displays the undamped cosine-product standing‑wave pattern — a geometric ideal, not a transmission‑line simulation.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Pressure at a point</p>
+            <p class="mt-2">p(x,y,z) = cos(n<sub>x</sub>πx/L<sub>x</sub>) · cos(n<sub>y</sub>πy/L<sub>y</sub>) · cos(n<sub>z</sub>πz/L<sub>z</sub>)</p>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+              Normalised to [−1, 1]. Zero crossings are the modal nodal surfaces where that particular mode contributes no pressure — the ideal places to put a subwoofer you don’t want exciting that mode.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Mode type classification</p>
+            <p class="mt-2 text-[0.74rem] leading-[1.55] text-muted-text">
+              <strong>Axial</strong>: one index non‑zero (e.g. 1,0,0) — between two parallel walls.<br/>
+              <strong>Tangential</strong>: two indices non‑zero (e.g. 1,1,0) — involves four surfaces.<br/>
+              <strong>Oblique</strong>: all three indices non‑zero (e.g. 1,1,1) — involves all six surfaces.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .tool-input {
+    width: 100%;
+    accent-color: var(--mp-cta);
+    border-radius: 8px;
+  }
+  input.tool-input[type="range"] {
+    accent-color: var(--mp-cta);
+  }
+  select.tool-input {
+    accent-color: transparent;
+    background: var(--mp-elevated);
+    color: var(--mp-text);
+    padding: 0.45rem 0.75rem;
+    font-size: 0.72rem;
+  }
+  .control-label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .control-label output {
+    color: var(--mp-text);
+  }
+  .control-label input,
+  .control-label select {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .metric-card,
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem;
+  }
+  .metric-card dt,
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .metric-card dd {
+    margin-top: 0.35rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .math-card {
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+    margin-bottom: 0.25rem;
+  }
+  .canvas-label-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--mp-border);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mp-muted);
+  }
+
+  #modes-table tbody td {
+    padding: 0.35rem 0.75rem;
+    white-space: nowrap;
+  }
+  tr.row-axial {
+    background: hsla(120, 40%, 50%, 0.06);
+  }
+  tr.row-tangential {
+    background: hsla(40, 80%, 55%, 0.06);
+  }
+  tr.row-oblique {
+    background: hsla(280, 40%, 50%, 0.06);
+  }
+  tr.row-highlight {
+    box-shadow: inset 3px 0 0 var(--mp-cta);
+  }
+</style>
+
+<script>
+  import { roomModes, schroederFrequency, modePressure, speedOfSound } from '../../lib/acoustics.ts';
+
+  interface RoomMode {
+    nx: number;
+    ny: number;
+    nz: number;
+    freq: number;
+    type: 'axial' | 'tangential' | 'oblique';
+  }
+
+  function initRoomModes() {
+    const root = document.getElementById('room-lx');
+    if (!root || root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+
+    const lxInput = document.getElementById('room-lx') as HTMLInputElement;
+    const lyInput = document.getElementById('room-ly') as HTMLInputElement;
+    const lzInput = document.getElementById('room-lz') as HTMLInputElement;
+    const tempInput = document.getElementById('room-temp') as HTMLInputElement;
+    const maxFreqInput = document.getElementById('max-freq') as HTMLInputElement;
+    const listenerX = document.getElementById('listener-x') as HTMLInputElement;
+    const listenerY = document.getElementById('listener-y') as HTMLInputElement;
+    const listenerZ = document.getElementById('listener-z') as HTMLInputElement;
+    const sourceX = document.getElementById('source-x') as HTMLInputElement;
+    const sourceY = document.getElementById('source-y') as HTMLInputElement;
+    const sourceZ = document.getElementById('source-z') as HTMLInputElement;
+    const modeSelect = document.getElementById('mode-select') as HTMLSelectElement;
+    const gridResSlider = document.getElementById('grid-res-slider') as HTMLInputElement;
+    const gridResReadout = document.getElementById('grid-res-readout')!;
+    const sliceZReadout = document.getElementById('slice-z-readout')!;
+    const mapModeLabel = document.getElementById('map-mode-label')!;
+    const tableNote = document.getElementById('table-note')!;
+    const modesTbody = document.getElementById('modes-tbody')!;
+    const pressureSvg = document.getElementById('pressure-svg')!;
+    const lxReadout = document.getElementById('lx-readout')!;
+    const lyReadout = document.getElementById('ly-readout')!;
+    const lzReadout = document.getElementById('lz-readout')!;
+    const tempReadout = document.getElementById('temp-readout')!;
+    const maxfreqReadout = document.getElementById('maxfreq-readout')!;
+    const listenerXReadout = document.getElementById('listener-x-readout')!;
+    const listenerYReadout = document.getElementById('listener-y-readout')!;
+    const listenerZReadout = document.getElementById('listener-z-readout')!;
+    const sourceXReadout = document.getElementById('source-x-readout')!;
+    const sourceYReadout = document.getElementById('source-y-readout')!;
+    const sourceZReadout = document.getElementById('source-z-readout')!;
+    const metricVolume = document.getElementById('metric-volume')!;
+    const metricSA = document.getElementById('metric-sa')!;
+    const metricEdges = document.getElementById('metric-edges')!;
+    const metricC = document.getElementById('metric-c')!;
+    const metricSchroeder = document.getElementById('metric-schroeder')!;
+    const metricTotal = document.getElementById('metric-total')!;
+    const metricAxial = document.getElementById('metric-axial')!;
+    const metricTangential = document.getElementById('metric-tangential')!;
+    const metricOblique = document.getElementById('metric-oblique')!;
+
+    const MAX_TABLE_ROWS = 200;
+    let modes: RoomMode[] = [];
+    
+
+    function readParams(): { Lx: number; Ly: number; Lz: number; tempC: number; maxFreq: number; listener: [number, number, number]; source: [number, number, number] } {
+      const Lx = parseFloat(lxInput.value) || 5;
+      const Ly = parseFloat(lyInput.value) || 4;
+      const Lz = parseFloat(lzInput.value) || 2.8;
+      const tempC = parseFloat(tempInput.value) || 20;
+      const maxFreq = parseFloat(maxFreqInput.value) || 400;
+      const lx = Math.min(Lx, parseFloat(listenerX.value) ?? Lx / 2);
+      const ly = Math.min(Ly, parseFloat(listenerY.value) ?? Ly / 2);
+      const lz = Math.min(Lz, parseFloat(listenerZ.value) ?? 1.2);
+      const sx = Math.min(Lx, parseFloat(sourceX.value) ?? Lx * 0.25);
+      const sy = Math.min(Ly, parseFloat(sourceY.value) ?? Ly * 0.25);
+      const sz = Math.min(Lz, parseFloat(sourceZ.value) ?? Lz * 0.25);
+      return { Lx, Ly, Lz, tempC, maxFreq, listener: [lx, ly, lz], source: [sx, sy, sz] };
+    }
+
+    function updateReadouts(p: ReturnType<typeof readParams>) {
+      lxReadout.textContent = p.Lx.toFixed(1);
+      lyReadout.textContent = p.Ly.toFixed(1);
+      lzReadout.textContent = p.Lz.toFixed(2);
+      tempReadout.textContent = String(p.tempC);
+      maxfreqReadout.textContent = String(p.maxFreq);
+      listenerXReadout.textContent = p.listener[0].toFixed(2);
+      listenerYReadout.textContent = p.listener[1].toFixed(2);
+      listenerZReadout.textContent = p.listener[2].toFixed(2);
+      sourceXReadout.textContent = p.source[0].toFixed(2);
+      sourceYReadout.textContent = p.source[1].toFixed(2);
+      sourceZReadout.textContent = p.source[2].toFixed(2);
+      sliceZReadout.textContent = p.listener[2].toFixed(2);
+
+      listenerX.max = String(p.Lx);
+      listenerY.max = String(p.Ly);
+      listenerZ.max = String(p.Lz);
+      sourceX.max = String(p.Lx);
+      sourceY.max = String(p.Ly);
+      sourceZ.max = String(p.Lz);
+    }
+
+    function clampVal(v: number, max: number) { return Math.min(max, Math.max(0, v)); }
+
+    function recalculate() {
+      const p = readParams();
+      updateReadouts(p);
+
+      const c = speedOfSound(p.tempC);
+      const V = p.Lx * p.Ly * p.Lz;
+      const S = 2 * (p.Lx * p.Ly + p.Lx * p.Lz + p.Ly * p.Lz);
+      const totalEdge = 4 * (p.Lx + p.Ly + p.Lz);
+      const avgAlpha = 0.15;
+      const A = S * avgAlpha;
+      const T60 = 0.161 * V / A;
+      const fSchroeder = schroederFrequency(V, T60);
+
+      modes = roomModes(p.Lx, p.Ly, p.Lz, c, p.maxFreq);
+
+      const countAxial = modes.filter((m) => m.type === 'axial').length;
+      const countTangential = modes.filter((m) => m.type === 'tangential').length;
+      const countOblique = modes.filter((m) => m.type === 'oblique').length;
+
+      metricVolume.textContent = `${V.toFixed(1)} m³`;
+      metricSA.textContent = `${S.toFixed(1)} m²`;
+      metricEdges.textContent = `${totalEdge.toFixed(1)} m`;
+      metricC.textContent = `${c.toFixed(0)} m/s`;
+      metricSchroeder.textContent = `${fSchroeder.toFixed(1)} Hz`;
+      metricTotal.textContent = String(modes.length);
+      metricAxial.textContent = String(countAxial);
+      metricTangential.textContent = String(countTangential);
+      metricOblique.textContent = String(countOblique);
+
+      buildTable(p);
+      buildModeDropdown();
+      drawPressureMap(p);
+    }
+
+    function buildTable(p: ReturnType<typeof readParams>) {
+      const [lx, ly, lz] = p.listener;
+      const truncated = modes.length > MAX_TABLE_ROWS;
+      const shown = truncated ? modes.slice(0, MAX_TABLE_ROWS) : modes;
+
+      tableNote.textContent = truncated
+        ? `Showing first ${MAX_TABLE_ROWS} of ${modes.length} modes (sorted by frequency). Increase max frequency to see more.`
+        : `Showing all ${modes.length} modes sorted by frequency.`;
+
+      const rows = shown.map((m, i) => {
+        const pressure = modePressure(lx, ly, lz, p.Lx, p.Ly, p.Lz, m.nx, m.ny, m.nz);
+        const highlightCls = Math.abs(pressure) > 0.5 ? ' row-highlight' : '';
+        return `<tr class="row-${m.type}${highlightCls}">
+          <td>${i + 1}</td>
+          <td>${m.nx}</td>
+          <td>${m.ny}</td>
+          <td>${m.nz}</td>
+          <td>${m.freq.toFixed(1)}</td>
+          <td>${m.type}</td>
+          <td>${pressure.toFixed(3)}</td>
+        </tr>`;
+      });
+
+      if (truncated) {
+        rows.push(`<tr class="text-muted-text text-[0.65rem]"><td colspan="7" class="px-3 py-2">… ${modes.length - MAX_TABLE_ROWS} more modes truncated (max ${MAX_TABLE_ROWS} rows shown).</td></tr>`);
+      }
+
+      modesTbody.innerHTML = rows.join('');
+    }
+
+    function buildModeDropdown() {
+      const currentVal = modeSelect.value;
+      modeSelect.innerHTML = modes.map((m, i) => {
+        const label = `#${i + 1} — (${m.nx},${m.ny},${m.nz}) — ${m.freq.toFixed(1)} Hz [${m.type}]`;
+        return `<option value="${i}">${label}</option>`;
+      }).join('');
+      if (modes.length > 0) {
+        const prevIdx = parseInt(currentVal, 10);
+        if (!isNaN(prevIdx) && prevIdx < modes.length) {
+          modeSelect.value = String(prevIdx);
+        } else {
+          modeSelect.value = '0';
+        }
+      }
+    }
+
+    function drawPressureMap(p: ReturnType<typeof readParams>) {
+      const idx = parseInt(modeSelect.value, 10);
+      if (isNaN(idx) || idx < 0 || idx >= modes.length) {
+        pressureSvg.innerHTML = '';
+        mapModeLabel.textContent = 'Select a mode to display';
+        return;
+      }
+      const mode = modes[idx];
+      mapModeLabel.textContent = `Mode (${mode.nx},${mode.ny},${mode.nz}) — ${mode.freq.toFixed(1)} Hz — ${mode.type}`;
+
+      const gridRes = parseInt(gridResSlider.value, 10) || 40;
+      const svgW = 640;
+      const svgH = 520;
+      const margin = { top: 10, right: 120, bottom: 10, left: 10 };
+      const plotW = svgW - margin.left - margin.right;
+      const plotH = svgH - margin.top - margin.bottom;
+      const scale = Math.min(plotW / p.Lx, plotH / p.Ly);
+      const roomW = p.Lx * scale;
+      const roomH = p.Ly * scale;
+      const offX = margin.left + (plotW - roomW) / 2;
+      const offY = margin.top + (plotH - roomH) / 2;
+
+      const listenerZVal = p.listener[2];
+      const cellW = roomW / gridRes;
+      const cellH = roomH / gridRes;
+
+      function pressureColor(val: number): string {
+        const abs = Math.abs(val);
+        const s = (abs * 100).toFixed(0);
+        const l = (100 - abs * 35).toFixed(0);
+        const h = val >= 0 ? 0 : 240;
+        return `hsl(${h}, ${s}%, ${l}%)`;
+      }
+
+      const cells: string[] = [];
+      for (let j = 0; j < gridRes; j++) {
+        const y = (j + 0.5) * p.Ly / gridRes;
+        for (let i = 0; i < gridRes; i++) {
+          const x = (i + 0.5) * p.Lx / gridRes;
+          const pr = modePressure(x, y, listenerZVal, p.Lx, p.Ly, p.Lz, mode.nx, mode.ny, mode.nz);
+          const fill = pressureColor(pr);
+          const sx = (offX + i * cellW).toFixed(2);
+          const sy = (offY + j * cellH).toFixed(2);
+          cells.push(`<rect x="${sx}" y="${sy}" width="${cellW.toFixed(2)}" height="${cellH.toFixed(2)}" fill="${fill}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`);
+        }
+      }
+
+      const roomRect = `<rect x="${offX.toFixed(2)}" y="${offY.toFixed(2)}" width="${roomW.toFixed(2)}" height="${roomH.toFixed(2)}" fill="none" stroke="var(--mp-border-strong)" stroke-width="2" rx="2"/>`;
+
+      const lxScaled = offX + (p.listener[0] / p.Lx) * roomW;
+      const lyScaled = offY + (p.listener[1] / p.Ly) * roomH;
+      const sxScaled = offX + (p.source[0] / p.Lx) * roomW;
+      const syScaled = offY + (p.source[1] / p.Ly) * roomH;
+
+      const listenerDot = `<circle cx="${lxScaled.toFixed(2)}" cy="${lyScaled.toFixed(2)}" r="5" fill="none" stroke="var(--mp-text)" stroke-width="2"/><circle cx="${lxScaled.toFixed(2)}" cy="${lyScaled.toFixed(2)}" r="2" fill="var(--mp-text)"/>`;
+      const sourceDot = `<circle cx="${sxScaled.toFixed(2)}" cy="${syScaled.toFixed(2)}" r="5" fill="none" stroke="var(--mp-cta)" stroke-width="2"/><circle cx="${sxScaled.toFixed(2)}" cy="${syScaled.toFixed(2)}" r="2" fill="var(--mp-cta)"/>`;
+
+      const labelX = offX + roomW + 18;
+      const cbX = offX + roomW + 30;
+      const cbTop = offY;
+      const cbH = roomH;
+      const cbW = 16;
+
+      const colorbarGradient = (() => {
+        const id = 'cb-grad';
+        const stops = [];
+        for (let s = 0; s <= 20; s++) {
+          const t = s / 20;
+          const val = 1 - 2 * t;
+          const v = (t * 100).toFixed(1);
+          stops.push(`<stop offset="${v}%" stop-color="${pressureColor(val)}"/>`);
+        }
+        return `<defs><linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0">${stops.join('')}</linearGradient></defs>
+        <rect x="${cbX}" y="${cbTop.toFixed(2)}" width="${cbW}" height="${cbH.toFixed(2)}" fill="url(#${id})" rx="2"/>
+        <text x="${cbX + cbW + 8}" y="${cbTop + 8}" fill="var(--mp-text)" font-size="11" font-family="ui-monospace, monospace">+1</text>
+        <text x="${cbX + cbW + 8}" y="${cbTop + cbH - 4}" fill="var(--mp-text)" font-size="11" font-family="ui-monospace, monospace">−1</text>
+        <text x="${cbX + cbW + 8}" y="${cbTop + cbH/2 + 4}" fill="var(--mp-text)" font-size="11" font-family="ui-monospace, monospace">0</text>`;
+      })();
+
+      const legendItems = [
+        `<circle cx="${labelX + 8}" cy="${offY + roomH + 32}" r="4" fill="none" stroke="var(--mp-text)" stroke-width="1.5"/><text x="${labelX + 20}" y="${offY + roomH + 36}" fill="var(--mp-muted)" font-size="10" font-family="ui-monospace, monospace">Listener</text>`,
+        `<circle cx="${labelX + 8}" cy="${offY + roomH + 52}" r="4" fill="none" stroke="var(--mp-cta)" stroke-width="1.5"/><text x="${labelX + 20}" y="${offY + roomH + 56}" fill="var(--mp-muted)" font-size="10" font-family="ui-monospace, monospace">Source</text>`,
+        `<rect x="${labelX + 2}" y="${offY + roomH + 64}" width="12" height="12" fill="hsl(0, 100%, 65%)" rx="1"/><text x="${labelX + 20}" y="${offY + roomH + 74}" fill="var(--mp-muted)" font-size="10" font-family="ui-monospace, monospace">+ pressure</text>`,
+        `<rect x="${labelX + 2}" y="${offY + roomH + 84}" width="12" height="12" fill="hsl(240, 100%, 65%)" rx="1"/><text x="${labelX + 20}" y="${offY + roomH + 94}" fill="var(--mp-muted)" font-size="10" font-family="ui-monospace, monospace">− pressure</text>`,
+      ];
+
+      const dimLabels = [
+        `<text x="${offX + roomW/2}" y="${offY + roomH + 18}" fill="var(--mp-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">L<sub>x</sub> = ${p.Lx.toFixed(1)} m</text>`,
+        `<text x="${offX - 8}" y="${offY + roomH/2}" fill="var(--mp-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="end" transform="rotate(-90, ${offX - 8}, ${offY + roomH/2})">L<sub>y</sub> = ${p.Ly.toFixed(1)} m</text>`,
+      ];
+
+      pressureSvg.innerHTML = cells.join('') + colorbarGradient + roomRect + listenerDot + sourceDot + legendItems.join('') + dimLabels.join('');
+    }
+
+    function handleInput() {
+      const p = readParams();
+      const clampedLx = clampVal(parseFloat(listenerX.value) || p.Lx / 2, p.Lx);
+      const clampedLy = clampVal(parseFloat(listenerY.value) || p.Ly / 2, p.Ly);
+      const clampedLz = clampVal(parseFloat(listenerZ.value) || 1.2, p.Lz);
+      const clampedSx = clampVal(parseFloat(sourceX.value) || p.Lx * 0.25, p.Lx);
+      const clampedSy = clampVal(parseFloat(sourceY.value) || p.Ly * 0.25, p.Ly);
+      const clampedSz = clampVal(parseFloat(sourceZ.value) || p.Lz * 0.25, p.Lz);
+      listenerX.value = clampedLx.toFixed(2);
+      listenerY.value = clampedLy.toFixed(2);
+      listenerZ.value = clampedLz.toFixed(2);
+      sourceX.value    = clampedSx.toFixed(2);
+      sourceY.value    = clampedSy.toFixed(2);
+      sourceZ.value    = clampedSz.toFixed(2);
+      recalculate();
+    }
+
+    for (const el of [lxInput, lyInput, lzInput, tempInput, maxFreqInput, listenerX, listenerY, listenerZ, sourceX, sourceY, sourceZ]) {
+      el.addEventListener('input', handleInput);
+    }
+    modeSelect.addEventListener('change', () => {
+      const p = readParams();
+      drawPressureMap(p);
+    });
+    gridResSlider.addEventListener('input', () => {
+      gridResReadout.textContent = gridResSlider.value;
+      const p = readParams();
+      drawPressureMap(p);
+    });
+
+    handleInput();
+  }
+
+  document.addEventListener('astro:page-load', initRoomModes);
+  initRoomModes();
+</script>

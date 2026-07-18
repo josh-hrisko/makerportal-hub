@@ -1,0 +1,130 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Audio & Acoustics Toolbox — Engineering tools for sound, DSP & loudspeakers | MakerPortal';
+const description = 'Serious engineering tools for audio, acoustics, DSP, and loudspeaker design: room modes, pole-zero filters, enclosure alignment, driver nonlinearity, thermal compression, cone breakup, and fast acoustic calculators.';
+const canonical = new URL('/playground/multiphysics-dsp-lab', Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Audio & Acoustics Toolbox', item: canonical.toString() },
+  ],
+};
+
+const tools = [
+  {
+    slug: 'acoustic-calculators',
+    title: 'Acoustic Calculators',
+    tagline: 'Wavelength, SPL, RT60, delay — fast engineering math',
+    description: 'Quick-access calculators for wavelength, frequency, delay, SPL summation, dB conversion, RT60 (Sabine/Eyring), critical distance, port length, Helmholtz resonance, and speed of sound by temperature.',
+    emoji: '📐',
+  },
+  {
+    slug: 'acoustics-room-modes',
+    title: 'Room Mode Analyzer',
+    tagline: 'Modal calculator with pressure maps and Schroeder frequency',
+    description: 'Rectangular-room axial/tangential/oblique modal calculator with frequency table, mode-density analysis, Schroeder frequency, and 2D pressure slices — plus honest treatment guidance.',
+    emoji: '🏠',
+  },
+  {
+    slug: 'pole-zero-explorer',
+    title: 'Pole-Zero Filter Explorer',
+    tagline: 'Drag conjugate pairs, see the response, hear the filter',
+    description: 'Full z-plane with draggable poles and zeros, log-frequency magnitude/phase/group-delay plots, RBJ biquad coefficient export, filter presets, and Web Audio audition with safe gain handling.',
+    emoji: '🎛️',
+  },
+  {
+    slug: 'loudspeaker-enclosure-designer',
+    title: 'Loudspeaker Enclosure Designer',
+    tagline: 'Sealed-box Thiele–Small alignment with SPL transfer function',
+    description: 'Input fs, Qts, Vas, Vb. Get Qtc, fc, SPL response, and Vb sizing guidance for common alignments (0.5, 0.577, 0.707, 1.0). Documented model scope and caveats throughout.',
+    emoji: '🔊',
+  },
+  {
+    slug: 'loudspeaker-nonlinearity-lab',
+    title: 'Driver Nonlinearity Lab',
+    tagline: 'Bl(x), Kms(x), excursion, and harmonic distortion',
+    description: 'Visualize force-factor falloff, suspension stiffening, and excitation asymmetry. Lumped-parameter educational model with explicit caveats — no claims of measurement-grade prediction.',
+    emoji: '⚡',
+  },
+  {
+    slug: 'voice-coil-thermal-compression',
+    title: 'Voice-Coil Thermal Compression',
+    tagline: 'Heat, resistance, and SPL sag from a thermal RC model',
+    description: 'Thermal resistance/capacitance voice-coil model: temperature rise, Re(T), current, power, and resulting acoustic compression. Cooling presets with editable thermal mass/resistance.',
+    emoji: '🌡️',
+  },
+  {
+    slug: 'cone-breakup',
+    title: 'Cone Breakup Explorer',
+    tagline: 'Piston range, breakup onset, and modal resonances',
+    description: 'An illustrative modal-shape explorer distinguishing rigid-piston motion from cone breakup. Material presets use cited approximate stiffness/density values. Resonances clearly marked.',
+    emoji: '📢',
+  },
+];
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Audio & Acoustics Toolbox"
+    lead="Seven focused engineering tools for sound, DSP, and loudspeaker design. Each tool is self-contained, physically honest, and built for real problem-solving — not decorative demos."
+    pillarHint="dsp-audio"
+  >
+    <section class="border-b border-border" aria-labelledby="tools-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+        <h2 id="tools-title" class="text-[clamp(1.35rem,3vw,1.7rem)] font-[650] tracking-[-0.03em] text-primary-text">Choose a tool</h2>
+        <p class="mt-2 max-w-2xl text-[0.92rem] leading-[1.6] text-muted-text">
+          Each tool opens as its own page with shareable URLs, focused controls, and detailed method notes. Nothing runs in the background — open only what you need.
+        </p>
+
+        <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {tools.map((tool) => (
+            <a
+              href={`/playground/${tool.slug}`}
+              class="group flex flex-col rounded-[20px] border border-border bg-card-bg p-5 transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <h3 class="text-[1.05rem] font-semibold leading-tight text-primary-text transition-colors group-hover:text-primary-cta">{tool.title}</h3>
+                <span class="shrink-0 text-xl" aria-hidden="true">{tool.emoji}</span>
+              </div>
+              <p class="mt-1.5 text-[0.82rem] leading-[1.45] text-muted-text">{tool.tagline}</p>
+              <p class="mt-2 text-[0.76rem] leading-[1.5] text-muted-text/75">{tool.description}</p>
+              <span class="mt-3 inline-flex items-center gap-1 font-mono text-[0.65rem] uppercase tracking-[0.08em] text-primary-cta">
+                Open tool <span aria-hidden="true">→</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="philosophy-title">
+      <div class="mx-auto max-w-[70rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="philosophy-title" class="text-[clamp(1.35rem,3vw,1.7rem)] font-[650] tracking-[-0.03em]">How to use these tools</h2>
+        <div class="mt-6 grid gap-5 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-3">
+          <div>
+            <p class="font-semibold text-primary-text">1. Start with a known-good default.</p>
+            <p class="mt-1.5">Every tool opens in a stable, legible state. Watch it for a moment before changing any control.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-primary-text">2. Change one parameter at a time.</p>
+            <p class="mt-1.5">Move a single slider or input. Observe the consequence in the graph, table, or readout. That causal chain is the lesson.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-primary-text">3. Read the method notes.</p>
+            <p class="mt-1.5">Each tool has a "Method & limitations" section stating exactly what model is used, what it captures, and what it omits. These are educational models — not substitutes for measurement, FEA, or CFD.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>

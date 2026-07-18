@@ -1,0 +1,863 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Driver Nonlinearity Lab — Bl(x), Kms(x) & Harmonic Distortion | MakerPortal';
+const description =
+  'Interactive lumped-parameter model of a moving-coil loudspeaker driver with nonlinear Bl(x), Kms(x), and Le(x). Visualize excursion, harmonic distortion, and force-factor droop under realistic voltage drive.';
+const canonical = new URL('/playground/loudspeaker-nonlinearity-lab', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Driver Nonlinearity Lab', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Driver Nonlinearity Lab"
+    lead="A lumped-parameter moving-coil loudspeaker model with nonlinear Bl(x), Kms(x), and Le(x). Explore how force-factor droop and suspension stiffening generate harmonic distortion as excursion grows — educational, not measurement-grade."
+    pillarHint="dsp-audio"
+  >
+    <section class="border-b border-border" aria-labelledby="lab-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+
+        <!-- Top row: SVG + Controls -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.2fr]">
+          <!-- Motor Cross-Section SVG -->
+          <div class="canvas-card" id="motor-card">
+            <div class="canvas-label-row">
+              <span>Motor cross-section</span>
+              <span id="motor-status">Coil in gap</span>
+            </div>
+            <div class="motor-svg-wrap" id="motor-svg-wrap">
+              <svg id="motor-svg" viewBox="0 0 400 480" width="400" height="480" aria-label="Loudspeaker motor cross-section showing magnet, pole piece, voice coil, cone, spider, and surround">
+                <!-- Magnet top -->
+                <rect id="mag-top" x="80" y="200" width="240" height="36" fill="#3a3d44" rx="2" />
+                <rect id="mag-bottom" x="80" y="284" width="240" height="36" fill="#3a3d44" rx="2" />
+                <!-- Pole piece -->
+                <rect id="pole" x="176" y="220" width="48" height="84" fill="#6b6e75" rx="1" />
+                <!-- Top plate -->
+                <rect x="80" y="232" width="240" height="16" fill="#52555c" />
+                <!-- Bottom plate -->
+                <rect x="80" y="272" width="240" height="16" fill="#52555c" />
+                <!-- Voice coil group -->
+                <g id="coil-group">
+                  <rect id="coil-left" x="170" y="224" width="8" height="76" fill="#d4875e" rx="1" opacity="0.9" />
+                  <rect id="coil-right" x="222" y="224" width="8" height="76" fill="#d4875e" rx="1" opacity="0.9" />
+                </g>
+                <!-- Spider (wavy lines) -->
+                <g id="spider-group" opacity="0.7">
+                  <path d="M170,310 Q140,320 170,330 Q200,340 170,350 Q140,360 170,370" fill="none" stroke="#8a8d94" stroke-width="1.4" />
+                  <path d="M230,310 Q260,320 230,330 Q200,340 230,350 Q260,360 230,370" fill="none" stroke="#8a8d94" stroke-width="1.4" />
+                </g>
+                <!-- Cone -->
+                <polygon id="cone" points="178,310 130,140 270,140 222,310" fill="none" stroke="#9a9da4" stroke-width="1.8" opacity="0.8" />
+                <!-- Surround (accordion) -->
+                <g id="surround-group" opacity="0.7">
+                  <path d="M130,140 Q120,128 130,120 Q140,112 130,104" fill="none" stroke="#8a8d94" stroke-width="1.2" />
+                  <path d="M270,140 Q280,128 270,120 Q260,112 270,104" fill="none" stroke="#8a8d94" stroke-width="1.2" />
+                </g>
+                <!-- Force arrow (Bl*i) -->
+                <g id="force-arrow-group">
+                  <line id="force-arrow" x1="200" y1="340" x2="200" y2="280" stroke="#ce445d" stroke-width="3" marker-end="url(#arrowhead)" opacity="0" />
+                  <defs>
+                    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                      <polygon points="0 0, 8 3, 0 6" fill="#ce445d" />
+                    </marker>
+                  </defs>
+                </g>
+                <!-- Gap highlight -->
+                <rect id="gap-indicator" x="178" y="264" width="44" height="4" fill="#f07a94" rx="1" opacity="0.5" />
+                <!-- Labels -->
+                <text x="200" y="212" fill="currentColor" font-family="monospace" font-size="9" text-anchor="middle" opacity="0.5">Magnet</text>
+                <text x="200" y="320" fill="currentColor" font-family="monospace" font-size="9" text-anchor="middle" opacity="0.5">Magnet</text>
+                <text x="200" y="350" fill="currentColor" font-family="monospace" font-size="8" text-anchor="middle" opacity="0.4">Back plate</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Controls Card -->
+          <div class="rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+            <h2 class="text-[1.05rem] font-[650] tracking-[-0.02em]">Drive &amp; Parameters</h2>
+            <p class="mt-1 text-[0.75rem] text-muted-text">Adjust drive level and nonlinearity coefficients.</p>
+            <div class="mt-5 grid grid-cols-1 gap-x-5 gap-y-3.5 sm:grid-cols-2" id="controls-grid">
+              <div>
+                <span class="control-label">Drive <span class="eyebrow">Vrms</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="vrms-slider" min="0.5" max="60" step="0.5" value="12" class="w-full" />
+                  <input type="number" id="vrms-num" class="tool-input w-[4.8rem]" min="0.5" max="60" step="0.5" value="12" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">Frequency <span class="eyebrow">Hz</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="freq-slider" min="20" max="500" step="1" value="60" class="w-full" />
+                  <input type="number" id="freq-num" class="tool-input w-[4.8rem]" min="20" max="500" step="1" value="60" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">&beta; <span class="eyebrow">Bl(x) asymmetry</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="beta-slider" min="0" max="1" step="0.01" value="0.10" class="w-full" />
+                  <input type="number" id="beta-num" class="tool-input w-[4.8rem]" min="0" max="1" step="0.01" value="0.10" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">&gamma; <span class="eyebrow">Kms(x) stiffening</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="gamma-slider" min="0" max="1" step="0.01" value="0.20" class="w-full" />
+                  <input type="number" id="gamma-num" class="tool-input w-[4.8rem]" min="0" max="1" step="0.01" value="0.20" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">&delta; <span class="eyebrow">Le(x) modulation</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="delta-slider" min="0" max="1" step="0.01" value="0.05" class="w-full" />
+                  <input type="number" id="delta-num" class="tool-input w-[4.8rem]" min="0" max="1" step="0.01" value="0.05" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">Mms <span class="eyebrow">Moving mass (g)</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="mms-slider" min="2" max="200" step="1" value="20" class="w-full" />
+                  <input type="number" id="mms-num" class="tool-input w-[4.8rem]" min="2" max="200" step="1" value="20" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">Re <span class="eyebrow">DC resistance (&Omega;)</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="re-slider" min="1" max="32" step="0.1" value="6" class="w-full" />
+                  <input type="number" id="re-num" class="tool-input w-[4.8rem]" min="1" max="32" step="0.1" value="6" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">Bl0 <span class="eyebrow">Force factor (N/A)</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="bl0-slider" min="1" max="30" step="0.1" value="8" class="w-full" />
+                  <input type="number" id="bl0-num" class="tool-input w-[4.8rem]" min="1" max="30" step="0.1" value="8" />
+                </div>
+              </div>
+              <div>
+                <span class="control-label">Xmax <span class="eyebrow">Linear excursion (mm)</span></span>
+                <div class="flex items-center gap-3 mt-1">
+                  <input type="range" id="xmax-slider" min="0.5" max="20" step="0.1" value="5" class="w-full" />
+                  <input type="number" id="xmax-num" class="tool-input w-[4.8rem]" min="0.5" max="20" step="0.1" value="5" />
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button type="button" class="sim-btn is-active" id="run-toggle" aria-pressed="true">Pause</button>
+              <button type="button" class="sim-btn" id="reset-btn">Reset defaults</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric cards -->
+        <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 font-mono text-[0.75rem]" aria-live="off" id="metrics-row">
+          <div class="metric-card"><dt>Peak excursion</dt><dd id="met-excursion">—</dd></div>
+          <div class="metric-card"><dt>THD estimate</dt><dd id="met-thd">—</dd></div>
+          <div class="metric-card"><dt>Bl(x) at peak</dt><dd id="met-bl">—</dd></div>
+          <div class="metric-card"><dt>Kms at peak</dt><dd id="met-kms">—</dd></div>
+        </dl>
+
+        <!-- Waveform + Bl(x) Canvas -->
+        <div class="mt-6 canvas-card">
+          <div class="canvas-label-row">
+            <span>Waveform &amp; Bl(x) curve</span>
+            <span id="waveform-label">Displacement vs time</span>
+          </div>
+          <canvas id="waveform-canvas" width="880" height="440" aria-label="Upper half: input voltage and displacement waveforms; lower half: Bl(x) force factor curve with operating point marker"></canvas>
+        </div>
+
+        <!-- FFT / Spectrum Canvas -->
+        <div class="mt-6 canvas-card">
+          <div class="canvas-label-row">
+            <span>Approximate spectral view</span>
+            <span id="spectrum-label">Educational, not measurement-grade</span>
+          </div>
+          <canvas id="spectrum-canvas" width="880" height="220" aria-label="Approximate frequency spectrum of displacement output with harmonic markers"></canvas>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Method & Limitations Section -->
+    <section aria-labelledby="method-title" class="border-b border-border">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+
+        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <p>
+            This is an explicit <strong class="text-primary-text">lumped-parameter educational model</strong> of a moving-coil loudspeaker driver. The simulation solves the coupled electromechanical differential equations using simple Euler integration with a fixed timestep of 1/8000&thinsp;s, driven by a sinusoidal input voltage.
+          </p>
+          <p>
+            Bl(x), Kms(x), and Le(x) are modeled as <strong class="text-primary-text">simple polynomial functions</strong> — real drivers have more complex, measured nonlinear curves that can include asymmetry from offset coils, progressive spider stiffness, and hysteresis effects not captured here.
+          </p>
+        </div>
+
+        <div class="mt-7 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Governing equations</p>
+            <p class="mt-2 font-mono text-[0.8rem] leading-[1.65]">
+              F = Bl(x)&middot;i &minus; Kms(x)&middot;x<br/>
+              i = (V<sub>in</sub> &minus; Bl(x)&middot;v) / Re<br />
+              a = F / Mms<br />
+              v = &int; a dt<br />
+              x = &int; v dt<br />
+              Bl(x) = Bl<sub>0</sub>(1 &minus; &beta;|x/X<sub>max</sub>|)<br />
+              Kms(x) = Kms<sub>0</sub>(1 + &gamma;(x/X<sub>max</sub>)&sup2;)<br />
+              Le(x) = Le<sub>0</sub>(1 + &delta;|x/X<sub>max</sub>|)
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">What this model does NOT simulate</p>
+            <ul class="mt-2 space-y-1.5 text-[0.78rem] leading-[1.6] text-muted-text" style="list-style: disc; padding-left: 1.2rem;">
+              <li>Flux modulation from induced coil current</li>
+              <li>Eddy currents in the pole piece</li>
+              <li>Thermal effects (voice coil heating)</li>
+              <li>Cone breakup or bending modes</li>
+              <li>Port nonlinearity (vented boxes)</li>
+              <li>Equivalent-circuit or FEM analysis</li>
+            </ul>
+            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+              The THD estimate is an approximation derived from harmonic amplitudes of the displacement waveform. Use this tool to understand the <strong class="text-primary-text">qualitative mechanisms</strong> of driver nonlinearity — not for driver design validation.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-7 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Integration method</p>
+            <p class="mt-2 font-mono text-[0.8rem] leading-[1.65]">
+              Euler integration at 1/8000&thinsp;s timestep. Each frame, the simulation advances ~27&ndash;268 physics steps (depending on frame rate). The state vector [x, v, i] is updated sequentially:
+            </p>
+            <p class="mt-2 font-mono text-[0.76rem] leading-[1.55] text-muted-text">
+              Bl &larr; Bl(x<sub>n</sub>)<br/>
+              Kms &larr; Kms(x<sub>n</sub>)<br/>
+              Le &larr; Le(x<sub>n</sub>)<br/>
+              i<sub>n+1</sub> &larr; i<sub>n</sub> + (V<sub>in</sub> &minus; Re&middot;i<sub>n</sub> &minus; Bl&middot;v<sub>n</sub>) / Le &times; dt<br/>
+              a<sub>n</sub> &larr; (Bl&middot;i<sub>n+1</sub> &minus; Kms&middot;x<sub>n</sub>) / Mms<br/>
+              v<sub>n+1</sub> &larr; v<sub>n</sub> + a<sub>n</sub> &times; dt<br/>
+              x<sub>n+1</sub> &larr; x<sub>n</sub> + v<sub>n+1</sub> &times; dt
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Kms<sub>0</sub> derivation</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.65] text-muted-text">
+              The linear stiffness Kms<sub>0</sub> is not an independent input — it is computed from the free-air resonance relationship:
+            </p>
+            <p class="mt-2 font-mono text-[0.8rem] leading-[1.65]">
+              Kms<sub>0</sub> = Mms &times; (2&pi;f<sub>s</sub>)&sup2;
+            </p>
+            <p class="mt-2 text-[0.82rem] leading-[1.65] text-muted-text">
+              with a fixed f<sub>s</sub> = 40&thinsp;Hz. The model allows you to vary Mms and the nonlinear coefficients to explore how stiffness interacts with the motor force.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .sim-btn,
+  .preset-btn {
+    min-height: 2.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.45rem 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .sim-btn:hover {
+    color: var(--mp-text);
+    border-color: color-mix(in srgb, var(--mp-border) 140%, var(--mp-text));
+  }
+  .sim-btn.is-active {
+    color: var(--mp-canvas);
+    border-color: var(--mp-text);
+    background: var(--mp-text);
+  }
+  .canvas-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mp-border);
+    border-radius: 20px;
+    background: var(--mp-card);
+  }
+  .canvas-label-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--mp-border);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mp-muted);
+  }
+  .control-label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .control-label .eyebrow {
+    font-size: 0.62rem;
+    text-transform: none;
+    letter-spacing: 0.04em;
+    color: var(--mp-muted);
+    opacity: 0.65;
+  }
+  .tool-input {
+    border: 1px solid var(--mp-border);
+    border-radius: 8px;
+    background: var(--mp-elevated);
+    padding: 0.35rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--mp-text);
+    text-align: right;
+  }
+  .metric-card,
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem;
+  }
+  .metric-card dt,
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .metric-card dd {
+    margin-top: 0.35rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .math-card {
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+
+  #motor-svg-wrap {
+    position: relative;
+    width: 100%;
+    background: var(--mp-canvas);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  #motor-svg {
+    max-width: 100%;
+    height: auto;
+    color: var(--mp-muted);
+  }
+
+  #waveform-canvas,
+  #spectrum-canvas {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    background: var(--mp-canvas);
+    aspect-ratio: 2 / 1;
+  }
+
+  #spectrum-canvas {
+    aspect-ratio: 4 / 1;
+  }
+
+  .motor-svg-wrap input[type="range"] {
+    accent-color: var(--mp-cta);
+  }
+</style>
+
+<script>
+  import { setupHiDPI, resolveTheme, clearCanvas, drawLine, drawText, drawCircle } from '../../lib/chart-core.ts';
+
+  function initDriverNonlinearityLab() {
+    const waveformCanvas = document.getElementById('waveform-canvas') as HTMLCanvasElement | null;
+    const spectrumCanvas = document.getElementById('spectrum-canvas') as HTMLCanvasElement | null;
+    if (!waveformCanvas || !spectrumCanvas || waveformCanvas.dataset.initialized === 'true') return;
+    waveformCanvas.dataset.initialized = 'true';
+
+    const wfCtx = setupHiDPI(waveformCanvas, 880, 440);
+    const spCtx = setupHiDPI(spectrumCanvas, 880, 220);
+    const W_WF = 880;
+    const H_WF = 440;
+    const W_SP = 880;
+    const H_SP = 220;
+
+    const theme = resolveTheme();
+
+    const vrmsSlider = document.getElementById('vrms-slider') as HTMLInputElement;
+    const vrmsNum = document.getElementById('vrms-num') as HTMLInputElement;
+    const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
+    const freqNum = document.getElementById('freq-num') as HTMLInputElement;
+    const betaSlider = document.getElementById('beta-slider') as HTMLInputElement;
+    const betaNum = document.getElementById('beta-num') as HTMLInputElement;
+    const gammaSlider = document.getElementById('gamma-slider') as HTMLInputElement;
+    const gammaNum = document.getElementById('gamma-num') as HTMLInputElement;
+    const deltaSlider = document.getElementById('delta-slider') as HTMLInputElement;
+    const deltaNum = document.getElementById('delta-num') as HTMLInputElement;
+    const mmsSlider = document.getElementById('mms-slider') as HTMLInputElement;
+    const mmsNum = document.getElementById('mms-num') as HTMLInputElement;
+    const reSlider = document.getElementById('re-slider') as HTMLInputElement;
+    const reNum = document.getElementById('re-num') as HTMLInputElement;
+    const bl0Slider = document.getElementById('bl0-slider') as HTMLInputElement;
+    const bl0Num = document.getElementById('bl0-num') as HTMLInputElement;
+    const xmaxSlider = document.getElementById('xmax-slider') as HTMLInputElement;
+    const xmaxNum = document.getElementById('xmax-num') as HTMLInputElement;
+
+    const runToggle = document.getElementById('run-toggle') as HTMLButtonElement;
+    const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
+    const motorStatus = document.getElementById('motor-status') as HTMLSpanElement;
+
+    const metExcursion = document.getElementById('met-excursion') as HTMLElement;
+    const metThd = document.getElementById('met-thd') as HTMLElement;
+    const metBl = document.getElementById('met-bl') as HTMLElement;
+    const metKms = document.getElementById('met-kms') as HTMLElement;
+
+    const coilGroup = document.getElementById('coil-group') as unknown as SVGElement;
+    const forceArrow = document.getElementById('force-arrow') as unknown as SVGElement;
+    const coneEl = document.getElementById('cone') as unknown as SVGElement;
+    const gapIndicator = document.getElementById('gap-indicator') as unknown as SVGElement;
+
+    const PHYSICS_DT = 1 / 8000;
+
+    function getParams() {
+      return {
+        vrms: parseFloat(vrmsNum.value),
+        freq: parseFloat(freqNum.value),
+        beta: parseFloat(betaNum.value),
+        gamma: parseFloat(gammaNum.value),
+        delta: parseFloat(deltaNum.value),
+        mms: parseFloat(mmsNum.value) / 1000,
+        re: parseFloat(reNum.value),
+        bl0: parseFloat(bl0Num.value),
+        xmax: parseFloat(xmaxNum.value) / 1000,
+      };
+    }
+
+    const defaults: Record<string, string> = {
+      vrms: '12', freq: '60', beta: '0.10', gamma: '0.20', delta: '0.05',
+      mms: '20', re: '6', bl0: '8', xmax: '5',
+    };
+
+    function resetParams() {
+      for (const [id, val] of Object.entries(defaults)) {
+        const slider = document.getElementById(id + '-slider') as HTMLInputElement;
+        const num = document.getElementById(id + '-num') as HTMLInputElement;
+        if (slider) slider.value = val;
+        if (num) num.value = val;
+      }
+    }
+
+    let x = 0, v = 0, i = 0;
+    let running = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let destroyed = false;
+    let lastFrameTime = performance.now();
+    let animationFrameId = 0;
+    let accumulator = 0;
+
+    const historySize = 1024;
+    let displacementHistory: number[] = new Array(historySize).fill(0);
+    let voltageHistory: number[] = new Array(historySize).fill(0);
+    let historyCursor = 0;
+    let simTime = 0;
+
+    function syncControls() {
+      const p = getParams();
+      const historicalMax = displacementHistory.reduce((max, val) => Math.max(max, Math.abs(val)), 0);
+      const peakMm = historicalMax * 1000;
+      const blAtPeak = p.bl0 * (1 - p.beta * Math.abs(historicalMax / (p.xmax || 1e-9)));
+      const kms0 = p.mms * (2 * Math.PI * 40) * (2 * Math.PI * 40);
+      const kmsAtPeak = kms0 * (1 + p.gamma * Math.pow(historicalMax / (p.xmax || 1e-9), 2));
+      metExcursion.textContent = `±${peakMm.toFixed(2)} mm`;
+      metBl.textContent = `${blAtPeak.toFixed(2)} N/A`;
+      metKms.textContent = `${(kmsAtPeak / 1000).toFixed(2)} N/mm`;
+
+      const motorPos = (historicalMax / (p.xmax || 1e-9)) * 30;
+      const clampedMotorPos = Math.max(-30, Math.min(30, motorPos));
+      coilGroup.setAttribute('transform', `translate(0, ${clampedMotorPos})`);
+
+      if (Math.abs(historicalMax) > p.xmax) {
+        motorStatus.textContent = 'Coil out of gap';
+        motorStatus.style.color = theme.magColor;
+        gapIndicator.setAttribute('opacity', '0.12');
+      } else {
+        motorStatus.textContent = 'Coil in gap';
+        motorStatus.style.color = '';
+        gapIndicator.setAttribute('opacity', '0.5');
+      }
+
+      const forceMag = Math.abs(p.bl0 * (1 - p.beta * Math.abs(x / (p.xmax || 1e-9))) * i);
+      const forceScaled = Math.min(1, forceMag / 5);
+      forceArrow.setAttribute('opacity', String(0.15 + forceScaled * 0.85));
+      const arrowLen = 30 + forceScaled * 50;
+      forceArrow.setAttribute('y1', '340');
+      forceArrow.setAttribute('y2', String(340 - arrowLen));
+
+      const coneOffset = clampedMotorPos * 0.5;
+      coneEl.setAttribute('transform', `translate(0, ${coneOffset})`);
+
+      function approximateTHD(): number {
+        const N = displacementHistory.length;
+        if (N < 8) return 0;
+        const buf = new Float64Array(N);
+        for (let k = 0; k < N; k++) {
+          buf[k] = displacementHistory[(historyCursor + 1 + k) % N];
+        }
+        const mean = buf.reduce((a, b) => a + b, 0) / N;
+        const ac = new Float64Array(N);
+        for (let k = 0; k < N; k++) ac[k] = buf[k] - mean;
+        let fundamental = 0, h2 = 0, h3 = 0, h4 = 0;
+        const p = getParams();
+        const dt = PHYSICS_DT;
+        const omega = 2 * Math.PI * p.freq;
+        for (let k = 0; k < N; k++) {
+          const t = k * dt;
+          fundamental += ac[k] * Math.cos(omega * t);
+          h2 += ac[k] * Math.cos(2 * omega * t);
+          h3 += ac[k] * Math.cos(3 * omega * t);
+          h4 += ac[k] * Math.cos(4 * omega * t);
+        }
+        const norm = 2 / N;
+        const f1 = Math.abs(fundamental * norm);
+        const f2 = Math.abs(h2 * norm);
+        const f3 = Math.abs(h3 * norm);
+        const f4 = Math.abs(h4 * norm);
+        if (f1 < 1e-12) return 0;
+        const thd = Math.sqrt(f2 * f2 + f3 * f3 + f4 * f4) / f1 * 100;
+        return Math.min(99.9, thd);
+      }
+
+      metThd.textContent = `${approximateTHD().toFixed(1)}%`;
+    }
+
+    function stepPhysics() {
+      const p = getParams();
+      const omega = 2 * Math.PI * p.freq;
+      const vin = p.vrms * Math.sqrt(2) * Math.sin(omega * simTime);
+
+      const bl = p.bl0 * (1 - p.beta * Math.abs(x / (p.xmax || 1e-9)));
+      const kms0 = p.mms * (2 * Math.PI * 40) * (2 * Math.PI * 40);
+      const kms = kms0 * (1 + p.gamma * Math.pow(x / (p.xmax || 1e-9), 2));
+      const le0 = 0.5e-3;
+      const le = le0 * (1 + p.delta * Math.abs(x / (p.xmax || 1e-9)));
+
+      i = i + (vin - p.re * i - bl * v) / le * PHYSICS_DT;
+      const a = (bl * i - kms * x) / p.mms;
+      v = v + a * PHYSICS_DT;
+      x = x + v * PHYSICS_DT;
+
+      displacementHistory[historyCursor] = x;
+      voltageHistory[historyCursor] = vin;
+      historyCursor = (historyCursor + 1) % historySize;
+      simTime += PHYSICS_DT;
+    }
+
+    function renderPlots() {
+      const p = getParams();
+      clearCanvas(wfCtx, theme, W_WF, H_WF);
+      clearCanvas(spCtx, theme, W_SP, H_SP);
+
+      // ── Waveform Canvas (upper half: voltage/displacement, lower half: Bl(x)) ──
+      const topH = H_WF * 0.52;
+      const botTop = H_WF * 0.58;
+
+      // Upper half bounds
+      const margTop = { left: 56, right: 28, top: 28, bottom: 14 };
+      const plotW = W_WF - margTop.left - margTop.right;
+      const plotH = topH - margTop.top - margTop.bottom;
+
+      const dispMax = Math.max(1e-9, displacementHistory.reduce((max, val) => Math.max(max, Math.abs(val)), 0));
+      const dispRange = dispMax * 1.2;
+      const vMax = Math.max(1e-9, voltageHistory.reduce((max, val) => Math.max(max, Math.abs(val)), 0));
+      const vRange = Math.max(p.vrms * Math.sqrt(2) * 1.1, vMax * 1.2);
+
+      // Grid lines
+      wfCtx.strokeStyle = theme.gridLine;
+      wfCtx.lineWidth = 0.5;
+      for (let i = 0; i <= 5; i++) {
+        const y = margTop.top + (plotH * i) / 5;
+        wfCtx.beginPath();
+        wfCtx.moveTo(margTop.left, y);
+        wfCtx.lineTo(margTop.left + plotW, y);
+        wfCtx.stroke();
+      }
+
+      drawText(wfCtx, `+${(dispRange * 1000).toFixed(1)} mm`, margTop.left - 4, margTop.top + 10, theme.muted, 9, 'right');
+      drawText(wfCtx, '0', margTop.left - 4, margTop.top + plotH / 2 + 3, theme.muted, 9, 'right');
+      drawText(wfCtx, `−${(dispRange * 1000).toFixed(1)}`, margTop.left - 4, margTop.top + plotH + 4, theme.muted, 9, 'right');
+      drawText(wfCtx, `+${vRange.toFixed(1)} V`, margTop.left - 4, margTop.top + 22, theme.muted, 9, 'right');
+      drawText(wfCtx, '0 V', margTop.left - 4, margTop.top + plotH / 2 + 15, theme.muted, 9, 'right');
+
+      drawText(wfCtx, 'Displacement (x)', W_WF / 2, margTop.top + 12, theme.muted, 10, 'center');
+      drawText(wfCtx, 'Voltage (gray)', W_WF / 2, margTop.top + 24, theme.muted, 9, 'center');
+
+      // Draw voltage waveform (gray)
+      wfCtx.beginPath();
+      wfCtx.strokeStyle = '#8899aa';
+      wfCtx.lineWidth = 1.0;
+      for (let j = 0; j < historySize; j++) {
+        const idx = (historyCursor + 1 + j) % historySize;
+        const val = voltageHistory[idx];
+        const xp = margTop.left + (j / (historySize - 1)) * plotW;
+        const yp = margTop.top + plotH / 2 - (val / vRange) * (plotH / 2);
+        if (j === 0) wfCtx.moveTo(xp, yp);
+        else wfCtx.lineTo(xp, yp);
+      }
+      wfCtx.stroke();
+
+      // Draw displacement waveform (colored)
+      wfCtx.beginPath();
+      wfCtx.strokeStyle = theme.magColor;
+      wfCtx.lineWidth = 2.0;
+      for (let j = 0; j < historySize; j++) {
+        const idx = (historyCursor + 1 + j) % historySize;
+        const val = displacementHistory[idx];
+        const xp = margTop.left + (j / (historySize - 1)) * plotW;
+        const yp = margTop.top + plotH / 2 - (val / dispRange) * (plotH / 2);
+        if (j === 0) wfCtx.moveTo(xp, yp);
+        else wfCtx.lineTo(xp, yp);
+      }
+      wfCtx.stroke();
+
+      // Separator line
+      drawLine(wfCtx, margTop.left, topH + 14, W_WF - margTop.right, topH + 14, theme.border, 1);
+
+      // ── Lower half: Bl(x) curve ──
+      const blMarg = { left: 56, right: 28, top: 24, bottom: 28 };
+      const blPlotW = W_WF - blMarg.left - blMarg.right;
+      const blPlotH = H_WF - botTop - blMarg.top - blMarg.bottom;
+      const blMaxX = p.xmax * 2.5;
+
+      // Grid
+      wfCtx.strokeStyle = theme.gridLine;
+      wfCtx.lineWidth = 0.5;
+      for (let i = 0; i <= 4; i++) {
+        const y = botTop + blMarg.top + (blPlotH * i) / 4;
+        wfCtx.beginPath();
+        wfCtx.moveTo(blMarg.left, y);
+        wfCtx.lineTo(blMarg.left + blPlotW, y);
+        wfCtx.stroke();
+      }
+      // Zero x line
+      const zeroX = blMarg.left + blPlotW / 2;
+      wfCtx.strokeStyle = theme.border;
+      wfCtx.beginPath();
+      wfCtx.moveTo(zeroX, botTop + blMarg.top);
+      wfCtx.lineTo(zeroX, botTop + blMarg.top + blPlotH);
+      wfCtx.stroke();
+
+      drawText(wfCtx, 'Bl(x) curve', W_WF / 2, botTop + 14, theme.muted, 10, 'center');
+      drawText(wfCtx, `Bl₀ = ${p.bl0.toFixed(1)} N/A`, blMarg.left, botTop + blMarg.top + blPlotH + 16, theme.muted, 9, 'left');
+      drawText(wfCtx, `+${(blMaxX * 1000).toFixed(1)} mm`, blMarg.left + blPlotW, botTop + blMarg.top + blPlotH + 16, theme.muted, 9, 'right');
+      drawText(wfCtx, `−${(blMaxX * 1000).toFixed(1)}`, blMarg.left, botTop + blMarg.top + blPlotH + 16, theme.muted, 9, 'left');
+      drawText(wfCtx, '0', zeroX + 4, botTop + blMarg.top + blPlotH + 16, theme.muted, 9, 'left');
+
+      // Bl(x) curve
+      const bl0Flat = p.bl0;
+      const blMax = bl0Flat * 1.05;
+      const blMin = bl0Flat * 0.3;
+      const blRange = blMax - blMin;
+      const Ncurves = 300;
+      wfCtx.beginPath();
+      wfCtx.strokeStyle = '#71b9e3';
+      wfCtx.lineWidth = 2.0;
+      for (let j = 0; j <= Ncurves; j++) {
+        const xv = -blMaxX + (2 * blMaxX * j) / Ncurves;
+        const blv = bl0Flat * (1 - p.beta * Math.abs(xv / (p.xmax || 1e-9)));
+        const xp = zeroX + (xv / blMaxX) * (blPlotW / 2);
+        const yp = botTop + blMarg.top + blPlotH - ((blv - blMin) / blRange) * blPlotH;
+        if (j === 0) wfCtx.moveTo(xp, yp);
+        else wfCtx.lineTo(xp, yp);
+      }
+      wfCtx.stroke();
+
+      // Operating point marker
+      const opX = zeroX + (x / (p.xmax || 1e-9)) * (blPlotW / 2) * 0.5;
+      const blOp = bl0Flat * (1 - p.beta * Math.abs(x / (p.xmax || 1e-9)));
+      const opY = botTop + blMarg.top + blPlotH - ((blOp - blMin) / blRange) * blPlotH;
+      drawCircle(wfCtx, opX, opY, 5, theme.magColor, theme.text, 1.5);
+
+      // ── Spectrum Canvas ──
+      const spMarg = { left: 56, right: 28, top: 24, bottom: 28 };
+      const spPlotW = W_SP - spMarg.left - spMarg.right;
+      const spPlotH = H_SP - spMarg.top - spMarg.bottom;
+
+      // Compute approximate Fourier amplitudes using DFT-like binning
+      const Nspec = displacementHistory.length;
+      const P = getParams();
+      const omegaF = 2 * Math.PI * P.freq;
+      const buf = new Float64Array(Nspec);
+      for (let k = 0; k < Nspec; k++) buf[k] = displacementHistory[(historyCursor + 1 + k) % Nspec];
+
+      const harmonics: { label: string; freq: number; amp: number }[] = [];
+      for (let h = 1; h <= 4; h++) {
+        const f = P.freq * h;
+        const w = omegaF * h;
+        let re = 0, im = 0;
+        for (let k = 0; k < Nspec; k++) {
+          const t = k * PHYSICS_DT;
+          re += buf[k] * Math.cos(w * t);
+          im += buf[k] * Math.sin(w * t);
+        }
+        const amp = Math.sqrt(re * re + im * im) * (2 / Nspec);
+        harmonics.push({ label: h === 1 ? 'f₀' : `${h}·f₀`, freq: f, amp });
+      }
+
+      const spMaxAmp = 0.0001;
+      const maxHarmonic = Math.max(spMaxAmp, ...harmonics.map(h => h.amp));
+      const spRange = maxHarmonic * 1.3;
+      const spMaxFreq = P.freq * 5;
+
+      // Grid
+      spCtx.strokeStyle = theme.gridLine;
+      spCtx.lineWidth = 0.5;
+      for (let i = 0; i <= 4; i++) {
+        const y = spMarg.top + (spPlotH * i) / 4;
+        spCtx.beginPath();
+        spCtx.moveTo(spMarg.left, y);
+        spCtx.lineTo(spMarg.left + spPlotW, y);
+        spCtx.stroke();
+      }
+
+      drawText(spCtx, 'Displacement spectrum (approx.)', W_SP / 2, spMarg.top - 6, theme.muted, 10, 'center');
+      drawText(spCtx, '0', spMarg.left - 4, spMarg.top + spPlotH + 4, theme.muted, 9, 'right');
+      drawText(spCtx, `${(spRange * 1e6).toFixed(1)} μm`, spMarg.left - 4, spMarg.top + 10, theme.muted, 9, 'right');
+
+      // Frequency axis labels
+      for (let h = 1; h <= 4; h++) {
+        const f = P.freq * h;
+        const xp = spMarg.left + (f / spMaxFreq) * spPlotW;
+        drawText(spCtx, `${f.toFixed(0)} Hz`, xp, spMarg.top + spPlotH + 16, theme.muted, 8, 'center');
+      }
+
+      // Bars
+      const barWidth = Math.min(60, spPlotW / 10);
+      for (const h of harmonics) {
+        const barH = (h.amp / spRange) * spPlotH;
+        const xp = spMarg.left + (h.freq / spMaxFreq) * spPlotW - barWidth / 2;
+        const yp = spMarg.top + spPlotH - barH;
+        spCtx.fillStyle = h.label === 'f₀' ? theme.magColor : '#71b9e3';
+        spCtx.fillRect(xp, yp, barWidth, barH);
+
+        // Harmonic label
+        drawText(spCtx, h.label, xp + barWidth / 2, yp - 5, theme.text, 9, 'center');
+        drawText(spCtx, `${(h.amp * 1000).toFixed(3)} mm`, xp + barWidth / 2, yp - 17, theme.muted, 8, 'center');
+      }
+
+      // THD readout
+      const thd = metThd.textContent;
+      drawText(spCtx, `THD ≈ ${thd}`, spMarg.left, spMarg.top + 14, theme.muted, 10, 'left');
+
+      drawText(spCtx, 'Approximate spectral view — educational, not measurement-grade', spMarg.left + spPlotW - 4, spMarg.top + 14, theme.muted, 8, 'right');
+
+      // Separator at zero
+      drawLine(spCtx, spMarg.left, spMarg.top + spPlotH, spMarg.left + spPlotW, spMarg.top + spPlotH, theme.border, 1);
+    }
+
+    function renderFrame(frameTime: number) {
+      if (destroyed) return;
+      const elapsed = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
+      lastFrameTime = frameTime;
+      if (running && !document.hidden) {
+        accumulator += elapsed;
+        let safety = 0;
+        while (accumulator >= PHYSICS_DT && safety < 5000) {
+          stepPhysics();
+          accumulator -= PHYSICS_DT;
+          safety++;
+        }
+      }
+      syncControls();
+      renderPlots();
+      animationFrameId = requestAnimationFrame(renderFrame);
+    }
+
+    function setRunning(on: boolean) {
+      running = on;
+      runToggle.textContent = running ? 'Pause' : 'Run';
+      runToggle.classList.toggle('is-active', running);
+      runToggle.setAttribute('aria-pressed', String(running));
+      if (running) {
+        accumulator = 0;
+        lastFrameTime = performance.now();
+      }
+    }
+
+    function handleVisibilityChange() {
+      lastFrameTime = performance.now();
+    }
+
+    runToggle.addEventListener('click', () => setRunning(!running));
+    resetBtn.addEventListener('click', () => {
+      resetParams();
+      x = 0; v = 0; i = 0; simTime = 0;
+      displacementHistory = new Array(historySize).fill(0);
+      voltageHistory = new Array(historySize).fill(0);
+      historyCursor = 0;
+      accumulator = 0;
+    });
+
+    const sliderNumPairs: [HTMLInputElement, HTMLInputElement][] = [
+      [vrmsSlider, vrmsNum], [freqSlider, freqNum], [betaSlider, betaNum],
+      [gammaSlider, gammaNum], [deltaSlider, deltaNum], [mmsSlider, mmsNum],
+      [reSlider, reNum], [bl0Slider, bl0Num], [xmaxSlider, xmaxNum],
+    ];
+
+    for (const [slider, num] of sliderNumPairs) {
+      slider.addEventListener('input', () => {
+        num.value = slider.value;
+      });
+      num.addEventListener('input', () => {
+        slider.value = num.value;
+      });
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    setRunning(running);
+    syncControls();
+    renderPlots();
+    animationFrameId = requestAnimationFrame(renderFrame);
+
+    document.addEventListener('astro:before-swap', () => {
+      destroyed = true;
+      cancelAnimationFrame(animationFrameId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initDriverNonlinearityLab);
+  initDriverNonlinearityLab();
+</script>

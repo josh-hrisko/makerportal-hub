@@ -1,0 +1,1098 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Voice-Coil Thermal Compression — Heat, Resistance & SPL Sag | MakerPortal';
+const description =
+  'Interactive lumped thermal RC model of voice-coil heating. Simulate copper TCR, power compression, and SPL sag with configurable cooling architectures and real-time charts.';
+const canonical = new URL('/playground/voice-coil-thermal-compression', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Voice-Coil Thermal Compression', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Voice-Coil Thermal Compression"
+    lead="A lumped thermal RC model of voice-coil heating under continuous drive. Dial in power, cooling architecture, and copper TCR — watch temperature, resistance rise, SPL sag, and the steady-state destination in real time."
+    pillarHint="dsp-audio"
+    isGrounded={false}
+  >
+    <section class="border-b border-border" aria-labelledby="simulation-title">
+      <div class="mx-auto max-w-[76rem] px-5 py-12 sm:px-8 lg:px-10">
+
+        <!-- Controls Card -->
+        <div class="rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="simulation-title" class="text-[1.05rem] font-[650] tracking-[-0.02em]">Thermal Controls</h2>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" class="sim-btn is-active" id="run-toggle" aria-pressed="true">Pause</button>
+              <button type="button" class="sim-btn" id="reset-btn">Reset to ambient</button>
+            </div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- Input power -->
+            <label class="control-label" for="power-slider">
+              <span>Input power <span class="eyebrow">Continuous RMS (W)</span></span>
+              <output id="power-readout">150</output>
+              <input type="range" id="power-slider" min="1" max="1000" step="1" value="150" />
+            </label>
+
+            <!-- Re at 20°C -->
+            <label class="control-label" for="re-slider">
+              <span>Re at 20&deg;C <span class="eyebrow">Voice-coil DC resistance (&Omega;)</span></span>
+              <output id="re-readout">6.2</output>
+              <input type="range" id="re-slider" min="1" max="32" step="0.1" value="6.2" />
+            </label>
+
+            <!-- Tamb -->
+            <label class="control-label" for="tamb-slider">
+              <span>Tamb <span class="eyebrow">Ambient temperature (&deg;C)</span></span>
+              <output id="tamb-readout">20</output>
+              <input type="range" id="tamb-slider" min="0" max="50" step="0.5" value="20" />
+            </label>
+
+            <!-- Time acceleration -->
+            <label class="control-label" for="accel-slider">
+              <span>Time acceleration <span class="eyebrow">Simulation speed</span></span>
+              <output id="accel-readout">8&times;</output>
+              <input type="range" id="accel-slider" min="1" max="40" step="1" value="8" />
+            </label>
+          </div>
+
+          <!-- Cooling Architecture -->
+          <div class="mt-5">
+            <span class="eyebrow mb-2 block">Cooling architecture presets</span>
+            <div class="flex flex-wrap gap-2" aria-label="Cooling architecture presets">
+              <button type="button" class="preset-btn is-active" data-preset="standard">Standard basket</button>
+              <button type="button" class="preset-btn" data-preset="vented">Vented pole-piece</button>
+              <button type="button" class="preset-btn" data-preset="ferrofluid">Ferrofluid</button>
+              <button type="button" class="preset-btn" data-preset="custom">Custom</button>
+            </div>
+          </div>
+
+          <!-- Thermal parameters for custom -->
+          <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3" id="thermal-params-group">
+            <label class="control-label" for="rth-num">
+              <span>Rth <span class="eyebrow">Thermal resistance (K/W)</span></span>
+              <output id="rth-readout">2.5</output>
+              <input type="range" id="rth-slider" min="0.1" max="10" step="0.05" value="2.5" />
+            </label>
+            <label class="control-label" for="cth-num">
+              <span>Cth <span class="eyebrow">Thermal capacitance (J/K)</span></span>
+              <output id="cth-readout">15</output>
+              <input type="range" id="cth-slider" min="0.5" max="50" step="0.1" value="15" />
+            </label>
+            <label class="control-label" for="alpha-num">
+              <span>&alpha; <span class="eyebrow">Copper TCR (1/K) &mdash; default 0.00393</span></span>
+              <output id="alpha-readout">0.00393</output>
+              <input type="range" id="alpha-slider" min="0.001" max="0.006" step="0.00001" value="0.00393" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Results Dashboard -->
+        <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7" id="results-grid">
+          <!-- Coil temperature — large, prominent card -->
+          <div class="metric-card sm:col-span-1 lg:col-span-1" id="temp-card">
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Coil temp</dt>
+            <dd id="res-temp" class="mt-1 text-[clamp(1.4rem,3vw,2rem)] font-[700] leading-[1.05] tracking-[-0.03em] temp-safe">20.0&deg;C</dd>
+            <p class="text-[0.6rem] text-muted-text">&deg;C</p>
+          </div>
+          <div class="metric-card">
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Re</dt>
+            <dd id="res-re" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">6.20</dd>
+            <p class="text-[0.6rem] text-muted-text">&Omega;</p>
+          </div>
+          <div class="metric-card">
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Current</dt>
+            <dd id="res-current" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">4.92</dd>
+            <p class="text-[0.6rem] text-muted-text">A RMS</p>
+          </div>
+          <div class="metric-card">
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Elect. power</dt>
+            <dd id="res-power" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">150</dd>
+            <p class="text-[0.6rem] text-muted-text">W</p>
+          </div>
+          <div class="metric-card">
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">SPL compression</dt>
+            <dd id="res-spl" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">0.00</dd>
+            <p class="text-[0.6rem] text-muted-text">dB</p>
+          </div>
+          <div class="metric-card">
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Time constant</dt>
+            <dd id="res-tau" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">37.5</dd>
+            <p class="text-[0.6rem] text-muted-text">&tau; (s)</p>
+          </div>
+          <div class="metric-card">
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Steady-state T</dt>
+            <dd id="res-tss" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">395</dd>
+            <p class="text-[0.6rem] text-muted-text">&deg;C</p>
+          </div>
+        </div>
+
+        <!-- Warning callout -->
+        <div id="temp-warning" class="mt-4 hidden rounded-[14px] border border-[#d4523a]/40 bg-[#d4523a]/8 px-4 py-3 text-[0.82rem] font-semibold text-[#d4523a]">
+          Coil temperature exceeds 200&deg;C &mdash; adhesive failure risk. Reduce power or improve cooling.
+        </div>
+
+        <!-- Time-History Canvas -->
+        <div class="mt-6 canvas-card">
+          <div class="canvas-label-row">
+            <span>Time history &mdash; Temperature &amp; SPL compression</span>
+            <span id="time-readout">0.0 s simulated</span>
+          </div>
+          <canvas id="time-canvas" width="900" height="480" aria-label="Time-history plot: temperature and SPL compression over the last 60 simulated seconds"></canvas>
+        </div>
+
+        <!-- Thermal Gradient SVG -->
+        <div class="mt-5 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <h3 class="font-semibold">Motor cross-section &amp; thermal gradient</h3>
+          <div class="mt-4 flex justify-center">
+            <svg id="motor-svg" viewBox="0 0 500 260" class="w-full max-w-[500px] h-auto" xmlns="http://www.w3.org/2000/svg" aria-label="Simplified loudspeaker motor cross-section with thermal gradient visualization">
+              <!-- Magnet structure (outer gray ring) -->
+              <rect x="50" y="30" width="400" height="200" rx="16" fill="var(--mp-elevated)" stroke="var(--mp-border)" stroke-width="1.5" />
+              <!-- Pole piece (darker inner rectangle) -->
+              <rect x="130" y="55" width="240" height="150" rx="10" fill="color-mix(in srgb, var(--mp-elevated) 70%, #000 30%)" stroke="var(--mp-border)" stroke-width="1" />
+              <!-- Top plate -->
+              <rect x="100" y="45" width="300" height="28" rx="6" fill="color-mix(in srgb, var(--mp-elevated) 60%, #000 40%)" stroke="var(--mp-border)" stroke-width="1" />
+              <!-- Bottom plate -->
+              <rect x="100" y="187" width="300" height="28" rx="6" fill="color-mix(in srgb, var(--mp-elevated) 60%, #000 40%)" stroke="var(--mp-border)" stroke-width="1" />
+              <!-- Voice coil gap (left and right gaps between pole piece and magnet) -->
+              <!-- Left voice coil -->
+              <rect id="coil-left" x="120" y="72" width="12" height="116" rx="3" fill="#d4784a" stroke="#b85a2e" stroke-width="0.8" />
+              <!-- Right voice coil -->
+              <rect id="coil-right" x="368" y="72" width="12" height="116" rx="3" fill="#d4784a" stroke="#b85a2e" stroke-width="0.8" />
+              <!-- Heat flow arrows group -->
+              <g id="heat-arrows" stroke="#e8945a" stroke-width="1.8" fill="none" stroke-linecap="round">
+                <!-- Left side arrows -->
+                <line x1="132" y1="90" x2="155" y2="90" />
+                <polygon points="155,86 163,90 155,94" fill="#e8945a" stroke="none" />
+                <line x1="132" y1="130" x2="160" y2="130" />
+                <polygon points="160,126 168,130 160,134" fill="#e8945a" stroke="none" />
+                <line x1="132" y1="170" x2="155" y2="170" />
+                <polygon points="155,166 163,170 155,174" fill="#e8945a" stroke="none" />
+                <!-- Right side arrows -->
+                <line x1="368" y1="90" x2="345" y2="90" />
+                <polygon points="345,86 337,90 345,94" fill="#e8945a" stroke="none" />
+                <line x1="368" y1="130" x2="340" y2="130" />
+                <polygon points="340,126 332,130 340,134" fill="#e8945a" stroke="none" />
+                <line x1="368" y1="170" x2="345" y2="170" />
+                <polygon points="345,166 337,170 345,174" fill="#e8945a" stroke="none" />
+              </g>
+              <!-- Labels -->
+              <text id="label-ambient" x="250" y="22" fill="var(--mp-muted)" font-family="var(--font-mono)" font-size="10" text-anchor="middle">Ambient: 20&deg;C</text>
+              <text id="label-coil" x="250" y="245" fill="var(--mp-text)" font-family="var(--font-mono)" font-size="10" text-anchor="middle">Coil: 20&deg;C</text>
+              <text id="label-magnet" x="250" y="258" fill="var(--mp-muted)" font-family="var(--font-mono)" font-size="9" text-anchor="middle">Magnet structure: 20&deg;C</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Power Sweep Canvas -->
+        <div class="mt-5 canvas-card">
+          <div class="canvas-label-row">
+            <span>Power sweep &mdash; Steady-state temperature vs. input power</span>
+            <span>
+              <button type="button" id="show-all-curves-btn" class="sim-btn !text-[0.55rem] !py-0.5 !px-2">Show all architectures</button>
+            </span>
+          </div>
+          <canvas id="sweep-canvas" width="560" height="320" aria-label="Steady-state temperature vs input power curve"></canvas>
+        </div>
+
+        <!-- Method & limitations -->
+        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
+          <p class="font-semibold text-primary-text">Method &amp; limitations</p>
+          <p class="mt-2">This is a <strong>lumped single-time-constant thermal model</strong> (one RC pair) of voice-coil heating under continuous drive. The thermal circuit is:</p>
+          <p class="mt-2 font-mono text-[0.78rem]">Electrical power Pe = I&sup2; &middot; Re(T)  &rarr;  heats Cth  &rarr;  flows through Rth to ambient</p>
+          <p class="mt-2 font-mono text-[0.78rem]">dT/dt = (Pe &minus; (T &minus; Tamb) / Rth) / Cth</p>
+          <p class="mt-2">Where <strong>Re(T) = Re0 &middot; (1 + &alpha;&#8339;&#7506; &middot; (T &minus; 20&deg;C))</strong> using copper TCR &alpha; &asymp; 0.00393 K&minus;&sup1;, and the amplifier is modeled as a constant-voltage source: <strong>Vin&sup2; = P&#8345;&#8345;&#8345; &middot; Re0</strong>, giving <strong>Pe = Vin&sup2; / Re(T)</strong>.</p>
+          <p class="mt-2">SPL compression follows the simplified current-drive model: <strong>SPL&#8333;&#8333;&#8343; (dB) = &minus;20 &middot; log&#8321;&#8320;(Re(T) / Re0)</strong>, reflecting reduced current and thus reduced BL &middot; I force as the coil heats.</p>
+          <p class="mt-4 text-[0.78rem]"><strong>Assumptions &amp; caveats:</strong> Real voice coils have distributed thermal paths and multiple time constants — a single RC pair is a first-order approximation. Assumes uniform coil temperature (no hot spots). Does not model: frequency-dependent heating, air convection details, radiation losses, eddy-current heating, or BL nonlinearity with temperature. Thermal parameters (Rth, Cth) are approximate and vary with driver size, magnet type, and ventilation design. Voice-coil adhesives are typically rated 200&ndash;250&deg;C — operation above that risks mechanical failure. Music program power is typically &frac14; to &frac12; of continuous rating; this model shows worst-case continuous sine-wave heating.</p>
+        </div>
+
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .sim-btn,
+  .preset-btn {
+    min-height: 2.5rem;
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.45rem 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+  .sim-btn:hover,
+  .preset-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-border-strong);
+  }
+  .sim-btn.is-active,
+  .preset-btn.is-active {
+    color: var(--mp-canvas);
+    border-color: var(--mp-text);
+    background: var(--mp-text);
+  }
+  .preset-btn.is-active:hover {
+    color: var(--mp-canvas);
+  }
+  .canvas-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mp-border);
+    border-radius: 20px;
+    background: var(--mp-card);
+  }
+  .canvas-label-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--mp-border);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mp-muted);
+  }
+  #time-canvas,
+  #sweep-canvas {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 900 / 480;
+    background: var(--mp-canvas);
+  }
+  #sweep-canvas {
+    aspect-ratio: 560 / 320;
+  }
+  .control-label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+  }
+  .control-label output { color: var(--mp-text); }
+  .control-label input {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--mp-cta);
+  }
+  .metric-card,
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: var(--mp-card);
+    padding: 0.85rem;
+  }
+  .metric-card dt,
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .metric-card dd {
+    margin-top: 0.35rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .math-card {
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .eyebrow {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    font-weight: 400;
+  }
+  .temp-safe { color: #3ba55c; }
+  .temp-warn { color: #d4a02a; }
+  .temp-hot { color: #d47a2a; }
+  .temp-danger { color: #d4523a; }
+
+  @media (max-width: 640px) {
+    .control-label {
+      font-size: 0.62rem;
+    }
+    #time-canvas {
+      aspect-ratio: 900 / 520;
+    }
+  }
+</style>
+
+<script>
+import { setupHiDPI, clearCanvas, drawText, drawLine, drawCircle } from '../../lib/chart-core.ts';
+
+interface Preset {
+  label: string;
+  rth: number;
+  cth: number;
+}
+
+const PRESETS: Record<string, Preset> = {
+  standard: { label: 'Standard basket', rth: 2.5, cth: 15 },
+  vented:   { label: 'Vented pole-piece', rth: 1.2, cth: 12 },
+  ferrofluid: { label: 'Ferrofluid', rth: 0.7, cth: 10 },
+};
+
+const ALPHA_CU = 0.00393;
+const T_REF = 20;       // reference temperature for Re0 in °C
+const WINDOW_SECONDS = 60; // rolling window for time-history plot
+const PHYSICS_DT = 0.02;   // fixed physics timestep (seconds)
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function tempColorClass(t: number): string {
+  if (t < 80) return 'temp-safe';
+  if (t < 150) return 'temp-warn';
+  if (t < 200) return 'temp-hot';
+  return 'temp-danger';
+}
+
+function coilHexColor(t: number, tamb: number): string {
+  const norm = clamp((t - tamb) / 300, 0, 1);
+  if (norm < 0.15) return '#d4784a';
+  if (norm < 0.4) {
+    const f = (norm - 0.15) / 0.25;
+    const r = Math.round(0xd4 + f * (0xe8 - 0xd4));
+    const g = Math.round(0x78 + f * (0x6a - 0x78));
+    const b = Math.round(0x4a + f * (0x2e - 0x4a));
+    return `rgb(${r},${g},${b})`;
+  }
+  if (norm < 0.7) {
+    const f = (norm - 0.4) / 0.3;
+    const r = Math.round(0xe8 + f * (0xd4 - 0xe8));
+    const g = Math.round(0x6a + f * (0x3a - 0x6a));
+    const b = Math.round(0x2e + f * (0x28 - 0x2e));
+    return `rgb(${r},${g},${b})`;
+  }
+  return '#d4523a';
+}
+
+// --- Steady-state solver ---
+// Solves T_ss from: P_input * Re0 / (Re0 * (1 + α*(T_ss - Tref))) = (T_ss - Tamb) / Rth
+// Iterative Newton-like solver.
+function steadyStateTemp(P_input: number, Re0: number, Tamb: number, alpha: number, Rth: number): number {
+  const VinSq = P_input * Re0;
+  let T = Tamb + P_input * Rth; // initial guess (ignoring Re change)
+  for (let i = 0; i < 60; i++) {
+    const ReT = Re0 * (1 + alpha * (T - T_REF));
+    const Pe = VinSq / ReT;
+    const residual = Pe - (T - Tamb) / Rth;
+    if (Math.abs(residual) < 1e-6) break;
+    const dPe_dT = -VinSq * Re0 * alpha / (ReT * ReT);
+    const dRes_dT = dPe_dT - 1 / Rth;
+    T -= residual / dRes_dT;
+  }
+  return clamp(T, Tamb, Tamb + 1000);
+}
+
+function initVoiceCoilThermal() {
+  const timeCanvas = document.getElementById('time-canvas') as HTMLCanvasElement | null;
+  const sweepCanvas = document.getElementById('sweep-canvas') as HTMLCanvasElement | null;
+  if (!timeCanvas || !sweepCanvas || timeCanvas.dataset.initialized === 'true') return;
+  timeCanvas.dataset.initialized = 'true';
+
+  // --- DOM refs ---
+  const powerSlider = document.getElementById('power-slider') as HTMLInputElement;
+  const reSlider = document.getElementById('re-slider') as HTMLInputElement;
+  const tambSlider = document.getElementById('tamb-slider') as HTMLInputElement;
+  const accelSlider = document.getElementById('accel-slider') as HTMLInputElement;
+  const rthSlider = document.getElementById('rth-slider') as HTMLInputElement;
+  const cthSlider = document.getElementById('cth-slider') as HTMLInputElement;
+  const alphaSlider = document.getElementById('alpha-slider') as HTMLInputElement;
+
+  const powerReadout = document.getElementById('power-readout')!;
+  const reReadout = document.getElementById('re-readout')!;
+  const tambReadout = document.getElementById('tamb-readout')!;
+  const accelReadout = document.getElementById('accel-readout')!;
+  const rthReadout = document.getElementById('rth-readout')!;
+  const cthReadout = document.getElementById('cth-readout')!;
+  const alphaReadout = document.getElementById('alpha-readout')!;
+
+  const runToggle = document.getElementById('run-toggle') as HTMLButtonElement;
+  const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
+  const showAllCurvesBtn = document.getElementById('show-all-curves-btn') as HTMLButtonElement;
+
+  const resTemp = document.getElementById('res-temp')!;
+  const resRe = document.getElementById('res-re')!;
+  const resCurrent = document.getElementById('res-current')!;
+  const resPower = document.getElementById('res-power')!;
+  const resSpl = document.getElementById('res-spl')!;
+  const resTau = document.getElementById('res-tau')!;
+  const resTss = document.getElementById('res-tss')!;
+  const timeReadout = document.getElementById('time-readout')!;
+  const tempWarning = document.getElementById('temp-warning')!;
+  const coilLeft = document.getElementById('coil-left')!;
+  const coilRight = document.getElementById('coil-right')!;
+  const labelAmbient = document.getElementById('label-ambient')!;
+  const labelCoil = document.getElementById('label-coil')!;
+  const labelMagnet = document.getElementById('label-magnet')!;
+  const heatArrows = document.getElementById('heat-arrows')!;
+
+  const presetButtons = document.querySelectorAll<HTMLButtonElement>('[data-preset]');
+
+  // --- State ---
+  let P_input = 150;
+  let Re0 = 6.2;
+  let Tamb = 20;
+  let timeAccel = 8;
+  let alpha = ALPHA_CU;
+  let Rth = PRESETS.standard.rth;
+  let Cth = PRESETS.standard.cth;
+  let activePreset = 'standard';
+  let isCustom = false;
+
+  let T_coil = Tamb;          // current coil temperature
+  let simulatedTime = 0;      // accumulated simulated seconds
+  let running = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let accumulator = 0;
+  let lastFrameTime = performance.now();
+  let animationFrameId = 0;
+  let destroyed = false;
+  let showAllCurves = false;
+
+  // Rolling data buffers for time-history plot
+  interface DataPoint {
+    t: number;
+    T: number;
+    spl: number;
+  }
+  let dataBuffer: DataPoint[] = [];
+  const MAX_BUFFER = 1800; // ~30 samples per simulated second * 60 seconds
+
+  // Compute derived values
+  function computeDerived(): { VinSq: number; ReT: number; I: number; Pe: number; splComp: number; tau: number; Tss: number } {
+    const ReT = Re0 * (1 + alpha * (T_coil - T_REF));
+    const VinSq = P_input * Re0;
+    const I = Math.sqrt(VinSq) / ReT;  // I = Vin / Re(T)
+    const Pe = VinSq / ReT;
+    const splComp = -20 * Math.log10(ReT / Re0);
+    const tau = Rth * Cth;
+    const Tss = steadyStateTemp(P_input, Re0, Tamb, alpha, Rth);
+    return { VinSq, ReT, I, Pe, splComp, tau, Tss };
+  }
+
+  // --- Physics step ---
+  function stepPhysics(dt: number) {
+    const ReT = Re0 * (1 + alpha * (T_coil - T_REF));
+    const VinSq = P_input * Re0;
+    const Pe = VinSq / ReT;
+    const heatLoss = (T_coil - Tamb) / Rth;
+    const dT = (Pe - heatLoss) / Cth * dt;
+    T_coil += dT;
+    simulatedTime += dt;
+    // Store data point every ~0.033 simulated seconds (~30 Hz)
+    const lastP = dataBuffer[dataBuffer.length - 1];
+    if (!lastP || simulatedTime - lastP.t > 0.033) {
+      const ReT2 = Re0 * (1 + alpha * (T_coil - T_REF));
+      const splComp2 = -20 * Math.log10(ReT2 / Re0);
+      dataBuffer.push({ t: simulatedTime, T: T_coil, spl: splComp2 });
+      // Trim to rolling window
+      while (dataBuffer.length > 0 && simulatedTime - dataBuffer[0].t > WINDOW_SECONDS) {
+        dataBuffer.shift();
+      }
+      // Limit buffer size
+      while (dataBuffer.length > MAX_BUFFER) {
+        dataBuffer.shift();
+      }
+    }
+  }
+
+  // --- Update DOM ---
+  function updateReadouts() {
+    powerReadout.textContent = String(P_input);
+    reReadout.textContent = Re0.toFixed(1);
+    tambReadout.textContent = String(Tamb);
+    accelReadout.innerHTML = timeAccel + '&times;';
+    rthReadout.textContent = Rth.toFixed(2);
+    cthReadout.textContent = Cth.toFixed(1);
+    alphaReadout.textContent = alpha.toFixed(5);
+  }
+
+  function updateSliders() {
+    powerSlider.value = String(P_input);
+    reSlider.value = String(Re0);
+    tambSlider.value = String(Tamb);
+    accelSlider.value = String(timeAccel);
+    rthSlider.value = String(Rth);
+    cthSlider.value = String(Cth);
+    alphaSlider.value = String(alpha);
+  }
+
+  function updateResults() {
+    const d = computeDerived();
+    const colorCls = tempColorClass(T_coil);
+    resTemp.className = `mt-1 text-[clamp(1.4rem,3vw,2rem)] font-[700] leading-[1.05] tracking-[-0.03em] ${colorCls}`;
+    resTemp.textContent = T_coil.toFixed(1) + '\u00B0C';
+    resRe.textContent = d.ReT.toFixed(2);
+    resCurrent.textContent = d.I.toFixed(2);
+    resPower.textContent = d.Pe.toFixed(1);
+    resSpl.textContent = d.splComp.toFixed(2);
+    resTau.textContent = d.tau.toFixed(1);
+    resTss.textContent = d.Tss.toFixed(0);
+
+    // Warning
+    if (T_coil > 200) {
+      tempWarning.classList.remove('hidden');
+    } else {
+      tempWarning.classList.add('hidden');
+    }
+
+    // Time readout
+    timeReadout.textContent = simulatedTime.toFixed(1) + ' s simulated';
+  }
+
+  function updateSVG() {
+    const hex = coilHexColor(T_coil, Tamb);
+    coilLeft.setAttribute('fill', hex);
+    coilRight.setAttribute('fill', hex);
+
+    // Adjust stroke based on temperature
+    if (T_coil > 200) {
+      coilLeft.setAttribute('stroke', '#a83020');
+      coilRight.setAttribute('stroke', '#a83020');
+    } else if (T_coil > 100) {
+      coilLeft.setAttribute('stroke', '#c05830');
+      coilRight.setAttribute('stroke', '#c05830');
+    } else {
+      coilLeft.setAttribute('stroke', '#b85a2e');
+      coilRight.setAttribute('stroke', '#b85a2e');
+    }
+
+    // Labels
+    labelAmbient.textContent = 'Ambient: ' + Tamb.toFixed(0) + '\u00B0C';
+    labelCoil.textContent = 'Coil: ' + T_coil.toFixed(1) + '\u00B0C';
+    const magnetT = Tamb + (T_coil - Tamb) * 0.25; // rough estimate: magnet at ~25% of gradient
+    labelMagnet.textContent = 'Magnet structure: ' + magnetT.toFixed(0) + '\u00B0C';
+
+    // Arrow opacity scales with temperature gradient
+    const gradNorm = clamp((T_coil - Tamb) / 200, 0, 1);
+    heatArrows.setAttribute('opacity', String(0.25 + gradNorm * 0.75));
+  }
+
+  // --- Canvas rendering ---
+  function getTheme() {
+    const get = (v: string, fallback: string) =>
+      (typeof document !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue(v).trim() : '') || fallback;
+    return {
+      canvas: get('--mp-canvas', '#0f141c'),
+      text: get('--mp-text', '#e8eef6'),
+      muted: get('--mp-muted', '#a8b9cc'),
+      border: get('--mp-border', 'rgba(255,255,255,0.08)'),
+      gridLine: get('--mp-grid-line', 'rgba(168,185,204,0.028)'),
+      cta: get('--mp-cta', '#ce445d'),
+    };
+  }
+
+  function renderTimeCanvas() {
+    if (!timeCanvas) return;
+    const rect = timeCanvas.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+    const ctx = setupHiDPI(timeCanvas, cw, ch);
+    const theme = getTheme();
+    clearCanvas(ctx, { canvas: theme.canvas, text: theme.text, muted: theme.muted, border: theme.border, gridLine: theme.gridLine, magColor: theme.cta, phaseColor: '#4a7bb8' }, cw, ch);
+
+    if (dataBuffer.length < 2) {
+      drawText(ctx, 'Waiting for data…', cw / 2, ch / 2, theme.muted, 12, 'center');
+      return;
+    }
+
+    const margin = { top: 30, bottom: 34, left: 52, right: 20 };
+    const plotH = (ch - margin.top - margin.bottom) / 2 - 4; // two stacked plots
+    const tempTop = margin.top;
+    const tempBot = tempTop + plotH;
+    const splTop = tempBot + 8;
+    const splBot = splTop + plotH;
+    const plotW = cw - margin.left - margin.right;
+
+    const tMin = dataBuffer[0].t;
+    const tMax = dataBuffer[dataBuffer.length - 1].t;
+    const paddedTMin = tMax - WINDOW_SECONDS;
+    const effectiveTMin = Math.max(tMin, paddedTMin);
+
+    function timeToX(t: number): number {
+      return margin.left + ((t - effectiveTMin) / (tMax - effectiveTMin + 0.001)) * plotW;
+    }
+
+    // Temperature range
+    const temps = dataBuffer.map(d => d.T);
+    let tempMin = Tamb - 5;
+    let tempMax = Math.max(...temps, Tamb + 5, 250);
+    tempMax = Math.ceil(tempMax / 50) * 50 + 25;
+    if (tempMax - tempMin < 100) tempMax = tempMin + 100;
+
+    function tempToY(T: number): number {
+      return tempBot - ((T - tempMin) / (tempMax - tempMin)) * plotH;
+    }
+
+    // SPL range
+    const spls = dataBuffer.map(d => d.spl);
+    let splMin = Math.min(0, Math.floor(Math.min(...spls)));
+    let splMax = 0.5;
+    if (splMin > -3) splMin = -3;
+    splMin = Math.floor(splMin);
+
+    function splToY(spl: number): number {
+      return splBot - ((spl - splMin) / (splMax - splMin)) * plotH;
+    }
+
+    // --- Draw temp grid ---
+    ctx.strokeStyle = theme.gridLine;
+    ctx.lineWidth = 0.5;
+    for (let tTemp = Math.ceil(tempMin / 50) * 50; tTemp <= tempMax; tTemp += 50) {
+      const y = tempToY(tTemp);
+      ctx.beginPath();
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(cw - margin.right, y);
+      ctx.stroke();
+      drawText(ctx, tTemp + '\u00B0', margin.left - 6, y + 3, theme.muted, 8, 'right');
+    }
+
+    // Time grid
+    for (let t = Math.ceil(effectiveTMin / 10) * 10; t <= tMax; t += 10) {
+      if (t < effectiveTMin - 0.1) continue;
+      const x = timeToX(t);
+      ctx.beginPath();
+      ctx.moveTo(x, tempTop);
+      ctx.lineTo(x, tempBot);
+      ctx.strokeStyle = theme.gridLine;
+      ctx.stroke();
+      // same grid lines for SPL plot
+      ctx.beginPath();
+      ctx.moveTo(x, splTop);
+      ctx.lineTo(x, splBot);
+      ctx.stroke();
+      drawText(ctx, t.toFixed(0) + 's', x, splBot + 12, theme.muted, 8, 'center');
+    }
+
+    // --- Warning zone shading (above 200°C) ---
+    const warnY = tempToY(200);
+    if (warnY > tempTop && warnY < tempBot) {
+      ctx.fillStyle = 'rgba(212, 82, 58, 0.08)';
+      ctx.fillRect(margin.left, tempTop, plotW, warnY - tempTop);
+    }
+
+    // --- Tamb reference line ---
+    const tambY = tempToY(Tamb);
+    ctx.setLineDash([4, 4]);
+    drawLine(ctx, margin.left, tambY, cw - margin.right, tambY, theme.muted, 0.8);
+    drawText(ctx, 'Tamb=' + Tamb + '\u00B0', cw - margin.right - 4, tambY - 5, theme.muted, 9, 'right');
+    ctx.setLineDash([]);
+
+    // --- Steady-state asymptote line ---
+    const d = computeDerived();
+    const tssY = tempToY(d.Tss);
+    ctx.setLineDash([8, 5]);
+    drawLine(ctx, margin.left, tssY, cw - margin.right, tssY, theme.muted, 0.6);
+    drawText(ctx, 'Tss=' + d.Tss.toFixed(0) + '\u00B0', cw - margin.right - 4, tssY - 5, theme.muted, 8, 'right');
+    ctx.setLineDash([]);
+
+    // --- Plot temperature ---
+    ctx.beginPath();
+    ctx.strokeStyle = theme.cta;
+    ctx.lineWidth = 2;
+    let firstPoint = true;
+    for (const point of dataBuffer) {
+      const x = timeToX(point.t);
+      const y = tempToY(point.T);
+      if (x < margin.left) { firstPoint = true; continue; }
+      if (firstPoint) { ctx.moveTo(x, y); firstPoint = false; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // --- SPL grid ---
+    for (let s = splMin; s <= splMax; s += 0.5) {
+      const y = splToY(s);
+      ctx.beginPath();
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(cw - margin.right, y);
+      ctx.strokeStyle = s === 0 ? theme.border : theme.gridLine;
+      ctx.stroke();
+      drawText(ctx, s.toFixed(1), margin.left - 6, y + 3, theme.muted, 8, 'right');
+    }
+
+    // --- Plot SPL compression ---
+    ctx.beginPath();
+    ctx.strokeStyle = '#4a7bb8';
+    ctx.lineWidth = 1.8;
+    firstPoint = true;
+    for (const point of dataBuffer) {
+      const x = timeToX(point.t);
+      const y = splToY(point.spl);
+      if (x < margin.left) { firstPoint = true; continue; }
+      if (firstPoint) { ctx.moveTo(x, y); firstPoint = false; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // --- Axis labels ---
+    ctx.fillStyle = theme.muted;
+    ctx.font = '9px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Simulated time (s)', cw / 2, splBot + 26);
+
+    ctx.save();
+    ctx.translate(13, tempTop + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Temperature (\u00B0C)', 0, 0);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(13, splTop + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('SPL compression (dB)', 0, 0);
+    ctx.restore();
+
+    // Plot labels
+    drawText(ctx, 'Temp', margin.left + 8, tempTop + 12, theme.cta, 9);
+    drawText(ctx, 'SPL sag', margin.left + 8, splTop + 12, '#4a7bb8', 9);
+
+    // Current value indicator dots
+    if (dataBuffer.length > 0) {
+      const last = dataBuffer[dataBuffer.length - 1];
+      const lx = timeToX(last.t);
+      drawCircle(ctx, lx, tempToY(last.T), 3.5, theme.cta, theme.canvas, 1.5);
+      drawCircle(ctx, lx, splToY(last.spl), 3.5, '#4a7bb8', theme.canvas, 1.5);
+    }
+  }
+
+  function renderSweepCanvas() {
+    if (!sweepCanvas) return;
+    const rect = sweepCanvas.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+    const ctx = setupHiDPI(sweepCanvas, cw, ch);
+    const theme = getTheme();
+    clearCanvas(ctx, { canvas: theme.canvas, text: theme.text, muted: theme.muted, border: theme.border, gridLine: theme.gridLine, magColor: theme.cta, phaseColor: '#4a7bb8' }, cw, ch);
+
+    const margin = { top: 22, bottom: 30, left: 48, right: 16 };
+    const plotW = cw - margin.left - margin.right;
+    const plotH = ch - margin.top - margin.bottom;
+
+    const maxPower = P_input * 2;
+    const powers: number[] = [];
+    const steps = 100;
+    for (let i = 0; i <= steps; i++) {
+      powers.push((i / steps) * maxPower);
+    }
+
+    function powerToX(p: number): number {
+      return margin.left + (p / maxPower) * plotW;
+    }
+
+    // Compute Y range
+    const curves: Record<string, number[]> = {};
+
+    // Current architecture curve
+    curves['current'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, Rth));
+
+    if (showAllCurves) {
+      curves['standard'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.standard.rth));
+      curves['vented'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.vented.rth));
+      curves['ferrofluid'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.ferrofluid.rth));
+    }
+
+    const allTemps = Object.values(curves).flat();
+    let tempMin = Tamb - 5;
+    let tempMax = Math.ceil(Math.max(...allTemps, 100) / 50) * 50 + 25;
+    if (tempMax - tempMin < 100) tempMax = tempMin + 100;
+
+    function tempToY(T: number): number {
+      return margin.top + plotH - ((T - tempMin) / (tempMax - tempMin)) * plotH;
+    }
+
+    // Grid
+    ctx.strokeStyle = theme.gridLine;
+    ctx.lineWidth = 0.5;
+    for (let tTemp = Math.ceil(tempMin / 50) * 50; tTemp <= tempMax; tTemp += 50) {
+      const y = tempToY(tTemp);
+      ctx.beginPath();
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(cw - margin.right, y);
+      ctx.stroke();
+      drawText(ctx, tTemp + '\u00B0', margin.left - 6, y + 3, theme.muted, 8, 'right');
+    }
+
+    for (let p = 0; p <= maxPower; p += Math.max(1, Math.ceil(maxPower / 10))) {
+      const x = powerToX(p);
+      ctx.beginPath();
+      ctx.moveTo(x, margin.top);
+      ctx.lineTo(x, margin.top + plotH);
+      ctx.stroke();
+      drawText(ctx, p + 'W', x, margin.top + plotH + 12, theme.muted, 8, 'center');
+    }
+
+    // 200°C danger line
+    const dangerY = tempToY(200);
+    if (dangerY > margin.top && dangerY < margin.top + plotH) {
+      ctx.setLineDash([6, 4]);
+      drawLine(ctx, margin.left, dangerY, cw - margin.right, dangerY, '#d4523a', 0.7);
+      drawText(ctx, '200\u00B0C', cw - margin.right - 4, dangerY - 5, '#d4523a', 8, 'right');
+      ctx.setLineDash([]);
+    }
+
+    // Tamb reference
+    const tambY = tempToY(Tamb);
+    ctx.setLineDash([4, 4]);
+    drawLine(ctx, margin.left, tambY, cw - margin.right, tambY, theme.muted, 0.6);
+    ctx.setLineDash([]);
+
+    // Plot curves
+    // Always draw current architecture curve
+    function drawCurve(label: string, temps: number[], color: string, width: number, dash: number[] = []) {
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.setLineDash(dash);
+      for (let i = 0; i < powers.length; i++) {
+        const x = powerToX(powers[i]);
+        const y = tempToY(temps[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Label at end
+      const lastX = powerToX(powers[powers.length - 1]);
+      const lastY = tempToY(temps[temps.length - 1]);
+      drawText(ctx, label, lastX + 3, lastY + 3, color, 8, 'left');
+    }
+
+    drawCurve(isCustom ? 'Custom' : PRESETS[activePreset].label, curves['current'], theme.cta, 2.2);
+
+    if (showAllCurves) {
+      if (activePreset !== 'standard' || isCustom) drawCurve('Standard', curves['standard']!, theme.muted, 1.2, [5, 3]);
+      if (activePreset !== 'vented' || isCustom) drawCurve('Vented', curves['vented']!, '#4a7bb8', 1.2, [5, 3]);
+      if (activePreset !== 'ferrofluid' || isCustom) drawCurve('Ferrofluid', curves['ferrofluid']!, '#3ba55c', 1.2, [5, 3]);
+    }
+
+    // Current operating point marker
+    const currentTss = steadyStateTemp(P_input, Re0, Tamb, alpha, Rth);
+    const opX = powerToX(P_input);
+    const opY = tempToY(currentTss);
+    drawCircle(ctx, opX, opY, 5, theme.cta, theme.canvas, 2);
+    drawCircle(ctx, opX, opY, 2, theme.text);
+
+    // Current coil temp (may not be at steady state yet)
+    const coilY = tempToY(T_coil);
+    if (Math.abs(currentTss - T_coil) > 2) {
+      drawCircle(ctx, opX, coilY, 4, theme.text, theme.cta, 1.5);
+      drawLine(ctx, opX + 6, coilY, opX + 10, coilY, theme.text, 0.8);
+      drawText(ctx, T_coil.toFixed(0) + '\u00B0', opX + 12, coilY + 3, theme.text, 8, 'left');
+    }
+
+    // Axis labels
+    ctx.fillStyle = theme.muted;
+    ctx.font = '9px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Input power (W RMS)', cw / 2, ch - 6);
+
+    ctx.save();
+    ctx.translate(13, margin.top + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Steady-state temperature (\u00B0C)', 0, 0);
+    ctx.restore();
+  }
+
+  function renderAll() {
+    renderTimeCanvas();
+    renderSweepCanvas();
+  }
+
+  // --- Simulation loop ---
+  function renderFrame(frameTime: number) {
+    if (destroyed) return;
+    const elapsed = Math.min(0.1, Math.max(0, frameTime - lastFrameTime) / 1000);
+    lastFrameTime = frameTime;
+
+    if (running && !document.hidden) {
+      accumulator += elapsed * timeAccel;
+      let safety = 0;
+      while (accumulator >= PHYSICS_DT && safety < 200) {
+        stepPhysics(PHYSICS_DT);
+        accumulator -= PHYSICS_DT;
+        safety++;
+      }
+      if (accumulator > PHYSICS_DT * 3) {
+        accumulator = 0;
+      }
+    }
+
+    updateResults();
+    updateSVG();
+    renderTimeCanvas();
+    renderSweepCanvas();
+
+    animationFrameId = requestAnimationFrame(renderFrame);
+  }
+
+  // --- Controls ---
+  function setRunning(next: boolean) {
+    running = next;
+    runToggle.textContent = running ? 'Pause' : 'Play';
+    runToggle.classList.toggle('is-active', running);
+    runToggle.setAttribute('aria-pressed', String(running));
+    lastFrameTime = performance.now();
+  }
+
+  function setPreset(key: string) {
+    if (key === 'custom') {
+      isCustom = true;
+      presetButtons.forEach(b => b.classList.toggle('is-active', b.dataset.preset === 'custom'));
+      return;
+    }
+    isCustom = false;
+    activePreset = key;
+    const preset = PRESETS[key];
+    Rth = preset.rth;
+    Cth = preset.cth;
+    updateSliders();
+    updateReadouts();
+    presetButtons.forEach(b => b.classList.toggle('is-active', b.dataset.preset === key));
+  }
+
+  function resetSimulation() {
+    T_coil = Tamb;
+    simulatedTime = 0;
+    accumulator = 0;
+    dataBuffer = [{ t: 0, T: Tamb, spl: 0 }];
+    updateResults();
+    updateSVG();
+    renderTimeCanvas();
+    renderSweepCanvas();
+    lastFrameTime = performance.now();
+  }
+
+  // --- Event listeners ---
+  powerSlider.addEventListener('input', () => {
+    P_input = parseFloat(powerSlider.value);
+    powerReadout.textContent = String(P_input);
+    if (!running) { updateResults(); updateSVG(); renderSweepCanvas(); }
+  });
+
+  reSlider.addEventListener('input', () => {
+    Re0 = parseFloat(reSlider.value);
+    reReadout.textContent = Re0.toFixed(1);
+    if (!running) { updateResults(); updateSVG(); renderSweepCanvas(); }
+  });
+
+  tambSlider.addEventListener('input', () => {
+    Tamb = parseFloat(tambSlider.value);
+    tambReadout.textContent = String(Tamb);
+    if (!running) {
+      T_coil = Math.max(T_coil, Tamb);
+      dataBuffer = [{ t: 0, T: Tamb, spl: 0 }];
+      updateResults(); updateSVG(); renderAll();
+    }
+  });
+
+  accelSlider.addEventListener('input', () => {
+    timeAccel = parseFloat(accelSlider.value);
+    accelReadout.innerHTML = timeAccel + '&times;';
+    lastFrameTime = performance.now();
+  });
+
+  rthSlider.addEventListener('input', () => {
+    Rth = parseFloat(rthSlider.value);
+    rthReadout.textContent = Rth.toFixed(2);
+    if (!isCustom) {
+      setPreset('custom');
+      updateSliders();
+    }
+    if (!running) { updateResults(); updateSVG(); renderSweepCanvas(); }
+  });
+
+  cthSlider.addEventListener('input', () => {
+    Cth = parseFloat(cthSlider.value);
+    cthReadout.textContent = Cth.toFixed(1);
+    if (!isCustom) {
+      setPreset('custom');
+      updateSliders();
+    }
+    if (!running) { updateResults(); updateSVG(); renderSweepCanvas(); }
+  });
+
+  alphaSlider.addEventListener('input', () => {
+    alpha = parseFloat(alphaSlider.value);
+    alphaReadout.textContent = alpha.toFixed(5);
+    if (!running) { updateResults(); updateSVG(); renderSweepCanvas(); }
+  });
+
+  presetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setPreset(btn.dataset.preset!);
+      if (!running) { updateResults(); updateSVG(); renderAll(); }
+    });
+  });
+
+  runToggle.addEventListener('click', () => setRunning(!running));
+  resetBtn.addEventListener('click', resetSimulation);
+
+  showAllCurvesBtn.addEventListener('click', () => {
+    showAllCurves = !showAllCurves;
+    showAllCurvesBtn.textContent = showAllCurves ? 'Hide architectures' : 'Show all architectures';
+    renderSweepCanvas();
+  });
+
+  function handleVisibilityChange() { lastFrameTime = performance.now(); }
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  // --- Kick off ---
+  updateReadouts();
+  updateSliders();
+  // Initial preset button state
+  presetButtons.forEach(b => b.classList.toggle('is-active', b.dataset.preset === 'standard'));
+  dataBuffer = [{ t: 0, T: Tamb, spl: 0 }];
+  setRunning(running);
+  updateResults();
+  updateSVG();
+  renderAll();
+  animationFrameId = requestAnimationFrame(renderFrame);
+
+  // --- Cleanup ---
+  document.addEventListener('astro:before-swap', () => {
+    destroyed = true;
+    cancelAnimationFrame(animationFrameId);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, { once: true });
+}
+
+document.addEventListener('astro:page-load', initVoiceCoilThermal);
+initVoiceCoilThermal();
+</script>

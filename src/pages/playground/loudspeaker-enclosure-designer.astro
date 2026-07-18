@@ -1,0 +1,714 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Loudspeaker Enclosure Designer — Sealed Box Thiele–Small Alignment | MakerPortal';
+const description = 'Design a sealed loudspeaker enclosure using Thiele–Small parameters. Compute Qtc, fc, f3, sensitivity, max SPL, and visualize the frequency response with interactive charts.';
+const canonical = new URL('/playground/loudspeaker-enclosure-designer', Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Loudspeaker Enclosure Designer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Loudspeaker Enclosure Designer"
+    lead="Design a sealed-box loudspeaker from Thiele–Small parameters. Dial in driver specs, choose an alignment target, and see the computed Qtc, fc, f3, sensitivity, and max SPL — with a live frequency-response plot."
+    pillarHint="dsp-audio"
+    isGrounded={false}
+  >
+    <section class="border-b border-border" aria-labelledby="designer-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+
+        <!-- Driver Parameters Card -->
+        <div class="rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-[1.05rem] font-[650] tracking-[-0.02em]">Driver Parameters</h2>
+            <button type="button" id="reset-defaults" class="sim-btn">Reset defaults</button>
+          </div>
+          <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3" id="driver-inputs">
+            <!-- fs -->
+            <div>
+              <span class="control-label">fs <span class="eyebrow">Free-air resonance (Hz)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="fs-slider" min="10" max="150" step="0.1" value="35" class="w-full" />
+                <input type="number" id="fs-num" class="tool-input w-[5.5rem]" min="10" max="150" step="0.1" value="35" />
+              </div>
+            </div>
+            <!-- Qts -->
+            <div>
+              <span class="control-label">Qts <span class="eyebrow">Total Q factor</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="qts-slider" min="0.1" max="1.5" step="0.01" value="0.38" class="w-full" />
+                <input type="number" id="qts-num" class="tool-input w-[5.5rem]" min="0.1" max="1.5" step="0.01" value="0.38" />
+              </div>
+            </div>
+            <!-- Vas -->
+            <div>
+              <span class="control-label">Vas <span class="eyebrow">Equivalent compliance volume (L)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="vas-slider" min="1" max="500" step="0.1" value="70" class="w-full" />
+                <input type="number" id="vas-num" class="tool-input w-[5.5rem]" min="1" max="500" step="0.1" value="70" />
+              </div>
+            </div>
+            <!-- Re -->
+            <div>
+              <span class="control-label">Re <span class="eyebrow">DC voice coil resistance (Ω)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="re-slider" min="1" max="32" step="0.1" value="6" class="w-full" />
+                <input type="number" id="re-num" class="tool-input w-[5.5rem]" min="1" max="32" step="0.1" value="6" />
+              </div>
+            </div>
+            <!-- Sd -->
+            <div>
+              <span class="control-label">Sd <span class="eyebrow">Effective piston area (cm²)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="sd-slider" min="10" max="2000" step="0.1" value="140" class="w-full" />
+                <input type="number" id="sd-num" class="tool-input w-[5.5rem]" min="10" max="2000" step="0.1" value="140" />
+              </div>
+            </div>
+            <!-- Xmax -->
+            <div>
+              <span class="control-label">Xmax <span class="eyebrow">Linear excursion (mm)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="xmax-slider" min="0.5" max="30" step="0.1" value="5" class="w-full" />
+                <input type="number" id="xmax-num" class="tool-input w-[5.5rem]" min="0.5" max="30" step="0.1" value="5" />
+              </div>
+            </div>
+            <!-- Qms (optional) -->
+            <div>
+              <span class="control-label">Qms <span class="eyebrow">Mechanical Q (default 5.0)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="qms-slider" min="1" max="20" step="0.1" value="5" class="w-full" />
+                <input type="number" id="qms-num" class="tool-input w-[5.5rem]" min="1" max="20" step="0.1" value="5" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enclosure Card -->
+        <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-[1.05rem] font-[650] tracking-[-0.02em]">Enclosure</h2>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="eyebrow">Alignment presets:</span>
+              <button type="button" class="preset-btn" data-qtc="0.5">Qtc 0.5</button>
+              <button type="button" class="preset-btn" data-qtc="0.577">Bessel 0.577</button>
+              <button type="button" class="preset-btn !border-brand-anchor/50 !text-brand-anchor" data-qtc="0.707">Butterworth 0.707</button>
+              <button type="button" class="preset-btn" data-qtc="1.0">Qtc 1.0</button>
+            </div>
+          </div>
+          <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Vb -->
+            <div>
+              <span class="control-label">Vb <span class="eyebrow">Box volume (L) — auto-calculated for Qtc=0.707</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="vb-slider" min="1" max="500" step="0.1" value="28.4" class="w-full" />
+                <input type="number" id="vb-num" class="tool-input w-[5.5rem]" min="1" max="500" step="0.1" value="28.4" />
+              </div>
+            </div>
+            <!-- Qa -->
+            <div>
+              <span class="control-label">Qa <span class="eyebrow">Absorption Q (box losses)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="qa-slider" min="5" max="200" step="0.1" value="100" class="w-full" />
+                <input type="number" id="qa-num" class="tool-input w-[5.5rem]" min="5" max="200" step="0.1" value="100" />
+              </div>
+            </div>
+            <!-- Ql -->
+            <div>
+              <span class="control-label">Ql <span class="eyebrow">Leakage Q</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="ql-slider" min="5" max="200" step="0.1" value="100" class="w-full" />
+                <input type="number" id="ql-num" class="tool-input w-[5.5rem]" min="5" max="200" step="0.1" value="100" />
+              </div>
+            </div>
+            <!-- Power -->
+            <div>
+              <span class="control-label">Power <span class="eyebrow">Input power (W)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="power-slider" min="0.1" max="1000" step="0.1" value="10" class="w-full" />
+                <input type="number" id="power-num" class="tool-input w-[5.5rem]" min="0.1" max="1000" step="0.1" value="10" />
+              </div>
+            </div>
+            <!-- Qtc / fc display -->
+            <div class="sm:col-span-2 flex flex-wrap items-end gap-6">
+              <div>
+                <span class="text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">System Qtc</span>
+                <p class="mt-1 text-[1.8rem] font-[700] leading-none tracking-[-0.03em] text-brand-anchor" id="qtc-display">0.71</p>
+              </div>
+              <div>
+                <span class="text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">System fc</span>
+                <p class="mt-1 text-[1.8rem] font-[700] leading-none tracking-[-0.03em]" id="fc-display">65.1 Hz</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Dashboard -->
+        <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7" id="results-grid">
+          {[ 
+            { id: 'res-qtc', label: 'Qtc', unit: '', desc: 'Total system Q' },
+            { id: 'res-fc', label: 'fc', unit: 'Hz', desc: 'System resonance' },
+            { id: 'res-f3', label: 'f3', unit: 'Hz', desc: '-3 dB point' },
+            { id: 'res-eta', label: 'η₀', unit: '%', desc: 'Reference efficiency' },
+            { id: 'res-sens', label: 'Sensitivity', unit: 'dB', desc: '@ 1W / 1m' },
+            { id: 'res-maxspl', label: 'Max SPL', unit: 'dB', desc: 'At Xmax + power' },
+            { id: 'res-vbtext', label: 'Alignment', unit: '', desc: 'Vb recommendation' },
+          ].map(m => (
+            <div class="metric-card">
+              <p class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{m.desc}</p>
+              <p class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]" id={m.id}>—</p>
+              <p class="text-[0.7rem] text-muted-text">{m.label} {m.unit}</p>
+            </div>
+          ))}
+        </div>
+
+        <!-- SPL Response Canvas -->
+        <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="font-semibold">SPL Frequency Response</h3>
+            <div class="flex items-center gap-2 font-mono text-[0.7rem]">
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm bg-[#ce445d]"></span>Sealed</span>
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm border border-dashed" style="border-color:#a8b9cc"></span>Free-air</span>
+            </div>
+          </div>
+          <div class="mt-4 overflow-hidden rounded-[14px] border border-border bg-canvas relative" id="canvas-wrap">
+            <canvas id="spl-canvas" width="900" height="400" class="block h-[400px] w-full cursor-crosshair"></canvas>
+            <div id="tooltip" class="pointer-events-none absolute hidden rounded-lg border border-border bg-elevated px-2.5 py-1.5 font-mono text-[0.7rem] text-primary-text shadow-lg" style="top:0;left:0;"></div>
+          </div>
+        </div>
+
+        <!-- Box Visual -->
+        <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <h3 class="font-semibold">Box Visual</h3>
+          <div class="mt-4 flex justify-center">
+            <svg id="box-visual" viewBox="0 0 320 260" class="w-full max-w-[360px] h-auto" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="frontGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="var(--mp-elevated)" />
+                  <stop offset="100%" stop-color="var(--mp-card)" />
+                </linearGradient>
+                <linearGradient id="sideGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="var(--mp-card)" />
+                  <stop offset="100%" stop-color="var(--mp-elevated)" />
+                </linearGradient>
+                <linearGradient id="topGrad" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="var(--mp-elevated)" />
+                  <stop offset="100%" stop-color="var(--mp-card)" />
+                </linearGradient>
+              </defs>
+              <!-- faces drawn by script -->
+              <g id="box-faces"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Method & limitations -->
+        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
+          <p class="font-semibold text-primary-text">Method &amp; limitations</p>
+          <p class="mt-2">This designer models a <strong>sealed-box</strong> (acoustic suspension) enclosure using the classic second-order high-pass transfer function:</p>
+          <p class="mt-2 font-mono text-[0.78rem]">α = Vas / Vb &emsp; Qtc = Qts √<span style="text-decoration:overline;">1 + α</span> &emsp; fc = fs √<span style="text-decoration:overline;">1 + α</span></p>
+          <p class="mt-2 font-mono text-[0.78rem]">|H(f)| = (f/fc)² / √<span style="text-decoration:overline;">(1 − (f/fc)²)² + (f / fc·Qtc)²</span></p>
+          <p class="mt-2">Absorption and leakage Q factors (Qa, Ql) combine in parallel with the driver Q to give the effective system Qtc via:</p>
+          <p class="mt-2 font-mono text-[0.78rem]">1/Qtc_actual = 1/Qtc_ideal + 1/Qa + 1/Ql</p>
+          <p class="mt-2">Reference efficiency η₀ uses the simplified form: η₀ = (4π²/c³) · fs³ · Vas / Qes, where Qes = 1 / (1/Qts − 1/Qms) and c = 343 m/s. Sensitivity = 112 + 10·log₁₀(η₀) dB @ 1W/1m. SPL assumes half-space (2π) radiation.</p>
+          <p class="mt-4 text-[0.78rem]"><strong>Assumptions &amp; caveats:</strong> Rigid box walls, no standing waves, small-signal Thiele–Small parameters (linear). Does not model power compression, BL nonlinearity, voice-coil inductance, port turbulence, or baffle-step effects. Max SPL estimate combines Xmax excursion limit and thermal power handling. Real-world results may vary — this is a design tool, not a measurement system.</p>
+        </div>
+
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .tool-input {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+    color: var(--mp-text);
+  }
+  .tool-input:focus {
+    outline: none;
+    border-color: var(--mp-cta);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-cta) 20%, transparent);
+  }
+  input[type='range'] {
+    accent-color: var(--mp-cta);
+  }
+  .control-label {
+    font-size: 0.8rem;
+    font-weight: 550;
+    color: var(--mp-text);
+  }
+  .eyebrow {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    font-weight: 400;
+    margin-left: 0.3rem;
+  }
+  .sim-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.35rem 0.9rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .sim-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-anchor);
+  }
+  .preset-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.3rem 0.7rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .preset-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-anchor);
+    background: var(--mp-elevated);
+  }
+  .metric-card {
+    border-radius: 14px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-card);
+    padding: 0.9rem 1rem;
+  }
+  .math-card {
+    border-radius: 14px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.75rem 1rem;
+  }
+</style>
+
+<script>
+import { setupHiDPI, resolveTheme, clearCanvas, drawLogFreqGrid, drawDbGrid, drawText, drawCircle } from '../../lib/chart-core.ts';
+
+function initDesigner() {
+  const state: Record<string, any> = {
+    fs: 35, Qts: 0.38, Vas: 70, Re: 6.0, Sd: 140, Xmax: 5, Qms: 5.0,
+    Vb: 28.4, Qa: 100, Ql: 100, power: 10,
+  };
+
+  let _syncing = false;
+  let _rafPending = false;
+
+  const paramDefs: Record<string, { slider: string; num: string; min: number; max: number; step: number; defaultVal: number }> = {
+    fs: { slider: 'fs-slider', num: 'fs-num', min: 10, max: 150, step: 0.1, defaultVal: 35 },
+    Qts: { slider: 'qts-slider', num: 'qts-num', min: 0.1, max: 1.5, step: 0.01, defaultVal: 0.38 },
+    Vas: { slider: 'vas-slider', num: 'vas-num', min: 1, max: 500, step: 0.1, defaultVal: 70 },
+    Re: { slider: 're-slider', num: 're-num', min: 1, max: 32, step: 0.1, defaultVal: 6 },
+    Sd: { slider: 'sd-slider', num: 'sd-num', min: 10, max: 2000, step: 0.1, defaultVal: 140 },
+    Xmax: { slider: 'xmax-slider', num: 'xmax-num', min: 0.5, max: 30, step: 0.1, defaultVal: 5 },
+    Qms: { slider: 'qms-slider', num: 'qms-num', min: 1, max: 20, step: 0.1, defaultVal: 5 },
+    Vb: { slider: 'vb-slider', num: 'vb-num', min: 1, max: 500, step: 0.1, defaultVal: 28.4 },
+    Qa: { slider: 'qa-slider', num: 'qa-num', min: 5, max: 200, step: 0.1, defaultVal: 100 },
+    Ql: { slider: 'ql-slider', num: 'ql-num', min: 5, max: 200, step: 0.1, defaultVal: 100 },
+    power: { slider: 'power-slider', num: 'power-num', min: 0.1, max: 1000, step: 0.1, defaultVal: 10 },
+  };
+
+  const sliderEls: Record<string, HTMLInputElement> = {};
+  const numEls: Record<string, HTMLInputElement> = {};
+
+  for (const [key, def] of Object.entries(paramDefs)) {
+    sliderEls[key] = document.getElementById(def.slider) as HTMLInputElement;
+    numEls[key] = document.getElementById(def.num) as HTMLInputElement;
+  }
+
+  const qtcDisplay = document.getElementById('qtc-display')!;
+  const fcDisplay = document.getElementById('fc-display')!;
+  const canvas = document.getElementById('spl-canvas') as HTMLCanvasElement;
+  const tooltip = document.getElementById('tooltip')!;
+  const boxFaces = document.getElementById('box-faces')!;
+
+  let ctx: CanvasRenderingContext2D;
+  let cw: number;
+  let ch: number;
+
+  function initCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    cw = rect.width;
+    ch = rect.height;
+    ctx = setupHiDPI(canvas, cw, ch);
+  }
+
+  function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
+
+  function compute() {
+    const fs = state.fs;
+    const Qts = state.Qts;
+    const Vas = state.Vas;
+    const Sd = state.Sd;
+    const Xmax = state.Xmax;
+    const Qms = state.Qms;
+    const Vb = state.Vb;
+    const Qa = state.Qa;
+    const Ql = state.Ql;
+    const power = state.power;
+
+    const alpha = Vas / Vb;
+    const Qtc_ideal = Qts * Math.sqrt(1 + alpha);
+    const Qtc = 1 / (1 / Qtc_ideal + 1 / Qa + 1 / Ql);
+    const fc = fs * Math.sqrt(1 + alpha);
+
+    let f3: number;
+    if (Qtc > 0.5) {
+      const q2 = Qtc * Qtc;
+      const inner = (1 / q2 - 2 + Math.sqrt((2 - 1 / q2) * (2 - 1 / q2) + 4)) / 2;
+      f3 = fc * Math.sqrt(Math.max(inner, 0));
+    } else {
+      f3 = fc;
+    }
+
+    const Qes = 1 / (1 / Qts - 1 / Qms);
+    const k = (4 * Math.PI * Math.PI) / (343 * 343 * 343);
+    const eta = k * fs * fs * fs * Vas / Qes;
+    const sensitivity = 112 + 10 * Math.log10(Math.max(eta, 1e-12));
+
+    const Sd_m2 = Sd * 1e-4;
+    const Xmax_m = Xmax * 1e-3;
+    const Vd = Sd_m2 * Xmax_m;
+
+    const spl_xmax_at_fc = 20 * Math.log10(2 * Math.PI * 1.18 * fc * fc * Vd / 2e-5);
+    const spl_power = sensitivity + 10 * Math.log10(power);
+    const max_spl = Math.min(spl_xmax_at_fc, spl_power);
+
+    function H(f: number): number {
+      const r = f / fc;
+      const r2 = r * r;
+      return r2 / Math.sqrt((1 - r2) * (1 - r2) + r2 / (Qtc * Qtc));
+    }
+
+    function H_freeair(f: number): number {
+      const r = f / fs;
+      const r2 = r * r;
+      return r2 / Math.sqrt((1 - r2) * (1 - r2) + r2 / (Qts * Qts));
+    }
+
+    return { alpha, Qtc, Qtc_ideal, fc, f3, eta, sensitivity, Vd, spl_xmax_at_fc, spl_power, max_spl, H, H_freeair, Qes };
+  }
+
+  function vbRec(Qtc: number) {
+    if (Qtc < 0.45) return 'Overdamped — very tight, lean bass';
+    if (Qtc < 0.55) return 'Transient-perfect — tightest bass';
+    if (Qtc < 0.62) return 'Transient-accurate — tight, controlled';
+    if (Qtc < 0.72) return 'Good for music — balanced';
+    if (Qtc < 0.85) return 'Good for music — slight warmth';
+    if (Qtc < 1.05) return 'Bass extension — warm, full';
+    if (Qtc < 1.3) return 'Underdamped — boomy bass';
+    return 'Very underdamped — one-note bass';
+  }
+
+  function updateResults(r: ReturnType<typeof compute>) {
+    document.getElementById('res-qtc')!.innerHTML = `${r.Qtc.toFixed(3)} <span class="text-[0.7rem] text-muted-text">${r.Qtc_ideal.toFixed(3)} ideal</span>`;
+    document.getElementById('res-fc')!.textContent = `${r.fc.toFixed(1)} Hz`;
+    document.getElementById('res-f3')!.textContent = `${r.f3.toFixed(1)} Hz`;
+    document.getElementById('res-eta')!.textContent = `${(r.eta * 100).toFixed(3)}%`;
+    document.getElementById('res-sens')!.textContent = `${r.sensitivity.toFixed(1)} dB`;
+    const maxLabel = r.max_spl === r.spl_power ? 'power' : 'Xmax';
+    document.getElementById('res-maxspl')!.textContent = `${r.max_spl.toFixed(1)} dB`;
+    document.getElementById('res-maxspl')!.setAttribute('title', `${r.max_spl.toFixed(1)} dB (${maxLabel}-limited)`);
+    document.getElementById('res-vbtext')!.textContent = vbRec(r.Qtc);
+
+    qtcDisplay.textContent = r.Qtc.toFixed(3);
+    fcDisplay.textContent = `${r.fc.toFixed(1)} Hz`;
+  }
+
+  function renderCanvas() {
+    initCanvas();
+    const r = compute();
+    const theme = resolveTheme();
+    clearCanvas(ctx, theme, cw, ch);
+
+    const minF = 10;
+    const maxF = 500;
+
+    function xForF(f: number) { return (Math.log(f / minF) / Math.log(maxF / minF)) * cw; }
+
+    const steps = 300;
+    const freqs: number[] = [];
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      freqs.push(minF * Math.pow(maxF / minF, t));
+    }
+    const sealedSpl = freqs.map(f => r.sensitivity + 20 * Math.log10(Math.max(r.H(f), 1e-6)));
+    const freeairSpl = freqs.map(f => r.sensitivity + 20 * Math.log10(Math.max(r.H_freeair(f), 1e-6)));
+
+    const allSpl = [...sealedSpl, ...freeairSpl];
+    let minDb = Math.floor(Math.min(...allSpl) / 6) * 6 - 6;
+    let maxDb = Math.ceil(Math.max(...allSpl) / 6) * 6 + 6;
+    if (maxDb - minDb < 36) { const mid = (minDb + maxDb) / 2; minDb = mid - 18; maxDb = mid + 18; }
+    minDb = Math.floor(minDb / 6) * 6;
+    maxDb = Math.ceil(maxDb / 6) * 6;
+
+    function yForDb(db: number) { return ch - ((db - minDb) / (maxDb - minDb)) * ch; }
+
+    drawLogFreqGrid(ctx, theme, cw, ch, minF, maxF);
+    drawDbGrid(ctx, theme, cw, ch, minDb, maxDb);
+
+    ctx.beginPath();
+    ctx.strokeStyle = theme.magColor;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < steps; i++) {
+      const x = xForF(freqs[i]);
+      const y = yForDb(sealedSpl[i]);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.strokeStyle = theme.muted;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([6, 4]);
+    for (let i = 0; i < steps; i++) {
+      const x = xForF(freqs[i]);
+      const y = yForDb(freeairSpl[i]);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawCircle(ctx, xForF(r.fc), yForDb(r.sensitivity + 20 * Math.log10(Math.max(r.H(r.fc), 1e-6))), 4, theme.magColor, theme.text, 1.5);
+    drawText(ctx, `fc=${r.fc.toFixed(0)}Hz`, xForF(r.fc) + 7, yForDb(r.sensitivity + 20 * Math.log10(Math.max(r.H(r.fc), 1e-6))) - 6, theme.text, 10);
+
+    const splAtF3 = r.sensitivity + 20 * Math.log10(Math.max(r.H(r.f3), 1e-6));
+    drawCircle(ctx, xForF(r.f3), yForDb(splAtF3), 4, theme.muted, theme.text, 1.5);
+    drawText(ctx, `f3=${r.f3.toFixed(0)}Hz`, xForF(r.f3) + 7, yForDb(splAtF3) - 6, theme.muted, 10);
+
+    // Axis labels
+    ctx.fillStyle = theme.muted;
+    ctx.font = '10px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Frequency (Hz) — log scale', cw / 2, ch - 3);
+    ctx.save();
+    ctx.translate(12, ch / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('dB SPL @ 1W/1m', 0, 0);
+    ctx.restore();
+  }
+
+  function renderBoxVisual() {
+    const Vb = state.Vb;
+    const Sd = state.Sd;
+
+    const edgeDm = Math.cbrt(Vb);
+    const scale = 55;
+    let size = edgeDm * scale;
+    size = clamp(size, 40, 180);
+
+    const driverRadiusCm = Math.sqrt(Sd / Math.PI);
+    const driverPx = (driverRadiusCm / (edgeDm * 10)) * size;
+    const driverR = clamp(driverPx, 8, size * 0.48);
+
+    const cx = 180;
+    const cy = 100;
+    const depth = Math.min(size * 0.4, 60);
+
+    const fx = cx - size / 2;
+    const fy = cy - size / 2 + depth * 0.3;
+    const rx = fx + depth * 0.6;
+    const ry = fy - depth * 0.6;
+    const rw = size;
+    const rh = size;
+
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const frontFill = isDark ? '#1a232e' : '#ffffff';
+    const sideFill = isDark ? '#151d27' : '#e8dfd1';
+    const topFill = isDark ? '#212d3a' : '#f4f1eb';
+    const strokeCol = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(22,32,46,0.14)';
+    const textCol = isDark ? '#a8b9cc' : '#4a5d6f';
+    const driverFill = isDark ? '#0f141c' : '#f4f1eb';
+
+    let svg = '';
+
+    svg += `<polygon points="${fx},${fy} ${fx+rw},${fy} ${fx+rw},${fy+rh} ${fx},${fy+rh}" fill="${frontFill}" stroke="${strokeCol}" stroke-width="1.5" />`;
+
+    svg += `<polygon points="${rx},${ry} ${rx+rw},${ry} ${rx+rw},${ry+rh} ${rx},${ry+rh}" fill="${sideFill}" stroke="${strokeCol}" stroke-width="1.5" />`;
+
+    svg += `<polygon points="${rx},${ry} ${fx},${fy} ${fx+rw},${fy} ${rx+rw},${ry}" fill="${topFill}" stroke="${strokeCol}" stroke-width="1.5" />`;
+
+    const dCx = fx + rw / 2;
+    const dCy = fy + rh / 2;
+
+    svg += `<circle cx="${dCx}" cy="${dCy}" r="${driverR}" fill="${driverFill}" stroke="${strokeCol}" stroke-width="1" />`;
+    svg += `<circle cx="${dCx}" cy="${dCy}" r="${driverR * 0.35}" fill="none" stroke="${strokeCol}" stroke-width="0.8" />`;
+
+    const dimLabelY = fy + rh + 16;
+    svg += `<line x1="${fx}" y1="${dimLabelY-6}" x2="${fx+rw}" y2="${dimLabelY-6}" stroke="${textCol}" stroke-width="1" />`;
+    svg += `<line x1="${fx}" y1="${dimLabelY-9}" x2="${fx}" y2="${dimLabelY-3}" stroke="${textCol}" stroke-width="1" />`;
+    svg += `<line x1="${fx+rw}" y1="${dimLabelY-9}" x2="${fx+rw}" y2="${dimLabelY-3}" stroke="${textCol}" stroke-width="1" />`;
+    svg += `<text x="${dCx}" y="${dimLabelY}" fill="${textCol}" font-family="ui-monospace,monospace" font-size="10" text-anchor="middle">${edgeDm.toFixed(1)} dm (${Vb.toFixed(0)} L)</text>`;
+
+    boxFaces.innerHTML = svg;
+  }
+
+  function setVbForQtc(targetQtc: number) {
+    if (targetQtc <= state.Qts) return;
+    const alpha = (targetQtc / state.Qts) * (targetQtc / state.Qts) - 1;
+    const Vb = state.Vas / alpha;
+    state.Vb = clamp(Vb, 1, 500);
+    sliderEls['Vb'].value = String(state.Vb);
+    numEls['Vb'].value = state.Vb.toFixed(1);
+    updateAll();
+  }
+
+  function updateAll() {
+    const r = compute();
+    updateResults(r);
+    renderCanvas();
+    renderBoxVisual();
+  }
+
+  function syncFromSlider(key: string) {
+    if (_syncing) return;
+    _syncing = true;
+    const val = parseFloat(sliderEls[key].value);
+    state[key] = val;
+    numEls[key].value = key === 'Qts' ? val.toFixed(3) : val.toFixed(1);
+    _syncing = false;
+    scheduleUpdate();
+  }
+
+  function syncFromNum(key: string) {
+    if (_syncing) return;
+    _syncing = true;
+    let val = parseFloat(numEls[key].value);
+    if (isNaN(val) || val < paramDefs[key].min) val = paramDefs[key].min;
+    if (val > paramDefs[key].max) val = paramDefs[key].max;
+    state[key] = val;
+    sliderEls[key].value = String(val);
+    numEls[key].value = key === 'Qts' ? val.toFixed(3) : val.toFixed(1);
+    _syncing = false;
+    scheduleUpdate();
+  }
+
+  function scheduleUpdate() {
+    if (_rafPending) return;
+    _rafPending = true;
+    requestAnimationFrame(() => {
+      _rafPending = false;
+      updateAll();
+    });
+  }
+
+  for (const key of Object.keys(paramDefs)) {
+    sliderEls[key].addEventListener('input', () => syncFromSlider(key));
+    numEls[key].addEventListener('change', () => syncFromNum(key));
+    numEls[key].addEventListener('blur', () => {
+      if (isNaN(parseFloat(numEls[key].value)) || parseFloat(numEls[key].value) < paramDefs[key].min) {
+        state[key] = paramDefs[key].defaultVal;
+        numEls[key].value = String(paramDefs[key].defaultVal);
+        sliderEls[key].value = String(paramDefs[key].defaultVal);
+        updateAll();
+      }
+    });
+  }
+
+  document.getElementById('reset-defaults')!.addEventListener('click', () => {
+    for (const [key, def] of Object.entries(paramDefs)) {
+      state[key] = def.defaultVal;
+      sliderEls[key].value = String(def.defaultVal);
+      numEls[key].value = key === 'Qts' ? def.defaultVal.toFixed(3) : def.defaultVal.toFixed(1);
+    }
+    updateAll();
+  });
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetQtc = parseFloat((btn as HTMLElement).dataset.qtc || '0.707');
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.classList.remove('!border-brand-anchor/50', '!text-brand-anchor');
+      });
+      btn.classList.add('!border-brand-anchor/50', '!text-brand-anchor');
+      setVbForQtc(targetQtc);
+    });
+  });
+
+  // Canvas tooltip
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const r = compute();
+
+    const minF = 10;
+    const maxF = 500;
+    const f = minF * Math.pow(maxF / minF, mx / cw);
+    if (f < minF || f > maxF) {
+      tooltip.classList.add('hidden');
+      return;
+    }
+
+    const spl = r.sensitivity + 20 * Math.log10(Math.max(r.H(f), 1e-6));
+    tooltip.classList.remove('hidden');
+    tooltip.style.left = Math.min(mx + 12, cw - 140) + 'px';
+    tooltip.style.top = Math.max(my - 36, 4) + 'px';
+    tooltip.innerHTML = `${f.toFixed(0)} Hz<br>${spl.toFixed(1)} dB SPL`;
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    tooltip.classList.add('hidden');
+  });
+
+  window.addEventListener('resize', () => {
+    scheduleUpdate();
+  });
+
+  updateAll();
+  observeThemeChange();
+}
+
+let _themeRedraw: (() => void) | null = null;
+
+function observeThemeChange() {
+  const observer = new MutationObserver(() => {
+    _themeRedraw?.();
+  });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+
+document.addEventListener('astro:page-load', () => {
+  initDesigner();
+  _themeRedraw = () => {
+    const state = document.getElementById('spl-canvas');
+    if (state) initDesigner();
+  };
+});
+
+initDesigner();
+_themeRedraw = () => initDesigner();
+</script>

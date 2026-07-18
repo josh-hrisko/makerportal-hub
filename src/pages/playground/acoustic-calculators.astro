@@ -1,0 +1,835 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Acoustic Calculators — Wavelength, SPL, RT60 & more | MakerPortal';
+const description = 'Free online acoustic calculators: speed of sound, wavelength/frequency, delay/distance, SPL summation, dB/ratio conversion, RT60 (Sabine & Eyring), Helmholtz resonance, and port length for speaker design.';
+const canonical = new URL('/playground/acoustic-calculators', Astro.site);
+
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Acoustic Calculators',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Acoustic Calculators', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(appSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Acoustic Calculators"
+    lead="Speed of sound, wavelength, delay, SPL summation, dB/ratio conversion, RT60 (Sabine &amp; Eyring), Helmholtz resonance, and port length — eight battle-tested acoustic tools in one page."
+    pillarHint={undefined}
+    isGrounded={false}
+  >
+    <section class="border-b border-border" aria-labelledby="calculators-title" id="acoustic-calc-root">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 id="calculators-title" class="text-[clamp(1.35rem,3vw,1.7rem)] font-[650] tracking-[-0.03em]">Calculators</h2>
+        <p class="mt-2 max-w-2xl text-[0.92rem] leading-[1.6] text-muted-text">Each tool shares the same speed-of-sound baseline from the temperature input in the first card. Units default to metric with imperial conversions where helpful.</p>
+
+        <div class="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+
+          <!-- 1. Speed of Sound -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">Speed of Sound</h3>
+              <span class="eyebrow">ISO 9613-1</span>
+            </div>
+            <label class="block mt-4">
+              <span class="eyebrow">Temperature °C</span>
+              <input type="number" id="ac-temp" value="20" step="0.1" class="tool-input" />
+            </label>
+            <div class="mt-4 grid grid-cols-2 gap-4" aria-live="polite">
+              <div class="math-card">
+                <span class="eyebrow">m/s</span>
+                <p id="ac-speed-m" class="math-card__value">343.5 m/s</p>
+              </div>
+              <div class="math-card">
+                <span class="eyebrow">ft/s</span>
+                <p id="ac-speed-ft" class="math-card__value">1126.8 ft/s</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Wavelength / Frequency -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">Wavelength &harr; Frequency</h3>
+              <span class="eyebrow">c = f&middot;&lambda;</span>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <label class="block">
+                <span class="eyebrow">Frequency Hz</span>
+                <input type="number" id="ac-freq" value="440" step="0.1" min="0.01" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Wavelength m</span>
+                <input type="number" id="ac-wl" value="0.780" step="0.001" min="0.001" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4" aria-live="polite">
+              <div class="math-card">
+                <span class="eyebrow">Wavelength</span>
+                <p id="ac-wl-out" class="math-card__value">0.781 m</p>
+              </div>
+              <div class="math-card">
+                <span class="eyebrow">Period</span>
+                <p id="ac-period" class="math-card__value">2.273 ms</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Delay / Distance -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">Delay &harr; Distance</h3>
+              <span class="eyebrow">d = c&middot;t</span>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <label class="block">
+                <span class="eyebrow">Distance m</span>
+                <input type="number" id="ac-dist" value="1" step="0.001" min="0.001" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Delay ms</span>
+                <input type="number" id="ac-delay" value="2.915" step="0.001" min="0.001" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4" aria-live="polite">
+              <div class="math-card">
+                <span class="eyebrow">Distance ft</span>
+                <p id="ac-dist-ft" class="math-card__value">3.281 ft</p>
+              </div>
+              <div class="math-card">
+                <span class="eyebrow">Samples @48k</span>
+                <p id="ac-delay-samples" class="math-card__value">140 samples</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. SPL Summation -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">SPL Summation</h3>
+              <span class="eyebrow">incoherent sources</span>
+            </div>
+            <div id="ac-spl-sources" class="mt-4 space-y-3">
+              <div class="spl-source-row flex items-center gap-2">
+                <label class="flex-1"><span class="eyebrow">Source 1 dB</span><input type="number" class="tool-input ac-spl-input" value="80" /></label>
+                <label class="flex-1"><span class="eyebrow">Source 2 dB</span><input type="number" class="tool-input ac-spl-input" value="80" /></label>
+                <button type="button" class="spl-remove-btn pill hidden" aria-label="Remove source">&minus;</button>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center gap-3">
+              <button type="button" id="ac-spl-add" class="pill hover:border-cta">+ Add source</button>
+              <span class="text-[0.68rem] text-muted-text" id="ac-spl-count">2 of 6</span>
+            </div>
+            <div class="mt-4 math-card" aria-live="polite">
+              <span class="eyebrow">Combined SPL</span>
+              <p id="ac-spl-result" class="math-card__value">83.0 dB</p>
+            </div>
+          </div>
+
+          <!-- 5. dB ↔ Ratio -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">dB &harr; Ratio Converter</h3>
+              <span class="eyebrow">voltage / pressure &amp; power</span>
+            </div>
+            <div class="mt-4 flex items-center gap-4">
+              <label class="flex items-center gap-1.5 text-[0.78rem]">
+                <input type="radio" name="ac-db-mode" value="voltage" checked /> Voltage (20&middot;log)
+              </label>
+              <label class="flex items-center gap-1.5 text-[0.78rem]">
+                <input type="radio" name="ac-db-mode" value="power" /> Power (10&middot;log)
+              </label>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-4">
+              <label class="block">
+                <span class="eyebrow">dB</span>
+                <input type="number" id="ac-db-val" value="6" step="0.01" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Ratio</span>
+                <input type="number" id="ac-ratio-val" value="1.995" step="0.0001" min="0.0001" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4" aria-live="polite">
+              <div class="math-card">
+                <span class="eyebrow">Ratio (linear)</span>
+                <p id="ac-ratio-out" class="math-card__value">1.995</p>
+              </div>
+              <div class="math-card">
+                <span class="eyebrow">dB</span>
+                <p id="ac-db-out" class="math-card__value">6.00 dB</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. RT60 (Sabine & Eyring) -->
+          <div class="calc-card lg:col-span-2">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">RT60 — Sabine &amp; Eyring</h3>
+              <span class="eyebrow">room acoustics</span>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              <label class="block">
+                <span class="eyebrow">Length m</span>
+                <input type="number" id="ac-rt-l" value="5" step="0.01" min="0.01" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Width m</span>
+                <input type="number" id="ac-rt-w" value="4" step="0.01" min="0.01" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Height m</span>
+                <input type="number" id="ac-rt-h" value="3" step="0.01" min="0.01" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Avg &alpha;</span>
+                <input type="number" id="ac-rt-alpha" value="0.15" step="0.001" min="0.001" max="0.999" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Directivity Q</span>
+                <input type="number" id="ac-rt-q" value="1" step="0.1" min="0.1" max="100" class="tool-input" />
+              </label>
+              <div class="flex flex-col justify-end gap-1">
+                <span class="eyebrow">Volume m³</span>
+                <p id="ac-rt-vol" class="text-[0.9rem] font-semibold text-text mt-0.5">60.0</p>
+              </div>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4" aria-live="polite">
+              <div class="math-card">
+                <span class="eyebrow">Sabine RT60</span>
+                <p id="ac-rt-sabine" class="math-card__value">0.37 s</p>
+              </div>
+              <div class="math-card">
+                <span class="eyebrow">Eyring RT60</span>
+                <p id="ac-rt-eyring" class="math-card__value">0.35 s</p>
+              </div>
+              <div class="math-card">
+                <span class="eyebrow">Schroeder freq</span>
+                <p id="ac-rt-schroeder" class="math-card__value">157 Hz</p>
+              </div>
+              <div class="math-card">
+                <span class="eyebrow">Critical distance</span>
+                <p id="ac-rt-critdist" class="math-card__value">0.41 m</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. Helmholtz Resonance -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">Helmholtz Resonance</h3>
+              <span class="eyebrow">bass-reflex port + cavity</span>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-4">
+              <label class="block">
+                <span class="eyebrow">Port dia cm</span>
+                <input type="number" id="ac-hh-dia" value="5" step="0.1" min="0.1" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Port length cm</span>
+                <input type="number" id="ac-hh-len" value="10" step="0.1" min="0.1" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Cavity vol L</span>
+                <input type="number" id="ac-hh-vol" value="30" step="0.1" min="0.1" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-4 math-card" aria-live="polite">
+              <span class="eyebrow">Resonance frequency</span>
+              <p id="ac-hh-freq" class="math-card__value">93.7 Hz</p>
+            </div>
+          </div>
+
+          <!-- 8. Port Length Calculator -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">Port Length Calculator</h3>
+              <span class="eyebrow">speaker box tuning</span>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-4">
+              <label class="block">
+                <span class="eyebrow">Box volume L</span>
+                <input type="number" id="ac-pl-vol" value="30" step="0.1" min="0.1" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Port dia cm</span>
+                <input type="number" id="ac-pl-dia" value="5" step="0.1" min="0.1" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Tuning Hz</span>
+                <input type="number" id="ac-pl-tune" value="40" step="0.1" min="1" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-4 math-card" aria-live="polite">
+              <span class="eyebrow">Port length</span>
+              <p id="ac-pl-len" class="math-card__value">25.3 cm</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Method & limitations -->
+        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 sm:p-6 text-[0.86rem] leading-[1.65] text-muted-text">
+          <p class="font-semibold text-text">Method &amp; limitations</p>
+          <div class="mt-3 space-y-3">
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">Speed of sound</p>
+              <p>Computed via ISO&nbsp;9613-1: <code>c = 331.3 &middot; &radic;(1 + T/273.15)</code>, where T is temperature in Celsius. This assumes dry air at standard pressure (101.325 kPa). Humidity adds up to ~0.4% at 100% RH / 40 °C, which is negligible for most audio work. The wavelength, delay, and Helmholtz calculators all pull c from the temperature input in the Speed of Sound card.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">RT60 — Sabine vs. Eyring</p>
+              <p>The Sabine equation (<code>T60 = 0.161·V / A</code>) treats the room as a diffuse, well-mixed field and assumes continuous absorption. It is accurate for &alpha; &lt; 0.2 (live rooms). Eyring (<code>T60 = 0.161·V / (&minus;S·ln(1&minus;&alpha;))</code>) corrects for higher absorption by modelling the sound as a discrete decay series. Eyring converges to Sabine at low &alpha; but gives shorter times at high &alpha;. Neither equation accounts for air absorption at high frequencies (significant above 2 kHz in large rooms), non-rectangular geometries, or frequency-dependent &alpha;. The critical distance uses <code>d<sub>c</sub> = &radic;(Q·R / 16&pi;)</code> with room constant <code>R = S·&alpha;/(1&minus;&alpha;)</code>. The Schroeder frequency (<code>f<sub>s</sub> = 2000&middot;&radic;(T60/V)</code>) marks the transition from modal to diffuse field behaviour.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">SPL Summation</p>
+              <p>Assumes <strong>incoherent</strong> sources (random phase). For coherent sources (identical signals in phase), add 6 dB per doubling instead. This calculator uses the incoherent rule: sum the linear pressures, then convert back to dB. For N identical sources: <code>SPL_total = SPL_single + 10·log10(N)</code>.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">dB / Ratio</p>
+              <p>Voltage or sound-pressure ratios use the 20·log10 convention (doubling = +6 dB). Power or intensity ratios use 10·log10 (doubling = +3 dB). Toggle between the two conventions; the calculator updates bidirectionally.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">Helmholtz &amp; Port Length</p>
+              <p>The Helmholtz formula with flanged end-correction (<code>L_eff = L + 0.85&middot;r</code>): <code>f = (c/2&pi;)·&radic;(S/(V·L_eff))</code>. The port length formula inverts this for a given tuning frequency. Both assume a single circular port, rigid walls, and an enclosure dimension much smaller than the wavelength of interest — the standard lumped-element model. Real-world results are affected by port flares, internal damping material, and driver compliance, so treat these as starting estimates for box design.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .calc-card {
+    border-radius: 18px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-card);
+    padding: 1.15rem 1.25rem;
+  }
+  .calc-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .calc-card__title {
+    font-size: 1.02rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .eyebrow {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mp-muted);
+  }
+  .tool-input {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+    color: var(--mp-text);
+    -moz-appearance: textfield;
+  }
+  .tool-input::-webkit-outer-spin-button,
+  .tool-input::-webkit-inner-spin-button {
+    opacity: 1;
+    height: 1.5rem;
+  }
+  .tool-input:focus {
+    outline: none;
+    border-color: var(--mp-cta);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-cta) 20%, transparent);
+  }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.7rem 0.85rem;
+  }
+  .math-card__value {
+    margin-top: 0.2rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 1.05rem;
+    font-weight: 650;
+    color: var(--mp-text);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.75rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--mp-muted);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .pill:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .spl-remove-btn {
+    align-self: flex-end;
+    margin-bottom: 0.15rem;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+  .spl-source-row .tool-input {
+    margin-bottom: 0;
+  }
+</style>
+
+<script>
+  import {
+    speedOfSound,
+    wavelength,
+    frequencyFromWavelength,
+    delayFromDistance,
+    distanceFromDelay,
+    splSumArray,
+    dbToRatio as dbToRatioVoltage,
+    ratioToDb,
+    rt60Sabine,
+    rt60Eyring,
+    criticalDistance,
+    schroederFrequency,
+    helmholtzFrequency,
+    portLength,
+  } from '../../lib/acoustics.ts';
+
+  function initAcousticCalculators() {
+    const root = document.getElementById('acoustic-calc-root');
+    if (!root || root.dataset.init) return;
+    root.dataset.init = 'true';
+
+    // ---- shared speed of sound ----
+    const tempInput = document.getElementById('ac-temp') as HTMLInputElement;
+    const speedOutM = document.getElementById('ac-speed-m') as HTMLElement;
+    const speedOutFt = document.getElementById('ac-speed-ft') as HTMLElement;
+
+    let currentC = 343; // default @ 20°C
+
+    function updateSpeed() {
+      const raw = parseFloat(tempInput.value);
+      if (isNaN(raw) || raw < -273.15 || raw > 1000) {
+        speedOutM.textContent = '\u2014';
+        speedOutFt.textContent = '\u2014';
+        currentC = 0;
+        return;
+      }
+      currentC = speedOfSound(raw);
+      speedOutM.textContent = `${currentC.toFixed(1)} m/s`;
+      speedOutFt.textContent = `${(currentC * 3.28084).toFixed(1)} ft/s`;
+    }
+    tempInput.addEventListener('input', () => { updateSpeed(); updateWavelengthFromFreq(); updateDelayFromDist(); updateHelmholtz(); updatePortLength(); });
+    tempInput.addEventListener('change', updateSpeed);
+
+    // ---- wavelength / frequency ----
+    const freqInput = document.getElementById('ac-freq') as HTMLInputElement;
+    const wlInput = document.getElementById('ac-wl') as HTMLInputElement;
+    const wlOut = document.getElementById('ac-wl-out') as HTMLElement;
+    const periodOut = document.getElementById('ac-period') as HTMLElement;
+
+    let wlUpdating = false;
+
+    function updateWavelengthFromFreq() {
+      if (wlUpdating) return;
+      wlUpdating = true;
+      const f = parseFloat(freqInput.value);
+      if (!currentC || isNaN(f) || f <= 0) {
+        wlOut.textContent = '\u2014';
+        periodOut.textContent = '\u2014';
+        wlInput.value = '';
+      } else {
+        const wl = wavelength(f, currentC);
+        wlOut.textContent = `${wl.toFixed(3)} m`;
+        periodOut.textContent = `${(1000 / f).toFixed(3)} ms`;
+        wlInput.value = wl.toFixed(4);
+      }
+      wlUpdating = false;
+    }
+
+    function updateWavelengthFromWl() {
+      if (wlUpdating) return;
+      wlUpdating = true;
+      const wl = parseFloat(wlInput.value);
+      if (!currentC || isNaN(wl) || wl <= 0) {
+        freqInput.value = '';
+        wlOut.textContent = '\u2014';
+        periodOut.textContent = '\u2014';
+      } else {
+        const f = frequencyFromWavelength(wl, currentC);
+        freqInput.value = f >= 1 ? f.toFixed(2) : f.toFixed(4);
+        wlOut.textContent = `${wl.toFixed(3)} m`;
+        periodOut.textContent = `${(1000 / f).toFixed(3)} ms`;
+      }
+      wlUpdating = false;
+    }
+    freqInput.addEventListener('input', updateWavelengthFromFreq);
+    wlInput.addEventListener('input', updateWavelengthFromWl);
+
+    // ---- delay / distance ----
+    const distInput = document.getElementById('ac-dist') as HTMLInputElement;
+    const delayInput = document.getElementById('ac-delay') as HTMLInputElement;
+    const distFtOut = document.getElementById('ac-dist-ft') as HTMLElement;
+    const delaySamplesOut = document.getElementById('ac-delay-samples') as HTMLElement;
+
+    let delayUpdating = false;
+
+    function updateDelayFromDist() {
+      if (delayUpdating) return;
+      delayUpdating = true;
+      const d = parseFloat(distInput.value);
+      if (!currentC || isNaN(d) || d <= 0) {
+        delayInput.value = '';
+        distFtOut.textContent = '\u2014';
+        delaySamplesOut.textContent = '\u2014';
+      } else {
+        const delayMs = delayFromDistance(d, currentC);
+        delayInput.value = delayMs.toFixed(3);
+        distFtOut.textContent = `${(d * 3.28084).toFixed(3)} ft`;
+        delaySamplesOut.textContent = `${Math.round(delayMs / 1000 * 48000)} samples @48k`;
+      }
+      delayUpdating = false;
+    }
+
+    function updateDistFromDelay() {
+      if (delayUpdating) return;
+      delayUpdating = true;
+      const ms = parseFloat(delayInput.value);
+      if (!currentC || isNaN(ms) || ms <= 0) {
+        distInput.value = '';
+        distFtOut.textContent = '\u2014';
+        delaySamplesOut.textContent = '\u2014';
+      } else {
+        const d = distanceFromDelay(ms, currentC);
+        distInput.value = d.toFixed(4);
+        distFtOut.textContent = `${(d * 3.28084).toFixed(3)} ft`;
+        delaySamplesOut.textContent = `${Math.round(ms * 48)} samples @48k`;
+      }
+      delayUpdating = false;
+    }
+    distInput.addEventListener('input', updateDelayFromDist);
+    delayInput.addEventListener('input', updateDistFromDelay);
+
+    // ---- SPL Summation ----
+    const splSourcesEl = document.getElementById('ac-spl-sources') as HTMLElement;
+    const splAddBtn = document.getElementById('ac-spl-add') as HTMLButtonElement;
+    const splCountEl = document.getElementById('ac-spl-count') as HTMLElement;
+    const splResult = document.getElementById('ac-spl-result') as HTMLElement;
+    const MAX_SPL_SOURCES = 6;
+
+    function getSplValues(): number[] {
+      const inputs = splSourcesEl.querySelectorAll<HTMLInputElement>('.ac-spl-input');
+      const vals: number[] = [];
+      for (const inp of inputs) {
+        const v = parseFloat(inp.value);
+        if (!isNaN(v) && isFinite(v)) vals.push(v);
+      }
+      return vals;
+    }
+
+    function updateSpl() {
+      const vals = getSplValues();
+      if (vals.length < 2) {
+        splResult.textContent = '\u2014';
+        return;
+      }
+      const total = splSumArray(vals);
+      if (!isFinite(total)) {
+        splResult.textContent = '\u2014';
+        return;
+      }
+      splResult.textContent = `${total.toFixed(1)} dB`;
+    }
+
+    function refreshSplRowVisibility() {
+      const rows = splSourcesEl.querySelectorAll<HTMLElement>('.spl-source-row');
+      const count = rows.length;
+      splCountEl.textContent = `${count} of ${MAX_SPL_SOURCES}`;
+      splAddBtn.style.display = count >= MAX_SPL_SOURCES ? 'none' : '';
+
+      rows.forEach((row, i) => {
+        const btn = row.querySelector<HTMLButtonElement>('.spl-remove-btn');
+        if (btn) btn.classList.toggle('hidden', count <= 2);
+      });
+    }
+
+    function addSplSource() {
+      const rows = splSourcesEl.querySelectorAll<HTMLElement>('.spl-source-row');
+      if (rows.length >= MAX_SPL_SOURCES) return;
+      const idx = rows.length + 1;
+      const row = document.createElement('div');
+      row.className = 'spl-source-row flex items-center gap-2';
+      row.innerHTML = `
+        <label class="flex-1"><span class="eyebrow">Source ${idx} dB</span><input type="number" class="tool-input ac-spl-input" value="80" /></label>
+        <button type="button" class="spl-remove-btn pill" aria-label="Remove source">&minus;</button>
+      `;
+      splSourcesEl.appendChild(row);
+
+      const inp = row.querySelector<HTMLInputElement>('.ac-spl-input')!;
+      inp.addEventListener('input', updateSpl);
+      const rm = row.querySelector<HTMLButtonElement>('.spl-remove-btn')!;
+      rm.addEventListener('click', () => {
+        const currentRows = splSourcesEl.querySelectorAll<HTMLElement>('.spl-source-row');
+        if (currentRows.length <= 2) return;
+        row.remove();
+        renumberSplSources();
+        refreshSplRowVisibility();
+        updateSpl();
+      });
+
+      refreshSplRowVisibility();
+      updateSpl();
+    }
+
+    function renumberSplSources() {
+      const rows = splSourcesEl.querySelectorAll<HTMLElement>('.spl-source-row');
+      rows.forEach((row, i) => {
+        const label = row.querySelector<HTMLElement>('.eyebrow');
+        if (label) label.textContent = `Source ${i + 1} dB`;
+      });
+    }
+
+    splAddBtn.addEventListener('click', addSplSource);
+    splSourcesEl.querySelectorAll<HTMLInputElement>('.ac-spl-input').forEach(inp => {
+      inp.addEventListener('input', updateSpl);
+    });
+    splSourcesEl.querySelectorAll<HTMLButtonElement>('.spl-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rows = splSourcesEl.querySelectorAll<HTMLElement>('.spl-source-row');
+        if (rows.length <= 2) return;
+        btn.closest('.spl-source-row')?.remove();
+        renumberSplSources();
+        refreshSplRowVisibility();
+        updateSpl();
+      });
+    });
+
+    // ---- dB / Ratio ----
+    const dbModeRadios = document.querySelectorAll<HTMLInputElement>('input[name="ac-db-mode"]');
+    const dbValInput = document.getElementById('ac-db-val') as HTMLInputElement;
+    const ratioValInput = document.getElementById('ac-ratio-val') as HTMLInputElement;
+    const ratioOut = document.getElementById('ac-ratio-out') as HTMLElement;
+    const dbOut = document.getElementById('ac-db-out') as HTMLElement;
+
+    let dbRatioUpdating = false;
+
+    function getDbMode(): 'voltage' | 'power' {
+      for (const r of dbModeRadios) {
+        if (r.checked) return r.value as 'voltage' | 'power';
+      }
+      return 'voltage';
+    }
+
+    function dbToRatioDb(db: number, mode: 'voltage' | 'power'): number {
+      return mode === 'power' ? Math.pow(10, db / 10) : dbToRatioVoltage(db);
+    }
+
+    function ratioToDbCustom(ratio: number, mode: 'voltage' | 'power'): number {
+      if (ratio <= 0) return -Infinity;
+      return mode === 'power' ? 10 * Math.log10(ratio) : ratioToDb(ratio);
+    }
+
+    function updateFromDb() {
+      if (dbRatioUpdating) return;
+      dbRatioUpdating = true;
+      const db = parseFloat(dbValInput.value);
+      const mode = getDbMode();
+      if (isNaN(db) || !isFinite(db)) {
+        ratioOut.textContent = '\u2014';
+        dbOut.textContent = '\u2014';
+        ratioValInput.value = '';
+      } else {
+        const ratio = dbToRatioDb(db, mode);
+        ratioValInput.value = ratio.toFixed(4);
+        ratioOut.textContent = `${ratio.toFixed(4)}`;
+        dbOut.textContent = `${db.toFixed(2)} dB`;
+      }
+      dbRatioUpdating = false;
+    }
+
+    function updateFromRatio() {
+      if (dbRatioUpdating) return;
+      dbRatioUpdating = true;
+      const ratio = parseFloat(ratioValInput.value);
+      const mode = getDbMode();
+      if (isNaN(ratio) || ratio <= 0 || !isFinite(ratio)) {
+        ratioOut.textContent = '\u2014';
+        dbOut.textContent = '\u2014';
+        dbValInput.value = '';
+      } else {
+        const db = ratioToDbCustom(ratio, mode);
+        if (!isFinite(db)) {
+          ratioOut.textContent = '\u2014';
+          dbOut.textContent = '\u2014';
+        } else {
+          dbValInput.value = db.toFixed(2);
+          ratioOut.textContent = `${ratio.toFixed(4)}`;
+          dbOut.textContent = `${db.toFixed(2)} dB`;
+        }
+      }
+      dbRatioUpdating = false;
+    }
+
+    dbValInput.addEventListener('input', updateFromDb);
+    ratioValInput.addEventListener('input', updateFromRatio);
+    dbModeRadios.forEach(r => r.addEventListener('change', () => { updateFromDb(); }));
+
+    // ---- RT60 ----
+    const rtL = document.getElementById('ac-rt-l') as HTMLInputElement;
+    const rtW = document.getElementById('ac-rt-w') as HTMLInputElement;
+    const rtH = document.getElementById('ac-rt-h') as HTMLInputElement;
+    const rtAlpha = document.getElementById('ac-rt-alpha') as HTMLInputElement;
+    const rtQ = document.getElementById('ac-rt-q') as HTMLInputElement;
+    const rtVolOut = document.getElementById('ac-rt-vol') as HTMLElement;
+    const rtSabineOut = document.getElementById('ac-rt-sabine') as HTMLElement;
+    const rtEyringOut = document.getElementById('ac-rt-eyring') as HTMLElement;
+    const rtSchroederOut = document.getElementById('ac-rt-schroeder') as HTMLElement;
+    const rtCritDistOut = document.getElementById('ac-rt-critdist') as HTMLElement;
+
+    function updateRT60() {
+      const L = parseFloat(rtL.value);
+      const W = parseFloat(rtW.value);
+      const H = parseFloat(rtH.value);
+      const alpha = parseFloat(rtAlpha.value);
+      const Q = parseFloat(rtQ.value);
+
+      if (isNaN(L) || L <= 0 || isNaN(W) || W <= 0 || isNaN(H) || H <= 0) {
+        rtVolOut.textContent = '\u2014';
+        rtSabineOut.textContent = '\u2014';
+        rtEyringOut.textContent = '\u2014';
+        rtSchroederOut.textContent = '\u2014';
+        rtCritDistOut.textContent = '\u2014';
+        return;
+      }
+
+      const V = L * W * H;
+      const S = 2 * (L * W + L * H + W * H);
+      rtVolOut.textContent = `${V.toFixed(1)}`;
+
+      if (isNaN(alpha) || alpha <= 0 || alpha >= 1) {
+        rtSabineOut.textContent = '\u2014';
+        rtEyringOut.textContent = '\u2014';
+        rtSchroederOut.textContent = '\u2014';
+        rtCritDistOut.textContent = '\u2014';
+        return;
+      }
+
+      const A = S * alpha;
+      const sabine = rt60Sabine(V, A);
+      const eyring = rt60Eyring(V, S, alpha);
+      rtSabineOut.textContent = isFinite(sabine) ? `${sabine.toFixed(2)} s` : '\u2014';
+      rtEyringOut.textContent = isFinite(eyring) ? `${eyring.toFixed(2)} s` : '\u2014';
+
+      const t60 = isFinite(sabine) ? sabine : (isFinite(eyring) ? eyring : 0);
+      const sch = schroederFrequency(V, t60);
+      rtSchroederOut.textContent = isFinite(sch) ? `${Math.round(sch)} Hz` : '\u2014';
+
+      if (!isNaN(Q) && Q > 0 && alpha > 0 && alpha < 1) {
+        const R = (S * alpha) / (1 - alpha);
+        const dc = criticalDistance(Q, R);
+        rtCritDistOut.textContent = isFinite(dc) ? `${dc.toFixed(2)} m` : '\u2014';
+      } else {
+        rtCritDistOut.textContent = '\u2014';
+      }
+    }
+
+    [rtL, rtW, rtH, rtAlpha, rtQ].forEach(el => el.addEventListener('input', updateRT60));
+
+    // ---- Helmholtz Resonance ----
+    const hhDia = document.getElementById('ac-hh-dia') as HTMLInputElement;
+    const hhLen = document.getElementById('ac-hh-len') as HTMLInputElement;
+    const hhVol = document.getElementById('ac-hh-vol') as HTMLInputElement;
+    const hhFreq = document.getElementById('ac-hh-freq') as HTMLElement;
+
+    function updateHelmholtz() {
+      const diaCm = parseFloat(hhDia.value);
+      const lenCm = parseFloat(hhLen.value);
+      const volL = parseFloat(hhVol.value);
+      if (!currentC || isNaN(diaCm) || diaCm <= 0 || isNaN(lenCm) || lenCm <= 0 || isNaN(volL) || volL <= 0) {
+        hhFreq.textContent = '\u2014';
+        return;
+      }
+      const radiusM = (diaCm / 2) / 100;
+      const S = Math.PI * radiusM * radiusM;
+      const L = lenCm / 100;
+      const V = volL / 1000;
+      const f = helmholtzFrequency(S, L, V, currentC);
+      hhFreq.textContent = f > 0 ? `${f.toFixed(1)} Hz` : '\u2014';
+    }
+    [hhDia, hhLen, hhVol].forEach(el => el.addEventListener('input', updateHelmholtz));
+
+    // ---- Port Length ----
+    const plVol = document.getElementById('ac-pl-vol') as HTMLInputElement;
+    const plDia = document.getElementById('ac-pl-dia') as HTMLInputElement;
+    const plTune = document.getElementById('ac-pl-tune') as HTMLInputElement;
+    const plLen = document.getElementById('ac-pl-len') as HTMLElement;
+
+    function updatePortLength() {
+      const volL = parseFloat(plVol.value);
+      const diaCm = parseFloat(plDia.value);
+      const tuneHz = parseFloat(plTune.value);
+      if (!currentC || isNaN(volL) || volL <= 0 || isNaN(diaCm) || diaCm <= 0 || isNaN(tuneHz) || tuneHz <= 0) {
+        plLen.textContent = '\u2014';
+        return;
+      }
+      const radiusM = (diaCm / 2) / 100;
+      const S = Math.PI * radiusM * radiusM;
+      const Vb = volL / 1000;
+      const L_m = portLength(S, tuneHz, Vb, currentC);
+      const L_cm = L_m * 100;
+      plLen.textContent = L_cm > 0 ? `${L_cm.toFixed(1)} cm` : '\u2014';
+    }
+    [plVol, plDia, plTune].forEach(el => el.addEventListener('input', updatePortLength));
+
+    // ---- initialise all ----
+    updateSpeed();
+    updateWavelengthFromFreq();
+    updateDelayFromDist();
+    updateSpl();
+    updateRT60();
+    updateHelmholtz();
+    updatePortLength();
+    updateFromDb();
+    refreshSplRowVisibility();
+  }
+
+  document.addEventListener('astro:page-load', initAcousticCalculators);
+  initAcousticCalculators();
+</script>
