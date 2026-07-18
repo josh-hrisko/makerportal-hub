@@ -16,6 +16,7 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Fourier Epicycles', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -66,10 +67,10 @@ const breadcrumbSchema = {
               Draw a star, a heart, a shaky signature. Once you lift the pen, the path doesn't look like a single messy line anymore — it becomes a machine built from pure circular motion, one circle riding on the tip of another, all spinning at integer multiples of a base rate, reconstructing your exact wobble.
             </p>
             <p>
-              Ptolemy tried this to explain planets, stacking epicycles upon epicycles to fit retrograde loops. Fourier proved you can do it perfectly for <em>any</em> closed curve. Same math that powers spectral analysis in <a href="/blog/inside-biquadia" class="text-primary-cta underline underline-offset-2">Biquadia</a>, just rotated 90 degrees in your mind: instead of decomposing sound pressure over time into sine waves, you decompose $x(t)$ and $y(t)$ over time into spinning complex exponentials.
+              Ptolemy tried this to explain planets, stacking epicycles upon epicycles to fit retrograde loops. Fourier proved you can do it perfectly for <em>any</em> closed curve. Same math that powers spectral analysis in <a href="/blog/inside-biquadia" class="text-primary-cta underline underline-offset-2">Biquadia</a>, just rotated 90 degrees in your mind: instead of decomposing sound pressure over time into sine waves, you decompose <Math math="x(t)" /> and <Math math="y(t)" /> over time into spinning complex exponentials.
             </p>
             <p>
-              This playground makes that literal. You give it $z(t)=x(t)+i\,y(t)$, a walk in the complex plane. It computes how much of each pure spin $e^&#123;i 2\pi k t / N&#125;$ you need, then plays them back tip-to-tail. The tip draws you.
+              This playground makes that literal. You give it <Math math="z(t)=x(t)+i\,y(t)" />, a walk in the complex plane. It computes how much of each pure spin <Math math="e^{i 2\pi k t / N}" /> you need, then plays them back tip-to-tail. The tip draws you.
             </p>
           </div>
         </div>
@@ -83,40 +84,40 @@ const breadcrumbSchema = {
             <h2 id="intuition-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The intuition — ink as complex numbers</h2>
             <div class="mt-5 space-y-4 text-[0.95rem] leading-[1.75] text-muted-text">
               <p>
-                The canvas is the complex plane. Each point you draw is $z = x + i y$. Why complex? Because rotation becomes multiplication. Multiply by $e^&#123;i\theta&#125;$ and you rotate by $\theta$ with no matrix, no bookkeeping. A pure circle at constant speed is just $r e^&#123;i(2\pi f t + \phi)&#125;$ — radius $r$, frequency $f$, starting angle $\phi$.
+                The canvas is the complex plane. Each point you draw is <Math math="z = x + i y" />. Why complex? Because rotation becomes multiplication. Multiply by <Math math="e^{i\theta}" /> and you rotate by <Math math="\theta" /> with no matrix, no bookkeeping. A pure circle at constant speed is just <Math math="r e^{i(2\pi f t + \phi)}" /> — radius <Math math="r" />, frequency <Math math="f" />, starting angle <Math math="\phi" />.
               </p>
               <p>
-                Your drawing is a loop $z(t)$ with $t$ from $0$ to $1$. Fourier's trick: any such loop, no matter how jagged, is a sum of circles spinning at integer rates $k = \dots,-2,-1,0,1,2,\dots$. $k=0$ doesn't spin — it's the centroid, the average position. $k=1$ goes once around during your loop. $k=-1$ goes once the other way. $k=2$ twice as fast, and so on.
+                Your drawing is a loop <Math math="z(t)" /> with <Math math="t" /> from $0$ to $1$. Fourier's trick: any such loop, no matter how jagged, is a sum of circles spinning at integer rates <Math math="k = \dots,-2,-1,0,1,2,\dots" />. <Math math="k=0" /> doesn't spin — it's the centroid, the average position. <Math math="k=1" /> goes once around during your loop. <Math math="k=-1" /> goes once the other way. <Math math="k=2" /> twice as fast, and so on.
               </p>
               <p>
-                Magnitude controls size. If coefficient $X_k$ has large $|X_k|$, its circle is big and carries most of the shape. Phase controls orientation — where the circle starts at $t=0$. Add all circles tip-to-tail and the final tip traces $z(t)$ exactly. Remove small circles and you still get the gist but lose fine jitter. That is low-pass filtering.
+                Magnitude controls size. If coefficient <Math math="X_k" /> has large <Math math="|X_k|" />, its circle is big and carries most of the shape. Phase controls orientation — where the circle starts at <Math math="t=0" />. Add all circles tip-to-tail and the final tip traces <Math math="z(t)" /> exactly. Remove small circles and you still get the gist but lose fine jitter. That is low-pass filtering.
               </p>
               <p>
                 Three details make this playground feel right:
               </p>
               <ul class="list-disc pl-5 space-y-2 marker:text-muted-text/60">
-                <li><strong class="text-primary-text">Resampling to 140 points.</strong> Your hand produces uneven spacing — fast strokes leave few samples, slow strokes leave many. The code walks the polyline by arc length and emits $N=140$ uniformly spaced points via $resamplePath$. That erases drawing speed and keeps only geometry. Constant $SAMPLE\_COUNT=140$ keeps the DFT at $O(N^2)$ cheap and the animation crisp.</li>
-                <li><strong class="text-primary-text">Centroid first.</strong> Mean $c_x,c_y$ is subtracted before transform, computed as $c = \frac&#123;1&#125;&#123;N&#125;\sum_&#123;n&#125; z_n$. The animation origin is that $c$. Without this, the $k=0$ term would dominate with a huge radius to the page corner, and everything else would be a tiny detail orbiting far away.</li>
-                <li><strong class="text-primary-text">Sorted by amplitude.</strong> Raw frequency order is $0,1,2,\dots,N/2,-N/2+1,\dots,-1$. Visually more useful: sort by $|X_k|/N$, biggest radius first. Then slider $1 \to 60$ peels away importance rather than arbitrary high frequency. You see structure emerge, not noise.</li>
+                <li><strong class="text-primary-text">Resampling to 140 points.</strong> Your hand produces uneven spacing — fast strokes leave few samples, slow strokes leave many. The code walks the polyline by arc length and emits <Math math="N=140" /> uniformly spaced points via $resamplePath$. That erases drawing speed and keeps only geometry. Constant <Math math="SAMPLE\_COUNT=140" /> keeps the DFT at <Math math="O(N^2)" /> cheap and the animation crisp.</li>
+                <li><strong class="text-primary-text">Centroid first.</strong> Mean <Math math="c_x,c_y" /> is subtracted before transform, computed as <Math math="c = \frac{1}{N}\sum_{n} z_n" />. The animation origin is that <Math math="c" />. Without this, the <Math math="k=0" /> term would dominate with a huge radius to the page corner, and everything else would be a tiny detail orbiting far away.</li>
+                <li><strong class="text-primary-text">Sorted by amplitude.</strong> Raw frequency order is <Math math="0,1,2,\dots,N/2,-N/2+1,\dots,-1" />. Visually more useful: sort by <Math math="|X_k|/N" />, biggest radius first. Then slider <Math math="1 \to 60" /> peels away importance rather than arbitrary high frequency. You see structure emerge, not noise.</li>
               </ul>
               <p>
-                Animation runs $LOOP\_MS=9000$ ms per cycle — $t$ sweeps $0 \to 1$ every nine seconds, slow enough to see each epicycle turn. The pink trail buffer holds $TRAIL\_MAX = N \times 3 = 420$ points, about three full loops of history, then overwrites. That persistence lets you compare reconstruction vs ideal without infinite ink.
+                Animation runs <Math math="LOOP\_MS=9000" /> ms per cycle — <Math math="t" /> sweeps <Math math="0 \to 1" /> every nine seconds, slow enough to see each epicycle turn. The pink trail buffer holds <Math math="TRAIL\_MAX = N \times 3 = 420" /> points, about three full loops of history, then overwrites. That persistence lets you compare reconstruction vs ideal without infinite ink.
               </p>
             </div>
           </div>
           <div class="space-y-4">
             <div class="math-card !bg-card-bg">
               <p class="math-label">Think like this</p>
-              <p class="mt-3 text-[0.92rem] leading-[1.6] text-primary-text">A circle of radius $r$ spinning at $k$ turns per loop and offset by $\phi$ is $r e^&#123;i(2\pi k t + \phi)&#125;$. Chain 60 of them: first circle's tip becomes second's center. Biggest first. That's all this page does.</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.6] text-primary-text">A circle of radius <Math math="r" /> spinning at <Math math="k" /> turns per loop and offset by <Math math="\phi" /> is <Math math="r e^{i(2\pi k t + \phi)}" />. Chain 60 of them: first circle's tip becomes second's center. Biggest first. That's all this page does.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Radius and phase decoded</p>
-              <p class="mt-2 font-mono text-[0.82rem] leading-[1.6] text-primary-text">$r_k = |X_k| / N$ &nbsp; radius<br/>$\phi_k = \arg X_k = \operatorname&#123;atan2&#125;(\operatorname&#123;Im&#125; X_k, \operatorname&#123;Re&#125; X_k)$ &nbsp; start angle<br/>$f_k = k$ &nbsp; turns per loop, negative = clockwise</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">In code each term stores re, im, freq, amp, phase. $amp=\sqrt&#123;re^2+im^2&#125;$ is already divided by $N$, $phase=\operatorname&#123;atan2&#125;(im,re)$.</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.6] text-primary-text"><Math math="r_k = |X_k| / N" /> &nbsp; radius<br/><Math math="\phi_k = \arg X_k = \operatorname{atan2}(\operatorname{Im} X_k, \operatorname{Re} X_k)" /> &nbsp; start angle<br/><Math math="f_k = k" /> &nbsp; turns per loop, negative = clockwise</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">In code each term stores re, im, freq, amp, phase. <Math math="amp=\sqrt{re^2+im^2}" /> is already divided by <Math math="N" />, <Math math="phase=\operatorname{atan2}(im,re)" />.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Why uniform resample matters</p>
-              <p class="mt-3 text-[0.84rem] leading-[1.6] text-muted-text">If you kept raw mouse samples, fast strokes would be underweighted. Arc-length parameterization makes $t$ geometric, not temporal. 140 points captures a 5-point star's 10 corners easily, yet keeps DFT at $140^2 \approx 19600$ complex multiply-adds — instant in JS.</p>
+              <p class="mt-3 text-[0.84rem] leading-[1.6] text-muted-text">If you kept raw mouse samples, fast strokes would be underweighted. Arc-length parameterization makes <Math math="t" /> geometric, not temporal. 140 points captures a 5-point star's 10 corners easily, yet keeps DFT at <Math math="140^2 \approx 19600" /> complex multiply-adds — instant in JS.</p>
             </div>
           </div>
         </div>
@@ -132,9 +133,9 @@ const breadcrumbSchema = {
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">1. From stroke to signal</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>After resampling you have $N=140$ points $(x_n,y_n)$, $n=0\dots N-1$, closed so $z_N=z_0$. Build $z_n = x_n + i y_n$. Subtract centroid $c_x + i c_y$ to place animation origin at shape center. Call the zero-mean signal $\tilde&#123;z&#125;_n$.</p>
+                <p>After resampling you have <Math math="N=140" /> points <Math math="(x_n,y_n)" />, <Math math="n=0\dots N-1" />, closed so <Math math="z_N=z_0" />. Build <Math math="z_n = x_n + i y_n" />. Subtract centroid <Math math="c_x + i c_y" /> to place animation origin at shape center. Call the zero-mean signal <Math math="\tilde{z}_n" />.</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
-                  $$ \tilde&#123;z&#125;_n = (x_n - c_x) + i (y_n - c_y),\quad c_x = \frac&#123;1&#125;&#123;N&#125;\sum_&#123;n=0&#125;^&#123;N-1&#125; x_n,\; c_y = \frac&#123;1&#125;&#123;N&#125;\sum_&#123;n=0&#125;^&#123;N-1&#125; y_n $$
+                  <Math math="\tilde{z}_n = (x_n - c_x) + i (y_n - c_y),\quad c_x = \frac{1}{N}\sum_{n=0}^{N-1} x_n,\; c_y = \frac{1}{N}\sum_{n=0}^{N-1} y_n" display />
                 </div>
               </div>
             </div>
@@ -142,27 +143,27 @@ const breadcrumbSchema = {
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">2. Analysis — Discrete Fourier Transform</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>DFT asks: how much of each pure spin $e^&#123;i 2\pi k n / N&#125;$ lives inside $\tilde&#123;z&#125;_n$? Project onto each spin:</p>
+                <p>DFT asks: how much of each pure spin <Math math="e^{i 2\pi k n / N}" /> lives inside <Math math="\tilde{z}_n" />? Project onto each spin:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
-                  $$ X_k = \sum_&#123;n=0&#125;^&#123;N-1&#125; \tilde&#123;z&#125;_n\, e^&#123;-i 2\pi k n / N&#125;,\qquad k=0\dots N-1 $$
-                  $$ e^&#123;-i\theta&#125; = \cos\theta - i\sin\theta $$
-                  <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">Code loops exactly this: $re += \tilde&#123;x&#125;_n\cos\phi + \tilde&#123;y&#125;_n\sin\phi$, $im += -\tilde&#123;x&#125;_n\sin\phi + \tilde&#123;y&#125;_n\cos\phi$ with $\phi=2\pi k n / N$, then $re/=N, im/=N$. So stored $re,im$ already include $1/N$.</p>
+                  <Math math="X_k = \sum_{n=0}^{N-1} \tilde{z}_n\, e^{-i 2\pi k n / N},\qquad k=0\dots N-1" display />
+                  <Math math="e^{-i\theta} = \cos\theta - i\sin\theta" display />
+                  <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">Code loops exactly this: <Math math="re += \tilde{x}_n\cos\phi + \tilde{y}_n\sin\phi" />, <Math math="im += -\tilde{x}_n\sin\phi + \tilde{y}_n\cos\phi" /> with <Math math="\phi=2\pi k n / N" />, then <Math math="re/=N, im/=N" />. So stored $re,im$ already include $1/N$.</p>
                 </div>
-                <p>Interpretation: $X_k / N$ is amplitude and phase of the circle that spins $k$ times per loop. In raw DFT ordering, $k \gt N/2$ corresponds to negative frequency $k-N$, i.e., clockwise spins. The code converts: $freq = k \le N/2 \,?\, k : k-N$. That's why you see both positive and negative $freq$ in sorted terms — you need both directions to make non-circular shapes.</p>
+                <p>Interpretation: <Math math="X_k / N" /> is amplitude and phase of the circle that spins <Math math="k" /> times per loop. In raw DFT ordering, <Math math="k \gt N/2" /> corresponds to negative frequency <Math math="k-N" />, i.e., clockwise spins. The code converts: <code>freq = k &lt;= N/2 ? k : k-N</code>. That's why you see both positive and negative <code>freq</code> in sorted terms — you need both directions to make non-circular shapes.</p>
               </div>
             </div>
 
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">3. Synthesis — epicycle reconstruction</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>Rebuild the path at continuous time $t\in[0,1)$ by summing circles:</p>
+                <p>Rebuild the path at continuous time <Math math="t\in[0,1)" /> by summing circles:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
-                  $$ p(t) = c + \frac&#123;1&#125;&#123;N&#125;\sum_&#123;k&#125; X_k\, e^&#123;i 2\pi k t&#125; \approx c + \sum_&#123;k\in\text&#123;kept&#125;&#125; r_k e^&#123;i(2\pi f_k t + \phi_k)&#125; $$
-                  $$ r_k = |X_k|/N,\quad \phi_k = \arg X_k $$
-                  <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">In animation $t = ((now - loopStart) \bmod LOOP\_MS)/LOOP\_MS$, $LOOP\_MS=9000$. Each frame computes $ang_k = 2\pi f_k t + \phi_k$, steps $x_&#123;k+1&#125;=x_k+r_k\cos ang_k$, $y_&#123;k+1&#125;=y_k+r_k\sin ang_k$ tip-to-tail. Trail pushes final $(x,y)$.</p>
+                  <Math math="p(t) = c + \frac{1}{N}\sum_{k} X_k\, e^{i 2\pi k t} \approx c + \sum_{k\in\text{kept}} r_k e^{i(2\pi f_k t + \phi_k)}" display />
+                  <Math math="r_k = |X_k|/N,\quad \phi_k = \arg X_k" display />
+                  <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">In animation <Math math="t = ((now - loopStart) \bmod LOOP\_MS)/LOOP\_MS" />, <Math math="LOOP\_MS=9000" />. Each frame computes <Math math="ang_k = 2\pi f_k t + \phi_k" />, steps <Math math="x_{k+1}=x_k+r_k\cos ang_k" />, <Math math="y_{k+1}=y_k+r_k\sin ang_k" /> tip-to-tail. Trail pushes final $(x,y)$.</p>
                 </div>
-                <p>Use $M$ terms instead of $N$ and you get low-pass filtering. Dropping high $|k|$ removes fast wobble — exactly how JPEG discards high DCT coefficients, how audio codecs shave brilliance, how Biquadia's filter shelves high frequencies. Keeping only biggest $|X_k|$ rather than lowest $|k|$ is even smarter: biggest circles first, perceptually optimal compression.</p>
-                <p>Sharp corners need high $|k|$. Truncate and you see Gibbs phenomenon: ringing overshoot near discontinuities, about $9\%$ overshoot that never vanishes, only compresses in width as you add terms. That's why a star point looks rounded with few terms, then develops a tiny ripple that hugs the tip as you crank to 60.</p>
+                <p>Use <Math math="M" /> terms instead of <Math math="N" /> and you get low-pass filtering. Dropping high $|k|$ removes fast wobble — exactly how JPEG discards high DCT coefficients, how audio codecs shave brilliance, how Biquadia's filter shelves high frequencies. Keeping only biggest <Math math="|X_k|" /> rather than lowest $|k|$ is even smarter: biggest circles first, perceptually optimal compression.</p>
+                <p>Sharp corners need high $|k|$. Truncate and you see Gibbs phenomenon: ringing overshoot near discontinuities, about <Math math="9\%" /> overshoot that never vanishes, only compresses in width as you add terms. That's why a star point looks rounded with few terms, then develops a tiny ripple that hugs the tip as you crank to 60.</p>
               </div>
             </div>
           </div>
@@ -170,23 +171,23 @@ const breadcrumbSchema = {
           <div class="space-y-4">
             <div class="math-card !bg-card-bg">
               <p class="math-label">State that actually travels</p>
-              <p class="mt-2 font-mono text-[0.9rem] text-primary-text">$$ \mathbf&#123;X&#125; = [X_0,\dots,X_&#123;N-1&#125;],\; N=140 $$</p>
-              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">140 complex coefficients, DC removed for origin. Sorted view keeps $M\le 60$ of them. Slider maps $M$ to visual fidelity. No FFT — naive $O(N^2)$ DFT, $19.6k$ ops, faster to write than to import FFT and clearer to read.</p>
+              <p class="mt-2 font-mono text-[0.9rem] text-primary-text"><Math math="\mathbf{X} = [X_0,\dots,X_{N-1}],\; N=140" display /></p>
+              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">140 complex coefficients, DC removed for origin. Sorted view keeps <Math math="M\le 60" /> of them. Slider maps <Math math="M" /> to visual fidelity. No FFT — naive <Math math="O(N^2)" /> DFT, $19.6k$ ops, faster to write than to import FFT and clearer to read.</p>
             </div>
             <div class="math-card !bg-card-bg">
               <p class="math-label">Frequency mapping</p>
-              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text">$$ f_k = \begin&#123;cases&#125; k & k\le N/2\\ k-N & k \gt N/2 \end&#123;cases&#125; $$</p>
-              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">$f_k \gt 0$ counter-clockwise, $f_k \lt 0$ clockwise. Need both to trace arbitrary loops. A perfect circle needs only $k=1$ (or $-1$). A figure-8 needs $k=\pm1$ balanced.</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text"><Math math="f_k = \begin{cases} k &amp; k\le N/2\\ k-N &amp; k \gt N/2 \end{cases}" display /></p>
+              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text"><Math math="f_k \gt 0" /> counter-clockwise, <Math math="f_k \lt 0" /> clockwise. Need both to trace arbitrary loops. A perfect circle needs only <Math math="k=1" /> (or $-1$). A figure-8 needs <Math math="k=\pm1" /> balanced.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Low-pass as smoothing</p>
-              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text">$$ p_M(t) = c + \sum_&#123;j=1&#125;^&#123;M&#125; r_j e^&#123;i(2\pi f_j t+\phi_j)&#125; $$</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Energy compaction: usually top 8 circles hold $90\%+$ of power for cartoon shapes. Rest is edges, hand tremor, sampling noise. Slider is literally a bandwidth knob.</p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text"><Math math="p_M(t) = c + \sum_{j=1}^{M} r_j e^{i(2\pi f_j t+\phi_j)}" display /></p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Energy compaction: usually top 8 circles hold <Math math="90\%+" /> of power for cartoon shapes. Rest is edges, hand tremor, sampling noise. Slider is literally a bandwidth knob.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Why Gibbs rings</p>
-              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text">$$ \text&#123;step discontinuity&#125; \implies \hat&#123;f&#125;_M \text&#123; overshoots &#125; \approx 1.089\ldots $$</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A sharp corner is high-frequency. Truncate Fourier series and partial sum overshoots by $\approx 9\%$. Add more terms: overshoot moves closer to corner, doesn't vanish. Draw a star and push slider $20\to60$ — watch tips ripple, that's Gibbs live.</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text"><Math math="\text{step discontinuity} \implies \hat{f}_M \text{ overshoots } \approx 1.089\ldots" display /></p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A sharp corner is high-frequency. Truncate Fourier series and partial sum overshoots by <Math math="\approx 9\%" />. Add more terms: overshoot moves closer to corner, doesn't vanish. Draw a star and push slider <Math math="20\to60" /> — watch tips ripple, that's Gibbs live.</p>
             </div>
           </div>
         </div>
@@ -201,10 +202,10 @@ const breadcrumbSchema = {
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Start with presets</h3>
               <div class="mt-3 space-y-3 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p><strong class="text-primary-text">Circle:</strong> one dominant $k=1$ circle, others near zero. Slider $1\to2$ jumps from dot at centroid to perfect circle. Pure tone in audio terms.</p>
-                <p><strong class="text-primary-text">Star:</strong> 5 points = 5-fold symmetry. Spectrum spikes at $k=\pm5,\pm10,\dots$. With 5-8 terms you get lumpy star; $15+$ sharpens points but Gibbs ripples appear at tips. Shows why high $|k|$ equals edge detail.</p>
-                <p><strong class="text-primary-text">Infinity / figure-8:</strong> needs $k=1$ and $k=-1$ with almost equal amplitude — counter and clockwise battles. Two terms give an ellipse, three give a pinched loop. Nice demonstration that you can't make a figure-8 from only CCW circles.</p>
-                <p><strong class="text-primary-text">Heart:</strong> smooth bulge plus sharp cusp at bottom. Low $k$ capture bulge, cusp needs high $k$. Watch bottom point evolve: $M=5$ rounded, $M=20$ pointed, $M=40$ slight ringing either side.</p>
+                <p><strong class="text-primary-text">Circle:</strong> one dominant <Math math="k=1" /> circle, others near zero. Slider <Math math="1\to2" /> jumps from dot at centroid to perfect circle. Pure tone in audio terms.</p>
+                <p><strong class="text-primary-text">Star:</strong> 5 points = 5-fold symmetry. Spectrum spikes at <Math math="k=\pm5,\pm10,\dots" />. With 5-8 terms you get lumpy star; $15+$ sharpens points but Gibbs ripples appear at tips. Shows why high $|k|$ equals edge detail.</p>
+                <p><strong class="text-primary-text">Infinity / figure-8:</strong> needs <Math math="k=1" /> and <Math math="k=-1" /> with almost equal amplitude — counter and clockwise battles. Two terms give an ellipse, three give a pinched loop. Nice demonstration that you can't make a figure-8 from only CCW circles.</p>
+                <p><strong class="text-primary-text">Heart:</strong> smooth bulge plus sharp cusp at bottom. Low <Math math="k" /> capture bulge, cusp needs high <Math math="k" />. Watch bottom point evolve: <Math math="M=5" /> rounded, <Math math="M=20" /> pointed, <Math math="M=40" /> slight ringing either side.</p>
                 <p><strong class="text-primary-text">Spiral:</strong> not closed, but code closes it with a line back to center. That closure edge is a discontinuity, so spectrum spreads wide — needs many terms, low-pass looks like shrinking coil. Good stress test for Gibbs.</p>
                 <p><strong class="text-primary-text">MP monogram:</strong> multiple straight segments + bowl. Fourier hates straight lines and corners — needs many high frequencies. Demonstrates compression limit: text is hard.</p>
               </div>
@@ -213,11 +214,11 @@ const breadcrumbSchema = {
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">The terms slider decoded</h3>
               <div class="mt-3 space-y-3 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p><strong class="text-primary-text">$M=1$</strong> — dot at centroid $c$. You removed all rotation, left only DC. Slightly anticlimactic, proves DC handling works.</p>
-                <p><strong class="text-primary-text">$M=2$ to $3$</strong> — best-fit ellipse(s). Two largest circles make an ellipse, third adds offset bulge. Any smooth loop looks roughly elliptical at this level — same reason first two principal components capture most variance.</p>
-                <p><strong class="text-primary-text">$M=5$ to $10$</strong> — recognizable. Star shows 5 points, heart shows asymmetry, infinity pinches. This band is sweet spot for “aha” — enough structure, not too much clutter.</p>
-                <p><strong class="text-primary-text">$M=15$ to $30$</strong> — details, corners start to bite. You trade cleanliness for fidelity. Good range to see Gibbs begin.</p>
-                <p><strong class="text-primary-text">$M=40$ to $60$</strong> — nearly pixel-perfect, includes hand tremor and resampling artifacts. At $60$ you kept $60/140 \approx 43\%$ of coefficients — close to lossless. Beyond 60 diminishing returns; remaining terms are near noise floor.</p>
+                <p><strong class="text-primary-text"><Math math="M=1" /></strong> — dot at centroid <Math math="c" />. You removed all rotation, left only DC. Slightly anticlimactic, proves DC handling works.</p>
+                <p><strong class="text-primary-text"><Math math="M=2" /> to $3$</strong> — best-fit ellipse(s). Two largest circles make an ellipse, third adds offset bulge. Any smooth loop looks roughly elliptical at this level — same reason first two principal components capture most variance.</p>
+                <p><strong class="text-primary-text"><Math math="M=5" /> to $10$</strong> — recognizable. Star shows 5 points, heart shows asymmetry, infinity pinches. This band is sweet spot for “aha” — enough structure, not too much clutter.</p>
+                <p><strong class="text-primary-text"><Math math="M=15" /> to $30$</strong> — details, corners start to bite. You trade cleanliness for fidelity. Good range to see Gibbs begin.</p>
+                <p><strong class="text-primary-text"><Math math="M=40" /> to $60$</strong> — nearly pixel-perfect, includes hand tremor and resampling artifacts. At $60$ you kept <Math math="60/140 \approx 43\%" /> of coefficients — close to lossless. Beyond 60 diminishing returns; remaining terms are near noise floor.</p>
               </div>
             </div>
 
@@ -227,7 +228,7 @@ const breadcrumbSchema = {
                 <li>Draw <em>slowly</em> and close the loop near start — closure gap is linearly interpolated and creates a high-frequency edge.</li>
                 <li>Single non-intersecting loop beats scribble. Self-intersections still work, but spectrum smears — more high $|k|$ needed.</li>
                 <li>If you want clean circles, keep it convex. If you want ringing, draw sharp zig-zag — that's Gibbs you can trigger on demand.</li>
-                <li>Loop time $LOOP\_MS=9000$ is fixed for perception, not tied to draw speed. That decoupling is deliberate — geometry, not timing.</li>
+                <li>Loop time <Math math="LOOP\_MS=9000" /> is fixed for perception, not tied to draw speed. That decoupling is deliberate — geometry, not timing.</li>
               </ul>
             </div>
           </div>
@@ -237,16 +238,16 @@ const breadcrumbSchema = {
               <p class="font-mono text-[0.64rem] uppercase tracking-[0.1em] text-muted-text">Tweaks that matter</p>
               <div class="mt-4 space-y-4 text-[0.88rem] leading-[1.6] text-muted-text">
                 <div>
-                  <p class="font-semibold text-primary-text">$SAMPLE\_COUNT=140$</p>
-                  <p>Uniform arc-length resample, $O(L)$ walk. 140 balances detail vs $N^2$ cost and visual clutter. Raise it and you get hairline fidelity but slider needs more terms; lower and sharp corners alias.</p>
+                  <p class="font-semibold text-primary-text"><Math math="SAMPLE\_COUNT=140" /></p>
+                  <p>Uniform arc-length resample, <Math math="O(L)" /> walk. 140 balances detail vs <Math math="N^2" /> cost and visual clutter. Raise it and you get hairline fidelity but slider needs more terms; lower and sharp corners alias.</p>
                 </div>
                 <div>
-                  <p class="font-semibold text-primary-text">$LOOP\_MS=9000$ ms</p>
-                  <p>Full period for $t$ wrap. Chosen so $k=10$ circle completes 10 turns in 9 s — you can still follow it by eye. Faster would blur, slower would drag. Trail $TRAIL\_MAX=420$ = 3 loops covers persistence without unbounded memory.</p>
+                  <p class="font-semibold text-primary-text"><Math math="LOOP\_MS=9000" /> ms</p>
+                  <p>Full period for <Math math="t" /> wrap. Chosen so <Math math="k=10" /> circle completes 10 turns in 9 s — you can still follow it by eye. Faster would blur, slower would drag. Trail <Math math="TRAIL\_MAX=420" /> = 3 loops covers persistence without unbounded memory.</p>
                 </div>
                 <div>
                   <p class="font-semibold text-primary-text">Sorting by $amp$ not $|k|$</p>
-                  <p>Low $|k|$ first would give classic low-pass. Sorting by $|X_k|/N$ gives perceptual low-pass — biggest visual contributors first. For star, $k=5$ outranks $k=2$ despite higher frequency, because symmetry demands it.</p>
+                  <p>Low $|k|$ first would give classic low-pass. Sorting by <Math math="|X_k|/N" /> gives perceptual low-pass — biggest visual contributors first. For star, <Math math="k=5" /> outranks <Math math="k=2" /> despite higher frequency, because symmetry demands it.</p>
                 </div>
               </div>
             </div>
@@ -263,7 +264,7 @@ const breadcrumbSchema = {
 
             <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
               <p class="font-semibold text-primary-text">Why this matters for audio DSP</p>
-              <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Same transform, different domain. <a href="/blog/inside-biquadia" class="text-primary-cta underline underline-offset-2">Biquadia</a>'s spectrogram shows $X_k(t)$ sliding over windows of audio. Here $t$ is not time but position along loop. Sorting by amp is like finding dominant harmonics — fundamental vs overtones. Low-pass by dropping high $|k|$ is identical to low-pass filter in audio: it smooths transients, causes pre-ring near attacks, which is Gibbs in time domain. Once you see it on a star, you'll hear it on a snare.</p>
+              <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Same transform, different domain. <a href="/blog/inside-biquadia" class="text-primary-cta underline underline-offset-2">Biquadia</a>'s spectrogram shows <Math math="X_k(t)" /> sliding over windows of audio. Here <Math math="t" /> is not time but position along loop. Sorting by amp is like finding dominant harmonics — fundamental vs overtones. Low-pass by dropping high $|k|$ is identical to low-pass filter in audio: it smooths transients, causes pre-ring near attacks, which is Gibbs in time domain. Once you see it on a star, you'll hear it on a snare.</p>
             </div>
           </div>
         </div>

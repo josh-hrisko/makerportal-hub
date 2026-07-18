@@ -16,6 +16,7 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Driver Nonlinearity Lab', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -196,55 +197,55 @@ const breadcrumbSchema = {
       <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The motor is linear until you ask it to work</h2>
         <p class="mt-3 max-w-3xl text-[0.95rem] leading-[1.7] text-muted-text">
-          Thiele-Small looks innocent at 1 watt. Push a driver to $X_&#123;max&#125;$ and three curves betray you: $Bl(x)$ falls when coil leaves the gap, $K_&#123;ms&#125;(x)$ stiffens when spider and surround stretch, $Le(x)$ breathes with position. Each one is a distortion generator. This lab lets you dial them and watch the sine turn into something else.
+          Thiele-Small looks innocent at 1 watt. Push a driver to <Math math="X_{max}" /> and three curves betray you: <Math math="Bl(x)" /> falls when coil leaves the gap, <Math math="K_{ms}(x)" /> stiffens when spider and surround stretch, <Math math="Le(x)" /> breathes with position. Each one is a distortion generator. This lab lets you dial them and watch the sine turn into something else.
         </p>
 
         <div class="mt-8 grid gap-5 md:grid-cols-2">
           <div class="math-card">
             <p class="math-label">1 — Bl(x): force factor droop</p>
             <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
-              Ideal motor gives constant $Bl$. Real gap has finite height. As coil moves out, fewer turns sit in $B$-field. Force per amp drops. If coil is centered, droop is symmetric; if offset (common after sag or assembly), one side drops earlier — even-order distortion.
+              Ideal motor gives constant <Math math="Bl" />. Real gap has finite height. As coil moves out, fewer turns sit in <Math math="B" />-field. Force per amp drops. If coil is centered, droop is symmetric; if offset (common after sag or assembly), one side drops earlier — even-order distortion.
             </p>
             <p class="mt-3 font-mono text-[0.78rem] leading-[1.55]">
-              $$ F_&#123;motor&#125; = Bl(x) \cdot i $$
+              <Math math="F_{motor} = Bl(x) \cdot i" display />
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
-              $$ Bl(x) = Bl_0 (1 - \beta |x / X_&#123;max&#125;|) $$
+              <Math math="Bl(x) = Bl_0 (1 - \beta |x / X_{max}|)" display />
             </p>
             <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
-              $\beta$ is asymmetry/shape knob. In Klippel measurements you see a bell curve, not this triangle — peak $Bl_0$ at rest, down to 70% at $X_&#123;max&#125;$ for a good long-throw, 50% for a cheap one. Twice excursion → twice loss → current has to rise → more heat → more compression. That coupling is outside this model, but you feel it in the motor SVG when status flips to "Coil out of gap".
+              <Math math="\beta" /> is asymmetry/shape knob. In Klippel measurements you see a bell curve, not this triangle — peak <Math math="Bl_0" /> at rest, down to 70% at <Math math="X_{max}" /> for a good long-throw, 50% for a cheap one. Twice excursion → twice loss → current has to rise → more heat → more compression. That coupling is outside this model, but you feel it in the motor SVG when status flips to "Coil out of gap".
             </p>
           </div>
 
           <div class="math-card">
             <p class="math-label">2 — Kms(x): spider gets angry</p>
             <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
-              Suspension compliance is progressive. Small $x$, soft. Large $x$, spider fibers align, surround folds stretch — stiffness climbs quadratically. This is symmetric by nature, so it makes odd harmonics.
+              Suspension compliance is progressive. Small <Math math="x" />, soft. Large <Math math="x" />, spider fibers align, surround folds stretch — stiffness climbs quadratically. This is symmetric by nature, so it makes odd harmonics.
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
-              $$ K_&#123;ms&#125;(x) = K_&#123;ms0&#125;(1 + \gamma (x/X_&#123;max&#125;)^2) $$
+              <Math math="K_{ms}(x) = K_{ms0}(1 + \gamma (x/X_{max})^2)" display />
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
-              $$ K_&#123;ms0&#125; = M_&#123;ms&#125;(2\pi f_s)^2 $$
+              <Math math="K_{ms0} = M_{ms}(2\pi f_s)^2" display />
             </p>
             <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
-              Fixed $f_s=40$ Hz here gives $K_&#123;ms0&#125;$. $\gamma$ multiplies the square term. $\gamma=0.2$ is a soft progressive spider, $\gamma=1$ is a harsh bottoming surround. Because force is $K_&#123;ms&#125;(x) \cdot x$, you get an $x^3$ term — same math that makes a Duffing oscillator generate 3rd harmonic. Push Vrms and watch waveform flatten on peaks.
+              Fixed <Math math="f_s=40" /> Hz here gives <Math math="K_{ms0}" />. <Math math="\gamma" /> multiplies the square term. <Math math="\gamma=0.2" /> is a soft progressive spider, <Math math="\gamma=1" /> is a harsh bottoming surround. Because force is <Math math="K_{ms}(x) \cdot x" />, you get an <Math math="x^3" /> term — same math that makes a Duffing oscillator generate 3rd harmonic. Push Vrms and watch waveform flatten on peaks.
             </p>
           </div>
 
           <div class="math-card">
             <p class="math-label">3 — Le(x): inductance modulates</p>
             <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
-              Voice-coil inductance depends on how much steel it overlaps. Move out, $L_e$ drops ~$\delta$. That sounds harmless until you realize impedance changes with position, so current waveform distorts even with perfect voltage drive. Add flux modulation (current itself modulates $B$) and you get $Bl(i)$ — not modeled here but measured by Klippel $L_&#123;e&#125;(x,i)$.
+              Voice-coil inductance depends on how much steel it overlaps. Move out, <Math math="L_e" /> drops ~<Math math="\delta" />. That sounds harmless until you realize impedance changes with position, so current waveform distorts even with perfect voltage drive. Add flux modulation (current itself modulates <Math math="B" />) and you get <Math math="Bl(i)" /> — not modeled here but measured by Klippel <Math math="L_{e}(x,i)" />.
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
-              $$ Le(x) = Le_0 (1 + \delta |x/X_&#123;max&#125;|) $$
+              <Math math="Le(x) = Le_0 (1 + \delta |x/X_{max}|)" display />
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
-              $$ i = \frac&#123;V_&#123;in&#125; - Bl(x) v&#125;&#123;R_e&#125; \quad\text&#123;DC approx, full: + Le·di/dt&#125;$$
+              <Math math="i = \frac{V_{in} - Bl(x) v}{R_e} \quad\text{DC approx, full: + Le·di/dt}" display />
             </p>
             <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
-              The back-EMF $Bl(x)v$ is velocity times force factor — it fights input voltage. When $Bl$ droops at peak $x$, back-EMF collapses, current spikes. That spike hits non-flat $K_&#123;ms&#125;$ and you have intermodulation. In the canvas lower half, watch $Bl(x)$ bell shrink with $\beta$ and dot trace current position.
+              The back-EMF <Math math="Bl(x)v" /> is velocity times force factor — it fights input voltage. When <Math math="Bl" /> droops at peak <Math math="x" />, back-EMF collapses, current spikes. That spike hits non-flat <Math math="K_{ms}" /> and you have intermodulation. In the canvas lower half, watch <Math math="Bl(x)" /> bell shrink with <Math math="\beta" /> and dot trace current position.
             </p>
           </div>
 
@@ -254,25 +255,25 @@ const breadcrumbSchema = {
               Any memoryless nonlinearity can be expanded:
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
-              $$ y = a_1 x + a_2 x^2 + a_3 x^3 + ... $$
+              <Math math="y = a_1 x + a_2 x^2 + a_3 x^3 + ..." display />
             </p>
             <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
-              Drive $x = \hat&#123;X&#125;\sin\omega t$:
+              Drive <Math math="x = \hat{X}\sin\omega t" />:
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
-              $$ x^2 = \frac&#123;\hat&#123;X&#125;^2&#125;&#123;2&#125;(1 - \cos 2\omega t) \rightarrow \text&#123;2nd harmonic + DC shift&#125; $$
+              <Math math="x^2 = \frac{\hat{X}^2}{2}(1 - \cos 2\omega t) \rightarrow \text{2nd harmonic + DC shift}" display />
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
-              $$ x^3 = \frac&#123;\hat&#123;X&#125;^3&#125;&#123;4&#125;(3\sin\omega t - \sin 3\omega t) \rightarrow \text&#123;3rd harmonic + fundamental compression&#125; $$
+              <Math math="x^3 = \frac{\hat{X}^3}{4}(3\sin\omega t - \sin 3\omega t) \rightarrow \text{3rd harmonic + fundamental compression}" display />
             </p>
             <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
-              So asymmetric $Bl(x)$ → even order (2nd), symmetric $K_&#123;ms&#125;(x)$ → odd order (3rd). Real driver does both. THD here computed from displacement spectrum via numerical harmonic extraction:
+              So asymmetric <Math math="Bl(x)" /> → even order (2nd), symmetric <Math math="K_{ms}(x)" /> → odd order (3rd). Real driver does both. THD here computed from displacement spectrum via numerical harmonic extraction:
             </p>
             <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
-              $$ THD = \frac&#123;\sqrt&#123;V_2^2+V_3^2+V_4^2&#125;&#125;&#123;V_1&#125; $$
+              <Math math="THD = \frac{\sqrt{V_2^2+V_3^2+V_4^2}}{V_1}" display />
             </p>
             <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
-              Klippel's measurement rig does this for real with laser and current sense, plotting $Bl(x)$, $K_&#123;ms&#125;(x)$, $Le(x)$ versus $x$. Golden rule: keep $Bl$ above 80% and $K_&#123;ms&#125;$ within 50% over intended $X$. Once outside, no motor feedback fixes mechanical bottoming.
+              Klippel's measurement rig does this for real with laser and current sense, plotting <Math math="Bl(x)" />, <Math math="K_{ms}(x)" />, <Math math="Le(x)" /> versus <Math math="x" />. Golden rule: keep <Math math="Bl" /> above 80% and <Math math="K_{ms}" /> within 50% over intended <Math math="X" />. Once outside, no motor feedback fixes mechanical bottoming.
             </p>
           </div>
 
@@ -280,14 +281,14 @@ const breadcrumbSchema = {
             <p class="math-label">5 — Playbook &amp; honesty</p>
             <p class="mt-2 text-[0.78rem] font-semibold text-primary-text">How to use</p>
             <ul class="mt-1 space-y-1.5 text-[0.74rem] leading-[1.55] text-muted-text" style="list-style: disc; padding-left: 1.1rem;">
-              <li>Set $V_&#123;rms&#125;=12$ V, $f=60$ Hz, $\beta=0.1$, $\gamma=0.2$ — this is a decent 6" woofer. Waveform looks sinusoidal, THD 2–5%, $Bl(x)$ dot stays near top.</li>
-              <li>Now push Vrms to 30 V or drop $X_&#123;max&#125;$ to 2 mm. Excursion exceeds gap, coil dot leaves bell, displacement waveform flattens, 3rd harmonic bar pops up in spectrum.</li>
-              <li>Isolate mechanisms: $\beta=0$, $\gamma=0.8$ → pure suspension odd distortion. $\beta=0.5$, $\gamma=0$ → even. Combine — you get real driver stew.</li>
-              <li>Lower $M_&#123;ms&#125;$ raises acceleration $a=F/M$, raises $f_s$ via $K_&#123;ms0&#125;=M(2\pi f_s)^2$ — lighter cone distorts more at high freq? Check.</li>
+              <li>Set <Math math="V_{rms}=12" /> V, <Math math="f=60" /> Hz, <Math math="\beta=0.1" />, <Math math="\gamma=0.2" /> — this is a decent 6" woofer. Waveform looks sinusoidal, THD 2–5%, <Math math="Bl(x)" /> dot stays near top.</li>
+              <li>Now push Vrms to 30 V or drop <Math math="X_{max}" /> to 2 mm. Excursion exceeds gap, coil dot leaves bell, displacement waveform flattens, 3rd harmonic bar pops up in spectrum.</li>
+              <li>Isolate mechanisms: <Math math="\beta=0" />, <Math math="\gamma=0.8" /> → pure suspension odd distortion. <Math math="\beta=0.5" />, <Math math="\gamma=0" /> → even. Combine — you get real driver stew.</li>
+              <li>Lower <Math math="M_{ms}" /> raises acceleration <Math math="a=F/M" />, raises <Math math="f_s" /> via <Math math="K_{ms0}=M(2\pi f_s)^2" /> — lighter cone distorts more at high freq? Check.</li>
             </ul>
             <p class="mt-3 text-[0.78rem] font-semibold text-primary-text">What this omits</p>
             <p class="mt-1 text-[0.74rem] leading-[1.55] text-muted-text">
-              Euler at 8 kHz timestep, no flux modulation $Bl(i)$, no eddy-current hysteresis in pole, no thermal memory, no cone breakup, no port nonlinearity, no equivalent circuit of $Q_&#123;ms&#125;$, $Q_&#123;es&#125;$. $Bl$, $K_&#123;ms&#125;$, $Le$ shapes are simplified polynomials — real curves have asymmetry, plateau, and hysteresis loops. THD is displacement THD via 1024-sample history, not acoustic SPL THD. Use for qualitative cause → effect, not for validating a driver design. For that, need Klippel LSI or laser vibrometer.
+              Euler at 8 kHz timestep, no flux modulation <Math math="Bl(i)" />, no eddy-current hysteresis in pole, no thermal memory, no cone breakup, no port nonlinearity, no equivalent circuit of <Math math="Q_{ms}" />, <Math math="Q_{es}" />. <Math math="Bl" />, <Math math="K_{ms}" />, <Math math="Le" /> shapes are simplified polynomials — real curves have asymmetry, plateau, and hysteresis loops. THD is displacement THD via 1024-sample history, not acoustic SPL THD. Use for qualitative cause → effect, not for validating a driver design. For that, need Klippel LSI or laser vibrometer.
             </p>
           </div>
         </div>

@@ -21,6 +21,7 @@ const breadcrumbSchema = {
 
 const weatherGeneratedAt = new Date(weatherData.generatedAt).toISOString();
 const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -91,7 +92,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
             <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Coastlines</p>
             <p class="mt-2 font-semibold text-[0.9rem] text-primary-text">Real geometry, self-hosted</p>
             <p class="mt-2 text-[0.86rem] leading-[1.65] text-muted-text">
-              Natural Earth 110m public-domain polygons, converted to GeoJSON and served from <code>/data/world-land-110m.json</code>. No live fetch to a map tile server. Projection is <code>d3.geoOrthographic</code> with clipAngle $90^\circ$, scale tied to canvas radius, updated on drag. We intentionally draw at low precision $0.1^\circ$ to keep frame rate while staying recognizable. Toggle wireframe vs filled — same geometry, two strokes.
+              Natural Earth 110m public-domain polygons, converted to GeoJSON and served from <code>/data/world-land-110m.json</code>. No live fetch to a map tile server. Projection is <code>d3.geoOrthographic</code> with clipAngle <Math math="90^\circ" />, scale tied to canvas radius, updated on drag. We intentionally draw at low precision <Math math="0.1^\circ" /> to keep frame rate while staying recognizable. Toggle wireframe vs filled — same geometry, two strokes.
             </p>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
@@ -99,13 +100,13 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
             <p class="mt-2 font-semibold text-[0.9rem] text-primary-text">Real astronomy from your clock</p>
             <div class="mt-2 space-y-3 text-[0.86rem] leading-[1.65] text-muted-text">
               <p>
-                No API. We compute subsolar latitude $\delta$ and longitude $\lambda_s$ from Julian Date $JD$. Steps: $T = (JD - 2451545)/36525$, mean longitude $L$, mean anomaly $M$, equation of center $C(M)$, apparent longitude, obliquity $\epsilon$, right ascension $\alpha = \text&#123;atan2&#125;(\cos\epsilon \sin\lambda, \cos\lambda)$, declination $\delta = \arcsin(\sin\epsilon \sin\lambda)$. Greenwich sidereal time from same $JD$ gives subsolar longitude.
+                No API. We compute subsolar latitude <Math math="\delta" /> and longitude <Math math="\lambda_s" /> from Julian Date <Math math="JD" />. Steps: <Math math="T = (JD - 2451545)/36525" />, mean longitude <Math math="L" />, mean anomaly <Math math="M" />, equation of center <Math math="C(M)" />, apparent longitude, obliquity <Math math="\epsilon" />, right ascension <Math math="\alpha = \text{atan2}(\cos\epsilon \sin\lambda, \cos\lambda)" />, declination <Math math="\delta = \arcsin(\sin\epsilon \sin\lambda)" />. Greenwich sidereal time from same <Math math="JD" /> gives subsolar longitude.
               </p>
               <p>
-                Terminator is the great circle $s \cdot p = 0$ where $s$ is sun vector, $p$ is surface point. We build orthonormal basis $u, v \perp s$ and sweep $p(t)=\cos t \, u + \sin t \, v$, $t \in [0,2\pi)$. Night shading is per-pixel $s \cdot n &lt; 0$ where $n$ is surface normal reconstructed from canvas $x,y$ plus viewer depth $\sqrt&#123;1 - x^2 - y^2&#125;$. Dot product sign decides day vs night, alpha ramps with $-|s\cdot n|$. That is why terminator is not a hard line but soft with grazing illumination.
+                Terminator is the great circle <Math math="s \cdot p = 0" /> where <Math math="s" /> is sun vector, <Math math="p" /> is surface point. We build orthonormal basis <Math math="u, v \perp s" /> and sweep <Math math="p(t)=\cos t \, u + \sin t \, v" />, <Math math="t \in [0,2\pi)" />. Night shading is per-pixel <Math math="s \cdot n \lt 0" /> where <Math math="n" /> is surface normal reconstructed from canvas <Math math="x,y" /> plus viewer depth <Math math="\sqrt{1 - x^2 - y^2}" />. Dot product sign decides day vs night, alpha ramps with <Math math="-|s\cdot n|" />. That is why terminator is not a hard line but soft with grazing illumination.
               </p>
               <p>
-                This is exact to $\sim0.01^\circ$ for modern dates — more than enough to watch sunset sweep across continents as you drag.
+                This is exact to <Math math="\sim0.01^\circ" /> for modern dates — more than enough to watch sunset sweep across continents as you drag.
               </p>
             </div>
           </div>
@@ -117,10 +118,10 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
                 Sixteen cities, real current conditions from Open-Meteo at build time, committed as <code>src/data/weather.json</code> with <code>generatedAt</code>. Refresh script hits weather API every 4 hours via GitHub Action, writes static JSON, no runtime fetch from browser. That avoids API keys in client and makes demo deterministic.
               </p>
               <p>
-                Temperature to color is piecewise linear interpolation through stops $-15^\circ$ to $40^\circ$ C: deep blue $\to$ cyan $\to$ green $\to$ amber $\to$ red. Dot placed by projecting $(\phi,\lambda)$ through same orthographic projection. Hidden behind globe if $p_z &lt; 0$ after rotation — d3-geo path returns null for backside, so cities disappear naturally as Earth spins, same as satellites.
+                Temperature to color is piecewise linear interpolation through stops <Math math="-15^\circ" /> to <Math math="40^\circ" /> C: deep blue <Math math="\to" /> cyan <Math math="\to" /> green <Math math="\to" /> amber <Math math="\to" /> red. Dot placed by projecting <Math math="(\phi,\lambda)" /> through same orthographic projection. Hidden behind globe if <Math math="p_z \lt 0" /> after rotation — d3-geo path returns null for backside, so cities disappear naturally as Earth spins, same as satellites.
               </p>
               <p>
-                Limitation: snapshot in time, not forecast. If you open at night and see $32^\circ$ C in Mumbai, that was current at last refresh, not predicted.
+                Limitation: snapshot in time, not forecast. If you open at night and see <Math math="32^\circ" /> C in Mumbai, that was current at last refresh, not predicted.
               </p>
             </div>
           </div>
@@ -129,13 +130,13 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
             <p class="mt-2 font-semibold text-[0.9rem] text-primary-text">Real TLE, simplified propagator</p>
             <div class="mt-2 space-y-3 text-[0.86rem] leading-[1.65] text-muted-text">
               <p>
-                TLE from CelesTrak, also scraped every 4 hours to <code>src/data/satellite.json</code>. Line 1 contains epoch $yyddd.ddd$, line 2 contains $i, \Omega, e, \omega, M_0, n$ in deg, deg, dimensionless, deg, deg, rev/day.
+                TLE from CelesTrak, also scraped every 4 hours to <code>src/data/satellite.json</code>. Line 1 contains epoch $yyddd.ddd$, line 2 contains <Math math="i, \Omega, e, \omega, M_0, n" /> in deg, deg, dimensionless, deg, deg, rev/day.
               </p>
               <p>
-                We parse $n$ rad/s, get semi-major axis $a = (GM / n^2)^&#123;1/3&#125;$ from Kepler third law, $GM=398600.4418$ km$^3$/s$^2$. Mean anomaly at now $M = M_0 + n \Delta t$, solve Kepler $M = E - e \sin E$ by Newton iteration ($15$ iters), true anomaly $\nu = 2 \text&#123;atan2&#125;(\sqrt&#123;1+e&#125;\sin(E/2), \sqrt&#123;1-e&#125;\cos(E/2))$, radius $r = a(1-e\cos E)$. Perifocal to inertial via $R(\Omega)R(i)R(\omega)$, then ECEF via GMST rotation $\theta$.
+                We parse <Math math="n" /> rad/s, get semi-major axis <Math math="a = (GM / n^2)^{1/3}" /> from Kepler third law, <Math math="GM=398600.4418" /> km<Math math="^3" />/s<Math math="^2" />. Mean anomaly at now <Math math="M = M_0 + n \Delta t" />, solve Kepler <Math math="M = E - e \sin E" /> by Newton iteration ($15$ iters), true anomaly <Math math="\nu = 2 \text{atan2}(\sqrt{1+e}\sin(E/2), \sqrt{1-e}\cos(E/2))" />, radius <Math math="r = a(1-e\cos E)" />. Perifocal to inertial via <Math math="R(\Omega)R(i)R(\omega)" />, then ECEF via GMST rotation <Math math="\theta" />.
               </p>
               <p>
-                That is two-body Keplerian. Full SGP4 adds $J_2$ oblateness, drag term $B^*$, lunar-solar perturbations, resonance. We omit those for footprint and clarity — no 1000-line SGP4 port. Result drifts $\sim$ few km vs truth within hours of epoch, fine for "watch it move" but not for pass prediction or docking. For precision, use <code>satellite.js</code> SGP4. Trail is recomputed $-25$ min to now every second, projected as LineString so it clips at horizon like coastlines.
+                That is two-body Keplerian. Full SGP4 adds <Math math="J_2" /> oblateness, drag term <Math math="B^*" />, lunar-solar perturbations, resonance. We omit those for footprint and clarity — no 1000-line SGP4 port. Result drifts <Math math="\sim" /> few km vs truth within hours of epoch, fine for "watch it move" but not for pass prediction or docking. For precision, use <code>satellite.js</code> SGP4. Trail is recomputed $-25$ min to now every second, projected as LineString so it clips at horizon like coastlines.
               </p>
             </div>
           </div>
@@ -147,7 +148,7 @@ const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
             <li><strong class="text-primary-text">Coastlines</strong> — real shapes, fake shading. Orthographic is geometric idealization; no terrain, no atmosphere scattering.</li>
             <li><strong class="text-primary-text">Day/night</strong> — real sun position, simplified scattering. Night texture is a procedurally tinted alpha mask, not city lights database.</li>
             <li><strong class="text-primary-text">Weather</strong> — real temps at snapshot, not live, not forecast, 16 points only — spatial interpolation would be misleading so we show dots only.</li>
-            <li><strong class="text-primary-text">ISS</strong> — real TLE epoch, simplified physics. Accuracy badge: illustrative &lt;10 km near epoch, degrades as $\Delta t$ grows, no maneuver modeling.</li>
+            <li><strong class="text-primary-text">ISS</strong> — real TLE epoch, simplified physics. Accuracy badge: illustrative &lt;10 km near epoch, degrades as <Math math="\Delta t" /> grows, no maneuver modeling.</li>
           </ul>
         </div>
       </div>

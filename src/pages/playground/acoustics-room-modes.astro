@@ -16,6 +16,7 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Room Mode Analyzer', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -183,7 +184,7 @@ const breadcrumbSchema = {
         <h2 id="method-title" class="mt-3 text-[clamp(1.6rem,3.5vw,2.4rem)] font-[700] leading-[0.95] tracking-[-0.05em] text-primary-text">Your room is a 3D guitar string you didn't pluck — but bass does.</h2>
 
         <div class="mt-6 max-w-[48rem] space-y-5 text-[1.02rem] leading-[1.75] text-muted-text">
-          <p>Clap in an empty box and some notes keep singing. Not echo — resonance. Air trapped between parallel walls behaves exactly like a string pinned at both ends: only wavelengths that fit an integer number of half-waves survive. In 1D that's $f=n c/2L$. In 3D it's the same idea three times — combine half-waves along length, width, and height, and you get a grid of allowed tones. Those are room modes. Everything that booms, drones, or disappears when you move the couch lives here.</p>
+          <p>Clap in an empty box and some notes keep singing. Not echo — resonance. Air trapped between parallel walls behaves exactly like a string pinned at both ends: only wavelengths that fit an integer number of half-waves survive. In 1D that's <Math math="f=n c/2L" />. In 3D it's the same idea three times — combine half-waves along length, width, and height, and you get a grid of allowed tones. Those are room modes. Everything that booms, drones, or disappears when you move the couch lives here.</p>
           <p>The ghost in the calculator is the assumption that walls are brick-ideal — perfectly rigid, zero absorption. Real walls breathe, flex, soak energy, shift peaks down a few Hz and smear them. Yet the rigid ideal predicts measured axial frequencies within 2–5% in concrete rooms and tells you where to put a sub to excite or avoid a mode — because nodes are geometry, not damping.</p>
         </div>
 
@@ -192,12 +193,12 @@ const breadcrumbSchema = {
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">1. From wave equation to cosine lattice</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.75] text-muted-text">
-                <p>Start with wave equation $\nabla^2 p = (1/c^2)\partial^2 p/\partial t^2$. Seek separable harmonic solution $p(x,y,z,t)=X(x)Y(y)Z(z)e^&#123;j\omega t&#125;$. Neumann walls — particle velocity zero normal to wall — mean $\partial p/\partial n =0$ at $x=0,L_x$ etc.</p>
-                <p>That boundary condition quantizes wavenumbers: $k_x = n_x \pi/L_x$, $k_y = n_y \pi/L_y$, $k_z = n_z \pi/L_z$ with $n_x,n_y,n_z\in\mathbb&#123;N&#125;_0$ not all zero. Total $|\mathbf&#123;k&#125;| = \sqrt&#123;k_x^2+k_y^2+k_z^2&#125; = \omega/c$. Divide by $2\pi$:</p>
+                <p>Start with wave equation <Math math="\nabla^2 p = (1/c^2)\partial^2 p/\partial t^2" />. Seek separable harmonic solution <Math math="p(x,y,z,t)=X(x)Y(y)Z(z)e^{j\omega t}" />. Neumann walls — particle velocity zero normal to wall — mean <Math math="\partial p/\partial n =0" /> at <Math math="x=0,L_x" /> etc.</p>
+                <p>That boundary condition quantizes wavenumbers: <Math math="k_x = n_x \pi/L_x" />, <Math math="k_y = n_y \pi/L_y" />, <Math math="k_z = n_z \pi/L_z" /> with <Math math="n_x,n_y,n_z\in\mathbb{N}_0" /> not all zero. Total <Math math="|\mathbf{k}| = \sqrt{k_x^2+k_y^2+k_z^2} = \omega/c" />. Divide by <Math math="2\pi" />:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.7] text-primary-text">
-                $$ f_&#123;n_x,n_y,n_z&#125; = \frac&#123;c&#125;&#123;2&#125; \sqrt&#123;\left(\frac&#123;n_x&#125;&#123;L_x&#125;\right)^2 + \left(\frac&#123;n_y&#125;&#123;L_y&#125;\right)^2 + \left(\frac&#123;n_z&#125;&#123;L_z&#125;\right)^2&#125; $$
+                <Math math="f_{n_x,n_y,n_z} = \frac{c}{2} \sqrt{\left(\frac{n_x}{L_x}\right)^2 + \left(\frac{n_y}{L_y}\right)^2 + \left(\frac{n_z}{L_z}\right)^2}" display />
                 </div>
-                <p>$c$ itself comes from temperature: $$ c(T)=331.3\sqrt&#123;1+T/273.15&#125; $$ m/s. So a hot room tunes modes up ~0.17% per °C — 0.6 Hz shift at 100 Hz per 3 °C. Measurable. The calculator recomputes it live.</p>
+                <p><Math math="c" /> itself comes from temperature: <Math math="c(T)=331.3\sqrt{1+T/273.15}" display /> m/s. So a hot room tunes modes up ~0.17% per °C — 0.6 Hz shift at 100 Hz per 3 °C. Measurable. The calculator recomputes it live.</p>
               </div>
             </div>
 
@@ -206,19 +207,19 @@ const breadcrumbSchema = {
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.75] text-muted-text">
                 <p>For rigid walls the eigenfunction is pure cosines product:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.7] text-primary-text">
-                $$ p_&#123;n_x n_y n_z&#125;(x,y,z)=\cos\left(\frac&#123;n_x\pi x&#125;&#123;L_x&#125;\right)\cos\left(\frac&#123;n_y\pi y&#125;&#123;L_y&#125;\right)\cos\left(\frac&#123;n_z\pi z&#125;&#123;L_z&#125;\right) $$
+                <Math math="p_{n_x n_y n_z}(x,y,z)=\cos\left(\frac{n_x\pi x}{L_x}\right)\cos\left(\frac{n_y\pi y}{L_y}\right)\cos\left(\frac{n_z\pi z}{L_z}\right)" display />
                 </div>
-                <p>Value in $[-1,1]$. Antinode $±1$ at every wall — pressure maximal, velocity zero. Node $0$ where $n_x\pi x/L_x = \pi/2, 3\pi/2$... i.e. $x = L_x/(2n_x), 3L_x/(2n_x)$... That's a plane. Two cosines zero → nodal line. Three → nodal point.</p>
-                <p>Coupling is ruthlessly simple: mode amplitude $\propto p(\text&#123;source&#125;)\times p(\text&#123;listener&#125;)$. Put a sub at a pressure antinode (wall) and it maximally drives that mode. Put it at a node and that mode goes silent — even though other modes still fire because their nodes are elsewhere. Same at listener: at a node you don't hear that mode, even if source excites it. This is why corner placement (all cos=±1) excites every mode, and why moving a sub 70 cm can kill a 40 Hz boom without EQ.</p>
-                <p>Velocity is $90°$ out of phase spatially: $\mathbf&#123;v&#125;\propto \nabla p$. Where $p=0$, particle velocity peaks — good place for porous absorbers which need air motion. Where $p=±1$, velocity zero — absorbers do nothing, but membrane traps work.</p>
+                <p>Value in $[-1,1]$. Antinode $±1$ at every wall — pressure maximal, velocity zero. Node $0$ where <Math math="n_x\pi x/L_x = \pi/2, 3\pi/2" />... i.e. <Math math="x = L_x/(2n_x), 3L_x/(2n_x)" />... That's a plane. Two cosines zero → nodal line. Three → nodal point.</p>
+                <p>Coupling is ruthlessly simple: mode amplitude <Math math="\propto p(\text{source})\times p(\text{listener})" />. Put a sub at a pressure antinode (wall) and it maximally drives that mode. Put it at a node and that mode goes silent — even though other modes still fire because their nodes are elsewhere. Same at listener: at a node you don't hear that mode, even if source excites it. This is why corner placement (all cos=±1) excites every mode, and why moving a sub 70 cm can kill a 40 Hz boom without EQ.</p>
+                <p>Velocity is $90°$ out of phase spatially: <Math math="\mathbf{v}\propto \nabla p" />. Where <Math math="p=0" />, particle velocity peaks — good place for porous absorbers which need air motion. Where <Math math="p=±1" />, velocity zero — absorbers do nothing, but membrane traps work.</p>
               </div>
             </div>
 
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">3. Why modes look like they do on the map</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.75] text-muted-text">
-                <p>The 2D slice fixes $z = z_&#123;listener&#125;$ and shows $p(x,y,z)$. Red/blue are ± pressure. Watch (1,0,0): left red, right blue, one half-wave across length. (2,0,0): red-blue-red — two half-waves. (1,1,0): checkerboard — one wave along x and y, hitting four walls. Higher indices tile faster, density $\propto f^2$.</p>
-                <p>The listener diamond and source dot on the map are not decoration — the table's "Pressure at listener" column is exactly $p(x_L,y_L,z_L)$ and source coupling would be $p(x_S,y_S,z_S)$. Scan the table: if a mode is +0.99 at listener, that frequency will dominate at the chair; -0.03 means you're sitting in its null.</p>
+                <p>The 2D slice fixes <Math math="z = z_{listener}" /> and shows <Math math="p(x,y,z)" />. Red/blue are ± pressure. Watch (1,0,0): left red, right blue, one half-wave across length. (2,0,0): red-blue-red — two half-waves. (1,1,0): checkerboard — one wave along x and y, hitting four walls. Higher indices tile faster, density <Math math="\propto f^2" />.</p>
+                <p>The listener diamond and source dot on the map are not decoration — the table's "Pressure at listener" column is exactly <Math math="p(x_L,y_L,z_L)" /> and source coupling would be <Math math="p(x_S,y_S,z_S)" />. Scan the table: if a mode is +0.99 at listener, that frequency will dominate at the chair; -0.03 means you're sitting in its null.</p>
               </div>
             </div>
           </div>
@@ -227,28 +228,28 @@ const breadcrumbSchema = {
             <div class="math-card !bg-card-bg">
               <p class="math-label">Axial / Tangential / Oblique — why energy differs</p>
               <div class="mt-3 space-y-3 text-[0.84rem] leading-[1.6] text-muted-text">
-                <p><strong class="text-primary-text">Axial</strong> $(n_x,0,0)$ — one index non-zero. Wave bounces between two parallel walls only. Two reflections per cycle, minimal wall contact, highest Q, biggest peak. $(1,0,0)$ at $c/2L_x$ is almost always the worst offender.</p>
-                <p><strong class="text-primary-text">Tangential</strong> $(n_x,n_y,0)$ — two non-zero. Four walls per cycle. Energy hits walls more often, losses double ~ — about $3$ dB less energy than axial after averaging.</p>
-                <p><strong class="text-primary-text">Oblique</strong> $(n_x,n_y,n_z)$ — three non-zero. All six surfaces. Least energy in practice, ~6 dB below axial, but most numerous: number of oblique grows as $f^3$. Topology: 1-0-0 is plane wave, 1-1-0 is diagonal, 1-1-1 bounces around room like a billiard.</p>
+                <p><strong class="text-primary-text">Axial</strong> <Math math="(n_x,0,0)" /> — one index non-zero. Wave bounces between two parallel walls only. Two reflections per cycle, minimal wall contact, highest Q, biggest peak. $(1,0,0)$ at <Math math="c/2L_x" /> is almost always the worst offender.</p>
+                <p><strong class="text-primary-text">Tangential</strong> <Math math="(n_x,n_y,0)" /> — two non-zero. Four walls per cycle. Energy hits walls more often, losses double ~ — about $3$ dB less energy than axial after averaging.</p>
+                <p><strong class="text-primary-text">Oblique</strong> <Math math="(n_x,n_y,n_z)" /> — three non-zero. All six surfaces. Least energy in practice, ~6 dB below axial, but most numerous: number of oblique grows as <Math math="f^3" />. Topology: 1-0-0 is plane wave, 1-1-0 is diagonal, 1-1-1 bounces around room like a billiard.</p>
                 <p>Real rooms weight axials strongest, which is why your table highlights axial rows — they need treatment first.</p>
               </div>
             </div>
 
             <div class="math-card">
               <p class="math-label">Schroeder / Schroeder-Bay — when statistics beats determinism</p>
-              <div class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text">$$ f_c = 2000 \sqrt&#123;\frac&#123;T_&#123;60&#125;&#125;&#123;V&#125;&#125; $$</div>
+              <div class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text"><Math math="f_c = 2000 \sqrt{\frac{T_{60}}{V}}" display /></div>
               <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
-                $T_&#123;60&#125;$ here is estimated from Sabine $0.161 V/A$ with $\bar&#123;\alpha&#125;=0.15$ typical furnished. $f_c$ is where 10 modes overlap within a mode's half-power bandwidth — above it, individual peaks blur into a statistical tail. Below, you hear discrete colouration. Rule of thumb: $V$ in m³, $T_&#123;60&#125;$ in s. 60 m³ living room, 0.4 s → $f_c\approx 163$ Hz. That's why bass below ~200 Hz needs modal fixes (placement, traps, EQ), above it needs absorption/diffusion — different physics. Constant 2000 varies by school (1500–4000); we use 2000 as conventional.
-                Bonello's extra check: modal density should monotonically increase in each third-octave — if not, ratios are poor. Sepmeyer and Louden suggested $L_x:L_y:L_z \approx 1:1.6:2.33$ or $1:1.4:1.9$ to spread axials. Use this tool to test any ratio — look for piled axial pairs within 5 Hz, those will ring.
+                <Math math="T_{60}" /> here is estimated from Sabine $0.161 V/A$ with <Math math="\bar{\alpha}=0.15" /> typical furnished. <Math math="f_c" /> is where 10 modes overlap within a mode's half-power bandwidth — above it, individual peaks blur into a statistical tail. Below, you hear discrete colouration. Rule of thumb: <Math math="V" /> in m³, <Math math="T_{60}" /> in s. 60 m³ living room, 0.4 s → <Math math="f_c\approx 163" /> Hz. That's why bass below ~200 Hz needs modal fixes (placement, traps, EQ), above it needs absorption/diffusion — different physics. Constant 2000 varies by school (1500–4000); we use 2000 as conventional.
+                Bonello's extra check: modal density should monotonically increase in each third-octave — if not, ratios are poor. Sepmeyer and Louden suggested <Math math="L_x:L_y:L_z \approx 1:1.6:2.33" /> or $1:1.4:1.9$ to spread axials. Use this tool to test any ratio — look for piled axial pairs within 5 Hz, those will ring.
               </p>
             </div>
 
             <div class="math-card">
               <p class="math-label">Nodal placement as acoustical judo</p>
               <div class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text space-y-2">
-                <p>Want less $(2,0,0)$? Place sub at $x=L_x/4$ or $3L_x/4$ because $\cos(2\pi x/L_x)=0$ there. Want fewer nulls at listening spot? Avoid listener at $x=L_x/2$ for $(1,0,0)$ (null at center), avoid $y=L_y/2$ for $(0,1,0)$, etc. The map makes this visual: drag source or listener in your head to a white (zero) region for the bad mode.</p>
+                <p>Want less $(2,0,0)$? Place sub at <Math math="x=L_x/4" /> or <Math math="3L_x/4" /> because <Math math="\cos(2\pi x/L_x)=0" /> there. Want fewer nulls at listening spot? Avoid listener at <Math math="x=L_x/2" /> for $(1,0,0)$ (null at center), avoid <Math math="y=L_y/2" /> for $(0,1,0)$, etc. The map makes this visual: drag source or listener in your head to a white (zero) region for the bad mode.</p>
                 <p>Full elimination impossible because nodes differ per mode. Trick: sub at 1/3 length excites $(1,0,0)$ and $(2,0,0)$ moderately but nulls $(3,0,0)$. Two subs at $1/4$ and $3/4$ cancel even axials via destructive pressure summation — principle behind double-bass arrays and CABS.</p>
-                <p>For porous absorption: put it where $\nabla p$ maximal (nodes) and thick enough $\gt \lambda/10$ or spaced off wall. For pressure traps (membrane): put at antinodes (walls).</p>
+                <p>For porous absorption: put it where <Math math="\nabla p" /> maximal (nodes) and thick enough <Math math="\gt \lambda/10" /> or spaced off wall. For pressure traps (membrane): put at antinodes (walls).</p>
               </div>
             </div>
 
@@ -256,8 +257,8 @@ const breadcrumbSchema = {
               <p class="math-label">What ideal model ignores</p>
               <div class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text space-y-2">
                 <p>Finite wall impedance → eigenfrequencies shift down $2$–$5$% and Q finite (~10–40 at low end). Damping not modal-independent: tangential/oblique damp faster because more wall hits.</p>
-                <p>Coupling: real modes are not orthogonal with lossy walls; energy leaks between them. Non-rectangular (L-shaped, vaulted) splits degeneracy — our integer triple no longer holds. Furniture acts as scatterer, adds absorption $\approx$ area·α and breaks perfect cosine via diffusion.</p>
-                <p>Air absorption above 2 kHz in large rooms matters (Sabine's $4mV$ term). The pressure map shows undamped $p$, not SPL re energy — it's geometric ideal, not FEM.</p>
+                <p>Coupling: real modes are not orthogonal with lossy walls; energy leaks between them. Non-rectangular (L-shaped, vaulted) splits degeneracy — our integer triple no longer holds. Furniture acts as scatterer, adds absorption <Math math="\approx" /> area·α and breaks perfect cosine via diffusion.</p>
+                <p>Air absorption above 2 kHz in large rooms matters (Sabine's $4mV$ term). The pressure map shows undamped <Math math="p" />, not SPL re energy — it's geometric ideal, not FEM.</p>
               </div>
             </div>
           </div>
@@ -268,17 +269,17 @@ const breadcrumbSchema = {
           <div class="mt-4 grid gap-6 md:grid-cols-2 text-[0.88rem] leading-[1.65] text-muted-text">
             <div>
               <h4 class="font-semibold text-primary-text">1. Find the offender</h4>
-              <p class="mt-2">Enter $L_x$, $L_y$, $L_z$. Set max freq 300 Hz — bass region. Sort by freq: lowest three axials are your enemies. Note where two axials land within 4 Hz — Bonello violation, audible double peak. Example $5×4×2.8$ m: $(1,0,0)=34.3$ Hz, $(0,1,0)=42.9$ Hz, $(0,0,1)=61.3$ Hz. Those three define your room's signature.</p>
+              <p class="mt-2">Enter <Math math="L_x" />, <Math math="L_y" />, <Math math="L_z" />. Set max freq 300 Hz — bass region. Sort by freq: lowest three axials are your enemies. Note where two axials land within 4 Hz — Bonello violation, audible double peak. Example $5×4×2.8$ m: <Math math="(1,0,0)=34.3" /> Hz, <Math math="(0,1,0)=42.9" /> Hz, <Math math="(0,0,1)=61.3" /> Hz. Those three define your room's signature.</p>
               <h4 class="mt-5 font-semibold text-primary-text">2. Use the map to move intelligenty</h4>
-              <p class="mt-2">Pick mode $(1,0,0)$ in dropdown. See red left, blue right. Drag listener (mentally) to center white line → pressure 0 → that mode disappears at ear. Pick $(0,1,0)$, same along width. Real listening spot is compromise — stay >0.3 m from all walls, avoid exact centers $L/2$ if you want to hear axial at all, sit at center if you want to null it. For sub:  corner = excite all, $1/2$ wall = kill first axial, $1/4$ wall = kill second, $1/3$ and $2/3$ dual subs kill even more. Check source pressure vs mode in table extension idea: source coupling = $p(x_S)$ similar to listener.</p>
+              <p class="mt-2">Pick mode $(1,0,0)$ in dropdown. See red left, blue right. Drag listener (mentally) to center white line → pressure 0 → that mode disappears at ear. Pick $(0,1,0)$, same along width. Real listening spot is compromise — stay >0.3 m from all walls, avoid exact centers $L/2$ if you want to hear axial at all, sit at center if you want to null it. For sub:  corner = excite all, $1/2$ wall = kill first axial, $1/4$ wall = kill second, $1/3$ and $2/3$ dual subs kill even more. Check source pressure vs mode in table extension idea: source coupling = <Math math="p(x_S)" /> similar to listener.</p>
             </div>
             <div>
               <h4 class="font-semibold text-primary-text">3. Ratio tune / break tie</h4>
-              <p class="mt-2">If building or choosing room, sweep $L_x$ slider ±10 cm and watch table — aim for axial spacing >5% apart below 100 Hz and increasing density per third-octave. Louden 1:1.4:1.9, Sepmeyer 1:1.28:1.54, EBU 1:1.25:1.6 all better than cube (1:1:1 disaster). The Schroeder readout tells you where you can stop caring — above $f_c$, use absorption, not geometry.</p>
+              <p class="mt-2">If building or choosing room, sweep <Math math="L_x" /> slider ±10 cm and watch table — aim for axial spacing >5% apart below 100 Hz and increasing density per third-octave. Louden 1:1.4:1.9, Sepmeyer 1:1.28:1.54, EBU 1:1.25:1.6 all better than cube (1:1:1 disaster). The Schroeder readout tells you where you can stop caring — above <Math math="f_c" />, use absorption, not geometry.</p>
               <h4 class="mt-5 font-semibold text-primary-text">4. Treatment logic</h4>
-              <p class="mt-2">Below $f_c$: move sub/listener (free), then EQ (narrow notch -3 to -6 dB, Q 8–12) at modal frequency, then resonant traps tuned to $f_&#123;mode&#125;$ placed at pressure antinodes (wall). Porous panels effective only if 10–15 cm thick or spaced, placed at nodes (velocity max). Above $f_c$: broadband absorption, aim $T_&#123;60&#125;\approx0.3$–$0.5$ s for small rooms, calculate via $A =0.161 V/T_&#123;60&#125;$. The pressure map's +1/-1 scale reminds you: porous does nothing at +1 walls.</p>
+              <p class="mt-2">Below <Math math="f_c" />: move sub/listener (free), then EQ (narrow notch -3 to -6 dB, Q 8–12) at modal frequency, then resonant traps tuned to <Math math="f_{mode}" /> placed at pressure antinodes (wall). Porous panels effective only if 10–15 cm thick or spaced, placed at nodes (velocity max). Above <Math math="f_c" />: broadband absorption, aim <Math math="T_{60}\approx0.3" />–$0.5$ s for small rooms, calculate via <Math math="A =0.161 V/T_{60}" />. The pressure map's +1/-1 scale reminds you: porous does nothing at +1 walls.</p>
               <h4 class="mt-5 font-semibold text-primary-text">5. Validate with measurement</h4>
-              <p class="mt-2">Run a sine sweep at listening position — peaks in transfer function should match table within a few Hz. Nulls should match nodes. If measured peak higher Q than expected, wall is more rigid than assumed; if lower and broader, extra absorption present. Use that to update $\bar&#123;\alpha&#125;$ and predict $T_&#123;60&#125;$.</p>
+              <p class="mt-2">Run a sine sweep at listening position — peaks in transfer function should match table within a few Hz. Nulls should match nodes. If measured peak higher Q than expected, wall is more rigid than assumed; if lower and broader, extra absorption present. Use that to update <Math math="\bar{\alpha}" /> and predict <Math math="T_{60}" />.</p>
             </div>
           </div>
         </div>
@@ -286,13 +287,13 @@ const breadcrumbSchema = {
         <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="rounded-[14px] border border-border bg-elevated/30 p-4 text-[0.78rem] leading-[1.6] text-muted-text">
             <p class="font-semibold text-primary-text">Honest limits</p>
-            <p class="mt-2">Rigid-wall, undamped, rectangular, no coupling, no air absorption. Real $f_n$ lower due to wall compliance. Damping and modal overlap shift peaks. Yet axial ordering, nodal geometry, and density growth are robust — trust them for placement and ratio decisions, not for absolute SPL to 0.1 dB.</p>
+            <p class="mt-2">Rigid-wall, undamped, rectangular, no coupling, no air absorption. Real <Math math="f_n" /> lower due to wall compliance. Damping and modal overlap shift peaks. Yet axial ordering, nodal geometry, and density growth are robust — trust them for placement and ratio decisions, not for absolute SPL to 0.1 dB.</p>
           </div>
           <div class="rounded-[14px] border border-border bg-elevated/30 p-4 font-mono text-[0.72rem] leading-[1.6] text-muted-text">
             <p class="font-semibold text-primary-text font-mono text-[0.68rem] uppercase tracking-[0.08em]">Quick reference</p>
-            <p class="mt-2">$$ p(x,y,z)=\cos\frac&#123;n_x\pi x&#125;&#123;L_x&#125;\cos\frac&#123;n_y\pi y&#125;&#123;L_y&#125;\cos\frac&#123;n_z\pi z&#125;&#123;L_z&#125; $$<br/>
-            Coupling $\propto p_&#123;src&#125;\,p_&#123;lst&#125;$ — zero at node, max at wall.<br/>
-            Modal density $\propto f^2 V$ — sparse below $f_c$, statistical above.</p>
+            <p class="mt-2"><Math math="p(x,y,z)=\cos\frac{n_x\pi x}{L_x}\cos\frac{n_y\pi y}{L_y}\cos\frac{n_z\pi z}{L_z}" display /><br/>
+            Coupling <Math math="\propto p_{src}\,p_{lst}" /> — zero at node, max at wall.<br/>
+            Modal density <Math math="\propto f^2 V" /> — sparse below <Math math="f_c" />, statistical above.</p>
           </div>
         </div>
 

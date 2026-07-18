@@ -16,6 +16,7 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Conformal Mapping Explorer', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -101,7 +102,7 @@ const breadcrumbSchema = {
       <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="explainer-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">What "conformal" actually means</h2>
         <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          Put a tiny plus-sign + on the complex plane at some point $z_0$. Push it through $f$. If $f'(z_0) \neq 0$, that plus stays a plus — maybe rotated, maybe scaled, but still $90^\circ$. It does not shear into an X. That is conformity. Analytic functions with non-zero derivative are locally just rotation plus dilation. First order Taylor: $f(z) \approx f(z_0) + f'(z_0)(z - z_0)$. Multiply by the complex number $f'(z_0)$ — that is argument rotation and magnitude stretch, nothing else.
+          Put a tiny plus-sign + on the complex plane at some point <Math math="z_0" />. Push it through <Math math="f" />. If <Math math="f'(z_0) \neq 0" />, that plus stays a plus — maybe rotated, maybe scaled, but still <Math math="90^\circ" />. It does not shear into an X. That is conformity. Analytic functions with non-zero derivative are locally just rotation plus dilation. First order Taylor: <Math math="f(z) \approx f(z_0) + f'(z_0)(z - z_0)" />. Multiply by the complex number <Math math="f'(z_0)" /> — that is argument rotation and magnitude stretch, nothing else.
         </p>
 
         <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -109,10 +110,10 @@ const breadcrumbSchema = {
             <p class="font-semibold text-primary-text">When it holds — and why you see right angles</p>
             <div class="mt-2 space-y-3 text-[0.88rem] leading-[1.65] text-muted-text">
               <p>
-                Condition is sharp: $f$ analytic and $f'(z_0) \neq 0$. Then $f$ preserves oriented angles and local shapes. Your grid above is built from orthogonal lines $\text&#123;Re&#125; z = \text&#123;const&#125;$ and $\text&#123;Im&#125; z = \text&#123;const&#125;$. Under any conformal $f$, their images still intersect orthogonally wherever derivative does not vanish. Look at $e^z$, $\sin z$, Möbius — squares stay squares infinitesimally, even though globally they stretch wildly.
+                Condition is sharp: <Math math="f" /> analytic and <Math math="f'(z_0) \neq 0" />. Then <Math math="f" /> preserves oriented angles and local shapes. Your grid above is built from orthogonal lines <Math math="\text{Re} z = \text{const}" /> and <Math math="\text{Im} z = \text{const}" />. Under any conformal <Math math="f" />, their images still intersect orthogonally wherever derivative does not vanish. Look at <Math math="e^z" />, <Math math="\sin z" />, Möbius — squares stay squares infinitesimally, even though globally they stretch wildly.
               </p>
               <p>
-                Picture it as $f$ having a local linear approximation that is a similarity: no squash. That is why conformal maps are the darling of fluid flow and electrostatics — if you understand flow around a circle, $f$ carries it to flow around anything $f(\text&#123;circle&#125;)$ preserves.
+                Picture it as <Math math="f" /> having a local linear approximation that is a similarity: no squash. That is why conformal maps are the darling of fluid flow and electrostatics — if you understand flow around a circle, <Math math="f" /> carries it to flow around anything <Math math="f(\text{circle})" /> preserves.
               </p>
             </div>
           </div>
@@ -120,10 +121,10 @@ const breadcrumbSchema = {
             <p class="font-semibold text-primary-text">When it fails — critical points</p>
             <div class="mt-2 space-y-3 text-[0.88rem] leading-[1.65] text-muted-text">
               <p>
-                Where $f'(z)=0$, conformality breaks. Angle doubles, triples, collapses. $f(z)=z^2$ has $f'(z)=2z$, zero at origin. A $90^\circ$ crossing becomes $180^\circ$ — the grid forms a cusp. $z^3$ has $f'(z)=3z^2$, so $90^\circ$ becomes $270^\circ$ at $0$. In general, $f(z) \approx z^k$ multiplies angles by $k$. That is not a rendering glitch; it is the map forgetting direction because leading term vanished.
+                Where <Math math="f'(z)=0" />, conformality breaks. Angle doubles, triples, collapses. <Math math="f(z)=z^2" /> has <Math math="f'(z)=2z" />, zero at origin. A <Math math="90^\circ" /> crossing becomes <Math math="180^\circ" /> — the grid forms a cusp. <Math math="z^3" /> has <Math math="f'(z)=3z^2" />, so <Math math="90^\circ" /> becomes <Math math="270^\circ" /> at $0$. In general, <Math math="f(z) \approx z^k" /> multiplies angles by <Math math="k" />. That is not a rendering glitch; it is the map forgetting direction because leading term vanished.
               </p>
               <p>
-                The renderer shows this honestly. At the origin for $z^2$, watch four right angles crush to two. At critical points you lose invertibility — locally many-to-one.
+                The renderer shows this honestly. At the origin for <Math math="z^2" />, watch four right angles crush to two. At critical points you lose invertibility — locally many-to-one.
               </p>
             </div>
           </div>
@@ -133,12 +134,12 @@ const breadcrumbSchema = {
           <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">The slider</p>
           <p class="mt-2 font-semibold text-[0.92rem] text-primary-text">A homotopy, not physics</p>
           <p class="mt-2 max-w-3xl text-[0.88rem] leading-[1.65] text-muted-text">
-            The $t$-slider blends identity with $f$: $p(t,z) = (1-t)z + t f(z)$, $t \in [0,1]$. $t=0$ flat grid, $t=1$ full image. For intermediate $t$, $p$ is generally not conformal — it is an affine blend of two maps, not analytic composition. We use it to track where each line came from. That is why halfway, angles are not preserved. At $t=1$ they are, again modulo critical points.
+            The <Math math="t" />-slider blends identity with <Math math="f" />: <Math math="p(t,z) = (1-t)z + t f(z)" />, <Math math="t \in [0,1]" />. <Math math="t=0" /> flat grid, <Math math="t=1" /> full image. For intermediate <Math math="t" />, <Math math="p" /> is generally not conformal — it is an affine blend of two maps, not analytic composition. We use it to track where each line came from. That is why halfway, angles are not preserved. At <Math math="t=1" /> they are, again modulo critical points.
           </p>
           <div class="mt-4 grid grid-cols-1 gap-3 font-mono text-[0.82rem] sm:grid-cols-3">
-            <div class="rounded-[10px] bg-elevated/60 p-3"> $p(0,z)=z$ <br /><span class="text-muted-text/70">flat</span></div>
-            <div class="rounded-[10px] bg-elevated/60 p-3"> $p(t,z)=(1-t)z + t f(z)$ <br /><span class="text-muted-text/70">blend</span></div>
-            <div class="rounded-[10px] bg-elevated/60 p-3"> $p(1,z)=f(z)$ <br /><span class="text-muted-text/70">image</span></div>
+            <div class="rounded-[10px] bg-elevated/60 p-3"> <Math math="p(0,z)=z" /> <br /><span class="text-muted-text/70">flat</span></div>
+            <div class="rounded-[10px] bg-elevated/60 p-3"> <Math math="p(t,z)=(1-t)z + t f(z)" /> <br /><span class="text-muted-text/70">blend</span></div>
+            <div class="rounded-[10px] bg-elevated/60 p-3"> <Math math="p(1,z)=f(z)" /> <br /><span class="text-muted-text/70">image</span></div>
           </div>
         </div>
 
@@ -146,28 +147,28 @@ const breadcrumbSchema = {
           <h3 class="text-[1.15rem] font-[650] text-primary-text">A field guide to the presets</h3>
           <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="rounded-[14px] border border-border bg-elevated/40 p-4">
-              <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">Monomials $z^n$</p>
-              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">$z^2, z^3$. Critical point at $0$ of order $n-1$. Angles multiply by $n$, wraps plane $n$ times. Purest example of $f'(z)=0$ failure. Far from origin dominates — grows like $r^n$.</p>
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">Monomials <Math math="z^n" /></p>
+              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text"><Math math="z^2, z^3" />. Critical point at $0$ of order $n-1$. Angles multiply by <Math math="n" />, wraps plane <Math math="n" /> times. Purest example of <Math math="f'(z)=0" /> failure. Far from origin dominates — grows like <Math math="r^n" />.</p>
             </div>
             <div class="rounded-[14px] border border-border bg-elevated/40 p-4">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">Reciprocal $1/z$</p>
-              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">$f(z)=1/z$. Pole at $0$ — not a zero of derivative but infinity. Outside/inside swap, lines through origin become themselves. Möbius with $c \neq 0$. Renderer clips when $|p| &gt; \text&#123;clamp&#125;$ to avoid streaks to infinity. Those gaps are truth, not bug.</p>
+              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text"><Math math="f(z)=1/z" />. Pole at $0$ — not a zero of derivative but infinity. Outside/inside swap, lines through origin become themselves. Möbius with <Math math="c \neq 0" />. Renderer clips when <Math math="|p| \gt \text{clamp}" /> to avoid streaks to infinity. Those gaps are truth, not bug.</p>
             </div>
             <div class="rounded-[14px] border border-border bg-elevated/40 p-4">
-              <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">Exponential $\exp(z)$</p>
-              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">$\exp(x+iy)=e^x (\cos y + i \sin y)$. Vertical lines $x=\text&#123;const&#125;$ become circles radius $e^x$, horizontal $y=\text&#123;const&#125;$ become rays angle $y$. Periodic in $y$ with $2\pi$. Never zero, $f' = f \neq 0$, so conformal everywhere. Essential singularity at $\infty$.</p>
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">Exponential <Math math="\exp(z)" /></p>
+              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text"><Math math="\exp(x+iy)=e^x (\cos y + i \sin y)" />. Vertical lines <Math math="x=\text{const}" /> become circles radius <Math math="e^x" />, horizontal <Math math="y=\text{const}" /> become rays angle <Math math="y" />. Periodic in <Math math="y" /> with <Math math="2\pi" />. Never zero, <Math math="f' = f \neq 0" />, so conformal everywhere. Essential singularity at <Math math="\infty" />.</p>
             </div>
             <div class="rounded-[14px] border border-border bg-elevated/40 p-4">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">Möbius $(z-1)/(z+1)$</p>
-              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">General form $\frac&#123;a z + b&#125;&#123;c z + d&#125;$, $ad - bc \neq 0$. Bijective on Riemann sphere, maps circles/lines to circles/lines. No critical points — $f' = (ad-bc)/(c z + d)^2 \neq 0$. Automorphisms of sphere. Our example sends $1\to0$, $-1\to\infty$, $0\to-1$.</p>
+              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">General form <Math math="\frac{a z + b}{c z + d}" />, <Math math="ad - bc \neq 0" />. Bijective on Riemann sphere, maps circles/lines to circles/lines. No critical points — <Math math="f' = (ad-bc)/(c z + d)^2 \neq 0" />. Automorphisms of sphere. Our example sends <Math math="1\to0" />, <Math math="-1\to\infty" />, <Math math="0\to-1" />.</p>
             </div>
             <div class="rounded-[14px] border border-border bg-elevated/40 p-4">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">Joukowski $z + 1/z$</p>
-              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">Classic airfoils. $f(z)=z+1/z$, $f'(z)=1-1/z^2$, zero at $\pm1$ — where smooth circle maps to sharp trailing edge. That loss of conformality is the feature: it creates a cusp that Kutta condition needs. Unit circle maps to $[-2,2]$ real segment.</p>
+              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">Classic airfoils. <Math math="f(z)=z+1/z" />, <Math math="f'(z)=1-1/z^2" />, zero at <Math math="\pm1" /> — where smooth circle maps to sharp trailing edge. That loss of conformality is the feature: it creates a cusp that Kutta condition needs. Unit circle maps to $[-2,2]$ real segment.</p>
             </div>
             <div class="rounded-[14px] border border-border bg-elevated/40 p-4">
-              <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta">$\sin z, \log z, \sqrt&#123;z&#125;$</p>
-              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text">$\sin z$ entire, $f'=\cos z$ zero at $\pi/2 + k\pi$. $\log z$ not entire — branch cut, we take principal $\ln|z|+i \arg z$. $\sqrt&#123;z&#125;$ two-valued; we pick principal branch. Both illustrate branch points: cannot be continuous on punctured plane without cut.</p>
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.1em] text-primary-cta"><Math math="\sin z, \log z, \sqrt{z}" /></p>
+              <p class="mt-1 text-[0.86rem] leading-[1.6] text-muted-text"><Math math="\sin z" /> entire, <Math math="f'=\cos z" /> zero at <Math math="\pi/2 + k\pi" />. <Math math="\log z" /> not entire — branch cut, we take principal <Math math="\ln|z|+i \arg z" />. <Math math="\sqrt{z}" /> two-valued; we pick principal branch. Both illustrate branch points: cannot be continuous on punctured plane without cut.</p>
             </div>
           </div>
         </div>
@@ -176,19 +177,19 @@ const breadcrumbSchema = {
           <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Poles vs zeros vs essential — how to read gaps</p>
           <div class="mt-2 space-y-3 text-[0.88rem] leading-[1.65] text-muted-text">
             <p>
-              Pole: $|f(z)|\to\infty$ as $z\to z_0$, near it behaves like $1/(z-z_0)^k$. Grid lines explode outward, then re-enter from opposite direction. We detect $|\text&#123;mapped&#125;| &gt; \text&#123;view&#125; \times 2.4$ or non-finite and lift pen. No line drawn to infinity — instead a gap. That gap location is the pole.
+              Pole: <Math math="|f(z)|\to\infty" /> as <Math math="z\to z_0" />, near it behaves like <Math math="1/(z-z_0)^k" />. Grid lines explode outward, then re-enter from opposite direction. We detect <Math math="|\text{mapped}| \gt \text{view} \times 2.4" /> or non-finite and lift pen. No line drawn to infinity — instead a gap. That gap location is the pole.
             </p>
             <p>
-              Zero: $f(z_0)=0$. $1/z$ zero at $\infty$, $z^2$ zero at $0$. Locally angle-preserving unless also critical.
+              Zero: <Math math="f(z_0)=0" />. $1/z$ zero at <Math math="\infty" />, <Math math="z^2" /> zero at $0$. Locally angle-preserving unless also critical.
             </p>
             <p>
-              Essential: wilder than any pole, e.g. $e^z$ at $\infty$, $\sin(1/z)$ near $0$. Picard says it hits almost every value infinitely often in any neighborhood. In the plot you see infinite oscillation as you approach — again, not a bug, Picard in action.
+              Essential: wilder than any pole, e.g. <Math math="e^z" /> at <Math math="\infty" />, <Math math="\sin(1/z)" /> near $0$. Picard says it hits almost every value infinitely often in any neighborhood. In the plot you see infinite oscillation as you approach — again, not a bug, Picard in action.
             </p>
           </div>
         </div>
 
         <p class="mt-6 max-w-2xl text-[0.82rem] leading-[1.6] text-muted-text/80">
-          Parser is hand-written recursive descent, no <code>eval</code>, complex arithmetic in plain $&#123;\text&#123;re&#125;,\text&#123;im&#125;&#125;$ objects. Supports $+ - * / ^$, $i, \pi, e$, and $\sin\cos\tan\exp\log\sqrt&#123;\cdot&#125;\text&#123;conj&#125;\text&#123;abs&#125;$. Derivative-zero detection is left to your eyes — that is the point.
+          Parser is hand-written recursive descent, no <code>eval</code>, complex arithmetic in plain <Math math="{\text{re},\text{im}}" /> objects. Supports <Math math="+, -, \times, /, \hat{\phantom{x}}" />, <Math math="i, \pi, e" />, and <Math math="\sin, \cos, \tan, \exp, \log, \sqrt{\cdot}, \mathrm{conj}, \mathrm{abs}" />. Derivative-zero detection is left to your eyes — that is the point.
         </p>
       </div>
     </section>

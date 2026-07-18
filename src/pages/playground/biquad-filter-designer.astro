@@ -51,6 +51,7 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Biquad Filter Designer', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -147,39 +148,39 @@ const breadcrumb = {
 
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">2. Intuition — feedback plus two numbers of state</p>
-              <p class="mt-2">A FIR filter only mixes past inputs. An IIR filter feeds past outputs back in, which is what creates resonance: $y[n] = b0 x[n] + b1 x[n-1] + b2 x[n-2] - a1 y[n-1] - a2 y[n-2]$. The $a1, a2$ terms are memory. Push $Q$ high, poles approach the unit circle, and the impulse rings for hundreds of samples.</p>
+              <p class="mt-2">A FIR filter only mixes past inputs. An IIR filter feeds past outputs back in, which is what creates resonance: <Math math="y[n] = b0 x[n] + b1 x[n-1] + b2 x[n-2] - a1 y[n-1] - a2 y[n-2]" />. The $a1, a2$ terms are memory. Push <Math math="Q" /> high, poles approach the unit circle, and the impulse rings for hundreds of samples.</p>
               <p class="mt-2">Direct Form II Transposed (DF2T) is the engineer's implementation. Instead of storing $x[n-1], x[n-2], y[n-1], y[n-2]$, keep two state floats $z1, z2$ per stage per channel. Per sample:</p>
               <p class="mt-2 font-mono text-[0.78rem] bg-canvas rounded-[10px] p-3 border border-border">
-                $y = b0 x + z1$<br />
-                $z1 = b1 x - a1 y + z2$<br />
-                $z2 = b2 x - a2 y$
+                <Math math="y = b0 x + z1" /><br />
+                <Math math="z1 = b1 x - a1 y + z2" /><br />
+                <Math math="z2 = b2 x - a2 y" />
               </p>
               <p class="mt-2">No history arrays, no $a0$ divide in the hot loop, minimal quantization noise. That is the exact code Biquadia ships in C++ and Swift — same DF2T, stereo-safe. Zero $z1, z2$ on reset, smooth coefficients if you want click-free sweeps.</p>
             </div>
 
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">3. The math — RBJ cookbook, for real</p>
-              <p class="mt-2">We use Robert Bristow-Johnson’s Audio EQ Cookbook. Input: $Fs$, $f0$, $Q$, $dBgain$. Compute:</p>
-              <p class="mt-2">$w0 = 2\pi f0 / Fs$, $\alpha = \sin w0 / 2Q$, $A = 10^&#123;dBgain/40&#125;$</p>
-              <p class="mt-2">Shelf slope is fixed at $S = 1$. Then $\sqrt&#123;A&#125;\alpha$ appears in shelf equations. Each type defines unnormalized $b0, b1, b2, a0, a1, a2$. Lowpass: $b0 = (1 - \cos w0)/2$, $b1 = 1 - \cos w0$, $b2 = (1 - \cos w0)/2$, $a0 = 1 + \alpha$, $a1 = -2\cos w0$, $a2 = 1 - \alpha$. Peaking: $b0 = 1 + \alpha A$, $b1 = -2\cos w0$, $b2 = 1 - \alpha A$, $a0 = 1 + \alpha / A$, $a1 = -2\cos w0$, $a2 = 1 - \alpha / A$. High/low shelf, notch, allpass, bandpass follow the same pattern with $A$ and $\sqrt&#123;A&#125;$.</p>
-              <p class="mt-2">Normalize by $a0$: $b0/=a0$, $b1/=a0$, $b2/=a0$, $a1/=a0$, $a2/=a0$, $a0 = 1$. Those are the numbers you see in the box and we feed to Web Audio.</p>
+              <p class="mt-2">We use Robert Bristow-Johnson’s Audio EQ Cookbook. Input: <Math math="Fs" />, $f0$, <Math math="Q" />, $dBgain$. Compute:</p>
+              <p class="mt-2"><Math math="w0 = 2\pi f0 / Fs" />, <Math math="\alpha = \sin w0 / 2Q" />, <Math math="A = 10^{dBgain/40}" /></p>
+              <p class="mt-2">Shelf slope is fixed at <Math math="S = 1" />. Then <Math math="\sqrt{A}\alpha" /> appears in shelf equations. Each type defines unnormalized $b0, b1, b2, a0, a1, a2$. Lowpass: <Math math="b0 = (1 - \cos w0)/2" />, <Math math="b1 = 1 - \cos w0" />, <Math math="b2 = (1 - \cos w0)/2" />, <Math math="a0 = 1 + \alpha" />, <Math math="a1 = -2\cos w0" />, <Math math="a2 = 1 - \alpha" />. Peaking: <Math math="b0 = 1 + \alpha A" />, <Math math="b1 = -2\cos w0" />, <Math math="b2 = 1 - \alpha A" />, <Math math="a0 = 1 + \alpha / A" />, <Math math="a1 = -2\cos w0" />, <Math math="a2 = 1 - \alpha / A" />. High/low shelf, notch, allpass, bandpass follow the same pattern with <Math math="A" /> and <Math math="\sqrt{A}" />.</p>
+              <p class="mt-2">Normalize by $a0$: <Math math="b0/=a0" />, <Math math="b1/=a0" />, <Math math="b2/=a0" />, <Math math="a1/=a0" />, <Math math="a2/=a0" />, <Math math="a0 = 1" />. Those are the numbers you see in the box and we feed to Web Audio.</p>
               <p class="mt-2">Frequency response is exact evaluation on the unit circle:</p>
-              <p class="mt-2">$$H(e^&#123;j\omega&#125;) = (b0 + b1 e^&#123;-j\omega&#125; + b2 e^&#123;-j2\omega&#125;) / (1 + a1 e^&#123;-j\omega&#125; + a2 e^&#123;-j2\omega&#125;)$$</p>
-              <p class="mt-2">We implement it as real/imag: $nr = b0 + b1\cos\omega + b2\cos2\omega$, $ni = -b1\sin\omega - b2\sin2\omega$, $dr = 1 + a1\cos\omega + a2\cos2\omega$, $di = -a1\sin\omega - a2\sin2\omega$, then complex divide. Magnitude is $20\log10|H|$, phase is $\arg H$.</p>
-              <p class="mt-2">Cascade is complex multiplication. So $|Htotal| = |H1||H2|...$, and in dB $|Htotal|dB = \sum |Hk|dB$. Phase sums too: $\arg Htotal = \sum \arg Hk$. Stability check: poles must satisfy $|p| \lt  1$, equivalently $a2 \lt  1$ and $|a1| \lt  1 + a2$ for a biquad. We keep $Q \gt  0.1$ in the UI to avoid blowup.</p>
+              <p class="mt-2"><Math math="H(e^{j\omega}) = (b0 + b1 e^{-j\omega} + b2 e^{-j2\omega}) / (1 + a1 e^{-j\omega} + a2 e^{-j2\omega})" display /></p>
+              <p class="mt-2">We implement it as real/imag: <Math math="nr = b0 + b1\cos\omega + b2\cos2\omega" />, <Math math="ni = -b1\sin\omega - b2\sin2\omega" />, <Math math="dr = 1 + a1\cos\omega + a2\cos2\omega" />, <Math math="di = -a1\sin\omega - a2\sin2\omega" />, then complex divide. Magnitude is <Math math="20\log10|H|" />, phase is <Math math="\arg H" />.</p>
+              <p class="mt-2">Cascade is complex multiplication. So <Math math="|Htotal| = |H1||H2|..." />, and in dB <Math math="|Htotal|dB = \sum |Hk|dB" />. Phase sums too: <Math math="\arg Htotal = \sum \arg Hk" />. Stability check: poles must satisfy <Math math="|p| \lt 1" />, equivalently <Math math="a2 \lt 1" /> and <Math math="|a1| \lt 1 + a2" /> for a biquad. We keep <Math math="Q \gt 0.1" /> in the UI to avoid blowup.</p>
             </div>
 
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">4. How to play</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Lowpass vs peaking:</span> Lowpass is $Q$ controls resonance at cutoff — set $f0 = 1000$, $Q = 0.707$ for Butterworth flat, $Q = 2$–$5$ to hear ringing. Peaking is your EQ bell — $f0$ is center, $Q$ is width, $gain$ is boost. $Q = 1$ means about one octave wide.</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Q and gain:</span> $Q$ below $0.5$ sounds mushy, above $5$ sounds surgical and rings. $gain$ only matters for peaking and shelves — others ignore it, which is why we dim it. Try $f0 = 2000$, $Q = 1$, $gain = 6$ then toggle $12$ dB.</p>
+              <p class="mt-2"><span class="font-semibold text-primary-text">Lowpass vs peaking:</span> Lowpass is <Math math="Q" /> controls resonance at cutoff — set <Math math="f0 = 1000" />, <Math math="Q = 0.707" /> for Butterworth flat, <Math math="Q = 2" />–$5$ to hear ringing. Peaking is your EQ bell — $f0$ is center, <Math math="Q" /> is width, $gain$ is boost. <Math math="Q = 1" /> means about one octave wide.</p>
+              <p class="mt-2"><span class="font-semibold text-primary-text">Q and gain:</span> <Math math="Q" /> below $0.5$ sounds mushy, above $5$ sounds surgical and rings. $gain$ only matters for peaking and shelves — others ignore it, which is why we dim it. Try <Math math="f0 = 2000" />, <Math math="Q = 1" />, <Math math="gain = 6" /> then toggle $12$ dB.</p>
               <p class="mt-2"><span class="font-semibold text-primary-text">Cascade $1$–$4$:</span> Put lowpass at $800$ Hz, then peaking at $2$ kHz $+6$ dB, then highshelf at $8$ kHz. Watch magnitude add. Phase gets messy fast — that messiness is real acoustic phase, not a plot bug. Four stages is enough for a $4$-band EQ chain.</p>
               <p class="mt-2"><span class="font-semibold text-primary-text">Why you can hear it:</span> Web Audio <code>IIRFilterNode</code> takes the same $b0,b1,b2,a0,a1,a2$ we plot. Biquadia uses near-identical kernels compiled via <code>clang++</code> and Accelerate vDSP on device, then Metal for parallel graphs. Same math, different transport — browser vs. on-device. Bypass button lets you AB the chain with zero extra latency.</p>
             </div>
 
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">5. Honesty check</p>
-              <p class="mt-2">RBJ is an approximation that bilinear-transforms analog prototypes. Near Nyquist, response warps — a $18$ kHz lowpass at $44.1$ kHz does not match analog. $Q$ definition matches RBJ, not constant-Q or proportional-Q variants. Shelf slope $S$ is fixed to $1$ here — Biquadia exposes $S$ as a knob, this playground does not. Coefficient quantization matters: $48$-bit double in JS is fine, but $32$-bit float on hardware at very low $f0/Fs$ loses resolution — Biquadia uses double for design, float for execution with error checks. If a stage goes unstable due to extreme $Q$ or $f0$, Web Audio may clamp or drop to identity — the UI clamps $r$ to $0.995$ equivalent for safety.</p>
+              <p class="mt-2">RBJ is an approximation that bilinear-transforms analog prototypes. Near Nyquist, response warps — a $18$ kHz lowpass at $44.1$ kHz does not match analog. <Math math="Q" /> definition matches RBJ, not constant-Q or proportional-Q variants. Shelf slope <Math math="S" /> is fixed to $1$ here — Biquadia exposes <Math math="S" /> as a knob, this playground does not. Coefficient quantization matters: $48$-bit double in JS is fine, but $32$-bit float on hardware at very low $f0/Fs$ loses resolution — Biquadia uses double for design, float for execution with error checks. If a stage goes unstable due to extreme <Math math="Q" /> or $f0$, Web Audio may clamp or drop to identity — the UI clamps <Math math="r" /> to $0.995$ equivalent for safety.</p>
             </div>
           </div>
         </div>

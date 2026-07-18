@@ -15,6 +15,7 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Waveguide Designer', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -102,37 +103,37 @@ const breadcrumb = {
         <!-- Method & limitations — frontier rewrite -->
         <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text" aria-labelledby="method-title">
           <h2 id="method-title" class="text-[clamp(1.25rem,2.6vw,1.6rem)] font-[680] tracking-[-0.03em] text-primary-text">Shape controls where sound goes</h2>
-          <p class="mt-2 max-w-3xl text-[0.88rem] leading-[1.65]">A horn is an impedance transformer. Thin air at throat, dense air at mouth. Webster's equation tells you how area change loads the driver down to a cutoff, and how mouth size sets directivity when $ka$ gets big. Get shape right — you keep directivity constant. Get it wrong — beam narrows, HOMs ring, response ripples.</p>
+          <p class="mt-2 max-w-3xl text-[0.88rem] leading-[1.65]">A horn is an impedance transformer. Thin air at throat, dense air at mouth. Webster's equation tells you how area change loads the driver down to a cutoff, and how mouth size sets directivity when <Math math="ka" /> gets big. Get shape right — you keep directivity constant. Get it wrong — beam narrows, HOMs ring, response ripples.</p>
 
           <div class="mt-6 grid gap-4 md:grid-cols-2">
             <div class="math-card">
               <p class="math-label">1 — Webster: 1D horn physics</p>
               <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-                Assume pressure is uniform across cross-section, varies only along axis $x$. Conservation of mass + momentum gives Webster:
+                Assume pressure is uniform across cross-section, varies only along axis <Math math="x" />. Conservation of mass + momentum gives Webster:
               </p>
               <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
-                $$ \frac&#123;1&#125;&#123;S&#125;\frac&#123;\partial&#125;&#123;\partial x&#125;\left(S\frac&#123;\partial p&#125;&#123;\partial x&#125;\right) = \frac&#123;1&#125;&#123;c^2&#125;\frac&#123;\partial^2 p&#125;&#123;\partial t^2&#125; $$
+                <Math math="\frac{1}{S}\frac{\partial}{\partial x}\left(S\frac{\partial p}{\partial x}\right) = \frac{1}{c^2}\frac{\partial^2 p}{\partial t^2}" display />
               </p>
               <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-                $S(x)$ is area profile. Solve for harmonic $e^&#123;j\omega t&#125;$ → spatial ODE whose solutions propagate only if $\omega$ above cutoff set by area flare rate. Ignore transverse modes — that is the core approximation. Valid up to $ka\approx 3–5$ depending on flare angle, beyond you need BEM.
+                <Math math="S(x)" /> is area profile. Solve for harmonic <Math math="e^{j\omega t}" /> → spatial ODE whose solutions propagate only if <Math math="\omega" /> above cutoff set by area flare rate. Ignore transverse modes — that is the core approximation. Valid up to <Math math="ka\approx 3–5" /> depending on flare angle, beyond you need BEM.
               </p>
             </div>
             <div class="math-card">
               <p class="math-label">2 — Three profiles, three bargains</p>
               <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-                <strong class="text-primary-text">Exponential:</strong> $S(x)=S_0 e^&#123;mx&#125;$. Classic Keele / Klipsch. Area doubles every $ln2/m$. Loads driver with frequency-independent resistance above cutoff, then dies below:
+                <strong class="text-primary-text">Exponential:</strong> <Math math="S(x)=S_0 e^{mx}" />. Classic Keele / Klipsch. Area doubles every $ln2/m$. Loads driver with frequency-independent resistance above cutoff, then dies below:
               </p>
               <p class="mt-1 font-mono text-[0.78rem] leading-[1.5]">
-                $$ f_c = \frac&#123;m c&#125;&#123;4\pi&#125; $$
+                <Math math="f_c = \frac{m c}{4\pi}" display />
               </p>
               <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-                Great LF loading, terrible directivity — beamwidth shrinks as $\propto 1/f$ because curved walls repeatedly reflect higher-order modes.
+                Great LF loading, terrible directivity — beamwidth shrinks as <Math math="\propto 1/f" /> because curved walls repeatedly reflect higher-order modes.
               </p>
               <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-                <strong class="text-primary-text">Conical:</strong> $S(x)=\pi(r_0 + x\tan\theta)^2$. Straight walls. Poor loading — no sharp $f_c$, just gradual transformer — but wall angle sets beamwidth directly: full angle $\approx 2\theta$. That is constant directivity by geometry.
+                <strong class="text-primary-text">Conical:</strong> <Math math="S(x)=\pi(r_0 + x\tan\theta)^2" />. Straight walls. Poor loading — no sharp <Math math="f_c" />, just gradual transformer — but wall angle sets beamwidth directly: full angle <Math math="\approx 2\theta" />. That is constant directivity by geometry.
               </p>
               <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-                <strong class="text-primary-text">Oblate Spheroidal (OSWG):</strong> $S(x)=S_0(1+(x/a)^2)$ where $a$ governs throat curvature. Derived by Geddes: define oblate spheroidal coordinates $\xi,\eta$ so wavefronts are spherical caps. Matches flat piston to spherical expansion at mouth with minimal discontinuity, killing HOMs that plague exponential and rapid-flare horns. Best CD + low HOM, slight price in LF loading vs exponential.
+                <strong class="text-primary-text">Oblate Spheroidal (OSWG):</strong> <Math math="S(x)=S_0(1+(x/a)^2)" /> where <Math math="a" /> governs throat curvature. Derived by Geddes: define oblate spheroidal coordinates <Math math="\xi,\eta" /> so wavefronts are spherical caps. Matches flat piston to spherical expansion at mouth with minimal discontinuity, killing HOMs that plague exponential and rapid-flare horns. Best CD + low HOM, slight price in LF loading vs exponential.
               </p>
             </div>
             <div class="math-card">
@@ -141,31 +142,31 @@ const breadcrumb = {
                 Mouth directivity kicks in when mouth circumference comparable to wavelength. Formal parameter:
               </p>
               <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
-                $$ ka = \frac&#123;2\pi a_&#123;mouth&#125;&#125;&#123;\lambda&#125; = \frac&#123;\omega a_&#123;mouth&#125;&#125;&#123;c&#125; $$
+                <Math math="ka = \frac{2\pi a_{mouth}}{\lambda} = \frac{\omega a_{mouth}}{c}" display />
               </p>
               <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-                $ka &lt; 1$ → mouth omnidirectional, waveguide does little. $ka\approx 2–3$ → pattern control starts. $ka &gt;5$ → strong beam.
-                For constant directivity you want $ka_&#123;throat&#125;$ small enough that driver doesn't beam before waveguide takes over, and mouth $ka$ large enough to hold pattern to lowest desired frequency: $f_&#123;min&#125;\approx c/(2\cdot mouth\_diameter)$.
+                $ka &lt; 1$ → mouth omnidirectional, waveguide does little. <Math math="ka\approx 2–3" /> → pattern control starts. $ka &gt;5$ → strong beam.
+                For constant directivity you want <Math math="ka_{throat}" /> small enough that driver doesn't beam before waveguide takes over, and mouth <Math math="ka" /> large enough to hold pattern to lowest desired frequency: <Math math="f_{min}\approx c/(2\cdot mouth\_diameter)" />.
                 That is why HF beaming shows as ___ in this canvas? The tool visual scales 1:1 so you can read mouth vs throat ratio immediately.
               </p>
               <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
-                Beamwidth $\approx 2\arcsin\left(\frac&#123;0.707\lambda&#125;&#123;2a&#125;\right)$ for rigid disk, but actual horn beam $\approx 2\theta$ conical above $ka\approx1$.
+                Beamwidth <Math math="\approx 2\arcsin\left(\frac{0.707\lambda}{2a}\right)" /> for rigid disk, but actual horn beam <Math math="\approx 2\theta" /> conical above <Math math="ka\approx1" />.
               </p>
             </div>
             <div class="math-card">
               <p class="math-label">4 — Playbook: choosing OSWG vs conical vs exponential</p>
               <ul class="mt-2 space-y-2 text-[0.74rem] leading-[1.55] text-muted-text" style="list-style: disc; padding-left: 1.1rem;">
-                <li><strong class="text-primary-text">Studio monitor CD:</strong> Use oblate spheroidal. Set throat to driver diameter ($25.4$ mm for 1"), length $150–250$ mm, half-angle $40–50°$. Mouth ends $\approx 180–220$ mm gives pattern control to ~1.2 kHz.</li>
+                <li><strong class="text-primary-text">Studio monitor CD:</strong> Use oblate spheroidal. Set throat to driver diameter ($25.4$ mm for 1"), length $150–250$ mm, half-angle $40–50°$. Mouth ends <Math math="\approx 180–220" /> mm gives pattern control to ~1.2 kHz.</li>
                 <li><strong class="text-primary-text">PA long throw:</strong> Conical with $30°$ half-angle gives 60° nominal (−6 dB) beam that stays ~60° from 2 kHz to 16 kHz. Pay with LF loading — add separate mid horn below.</li>
-                <li><strong class="text-primary-text">Bass horn:</strong> Exponential wins. Choose $m$ from desired $f_c$ via $f_c=m c/(4\pi)$. Example: $f_c=80$ Hz → $m=4\pi f_c /c \approx 2.93$ $m^&#123;-1&#125;$. Then length sets mouth size: $S_&#123;mouth&#125;=S_0 e^&#123;mL&#125;$.</li>
+                <li><strong class="text-primary-text">Bass horn:</strong> Exponential wins. Choose <Math math="m" /> from desired <Math math="f_c" /> via <Math math="f_c=m c/(4\pi)" />. Example: <Math math="f_c=80" /> Hz → <Math math="m=4\pi f_c /c \approx 2.93" /> <Math math="m^{-1}" />. Then length sets mouth size: <Math math="S_{mouth}=S_0 e^{mL}" />.</li>
                 <li><strong class="text-primary-text">HOM check:</strong> If flare changes slope abruptly (throat kink), you create higher-order modes that bounce and create time smear. OSWG curvature continuity fixes this — watch profile in canvas: smooth second derivative = good.</li>
               </ul>
             </div>
             <div class="math-card md:col-span-2">
               <p class="math-label">5 — Honesty: 1D is not 3D</p>
               <p class="mt-2 text-[0.74rem] leading-[1.55] text-muted-text">
-                Webster assumes planar or spherical isophase wavefronts. Real horn with wide angle, sharp walls, or diffraction slot launches transverse modes above $f \approx c/(2\cdot throat)$. The tool does not predict those modes, nor diffraction at mouth edge, nor polar lobing, nor driver diaphragm breakup interacting with throat.
-                Directivity number shown is geometric half-angle only, not measured DI. For accurate directivity maps ($DI(f,\theta)$) and throat impedance $Z_&#123;throat&#125;(\omega)$, run BEM (AKABAK, COMSOL, or open VACS). Use this designer to get first-cut area profile and mouth size that fits your cabinet, then validate with simulation and polar measurements.
+                Webster assumes planar or spherical isophase wavefronts. Real horn with wide angle, sharp walls, or diffraction slot launches transverse modes above <Math math="f \approx c/(2\cdot throat)" />. The tool does not predict those modes, nor diffraction at mouth edge, nor polar lobing, nor driver diaphragm breakup interacting with throat.
+                Directivity number shown is geometric half-angle only, not measured DI. For accurate directivity maps (<Math math="DI(f,\theta)" />) and throat impedance <Math math="Z_{throat}(\omega)" />, run BEM (AKABAK, COMSOL, or open VACS). Use this designer to get first-cut area profile and mouth size that fits your cabinet, then validate with simulation and polar measurements.
               </p>
             </div>
           </div>

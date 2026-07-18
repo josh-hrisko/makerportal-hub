@@ -16,6 +16,7 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Voice-Coil Thermal Compression', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -221,10 +222,10 @@ const breadcrumbSchema = {
           <h2 id="hook-title" class="mt-3 text-[clamp(1.6rem,3.5vw,2.4rem)] font-[700] leading-[0.95] tracking-[-0.05em] text-primary-text">Your speaker gets quieter the longer you punish it. That's copper doing math.</h2>
           <div class="mt-6 space-y-5 text-[1.02rem] leading-[1.75] text-muted-text">
             <p>
-              Set $P_&#123;in&#125; = 150$ W, walk away, come back five minutes later. The amp still reads 150 W on the dial, but the cone is moving less. You lost 2 dB. Not to the amp, not to the air — to heat.
+              Set <Math math="P_{in} = 150" /> W, walk away, come back five minutes later. The amp still reads 150 W on the dial, but the cone is moving less. You lost 2 dB. Not to the amp, not to the air — to heat.
             </p>
             <p>
-              Every $I^2 R$ watt that doesn't become sound becomes temperature inside a few grams of copper wire. Copper's resistance climbs about $0.39\%$ per degree — $\alpha = 0.00393$ $K^&#123;-1&#125;$ — so as it heats, it draws less current from the same voltage. Less current means less $Bl \cdot I$ force, so less SPL. The system quietly negotiates itself down. Engineers call it power compression, and in live sound it eats headroom for breakfast.
+              Every <Math math="I^2 R" /> watt that doesn't become sound becomes temperature inside a few grams of copper wire. Copper's resistance climbs about <Math math="0.39\%" /> per degree — <Math math="\alpha = 0.00393" /> <Math math="K^{-1}" /> — so as it heats, it draws less current from the same voltage. Less current means less <Math math="Bl \cdot I" /> force, so less SPL. The system quietly negotiates itself down. Engineers call it power compression, and in live sound it eats headroom for breakfast.
             </p>
             <p>
               Past $200°C$ the glue that holds the coil to the former softens. Past $300°C$ you smell it. This simulation lets you watch that negotiation in real time: temperature, resistance, current, electrical power, SPL sag, all coupled. No hidden knobs.
@@ -241,38 +242,38 @@ const breadcrumbSchema = {
             <h2 id="intuition-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The intuition — heat has mass and insulation</h2>
             <div class="mt-5 space-y-4 text-[0.95rem] leading-[1.75] text-muted-text">
               <p>
-                If you've seen an electrical RC circuit, you already know the thermal one. Temperature is voltage, heat flow is current, thermal resistance $R_&#123;th&#125;$ is how hard it is to push heat out, thermal capacitance $C_&#123;th&#125;$ is how much heat you must dump in to raise the temperature one degree.
+                If you've seen an electrical RC circuit, you already know the thermal one. Temperature is voltage, heat flow is current, thermal resistance <Math math="R_{th}" /> is how hard it is to push heat out, thermal capacitance <Math math="C_{th}" /> is how much heat you must dump in to raise the temperature one degree.
               </p>
               <p>
-                Map it: the coil dumps $P_e$ watts into $C_&#123;th\_v&#125;$, the small fast can — $10$ to $15$ $J/K$ in the code. It leaks to the magnet through $R_&#123;th\_v&#125;$. The magnet is the big slow can, $C_&#123;th\_m&#125; = 250$ $J/K$, barely warming at first, then storing that heat for minutes. It leaks to ambient through $R_&#123;th\_m&#125;$. Two cans, two time constants:
+                Map it: the coil dumps <Math math="P_e" /> watts into <Math math="C_{th\_v}" />, the small fast can — $10$ to $15$ $J/K$ in the code. It leaks to the magnet through <Math math="R_{th\_v}" />. The magnet is the big slow can, <Math math="C_{th\_m} = 250" /> $J/K$, barely warming at first, then storing that heat for minutes. It leaks to ambient through <Math math="R_{th\_m}" />. Two cans, two time constants:
               </p>
               <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.78rem] leading-[1.7] text-primary-text">
-                $\tau_v = R_&#123;th\_v&#125; C_&#123;th\_v&#125;$ — coil, seconds<br/>
-                $\tau_m = R_&#123;th\_m&#125; C_&#123;th\_m&#125;$ — magnet, minutes<br/>
-                <span class="text-muted-text">e.g. standard preset: $\tau_v \approx 22.5$ s, $\tau_m \approx 250$ s</span>
+                <Math math="\tau_v = R_{th\_v} C_{th\_v}" /> — coil, seconds<br/>
+                <Math math="\tau_m = R_{th\_m} C_{th\_m}" /> — magnet, minutes<br/>
+                <span class="text-muted-text">e.g. standard preset: <Math math="\tau_v \approx 22.5" /> s, <Math math="\tau_m \approx 250" /> s</span>
               </div>
               <p>
-                Now add copper's twist. $R_e(T) = R_&#123;e0&#125;(1+\alpha(T-20))$. As $T_v$ climbs, $R_e$ climbs. The amp is modeled as constant-voltage — $V_&#123;in&#125;^2 = P_&#123;input&#125; R_&#123;e0&#125;$ — so actual electrical power $P_e = V_&#123;in&#125;^2 / R_e(T)$ <em>drops</em> as it heats. That's a stabilizing negative feedback on temperature, but a direct hit to SPL. You trade loudness for survival.
+                Now add copper's twist. <Math math="R_e(T) = R_{e0}(1+\alpha(T-20))" />. As <Math math="T_v" /> climbs, <Math math="R_e" /> climbs. The amp is modeled as constant-voltage — <Math math="V_{in}^2 = P_{input} R_{e0}" /> — so actual electrical power <Math math="P_e = V_{in}^2 / R_e(T)" /> <em>drops</em> as it heats. That's a stabilizing negative feedback on temperature, but a direct hit to SPL. You trade loudness for survival.
               </p>
               <ul class="list-disc pl-5 space-y-2 marker:text-muted-text/60">
-                <li>Hot coil $\to$ higher $R_e$ $\to$ lower $I = V_&#123;in&#125;/R_e$ $\to$ lower $BlI$.</li>
-                <li>Lower $I$ $\to$ slightly less heating, so temperature asymptotes rather than running away.</li>
-                <li>But $SPL_&#123;comp&#125; = -20\log_&#123;10&#125;(R_e/R_&#123;e0&#125;)$ keeps sliding negative — you hear it as compression.</li>
+                <li>Hot coil <Math math="\to" /> higher <Math math="R_e" /> <Math math="\to" /> lower <Math math="I = V_{in}/R_e" /> <Math math="\to" /> lower $BlI$.</li>
+                <li>Lower <Math math="I" /> <Math math="\to" /> slightly less heating, so temperature asymptotes rather than running away.</li>
+                <li>But <Math math="SPL_{comp} = -20\log_{10}(R_e/R_{e0})" /> keeps sliding negative — you hear it as compression.</li>
               </ul>
               <p>
-                Short bursts mostly charge $C_&#123;th\_v&#125;$. Long, heavy drive also charges $C_&#123;th\_m&#125;$, and that magnet won't cool quickly when you stop. That is why a speaker can sound fine for one song and dull for the next, even at the same meter reading.
+                Short bursts mostly charge <Math math="C_{th\_v}" />. Long, heavy drive also charges <Math math="C_{th\_m}" />, and that magnet won't cool quickly when you stop. That is why a speaker can sound fine for one song and dull for the next, even at the same meter reading.
               </p>
             </div>
           </div>
           <div class="space-y-4">
             <div class="math-card !bg-card-bg">
               <p class="math-label">Think of it like</p>
-              <p class="mt-3 text-[0.92rem] leading-[1.6] text-primary-text">Two buckets connected by a slow pipe. You pour water (power) into the small top bucket (coil). It drains through a narrow hose ($R_&#123;th\_v&#125;$) into a huge bottom tank (magnet). The top bucket's water level is temperature. Now imagine the faucet gets stingier as the top bucket fills — higher water level pinches the inlet. Level stabilizes, but flow out the $BlI$ tap drops. That's compression.</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.6] text-primary-text">Two buckets connected by a slow pipe. You pour water (power) into the small top bucket (coil). It drains through a narrow hose (<Math math="R_{th\_v}" />) into a huge bottom tank (magnet). The top bucket's water level is temperature. Now imagine the faucet gets stingier as the top bucket fills — higher water level pinches the inlet. Level stabilizes, but flow out the $BlI$ tap drops. That's compression.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Where architecture matters</p>
-              <p class="mt-2 font-mono text-[0.82rem] leading-[1.6] text-primary-text">Standard basket: $R_&#123;th\_v&#125; \approx 1.5$ K/W, sluggish cooling<br/>Vented pole: $R_&#123;th\_v&#125; \approx 0.8$, much better exhaust<br/>Ferrofluid: $R_&#123;th\_v&#125; \approx 0.4$, fluid bridges the gap</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Same $C_&#123;th\_v&#125;$ range ($10$–$15$ J/K) but cutting $R_&#123;th\_v&#125;$ by 3× cuts $\tau_v$ and the final temperature almost proportionally. Check the lower plot — curves separate hard at high power.</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.6] text-primary-text">Standard basket: <Math math="R_{th\_v} \approx 1.5" /> K/W, sluggish cooling<br/>Vented pole: <Math math="R_{th\_v} \approx 0.8" />, much better exhaust<br/>Ferrofluid: <Math math="R_{th\_v} \approx 0.4" />, fluid bridges the gap</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Same <Math math="C_{th\_v}" /> range ($10$–$15$ J/K) but cutting <Math math="R_{th\_v}" /> by 3× cuts <Math math="\tau_v" /> and the final temperature almost proportionally. Check the lower plot — curves separate hard at high power.</p>
             </div>
           </div>
         </div>
@@ -290,38 +291,38 @@ const breadcrumbSchema = {
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
                 <p>The base fact of this whole sim is linear TCR:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
-                  $$ R_e(T) = R_&#123;e0&#125;\,[1 + \alpha\,(T - 20)] $$
-                  $$ \alpha = 0.00393\,K^&#123;-1&#125; \text&#123; (copper, code &#125;ALPHA\_CU\text&#123;)&#125; $$
+                  <Math math="R_e(T) = R_{e0}\,[1 + \alpha\,(T - 20)]" display />
+                  <Math math="\alpha = 0.00393\,K^{-1} \text{ (copper, code }ALPHA\_CU\text{)}" display />
                 </div>
-                <p>At $150°C$, $R_e \approx 1.51 \times R_&#123;e0&#125;$. A nominal $6.2\,\Omega$ coil is now $9.4\,\Omega$. The amp hasn't changed. Ohm's law has.</p>
+                <p>At $150°C$, <Math math="R_e \approx 1.51 \times R_{e0}" />. A nominal <Math math="6.2\,\Omega" /> coil is now <Math math="9.4\,\Omega" />. The amp hasn't changed. Ohm's law has.</p>
               </div>
             </div>
 
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">2. Constant-voltage amp model</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>The slider says "Input power" in RMS watts. That value is interpreted as power into a cold coil. Code stores it as $P_&#123;input&#125;$ and defines the drive voltage once:</p>
+                <p>The slider says "Input power" in RMS watts. That value is interpreted as power into a cold coil. Code stores it as <Math math="P_{input}" /> and defines the drive voltage once:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
-                  $$ V_&#123;in&#125;^2 = P_&#123;input&#125;\,R_&#123;e0&#125; $$
-                  $$ P_e(T_v) = \frac&#123;V_&#123;in&#125;^2&#125;&#123;R_e(T_v)&#125; = \frac&#123;P_&#123;input&#125;R_&#123;e0&#125;&#125;&#123;R_e(T_v)&#125; $$
-                  $$ I(T_v) = \frac&#123;V_&#123;in&#125;&#125;&#123;R_e(T_v)&#125; $$
+                  <Math math="V_{in}^2 = P_{input}\,R_{e0}" display />
+                  <Math math="P_e(T_v) = \frac{V_{in}^2}{R_e(T_v)} = \frac{P_{input}R_{e0}}{R_e(T_v)}" display />
+                  <Math math="I(T_v) = \frac{V_{in}}{R_e(T_v)}" display />
                 </div>
-                <p>So $P_e$ falls as the coil heats. If you wanted a constant-power source, you'd hold $P_e$ fixed and temperature would climb faster. Real amps behave closer to constant-voltage into a resistive load, so this is the honest choice for SPL loss.</p>
+                <p>So <Math math="P_e" /> falls as the coil heats. If you wanted a constant-power source, you'd hold <Math math="P_e" /> fixed and temperature would climb faster. Real amps behave closer to constant-voltage into a resistive load, so this is the honest choice for SPL loss.</p>
               </div>
             </div>
 
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">3. Two coupled thermal ODEs</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>This is the lumped ladder the code actually integrates with explicit Euler every $PHYSICS\_DT = 0.02$ s:</p>
+                <p>This is the lumped ladder the code actually integrates with explicit Euler every <Math math="PHYSICS\_DT = 0.02" /> s:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.76rem] leading-[1.75] text-primary-text">
-                  $$ \begin&#123;aligned&#125; \frac&#123;dT_v&#125;&#123;dt&#125; &= \frac&#123;P_e(T_v) - \frac&#123;T_v - T_m&#125;&#123;R_&#123;th\_v&#125;&#125;&#125;&#123;C_&#123;th\_v&#125;&#125; \\ \frac&#123;dT_m&#125;&#123;dt&#125; &= \frac&#123;\frac&#123;T_v - T_m&#125;&#123;R_&#123;th\_v&#125;&#125; - \frac&#123;T_m - T_&#123;amb&#125;&#125;&#123;R_&#123;th\_m&#125;&#125;&#125;&#123;C_&#123;th\_m&#125;&#125; \end&#123;aligned&#125; $$
+                  <Math math="\begin{aligned} \frac{dT_v}{dt} &amp;= \frac{P_e(T_v) - \frac{T_v - T_m}{R_{th\_v}}}{C_{th\_v}} \\ \frac{dT_m}{dt} &amp;= \frac{\frac{T_v - T_m}{R_{th\_v}} - \frac{T_m - T_{amb}}{R_{th\_m}}}{C_{th\_m}} \end{aligned}" display />
                 </div>
                 <p>
                   Inside <code>stepPhysics()</code>, <code>heatFlowVC_to_Mag = (T_coil - T_mag)/Rth_v</code> and <code>heatFlowMag_to_Amb = (T_mag - Tamb)/Rth_m</code>. The update is <code>T_coil += dT_coil</code> with <code>dT_coil = (Pe - flow)/Cth_v * dt</code>. That is exactly the math above.
                 </p>
                 <p>
-                  The rolling chart keeps $WINDOW\_SECONDS = 60$ simulated seconds, sampling about $30$ Hz, with <code>MAX_BUFFER = 1800</code> points. Time reads as simulated seconds, not wall-clock — accelerated by the slider up to $40\times$, safely stepping with an accumulator and a $200$-iteration cap per frame.
+                  The rolling chart keeps <Math math="WINDOW\_SECONDS = 60" /> simulated seconds, sampling about $30$ Hz, with <code>MAX_BUFFER = 1800</code> points. Time reads as simulated seconds, not wall-clock — accelerated by the slider up to <Math math="40\times" />, safely stepping with an accumulator and a $200$-iteration cap per frame.
                 </p>
               </div>
             </div>
@@ -329,23 +330,23 @@ const breadcrumbSchema = {
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">4. SPL compression from lost current</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>Force is $Bl \cdot I$. If $Bl$ held constant, $F \propto I \propto 1/R_e$. Sound pressure is proportional to force, so:</p>
+                <p>Force is <Math math="Bl \cdot I" />. If <Math math="Bl" /> held constant, <Math math="F \propto I \propto 1/R_e" />. Sound pressure is proportional to force, so:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.7] text-primary-text">
-                  $$ \Delta L = -20\,\log_&#123;10&#125;\!\left(\frac&#123;R_e(T_v)&#125;&#123;R_&#123;e0&#125;&#125;\right)\;[\text&#123;dB&#125;] $$
+                  <Math math="\Delta L = -20\,\log_{10}\!\left(\frac{R_e(T_v)}{R_{e0}}\right)\;[\text{dB}]" display />
                 </div>
-                <p>At $1.5\times R_&#123;e0&#125;$, that's $-3.5$ dB — you need $2.2\times$ electrical power to make up what heat stole. The top canvas draws this alongside temperature, so you see compression lag temperature slightly — it tracks $R_e$, which tracks $T_v$.</p>
+                <p>At <Math math="1.5\times R_{e0}" />, that's $-3.5$ dB — you need <Math math="2.2\times" /> electrical power to make up what heat stole. The top canvas draws this alongside temperature, so you see compression lag temperature slightly — it tracks <Math math="R_e" />, which tracks <Math math="T_v" />.</p>
               </div>
             </div>
 
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">5. Where it settles — steady-state solve</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>Set derivatives to zero. Heat in equals heat out through the series $R_&#123;th&#125;$:</p>
+                <p>Set derivatives to zero. Heat in equals heat out through the series <Math math="R_{th}" />:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.7] text-primary-text">
-                  $$ \frac&#123;V_&#123;in&#125;^2&#125;&#123;R_&#123;e0&#125;[1+\alpha(T_&#123;ss&#125;-20)]&#125; = \frac&#123;T_&#123;ss&#125;-T_&#123;amb&#125;&#125;&#123;R_&#123;th\_v&#125;+R_&#123;th\_m&#125;&#125; $$
+                  <Math math="\frac{V_{in}^2}{R_{e0}[1+\alpha(T_{ss}-20)]} = \frac{T_{ss}-T_{amb}}{R_{th\_v}+R_{th\_m}}" display />
                 </div>
                 <p>
-                  That's implicit in $T_&#123;ss&#125;$ because $R_e$ depends on it. Code function <code>steadyStateTemp(P_input, Re0, Tamb, alpha, Rth_v, Rth_m)</code> Newton-iterates $60$ times: residual $r = P_e - (T-T_&#123;amb&#125;)/R_&#123;th&#125;$, derivative $dr/dT = dP_e/dT - 1/R_&#123;th&#125;$, $T \gets T - r/(dr/dT)$. Initial guess ignores TCR: $T_&#123;guess&#125; = T_&#123;amb&#125; + P_&#123;input&#125;R_&#123;th&#125;$. Result shows as the dashed $T_&#123;ss&#125;$ line and the "Steady-state T" badge. The power-sweep canvas uses the same solver at $100$ power points up to $2\times P_&#123;input&#125;$.
+                  That's implicit in <Math math="T_{ss}" /> because <Math math="R_e" /> depends on it. Code function <code>steadyStateTemp(P_input, Re0, Tamb, alpha, Rth_v, Rth_m)</code> Newton-iterates $60$ times: residual <Math math="r = P_e - (T-T_{amb})/R_{th}" />, derivative <Math math="dr/dT = dP_e/dT - 1/R_{th}" />, <Math math="T \gets T - r/(dr/dT)" />. Initial guess ignores TCR: <Math math="T_{guess} = T_{amb} + P_{input}R_{th}" />. Result shows as the dashed <Math math="T_{ss}" /> line and the "Steady-state T" badge. The power-sweep canvas uses the same solver at $100$ power points up to <Math math="2\times P_{input}" />.
                 </p>
               </div>
             </div>
@@ -354,17 +355,17 @@ const breadcrumbSchema = {
           <div class="space-y-4">
             <div class="math-card !bg-card-bg">
               <p class="math-label">State vector</p>
-              <p class="mt-2 font-mono text-[0.84rem] text-primary-text">$$\mathbf&#123;x&#125; = [T_v, T_m]^&#123;\top&#125;$$</p>
+              <p class="mt-2 font-mono text-[0.84rem] text-primary-text"><Math math="\mathbf{x} = [T_v, T_m]^{\top}" display /></p>
               <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">Two states, two time scales. Code keeps them as <code>T_coil</code> and <code>T_mag</code>, plus <code>simulatedTime</code>. No hidden integrators pulling tricks.</p>
             </div>
             <div class="math-card !bg-card-bg">
               <p class="math-label">Variables you actually touch</p>
-              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text">$R_&#123;th\_v&#125;$ coil-to-magnet K/W — slider $rth\_v$<br/>$C_&#123;th\_v&#125;$ coil J/K — slider $cth\_v$<br/>$R_&#123;th\_m&#125;$, $C_&#123;th\_m&#125;$ magnet side — preset only<br/>$\alpha$ copper TCR — slider, default $0.00393$<br/>$P_&#123;input&#125;$, $R_&#123;e0&#125;$, $T_&#123;amb&#125;$ direct controls<br/>$PHYSICS\_DT=0.02$, $WINDOW\_SECONDS=60$</p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text"><Math math="R_{th\_v}" /> coil-to-magnet K/W — slider <Math math="rth\_v" /><br/><Math math="C_{th\_v}" /> coil J/K — slider <Math math="cth\_v" /><br/><Math math="R_{th\_m}" />, <Math math="C_{th\_m}" /> magnet side — preset only<br/><Math math="\alpha" /> copper TCR — slider, default $0.00393$<br/><Math math="P_{input}" />, <Math math="R_{e0}" />, <Math math="T_{amb}" /> direct controls<br/><Math math="PHYSICS\_DT=0.02" />, <Math math="WINDOW\_SECONDS=60" /></p>
             </div>
             <div class="math-card">
               <p class="math-label">Time constant decoded</p>
-              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text">$$\tau = R_&#123;th&#125;C_&#123;th&#125;\;[s]$$</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">After one $\tau$, the step response reaches $63\%$. Standard basket: $\tau_v=1.5\times15=22.5$ s. You see it on the top plot — knee around $20$–$30$ s. Ferrofluid slashes $R_&#123;th\_v&#125;$ to $0.4$, so $\tau_v \approx 4$ s and $T_&#123;ss&#125;$ drops dramatically, but $C_&#123;th\_v&#125;$ also $10$ J/K in that preset, keeping it responsive.</p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text"><Math math="\tau = R_{th}C_{th}\;[s]" display /></p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">After one <Math math="\tau" />, the step response reaches <Math math="63\%" />. Standard basket: <Math math="\tau_v=1.5\times15=22.5" /> s. You see it on the top plot — knee around $20$–$30$ s. Ferrofluid slashes <Math math="R_{th\_v}" /> to $0.4$, so <Math math="\tau_v \approx 4" /> s and <Math math="T_{ss}" /> drops dramatically, but <Math math="C_{th\_v}" /> also $10$ J/K in that preset, keeping it responsive.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Integrator honesty</p>
@@ -382,17 +383,17 @@ const breadcrumbSchema = {
           <div class="space-y-6">
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Start here</h3>
-              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">150 W, Standard basket, 20°C.</strong> The default. Hit Play — coil climbs toward $\sim 150$–$200°C$ depending on $R_&#123;e0&#125;$, SPL sags about $-1$ to $-2$ dB over $60$ s. Watch $\tau_v$: time readout shows the early rise is steep, then bends as magnet warms. That's $C_&#123;th\_m&#125;$ waking up.</p>
+              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">150 W, Standard basket, 20°C.</strong> The default. Hit Play — coil climbs toward <Math math="\sim 150" />–$200°C$ depending on <Math math="R_{e0}" />, SPL sags about $-1$ to $-2$ dB over $60$ s. Watch <Math math="\tau_v" />: time readout shows the early rise is steep, then bends as magnet warms. That's <Math math="C_{th\_m}" /> waking up.</p>
             </div>
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Crank it</h3>
-              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">1000 W.</strong> Same cooling, $5\times$ heat. $T_&#123;ss&#125;$ in the code's Newton solver jumps beyond $400°C$ — well past the $200°C$ adhesive warning. Current drops from $\sim 10$ A to $\sim 6$ A, electrical power actually falls as it heats. You asked for 1000 W, you get $\sim 600$ W hot. The red banner is not theatrical.</p>
-              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Swap to Ferrofluid.</strong> Same 1000 W now settles near $180$–$220°C$, SPL sag about half. The power-sweep chart shows why: the orange-red curve (your current architecture) pulls down to green when you click that preset. Ferrofluid bridges the $0.2$ mm gap with liquid that conducts heat — $R_&#123;th\_v&#125; = 0.4$ vs $1.5$. Physics you can buy.</p>
+              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">1000 W.</strong> Same cooling, <Math math="5\times" /> heat. <Math math="T_{ss}" /> in the code's Newton solver jumps beyond $400°C$ — well past the $200°C$ adhesive warning. Current drops from <Math math="\sim 10" /> A to <Math math="\sim 6" /> A, electrical power actually falls as it heats. You asked for 1000 W, you get <Math math="\sim 600" /> W hot. The red banner is not theatrical.</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Swap to Ferrofluid.</strong> Same 1000 W now settles near $180$–$220°C$, SPL sag about half. The power-sweep chart shows why: the orange-red curve (your current architecture) pulls down to green when you click that preset. Ferrofluid bridges the $0.2$ mm gap with liquid that conducts heat — <Math math="R_{th\_v} = 0.4" /> vs $1.5$. Physics you can buy.</p>
             </div>
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Find the constants</h3>
-              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Measure $\tau$.</strong> Pause at ambient, hit Play, time how long to get $63\%$ of $T_&#123;ss&#125;-T_&#123;amb&#125;$. That's $\tau$ — compare to $R_&#123;th\_v&#125;C_&#123;th\_v&#125;$ badge. Now lower $C_&#123;th\_v&#125;$ to $0.5$ J/K (custom). Rise becomes near-instant — you removed thermal inertia. Raise it to $50$ J/K and you get a slow cooker.</p>
-              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Ambient matters.</strong> Set $T_&#123;amb&#125; = 40°C$ — a summer stage. $T_v$ baseline lifts by $20$ K, $T_&#123;ss&#125;$ lifts by the same plus a little extra because hotter start means higher $R_e$ means a touch less power. Small, but real.</p>
+              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Measure <Math math="\tau" />.</strong> Pause at ambient, hit Play, time how long to get <Math math="63\%" /> of <Math math="T_{ss}-T_{amb}" />. That's <Math math="\tau" /> — compare to <Math math="R_{th\_v}C_{th\_v}" /> badge. Now lower <Math math="C_{th\_v}" /> to $0.5$ J/K (custom). Rise becomes near-instant — you removed thermal inertia. Raise it to $50$ J/K and you get a slow cooker.</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Ambient matters.</strong> Set <Math math="T_{amb} = 40°C" /> — a summer stage. <Math math="T_v" /> baseline lifts by $20$ K, <Math math="T_{ss}" /> lifts by the same plus a little extra because hotter start means higher <Math math="R_e" /> means a touch less power. Small, but real.</p>
             </div>
           </div>
           <div class="space-y-4">
@@ -401,11 +402,11 @@ const breadcrumbSchema = {
               <div class="mt-4 space-y-4 text-[0.88rem] leading-[1.6] text-muted-text">
                 <div>
                   <p class="font-semibold text-primary-text">Time acceleration</p>
-                  <p>Physics $dt$ stays $PHYSICS\_DT = 0.02$ s — speed just runs more steps per render frame (capped at $200$ per frame). At $40\times$ you watch minutes of thermal drift in seconds. At $1\times$ you can see the sampling — data points every $0.033$ s — and feel how $\tau_m$ really dominates long runs.</p>
+                  <p>Physics <Math math="dt" /> stays <Math math="PHYSICS\_DT = 0.02" /> s — speed just runs more steps per render frame (capped at $200$ per frame). At <Math math="40\times" /> you watch minutes of thermal drift in seconds. At <Math math="1\times" /> you can see the sampling — data points every $0.033$ s — and feel how <Math math="\tau_m" /> really dominates long runs.</p>
                 </div>
                 <div>
                   <p class="font-semibold text-primary-text">Power sweep + show all architectures</p>
-                  <p>Top marker shows current live $T_&#123;coil&#125;$ vs steady-state $T_&#123;ss&#125;$ at $P_&#123;input&#125;$. When they diverge, you're still in transient. Click "Show all architectures" — three dashed curves use $PRESETS$ directly: standard $1.5/1.0$, vented $0.8/0.4$, ferrofluid $0.4/0.3$ for $R_&#123;th\_v&#125;/R_&#123;th\_m&#125;$. Slope at low power is $R_&#123;th\_v&#125;+R_&#123;th\_m&#125;$: linear for cold.</p>
+                  <p>Top marker shows current live <Math math="T_{coil}" /> vs steady-state <Math math="T_{ss}" /> at <Math math="P_{input}" />. When they diverge, you're still in transient. Click "Show all architectures" — three dashed curves use $PRESETS$ directly: standard $1.5/1.0$, vented $0.8/0.4$, ferrofluid $0.4/0.3$ for <Math math="R_{th\_v}/R_{th\_m}" />. Slope at low power is <Math math="R_{th\_v}+R_{th\_m}" />: linear for cold.</p>
                 </div>
                 <div>
                   <p class="font-semibold text-primary-text">200°C warning</p>
@@ -415,7 +416,7 @@ const breadcrumbSchema = {
             </div>
             <div class="math-card">
               <p class="math-label">Where the code lives</p>
-              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text"><code>steadyStateTemp()</code> Newton solve, <code>stepPhysics()</code> Euler ladder, <code>renderTimeCanvas()</code> dual stacked plot with $Tamb$ and $Tss$ asymptotes, <code>renderSweepCanvas()</code> pre-computed $100$-point curves. Sampling interval $0.033$ s, $WINDOW_SECONDS=60$ window trim. No magic.</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text"><code>steadyStateTemp()</code> Newton solve, <code>stepPhysics()</code> Euler ladder, <code>renderTimeCanvas()</code> dual stacked plot with $Tamb$ and $Tss$ asymptotes, <code>renderSweepCanvas()</code> pre-computed $100$-point curves. Sampling interval $0.033$ s, <Math math="WINDOW_SECONDS=60" /> window trim. No magic.</p>
             </div>
           </div>
         </div>
@@ -428,14 +429,14 @@ const breadcrumbSchema = {
         <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-semibold text-primary-text">What is real physics</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Lumped two-time-constant thermal network, copper TCR $\alpha=0.00393$, constant-voltage interpretation $V_&#123;in&#125;^2 = P_&#123;input&#125;R_&#123;e0&#125;$, coupled ODEs as written, Newton solve for steady-state, SPL compression as $-20\log_&#123;10&#125;(R_e/R_&#123;e0&#125;)$. Time constants $\tau=R_&#123;th&#125;C_&#123;th&#125;$ behave exactly as labeled. Numbers track a real 15" woofer within a factor of two.</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Lumped two-time-constant thermal network, copper TCR <Math math="\alpha=0.00393" />, constant-voltage interpretation <Math math="V_{in}^2 = P_{input}R_{e0}" />, coupled ODEs as written, Newton solve for steady-state, SPL compression as <Math math="-20\log_{10}(R_e/R_{e0})" />. Time constants <Math math="\tau=R_{th}C_{th}" /> behave exactly as labeled. Numbers track a real 15" woofer within a factor of two.</p>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-semibold text-primary-text">What it simplifies</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Uniform temperature — real coil has hot spots near the gap exit. Constant $R_&#123;th&#125;$, $C_&#123;th&#125;$ — in reality convection scales with $\Delta T$ and gap airflow modulates with excursion. No radiation term $\propto T^4$. No frequency dependence — music is peaky, RMS is a crude average. No eddy-current heating in pole pieces, no $Bl(T)$ drop from magnet demagnetization, no former material or adhesive thermal conductance, no excursion-driven pumping. The model overestimates low-frequency heating and underestimates HF cooling — take it as a clear, teachable bounding case.</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Uniform temperature — real coil has hot spots near the gap exit. Constant <Math math="R_{th}" />, <Math math="C_{th}" /> — in reality convection scales with <Math math="\Delta T" /> and gap airflow modulates with excursion. No radiation term <Math math="\propto T^4" />. No frequency dependence — music is peaky, RMS is a crude average. No eddy-current heating in pole pieces, no <Math math="Bl(T)" /> drop from magnet demagnetization, no former material or adhesive thermal conductance, no excursion-driven pumping. The model overestimates low-frequency heating and underestimates HF cooling — take it as a clear, teachable bounding case.</p>
           </div>
         </div>
-        <p class="mt-8 text-[0.84rem] leading-[1.7] text-muted-text">If you want to push further: make $R_&#123;th\_v&#125;$ a function of $x_&#123;coil&#125;(t)$ to model pumping, add a third node for pole piece with its own $C$, let $Bl = Bl_0[1 - \beta(T_m-20)]$ for ferrite tempco, or drive $P_e(t)$ from a real audio envelope instead of continuous sine. All fit inside the same ladder — more nodes, same idea.</p>
+        <p class="mt-8 text-[0.84rem] leading-[1.7] text-muted-text">If you want to push further: make <Math math="R_{th\_v}" /> a function of <Math math="x_{coil}(t)" /> to model pumping, add a third node for pole piece with its own <Math math="C" />, let <Math math="Bl = Bl_0[1 - \beta(T_m-20)]" /> for ferrite tempco, or drive <Math math="P_e(t)" /> from a real audio envelope instead of continuous sine. All fit inside the same ladder — more nodes, same idea.</p>
       </div>
     </section>
   </PlaygroundShell>

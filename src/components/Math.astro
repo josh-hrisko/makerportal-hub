@@ -1,5 +1,6 @@
 ---
 import katex from 'katex';
+import 'katex/dist/katex.min.css';
 
 interface Props {
   math: string;
@@ -9,7 +10,9 @@ interface Props {
 
 const { math, display = false, class: className = '' } = Astro.props;
 
-// Decode HTML entities that may have been left from previous escaping pass
+// Decode HTML entities that may be left from source-level escaping. Astro
+// attribute values arrive verbatim (\\ stays \\), so matrix row separators
+// survive untouched.
 function decodeEntities(str: string): string {
   return str
     .replace(/&#123;/g, '{')
@@ -21,8 +24,6 @@ function decodeEntities(str: string): string {
 }
 
 let clean = decodeEntities(math)
-  // Fix double-escaped backslashes from JS strings
-  .replace(/\\\\/g, '\\')
   // Normalize \lt \gt to < > for server render (katex understands both but < > is more robust)
   .replace(/\\lt/g, '<')
   .replace(/\\gt/g, '>');

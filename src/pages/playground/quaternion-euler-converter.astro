@@ -3,7 +3,9 @@ import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const gear = affiliateLinks
   .filter((link) => link.relatedTo?.includes('motionlink') || link.relatedTo?.includes('quaternion-euler-converter'))
@@ -229,6 +231,76 @@ const faqSchema = {
       </div>
     </section>
 
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel above answers to the math below. Here is what each piece of the visualization and both converter panels is actually doing, and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The 3D viewport</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The head.</strong> An 18k-vertex sculpt (simplified from 185k with gltf-transform), painted matte brand-blue so specular highlights trace the geometry without skin-tone distraction. The nose defines local <Math math="+X" /> — that convention is what the roll axis pivots around.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The axis triad.</strong> Red <Math math="+X" /> forward, green <Math math="+Y" /> left, blue <Math math="+Z" /> up. The arrows are deliberately <em>not</em> parented to the head — they are the inertial world frame, the same frame CoreMotion reports attitude against. You watch the body rotate against a fixed reference, which is exactly how sensor fusion thinks.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The drag mapping.</strong> Horizontal drag integrates yaw about world <Math math="Z" />, vertical drag pitches about the rotated <Math math="Y" /> — deltas pre-multiplied into the current quaternion (world-frame composition). <strong class="text-primary-text">Shift-drag</strong> post-multiplies a roll about the head's local nose axis. Two Hamilton-product orders on one canvas: world pre-multiply versus local post-multiply, the distinction that bit us in the bug story below.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Lighting and shadow.</strong> Warm key from upper-front-right, cool fill from the opposite flank, warm rim from behind — a classic three-point rig — plus a low-intensity room environment for ambient. Neutral tone mapping keeps mid-tones from crushing. The ground shadow is a radial-gradient texture on a plane: a cheap depth cue with zero shadow-map cost.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> There is no idle <code>requestAnimationFrame</code> spin. The scene re-renders on state change only — drag frames (rAF-throttled), panel inputs, resets. Sixty frames per second while you interact, zero while you read.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">What the view constructs every frame — R(q)</p>
+              <Math math="R(q)=\begin{bmatrix} 1-2(y^2+z^2) & 2(xy-zw) & 2(xz+yw) \\ 2(xy+zw) & 1-2(x^2+z^2) & 2(yz-xw) \\ 2(xz-yw) & 2(yz+xw) & 1-2(x^2+y^2) \end{bmatrix}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">The mesh's orientation matrix comes straight from the quaternion — never from Euler angles — so the viewport itself is immune to gimbal lock. Compare the diagonal entries against the denominators in the yaw/roll <code>atan2</code> calls: they are the same terms.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Panels, readouts, and buttons</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Live yaw / pitch / roll readout.</strong> Computed per render from the exact quaternion driving the mesh, via the same <code>atan2</code>–<code>asin</code>–<code>atan2</code> chain as the Swift functions below. The view and the numbers can never disagree — they share one source of truth.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Quaternion → Euler panel.</strong> Four components in. The magnitude line reports <Math math="|q|" /> live; anything off 1.0 gets normalized before angle extraction, because the <code>asin</code> pitch term silently assumes a unit quaternion.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The pitch clamp.</strong> The <code>asin</code> argument is clamped to <Math math="[-1, 1]" />. Floating-point drift past ±1 would otherwise yield <code>NaN</code> and blank every readout downstream. Feed the panel extreme values and watch the clamp hold.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Euler → Quaternion panel.</strong> Degrees in, half-angle products out — literally <Math math="\cos(\theta/2)" />, <Math math="\sin(\theta/2)" /> terms multiplied in ZYX order, matching <code>quaternion(fromYaw:pitch:roll:)</code> line for line.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Reset buttons.</strong> <code>0°</code> puts the camera behind the head (the mathematical zero orientation), <code>180°</code> turns the face to you, and the sample pose <Math math="(180^\circ, -35^\circ, 35^\circ)" /> exercises all three axes at once so you can verify the round-trip by eye: Euler in → quaternion out → angles back, identical numbers.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The source line.</strong> The small mono label above the canvas ("From Quaternion → Euler panel") tells you which panel last drove the view. Typing in either panel re-derives the scene from scratch — no hidden state accumulates.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="border-b border-border" aria-labelledby="math-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math and physics, in full</h2>
@@ -240,12 +312,12 @@ const faqSchema = {
             <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Pick a 3D axis (a unit vector <code>(aₓ, a_y, a_z)</code>) and rotate around it by angle <code>θ</code>. Euler's rotation theorem states that any 3D rotation can be written this way. A unit quaternion stores this axis and angle in four components:</p>
             <div class="mt-5 math-card">
               <p class="math-label">Axis–angle form</p>
-              <p class="mt-2">q = ( aₓ·sin(θ/2), a_y·sin(θ/2), a_z·sin(θ/2), cos(θ/2) )</p>
+              <Math math="q = \bigl(a_x\sin\tfrac{\theta}{2},\ a_y\sin\tfrac{\theta}{2},\ a_z\sin\tfrac{\theta}{2},\ \cos\tfrac{\theta}{2}\bigr)" display class="mt-2" />
               <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is <code>quatFromAxisAngle()</code> in the script below. It is what CoreMotion's sensor fusion outputs under <code>attitude.quaternion</code>. If you are fetching raw IMU data, an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">MPU9250</a>'s onboard DMP spits out this exact format.</p>
             </div>
             <div class="mt-4 math-card">
               <p class="math-label">Unit constraint</p>
-              <p class="mt-2">x² + y² + z² + w² = 1</p>
+              <Math math="x^2 + y^2 + z^2 + w^2 = 1" display class="mt-2" />
               <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">To represent pure rotation without scaling or stretching, the quaternion must be normalized. We force-normalize the inputs in the Quaternion → Euler panel before calculating the angles.</p>
             </div>
           </div>
@@ -298,20 +370,20 @@ const faqSchema = {
           <div class="lg:order-1">
             <h3 class="text-[1.15rem] font-[650] text-primary-text">Why Euler angles break: gimbal lock</h3>
             <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
-              Picture three nested rings. Outer ring yaws around world $Z$, middle ring pitches around new $Y$, inner ring rolls around new $X$. With small pitch, those axes are distinct — you have three independent knobs. Now pitch the middle ring to $90^\circ$. Outer yaw axis folds flat onto inner roll axis. You still have three rings, but only two distinct directions. Twist yaw, you turn roll. Twist roll, you turn yaw. One degree of freedom is gone.
+              Picture three nested rings. Outer ring yaws around world <Math math="Z" />, middle ring pitches around new <Math math="Y" />, inner ring rolls around new <Math math="X" />. With small pitch, those axes are distinct — you have three independent knobs. Now pitch the middle ring to <Math math="90^\circ" />. Outer yaw axis folds flat onto inner roll axis. You still have three rings, but only two distinct directions. Twist yaw, you turn roll. Twist roll, you turn yaw. One degree of freedom is gone.
             </p>
             <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
-              Algebra says same thing. $R = R_z(\text&#123;yaw&#125;) R_y(\text&#123;pitch&#125;) R_x(\text&#123;roll&#125;)$. At $pitch=90^\circ$,
-              $R_y(90^\circ)=\begin&#123;bmatrix&#125;0 & 0 & 1\\0 & 1 & 0\\-1 & 0 & 0\end&#123;bmatrix&#125;$, and product collapses to $R = R_z(yaw - roll) R_y(90^\circ)$. Yaw minus roll is what matters; their individual values are not even observable. Jacobian $\partial R / \partial(yaw,pitch,roll)$ drops rank $3\to2$. Inverse mapping yaw/pitch/roll from a rotation matrix becomes ill-conditioned: tiny noise slams you from $(30^\circ,90^\circ,0^\circ)$ to $(130^\circ,90^\circ,100^\circ)$.
+              Algebra says same thing. <Math math="R = R_z(\text{yaw}) R_y(\text{pitch}) R_x(\text{roll})" />. At <Math math="pitch=90^\circ" />,
+              <Math math="R_y(90^\circ)=\begin{bmatrix}0 &amp; 0 &amp; 1\\0 &amp; 1 &amp; 0\\-1 &amp; 0 &amp; 0\end{bmatrix}" />, and product collapses to <Math math="R = R_z(yaw - roll) R_y(90^\circ)" />. Yaw minus roll is what matters; their individual values are not even observable. Jacobian <Math math="\partial R / \partial(yaw,pitch,roll)" /> drops rank <Math math="3\to2" />. Inverse mapping yaw/pitch/roll from a rotation matrix becomes ill-conditioned: tiny noise slams you from <Math math="(30^\circ,90^\circ,0^\circ)" /> to <Math math="(130^\circ,90^\circ,100^\circ)" />.
             </p>
             <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
-              It is not a bug in code. You cannot cover $SO(3)$ — the space of all rotations — with three numbers globally without a singularity. Same reason you cannot comb a sphere flat. Euler chose to put singularities at north-south pitch $\pm90^\circ$. Any other Euler convention just moves them elsewhere.
+              It is not a bug in code. You cannot cover <Math math="SO(3)" /> — the space of all rotations — with three numbers globally without a singularity. Same reason you cannot comb a sphere flat. Euler chose to put singularities at north-south pitch <Math math="\pm90^\circ" />. Any other Euler convention just moves them elsewhere.
             </p>
             <div class="mt-5 math-card">
               <p class="math-label">Verified, not asserted — same rotation, three labels</p>
-              <p class="mt-2 text-[0.8rem] leading-[1.6]">(yaw $30^\circ$, pitch $90^\circ$, roll $0^\circ$) $\to$ same $q$ as (yaw $50^\circ$, pitch $90^\circ$, roll $20^\circ$) $\to$ same $q$ as (yaw $0^\circ$, pitch $90^\circ$, roll $-30^\circ$). All share $yaw - roll = 30^\circ$. Literally same four numbers $x,y,z,w$ after normalization, not just close.</p>
+              <p class="mt-2 text-[0.8rem] leading-[1.6]">(yaw <Math math="30^\circ" />, pitch <Math math="90^\circ" />, roll <Math math="0^\circ" />) <Math math="\to" /> same <Math math="q" /> as (yaw <Math math="50^\circ" />, pitch <Math math="90^\circ" />, roll <Math math="20^\circ" />) <Math math="\to" /> same <Math math="q" /> as (yaw <Math math="0^\circ" />, pitch <Math math="90^\circ" />, roll <Math math="-30^\circ" />). All share <Math math="yaw - roll = 30^\circ" />. Literally same four numbers <Math math="x,y,z,w" /> after normalization, not just close.</p>
               <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
-                In code, $pitch = \arcsin(2(w y - z x))$. At $pitch=\pm90^\circ$, argument approaches $\pm1$ and rounding pushes it to $\pm1.0000002$. Without $\max(-1,\min(1,\cdot))$ clamp you get $NaN$ and your 3D head vanishes. With clamp you get stable $90^\circ$ but yaw/roll split is arbitrary — we zero roll by convention.
+                In code, <Math math="pitch = \arcsin(2(w y - z x))" />. At <Math math="pitch=\pm90^\circ" />, argument approaches <Math math="\pm1" /> and rounding pushes it to <Math math="\pm1.0000002" />. Without <Math math="\max(-1,\min(1,\cdot))" /> clamp you get $NaN$ and your 3D head vanishes. With clamp you get stable <Math math="90^\circ" /> but yaw/roll split is arbitrary — we zero roll by convention.
               </p>
               <div class="mt-3 flex flex-wrap gap-2">
                 <button type="button" class="gimbal-example-btn rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="30" data-pitch="90" data-roll="0">Load (30°, 90°, 0°)</button>
@@ -321,7 +393,7 @@ const faqSchema = {
             </div>
             <div class="mt-5 math-card">
               <p class="math-label">Why quaternion does not lock</p>
-              <p class="mt-2 text-[0.82rem] leading-[1.6]">$q = (a_x \sin(\theta/2), a_y \sin(\theta/2), a_z \sin(\theta/2), \cos(\theta/2))$. One axis $a$, one angle $\theta$. No sequence of dependent axes to collapse. Composition is one Hamilton product $q_1 \otimes q_2$, interpolation is great-circle slerp $q(t)=\frac&#123;\sin((1-t)\Omega)&#125;&#123;\sin\Omega&#125; q_0 + \frac&#123;\sin(t\Omega)&#125;&#123;\sin\Omega&#125; q_1$, constant angular velocity, shortest path, no poles.</p>
+              <p class="mt-2 text-[0.82rem] leading-[1.6]"><Math math="q = (a_x \sin(\theta/2), a_y \sin(\theta/2), a_z \sin(\theta/2), \cos(\theta/2))" />. One axis <Math math="a" />, one angle <Math math="\theta" />. No sequence of dependent axes to collapse. Composition is one Hamilton product <Math math="q_1 \otimes q_2" />, interpolation is great-circle slerp <Math math="q(t)=\frac{\sin((1-t)\Omega)}{\sin\Omega} q_0 + \frac{\sin(t\Omega)}{\sin\Omega} q_1" />, constant angular velocity, shortest path, no poles.</p>
               <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Gimbal lock is loss of ability to tell yaw from roll. Quaternion never had that factorization, so nothing to lose.</p>
             </div>
           </div>
@@ -332,8 +404,9 @@ const faqSchema = {
           <p class="mt-3 max-w-3xl text-[0.92rem] leading-[1.7] text-muted-text">Quaternions compose via the Hamilton product. Order matters here: <code>q₁⊗q₂</code> isn't the same as <code>q₂⊗q₁</code>. The sequence determines if you are rotating in the fixed world coordinate system or the object's local body frame.</p>
           <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div class="math-card">
-              <p class="math-label">Hamilton product</p>
-              <p class="mt-2 text-[0.82rem] leading-[1.7]">w = a_w·b_w − a·b (vector part)<br />v = a_w·b + b_w·a + a×b</p>
+              <p class="math-label">Hamilton product — q = a ⊗ b</p>
+              <Math math="w = a_w b_w - \mathbf{a}\cdot\mathbf{b}" display class="mt-2" />
+              <Math math="\mathbf{v} = a_w\,\mathbf{b} + b_w\,\mathbf{a} + \mathbf{a}\times\mathbf{b}" display />
               <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Implemented as <code>quatMul()</code> in the script. Pre-multiplying (<code>quatMul(delta, current)</code>) applies the rotation in world space. Post-multiplying (<code>quatMul(current, delta)</code>) applies it locally.</p>
             </div>
             <div class="math-card">
@@ -434,23 +507,85 @@ const faqSchema = {
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-          <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
-          <AffiliateDisclosure class="mt-3 max-w-2xl" />
-          <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              MotionLink stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Head-tracking hardware
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {gear.map((item) => (
-              <div class="flex items-start gap-3 rounded-[14px] border border-border bg-card-bg p-4">
-                {item.image && (
-                  <img src={item.image} alt="" width="48" height="48" loading="lazy" decoding="async" class="size-12 shrink-0 rounded-[8px] border border-border bg-card-bg object-contain p-1" />
-                )}
-                <div class="min-w-0 flex-1">
-                  <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="text-[0.92rem] font-semibold leading-[1.35] text-primary-text hover:text-primary-cta">{item.title} ↗</a>
-                  <p class="mt-1 text-[0.78rem] leading-[1.5] text-muted-text">{item.note}</p>
-                  {item.price && <span class="mt-2 inline-block rounded-full border border-border bg-elevated px-2 py-0.5 font-mono text-[0.65rem] text-primary-text">{item.price}</span>}
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                {/* Image — 4:3 with subtle radial tint, matches /resources#gear */}
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
                 </div>
-              </div>
+
+                {/* Content */}
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
             ))}
           </div>
-          <p class="mt-4 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
         </div>
       </section>
     )}
@@ -540,6 +675,18 @@ const faqSchema = {
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--mp-muted);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 

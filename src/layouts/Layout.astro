@@ -249,49 +249,7 @@ const organizationSchema = {
     `} />
     <SeoMeta title={title} description={description} canonical={canonical} noindex={noindex} type={type} publishedTime={publishedTime} modifiedTime={modifiedTime} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organizationSchema)}></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
-    <script is:inline src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
-    <script is:inline src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
-    <script is:inline data-astro-rerun>
-      (function(){
-        function doRender(){
-          try{
-            if(typeof window==='undefined') return;
-            if(!window.renderMathInElement) return;
-            // Don't render inside code/pre/canvas already excluded by ignoredTags, but scope to main
-            var root = document.getElementById('main-content') || document.body;
-            if(!root) return;
-            // Quick check to avoid work if no math
-            if(root.innerHTML.indexOf('$')===-1) return;
-            window.renderMathInElement(root, {
-              delimiters: [
-                {left:'$$', right:'$$', display:true},
-                {left:'$', right:'$', display:false},
-                {left:'\\(', right:'\\)', display:false},
-                {left:'\\[', right:'\\]', display:true}
-              ],
-              throwOnError:false,
-              strict:false,
-              ignoredTags:['script','noscript','style','textarea','pre','code','canvas','svg'],
-              ignoredClasses:['no-katex']
-            });
-          }catch(e){ console.warn('KaTeX render error', e); }
-        }
-        // Initial + after Astro transitions
-        if(document.readyState==='loading'){
-          document.addEventListener('DOMContentLoaded', doRender);
-        } else {
-          doRender();
-        }
-        document.addEventListener('astro:page-load', doRender);
-        document.addEventListener('astro:after-swap', doRender);
-        // Safety: retry after 1s for late-loaded CDN
-        setTimeout(doRender, 800);
-        setTimeout(doRender, 2000);
-        // Expose for manual trigger
-        window.__mp_renderMath = doRender;
-      })();
-    </script>
+    <!-- KaTeX is server-rendered via src/components/Math.astro (CSS+fonts bundled locally); no CDN runtime -->
     <slot name="head" />
     <!-- View Transitions for thrilling state-of-the-art nav -->
     <ClientRouter />

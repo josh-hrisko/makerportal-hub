@@ -16,6 +16,7 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Double Pendulum + Phase Space', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -108,10 +109,10 @@ const breadcrumbSchema = {
               There is no dice in this machine. Same angles, same velocities, same future — every single time. That's what makes the double pendulum so unnerving: it's the purest example of deterministic chaos you can build on a kitchen table.
             </p>
             <p>
-              Two equal masses, two equal rods, one pivot. Four numbers completely describe it — $\theta_1$, $\theta_2$, $\omega_1$, $\omega_2$ — yet there is no closed-form formula for $\theta(t)$. Not because we haven't found one, but because none exists. Poincaré proved this in 1890 while wrestling with the three-body problem, and the double pendulum is its tabletop cousin.
+              Two equal masses, two equal rods, one pivot. Four numbers completely describe it — <Math math="\theta_1" />, <Math math="\theta_2" />, <Math math="\omega_1" />, <Math math="\omega_2" /> — yet there is no closed-form formula for <Math math="\theta(t)" />. Not because we haven't found one, but because none exists. Poincaré proved this in 1890 while wrestling with the three-body problem, and the double pendulum is its tabletop cousin.
             </p>
             <p>
-              The faint ghost trailing behind the colored bob is identical to the main system except for <strong class="text-primary-text">$10^&#123;-4&#125;$ radians</strong> — about $0.006°$ — of initial offset on $\theta_2$. Watch what happens. For a calm release they stay glued. For a chaotic one, they diverge until you can't tell they ever started together. That divergence is exponential, not gradual. It has a number — the Lyapunov exponent — and this simulation lets you see it live.
+              The faint ghost trailing behind the colored bob is identical to the main system except for <strong class="text-primary-text"><Math math="10^{-4}" /> radians</strong> — about $0.006°$ — of initial offset on <Math math="\theta_2" />. Watch what happens. For a calm release they stay glued. For a chaotic one, they diverge until you can't tell they ever started together. That divergence is exponential, not gradual. It has a number — the Lyapunov exponent — and this simulation lets you see it live.
             </p>
           </div>
         </div>
@@ -125,33 +126,33 @@ const breadcrumbSchema = {
             <h2 id="intuition-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The intuition — why coupling breeds chaos</h2>
             <div class="mt-5 space-y-4 text-[0.95rem] leading-[1.75] text-muted-text">
               <p>
-                Think of a single pendulum: gravity provides a restoring torque proportional to $\sin\theta$. Simple, predictable, a cosine potential well. Now hang a second pendulum from the first.
+                Think of a single pendulum: gravity provides a restoring torque proportional to <Math math="\sin\theta" />. Simple, predictable, a cosine potential well. Now hang a second pendulum from the first.
               </p>
               <p>
-                Suddenly each bob feels two things it didn't before. The top bob is yanked by the inertia of the bottom bob — when $m_2$ swings, it tugs $m_1$ sideways through the rod. The bottom bob, meanwhile, lives in a non-inertial frame that is itself swinging. Its "gravity" is a combination of real gravity plus the centripetal and Coriolis accelerations of the first pivot.
+                Suddenly each bob feels two things it didn't before. The top bob is yanked by the inertia of the bottom bob — when <Math math="m_2" /> swings, it tugs <Math math="m_1" /> sideways through the rod. The bottom bob, meanwhile, lives in a non-inertial frame that is itself swinging. Its "gravity" is a combination of real gravity plus the centripetal and Coriolis accelerations of the first pivot.
               </p>
               <p>
-                The angle difference $\Delta = \theta_1 - \theta_2$ is the villain. Where a single pendulum has $\sin\theta$, the double has $\sin\Delta$ and $\cos\Delta$ multiplying velocity-squared terms. That $\omega^2 \cos\Delta$ term is centrifugal — the faster the other arm spins, the harder it pulls. That coupling is nonlinear and it goes both ways:
+                The angle difference <Math math="\Delta = \theta_1 - \theta_2" /> is the villain. Where a single pendulum has <Math math="\sin\theta" />, the double has <Math math="\sin\Delta" /> and <Math math="\cos\Delta" /> multiplying velocity-squared terms. That <Math math="\omega^2 \cos\Delta" /> term is centrifugal — the faster the other arm spins, the harder it pulls. That coupling is nonlinear and it goes both ways:
               </p>
               <ul class="list-disc pl-5 space-y-2 marker:text-muted-text/60">
-                <li>$\omega_2^2$ appears in $\dot\omega_1$ — the bottom arm's spin forces the top.</li>
-                <li>$\omega_1^2$ appears in $\dot\omega_2$ — the top arm's spin forces the bottom.</li>
-                <li>Both are scaled by $\sin(\theta_1-\theta_2)$ — strongest when the arms are perpendicular, zero when collinear.</li>
+                <li><Math math="\omega_2^2" /> appears in <Math math="\dot\omega_1" /> — the bottom arm's spin forces the top.</li>
+                <li><Math math="\omega_1^2" /> appears in <Math math="\dot\omega_2" /> — the top arm's spin forces the bottom.</li>
+                <li>Both are scaled by <Math math="\sin(\theta_1-\theta_2)" /> — strongest when the arms are perpendicular, zero when collinear.</li>
               </ul>
               <p>
-                In other words, the system feeds on its own motion. A tiny excess of speed in one arm gets converted — via that geometric $\sin\Delta$ gate — into a kick for the other. At low energy the gate stays almost closed and you get regular, quasi-periodic orbits. At high energy it swings wide open and the kicks cascade. That's the flip you see: one moment orderly, the next — tumbling.
+                In other words, the system feeds on its own motion. A tiny excess of speed in one arm gets converted — via that geometric <Math math="\sin\Delta" /> gate — into a kick for the other. At low energy the gate stays almost closed and you get regular, quasi-periodic orbits. At high energy it swings wide open and the kicks cascade. That's the flip you see: one moment orderly, the next — tumbling.
               </p>
             </div>
           </div>
           <div class="space-y-4">
             <div class="math-card !bg-card-bg">
               <p class="math-label">Think of it like</p>
-              <p class="mt-3 text-[0.92rem] leading-[1.6] text-primary-text">Two ice skaters holding a rigid pole. The inner skater pivots around a point, the outer holds on. When the outer skater leans out ($\Delta \approx 90°$), any spin whips the inner skater violently. When they line up ($\Delta \approx 0$), they can spin together smoothly. Chaos is what happens when that whip-crack keeps switching on and off.</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.6] text-primary-text">Two ice skaters holding a rigid pole. The inner skater pivots around a point, the outer holds on. When the outer skater leans out (<Math math="\Delta \approx 90°" />), any spin whips the inner skater violently. When they line up (<Math math="\Delta \approx 0" />), they can spin together smoothly. Chaos is what happens when that whip-crack keeps switching on and off.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Where chaos lives</p>
               <p class="mt-2 font-mono text-[0.82rem] leading-[1.6] text-primary-text">Low energy: nested tori, near-integrable<br/>Mid energy: mixed — islands of order in a chaotic sea<br/>High energy: almost fully chaotic, ergodicity, frequent flips</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">You control this with $\theta_1, \theta_2$. Both near 0 — calm. One near $\pi$ — inverted, tense, explosive. Preset “Double flip” parks both near the top, where the slightest jitter sends them over.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">You control this with <Math math="\theta_1, \theta_2" />. Both near 0 — calm. One near <Math math="\pi" /> — inverted, tense, explosive. Preset “Double flip” parks both near the top, where the slightest jitter sends them over.</p>
             </div>
           </div>
         </div>
@@ -167,21 +168,21 @@ const breadcrumbSchema = {
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">1. Configuration and velocities</h3>
               <div class="mt-3 rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.7]">
-                $$ \begin&#123;aligned&#125; x_1 &= L_1 \sin\theta_1, & y_1 &= L_1 \cos\theta_1 \\ x_2 &= x_1 + L_2 \sin\theta_2, & y_2 &= y_1 + L_2 \cos\theta_2 \end&#123;aligned&#125; $$
-                <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">We take $y$ positive down to match the canvas — physics is identical, just a sign flip in $V$. Angles are from that downward vertical, so $\theta=0$ is hanging still.</p>
+                <Math math="\begin{aligned} x_1 &amp;= L_1 \sin\theta_1, &amp; y_1 &amp;= L_1 \cos\theta_1 \\ x_2 &amp;= x_1 + L_2 \sin\theta_2, &amp; y_2 &amp;= y_1 + L_2 \cos\theta_2 \end{aligned}" display />
+                <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">We take <Math math="y" /> positive down to match the canvas — physics is identical, just a sign flip in <Math math="V" />. Angles are from that downward vertical, so <Math math="\theta=0" /> is hanging still.</p>
               </div>
             </div>
 
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">2. Kinetic and potential energy</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>The Lagrangian is $L = T - V$. The kinetic part has three contributions — the top bob alone, the bottom bob alone, and the cross term where both move together:</p>
+                <p>The Lagrangian is <Math math="L = T - V" />. The kinetic part has three contributions — the top bob alone, the bottom bob alone, and the cross term where both move together:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
-                  $$ \begin&#123;aligned&#125; T &= \tfrac12 (m_1+m_2) L_1^2 \omega_1^2 + \tfrac12 m_2 L_2^2 \omega_2^2 \\ &\quad + m_2 L_1 L_2\, \omega_1\omega_2 \cos(\theta_1-\theta_2) \end&#123;aligned&#125; $$
-                  $$ V = -(m_1+m_2) g L_1 \cos\theta_1 - m_2 g L_2 \cos\theta_2 $$
+                  <Math math="\begin{aligned} T &amp;= \tfrac12 (m_1+m_2) L_1^2 \omega_1^2 + \tfrac12 m_2 L_2^2 \omega_2^2 \\ &amp;\quad + m_2 L_1 L_2\, \omega_1\omega_2 \cos(\theta_1-\theta_2) \end{aligned}" display />
+                  <Math math="V = -(m_1+m_2) g L_1 \cos\theta_1 - m_2 g L_2 \cos\theta_2" display />
                 </div>
                 <p>
-                  That middle $\cos(\theta_1-\theta_2)$ is the entire story. Without it, you'd have two independent pendulums and a boring life. With it, the inertia matrix depends on configuration — the effective mass felt at one joint changes with the other joint's angle. This is what roboticists call a configuration-dependent mass matrix, and it's why inverse dynamics is hard.
+                  That middle <Math math="\cos(\theta_1-\theta_2)" /> is the entire story. Without it, you'd have two independent pendulums and a boring life. With it, the inertia matrix depends on configuration — the effective mass felt at one joint changes with the other joint's angle. This is what roboticists call a configuration-dependent mass matrix, and it's why inverse dynamics is hard.
                 </p>
               </div>
             </div>
@@ -189,13 +190,13 @@ const breadcrumbSchema = {
             <div>
               <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">3. Equations of motion that actually run</h3>
               <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
-                <p>Apply $\frac&#123;d&#125;&#123;dt&#125;\frac&#123;\partial L&#125;&#123;\partial \omega_i&#125; - \frac&#123;\partial L&#125;&#123;\partial \theta_i&#125;=0$. After a page of algebra you get the coupled accelerations the simulation integrates directly — this is the exact form in <code>acceleration()</code>:</p>
+                <p>Apply <Math math="\frac{d}{dt}\frac{\partial L}{\partial \omega_i} - \frac{\partial L}{\partial \theta_i}=0" />. After a page of algebra you get the coupled accelerations the simulation integrates directly — this is the exact form in <code>acceleration()</code>:</p>
                 <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.76rem] leading-[1.75] text-primary-text">
-                  Let $\Delta = \theta_1-\theta_2$, $D = 2m_1+m_2 - m_2\cos 2\Delta$
-                  $$ \begin&#123;aligned&#125; \alpha_1 &= \frac&#123;-g(2m_1+m_2)\sin\theta_1 - m_2 g\sin(\theta_1-2\theta_2) -2\sin\Delta\,m_2(\omega_2^2 L_2 + \omega_1^2 L_1\cos\Delta)&#125;&#123;L_1 D&#125; - b\omega_1 \\ \alpha_2 &= \frac&#123;2\sin\Delta\,[\omega_1^2 L_1(m_1+m_2)+g(m_1+m_2)\cos\theta_1 + \omega_2^2 L_2 m_2\cos\Delta]&#125;&#123;L_2 D&#125; - b\omega_2 \end&#123;aligned&#125; $$
+                  Let <Math math="\Delta = \theta_1-\theta_2" />, <Math math="D = 2m_1+m_2 - m_2\cos 2\Delta" />
+                  <Math math="\begin{aligned} \alpha_1 &amp;= \frac{-g(2m_1+m_2)\sin\theta_1 - m_2 g\sin(\theta_1-2\theta_2) -2\sin\Delta\,m_2(\omega_2^2 L_2 + \omega_1^2 L_1\cos\Delta)}{L_1 D} - b\omega_1 \\ \alpha_2 &amp;= \frac{2\sin\Delta\,[\omega_1^2 L_1(m_1+m_2)+g(m_1+m_2)\cos\theta_1 + \omega_2^2 L_2 m_2\cos\Delta]}{L_2 D} - b\omega_2 \end{aligned}" display />
                 </div>
                 <p>
-                  $b$ is the optional air damping slider — zero by default, so the system is conservative and the energy diagnostic actually means something. Each $\alpha$ is $\dot\omega$. Note: denominators $D$ can never be zero for positive masses; $D \ge 2m_1$.
+                  <Math math="b" /> is the optional air damping slider — zero by default, so the system is conservative and the energy diagnostic actually means something. Each <Math math="\alpha" /> is <Math math="\dot\omega" />. Note: denominators <Math math="D" /> can never be zero for positive masses; <Math math="D \ge 2m_1" />.
                 </p>
               </div>
             </div>
@@ -204,23 +205,23 @@ const breadcrumbSchema = {
           <div class="space-y-4">
             <div class="math-card !bg-card-bg">
               <p class="math-label">State vector</p>
-              <p class="mt-2 font-mono text-[0.9rem] text-primary-text">$$\mathbf&#123;x&#125; = [\theta_1,\theta_2,\omega_1,\omega_2]^\top \in \mathbb&#123;T&#125;^2 \times \mathbb&#123;R&#125;^2$$</p>
-              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">The state lives on a torus cross a plane — angles wrap at $\pm\pi$, velocities don't. That's why the phase-space trail splits instead of drawing a spurious line across the chart: we cut the wrap.</p>
+              <p class="mt-2 font-mono text-[0.9rem] text-primary-text"><Math math="\mathbf{x} = [\theta_1,\theta_2,\omega_1,\omega_2]^\top \in \mathbb{T}^2 \times \mathbb{R}^2" display /></p>
+              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">The state lives on a torus cross a plane — angles wrap at <Math math="\pm\pi" />, velocities don't. That's why the phase-space trail splits instead of drawing a spurious line across the chart: we cut the wrap.</p>
             </div>
             <div class="math-card !bg-card-bg">
               <p class="math-label">Total energy (the lie detector)</p>
-              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text">$$E = T(\boldsymbol&#123;\theta&#125;,\boldsymbol&#123;\omega&#125;) + V(\boldsymbol&#123;\theta&#125;)$$</p>
-              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">With $b=0$, $E$ should be constant. In the code we compute it every frame and show drift as $(E-E_0)/|E_0|$ in percent. If you see 0.001% after a minute, that's RK4's numerical dissipation — not physics. Turn on damping and we intentionally let it decay, so the readout switches to “dissipating”.</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text"><Math math="E = T(\boldsymbol{\theta},\boldsymbol{\omega}) + V(\boldsymbol{\theta})" display /></p>
+              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">With <Math math="b=0" />, <Math math="E" /> should be constant. In the code we compute it every frame and show drift as <Math math="(E-E_0)/|E_0|" /> in percent. If you see 0.001% after a minute, that's RK4's numerical dissipation — not physics. Turn on damping and we intentionally let it decay, so the readout switches to “dissipating”.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Integrator — RK4, fixed step</p>
-              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text">$$\begin&#123;aligned&#125; \mathbf&#123;f&#125;(\mathbf&#123;x&#125;) &= [\omega_1,\omega_2,\alpha_1,\alpha_2] \\ k_1 &= f(\mathbf&#123;x&#125;_n)\\ k_2 &= f(\mathbf&#123;x&#125;_n+\tfrac&#123;dt&#125;&#123;2&#125;k_1)\\ k_3 &= f(\mathbf&#123;x&#125;_n+\tfrac&#123;dt&#125;&#123;2&#125;k_2)\\ k_4 &= f(\mathbf&#123;x&#125;_n+dt\,k_3)\\ \mathbf&#123;x&#125;_&#123;n+1&#125;&=\mathbf&#123;x&#125;_n+\tfrac&#123;dt&#125;&#123;6&#125;(k_1+2k_2+2k_3+k_4) \end&#123;aligned&#125;$$</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">$dt = 1/240$ s, physics independent of display frame rate. Fixed step keeps chaos deterministic — adaptive stepping would add jitter that masks the true Lyapunov divergence. Accumulator + safety cap guarantees frame-rate independence.</p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text"><Math math="\begin{aligned} \mathbf{f}(\mathbf{x}) &amp;= [\omega_1,\omega_2,\alpha_1,\alpha_2] \\ k_1 &amp;= f(\mathbf{x}_n)\\ k_2 &amp;= f(\mathbf{x}_n+\tfrac{dt}{2}k_1)\\ k_3 &amp;= f(\mathbf{x}_n+\tfrac{dt}{2}k_2)\\ k_4 &amp;= f(\mathbf{x}_n+dt\,k_3)\\ \mathbf{x}_{n+1}&amp;=\mathbf{x}_n+\tfrac{dt}{6}(k_1+2k_2+2k_3+k_4) \end{aligned}" display /></p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text"><Math math="dt = 1/240" /> s, physics independent of display frame rate. Fixed step keeps chaos deterministic — adaptive stepping would add jitter that masks the true Lyapunov divergence. Accumulator + safety cap guarantees frame-rate independence.</p>
             </div>
             <div class="math-card">
               <p class="math-label">Twin trajectory — measuring chaos</p>
-              <p class="mt-2 font-mono text-[0.82rem] text-primary-text">$$s(t)=\bigl\|\operatorname&#123;wrap&#125;(\mathbf&#123;x&#125;(t)-\mathbf&#123;x&#125;'(t))\bigr\| \approx s_0 e^&#123;\lambda t&#125;$$</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Shadow starts $10^&#123;-4&#125;$ rad away on $\theta_2$. $s(t)$ live in the HUD is an $L_2$ angle distance. In chaotic regimes $\log s$ vs $t$ is roughly linear — slope is finite-time Lyapunov exponent $\lambda$. When it saturates at $\sim\pi$, orbits are uncorrelated.</p>
+              <p class="mt-2 font-mono text-[0.82rem] text-primary-text"><Math math="s(t)=\bigl\|\operatorname{wrap}(\mathbf{x}(t)-\mathbf{x}'(t))\bigr\| \approx s_0 e^{\lambda t}" display /></p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Shadow starts <Math math="10^{-4}" /> rad away on <Math math="\theta_2" />. <Math math="s(t)" /> live in the HUD is an <Math math="L_2" /> angle distance. In chaotic regimes <Math math="\log s" /> vs <Math math="t" /> is roughly linear — slope is finite-time Lyapunov exponent <Math math="\lambda" />. When it saturates at <Math math="\sim\pi" />, orbits are uncorrelated.</p>
             </div>
           </div>
         </div>
@@ -233,17 +234,17 @@ const breadcrumbSchema = {
         <div class="mt-6 grid gap-8 md:grid-cols-[1.1fr_0.9fr]">
           <div class="space-y-4 text-[0.92rem] leading-[1.75] text-muted-text">
             <p>
-              The right canvas isn't decoration. Each trace is $(\theta, \omega)$ — position vs velocity. That's the natural language of dynamics. A single pendulum in this view traces a closed loop or, at high energy, a wavy line across the top. Area inside the loop is action. Shape tells you energy.
+              The right canvas isn't decoration. Each trace is <Math math="(\theta, \omega)" /> — position vs velocity. That's the natural language of dynamics. A single pendulum in this view traces a closed loop or, at high energy, a wavy line across the top. Area inside the loop is action. Shape tells you energy.
             </p>
             <p>
-              For the double pendulum you get two such traces, one per joint. When motion is regular — “Calm orbit” preset — you see neat nested loops, sometimes a thin torus projected as Lissajous-like figures. The system revisits almost the same ($\theta$, $\omega$) periodically.
+              For the double pendulum you get two such traces, one per joint. When motion is regular — “Calm orbit” preset — you see neat nested loops, sometimes a thin torus projected as Lissajous-like figures. The system revisits almost the same (<Math math="\theta" />, <Math math="\omega" />) periodically.
             </p>
             <p>
               When it's chaotic, loops smear into broad bands that fold and stretch. The folding is key: chaos isn't random scribble, it's deterministic stretching and folding — like taffy. Nearby points separate along one direction (positive Lyapunov) and converge along another (dissipation or, here, area-preserving shear). The banded texture you see painted over time is that process accumulating.
             </p>
             <p class="rounded-[12px] border border-border bg-elevated/40 p-4 font-mono text-[0.76rem] leading-[1.6]">
               <strong class="text-primary-text uppercase tracking-[0.08em] text-[0.7rem]">Why splits, not wrap lines:</strong><br/>
-              Angles live on a circle. If $\theta$ jumps from $+179°$ to $-179°$, the shortest path on the circle is $2°$, not $358°$. Drawing a line across the chart would be a lie — it would claim the pendulum teleported through $\theta=0$. So the renderer cuts the segment whenever $|x_&#123;n+1&#125;-x_n| \gt  0.45W$. You lose a pixel of ink and keep the topology honest.
+              Angles live on a circle. If <Math math="\theta" /> jumps from $+179°$ to $-179°$, the shortest path on the circle is $2°$, not $358°$. Drawing a line across the chart would be a lie — it would claim the pendulum teleported through <Math math="\theta=0" />. So the renderer cuts the segment whenever <Math math="|x_{n+1}-x_n| \gt 0.45W" />. You lose a pixel of ink and keep the topology honest.
             </p>
           </div>
           <div class="space-y-4">
@@ -253,12 +254,12 @@ const breadcrumbSchema = {
                 <li><strong class="text-primary-text">Regular:</strong> thin, crisp loops that retrace. Drift suggests energy error, not chaos.</li>
                 <li><strong class="text-primary-text">Quasi-periodic:</strong> thickened loop — a torus cross-section, two incommensurate frequencies.</li>
                 <li><strong class="text-primary-text">Chaotic:</strong> diffuse band, never closes, fills area. No amount of waiting makes it retrace.</li>
-                <li><strong class="text-primary-text">Flip:</strong> sudden vertical jump in $\omega$ as the arm goes over the top — kinetic spike from potential drop.</li>
+                <li><strong class="text-primary-text">Flip:</strong> sudden vertical jump in <Math math="\omega" /> as the arm goes over the top — kinetic spike from potential drop.</li>
               </ul>
             </div>
             <div class="math-card">
               <p class="math-label">The hidden invariant (almost)</p>
-              <p class="mt-3 text-[0.84rem] leading-[1.6] text-muted-text">Dissipative pendulums have attractors. This one is Hamiltonian when $b=0$ — volume in phase space is preserved (Liouville's theorem). Hence no attractor — chaotic orbits never settle, they just explore. The painted history is not approach to a fixed set, it's the trace of a single orbit that happens to be space-filling. Leave it running and it will eventually paint wherever energy allows.</p>
+              <p class="mt-3 text-[0.84rem] leading-[1.6] text-muted-text">Dissipative pendulums have attractors. This one is Hamiltonian when <Math math="b=0" /> — volume in phase space is preserved (Liouville's theorem). Hence no attractor — chaotic orbits never settle, they just explore. The painted history is not approach to a fixed set, it's the trace of a single orbit that happens to be space-filling. Leave it running and it will eventually paint wherever energy allows.</p>
             </div>
           </div>
         </div>
@@ -272,17 +273,17 @@ const breadcrumbSchema = {
           <div class="space-y-6">
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Start here</h3>
-              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Classic chaos (120°, −10°).</strong> The workhorse. Watch the twin separation readout. It should sit around $10^&#123;-4&#125;$–$10^&#123;-3&#125;$ for a few seconds, then explode — exponential, not linear. Clear paint, pause, restart to see it's reproducible.</p>
+              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Classic chaos (120°, −10°).</strong> The workhorse. Watch the twin separation readout. It should sit around <Math math="10^{-4}" />–<Math math="10^{-3}" /> for a few seconds, then explode — exponential, not linear. Clear paint, pause, restart to see it's reproducible.</p>
             </div>
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Then break it</h3>
-              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Drag the bobs.</strong> Pull the inner bob to ~170° — near inverted equilibrium. The potential $V$ is almost maximal there, an unstable fixed point. Release from rest. Now tiny hand jitter determines whether it falls left or right — the separatrix. The phase portrait will show a trajectory that hesitates, then a sudden high-$\omega$ spike.</p>
-              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Double flip preset.</strong> Both arms near the top. They exchange energy violently: one arm can momentarily stop ($\omega \approx 0$) as the other whips over. Watch kinetic energy slosh between joints — it's the $\cos\Delta$ cross term moving energy around.</p>
+              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Drag the bobs.</strong> Pull the inner bob to ~170° — near inverted equilibrium. The potential <Math math="V" /> is almost maximal there, an unstable fixed point. Release from rest. Now tiny hand jitter determines whether it falls left or right — the separatrix. The phase portrait will show a trajectory that hesitates, then a sudden high-<Math math="\omega" /> spike.</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Double flip preset.</strong> Both arms near the top. They exchange energy violently: one arm can momentarily stop (<Math math="\omega \approx 0" />) as the other whips over. Watch kinetic energy slosh between joints — it's the <Math math="\cos\Delta" /> cross term moving energy around.</p>
             </div>
             <div>
               <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Find order in chaos</h3>
-              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Calm orbit (25°, 40°).</strong> Low total energy. Twin stays locked for hundreds of seconds — drift ~$10^&#123;-8&#125;$% if damping off. This is KAM territory: Kolmogorov-Arnold-Moser theory says most low-energy tori survive weak nonlinearity. The phase loops are your visual KAM tori.</p>
-              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Add air damping.</strong> Slide to $0.02$–$0.04$. Chaos dies. The attractor at $(0,0,0,0)$ pulls everything down. The phase portrait spirals inward — now it's not Hamiltonian, volume contracts. Clear paint and compare decay rates: high-energy chaos takes longer to die because it keeps visiting high-$|\omega|$ states where damping is stronger but intermittently stored as potential.</p>
+              <p class="mt-2 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Calm orbit (25°, 40°).</strong> Low total energy. Twin stays locked for hundreds of seconds — drift ~<Math math="10^{-8}" />% if damping off. This is KAM territory: Kolmogorov-Arnold-Moser theory says most low-energy tori survive weak nonlinearity. The phase loops are your visual KAM tori.</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text"><strong class="text-primary-text">Add air damping.</strong> Slide to $0.02$–$0.04$. Chaos dies. The attractor at $(0,0,0,0)$ pulls everything down. The phase portrait spirals inward — now it's not Hamiltonian, volume contracts. Clear paint and compare decay rates: high-energy chaos takes longer to die because it keeps visiting high-<Math math="|\omega|" /> states where damping is stronger but intermittently stored as potential.</p>
             </div>
           </div>
           <div class="space-y-4">
@@ -299,7 +300,7 @@ const breadcrumbSchema = {
                 </div>
                 <div>
                   <p class="font-semibold text-primary-text">Twin separation exponent</p>
-                  <p>Log it mentally. If it doubles every ~2 s, $\lambda \approx \ln2/2 \approx 0.35$ s$^&#123;-1&#125;$. That means your ability to predict the state halves every 2 s — after 20 s, you'd need $10×$ more precise initial measurement to stay accurate. That's chaos quantified.</p>
+                  <p>Log it mentally. If it doubles every ~2 s, <Math math="\lambda \approx \ln2/2 \approx 0.35" /> s<Math math="^{-1}" />. That means your ability to predict the state halves every 2 s — after 20 s, you'd need $10×$ more precise initial measurement to stay accurate. That's chaos quantified.</p>
                 </div>
               </div>
             </div>

@@ -32,6 +32,7 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'CoreML Model Size Calculator', item: canonical.toString() },
   ],
 };
+import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
@@ -146,7 +147,7 @@ Compression ratio = fp32Size / quantizedSize</pre>
               params = total − overhead_vocab counted separately
             </p>
             <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
-              bpe is bytes per element: FP32 4, FP16/BF16 2, INT8 1, INT4 0.5, INT2 0.25, binary 0.125. That's it. $ 360M × 0.5 = 180 MB $ raw INT4. Multiply by 1.08 CoreML tax → 194.4 MB. This page computes that deterministically. No ML needed to count bytes.
+              bpe is bytes per element: FP32 4, FP16/BF16 2, INT8 1, INT4 0.5, INT2 0.25, binary 0.125. That's it. <Math math="360M × 0.5 = 180 MB" /> raw INT4. Multiply by 1.08 CoreML tax → 194.4 MB. This page computes that deterministically. No ML needed to count bytes.
             </p>
           </div>
           <div class="math-card">
@@ -157,7 +158,7 @@ Compression ratio = fp32Size / quantizedSize</pre>
               Packing 0.96 → 0.5859 B realized
             </p>
             <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
-              Sub-byte types need metadata. For each 32 weights you store one scale (and often a zero-point). That adds $ 2/32 = 0.0625 $ B per param. Small group → better accuracy, worse size. Large group → opposite. The packing slider models alignment waste: CoreML aligns weight blobs to 16-byte boundaries, so 0.96 means 4% waste.
+              Sub-byte types need metadata. For each 32 weights you store one scale (and often a zero-point). That adds <Math math="2/32 = 0.0625" /> B per param. Small group → better accuracy, worse size. Large group → opposite. The packing slider models alignment waste: CoreML aligns weight blobs to 16-byte boundaries, so 0.96 means 4% waste.
             </p>
           </div>
           <div class="math-card">
@@ -186,7 +187,7 @@ Compression ratio = fp32Size / quantizedSize</pre>
           <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Playbook — how Notiary ships</p>
           <ol class="mt-3 list-decimal space-y-2 pl-5 text-[0.88rem] leading-[1.65] text-muted-text">
             <li><strong>Count in Python first:</strong> sum(p.numel for p in model.parameters). That M number goes in this calculator. Don't trust HF config alone — vocab embeddings count.</li>
-            <li><strong>Pick quant target from memory budget:</strong> Want &lt;200 MB on-disk for App Store cellular limit? $ 360M $ → need 0.55 B/param → INT4 group 32. $ 7B $ → need $ 7e9 × 0.5 = 3.5 GB $ → too big, need INT2+ streaming.</li>
+            <li><strong>Pick quant target from memory budget:</strong> Want &lt;200 MB on-disk for App Store cellular limit? $ 360M $ → need 0.55 B/param → INT4 group 32. $ 7B $ → need <Math math="7e9 × 0.5 = 3.5 GB" /> → too big, need INT2+ streaming.</li>
             <li><strong>Measure packing:</strong> Convert with <code>coremltools.optimize.coreml.quantize_weights</code>, then <code>ls -lh .mlpackage/Data/com.apple.CoreML/weights/weight.bin</code>. Compare to $ params × bpe $ to derive eff_pack. Our default 0.96 came from real 360M INT4 export.</li>
             <li><strong>Check act tile:</strong> Run Instruments → Allocations while prompt processing. Largest transient = act_tile. Add that to weights for jetsam calc. If peak &gt; 1 GB in extension, use layer streaming loader like Thumb-Dash does.</li>
             <li><strong>Don't trust latency field:</strong> CoreML predicts execution placement ANE vs GPU at compile time, but iOS can fallback under thermal pressure. Same model shows 18 ms then 90 ms. Bytes never lie, ms does.</li>
@@ -206,7 +207,7 @@ Compression ratio = fp32Size / quantizedSize</pre>
           <div class="math-card">
             <p class="math-label">Honesty — what this calculator does NOT do</p>
             <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[0.78rem] leading-[1.6] text-muted-text">
-              <li>It doesn't model KV-cache growth: $ 2 × layers × seq × hidden × bpe_kv $ — for 32 layers seq 4096 hidden 960 FP16 KV-cache ≈ 241 MB alone, larger than weights.</li>
+              <li>It doesn't model KV-cache growth: <Math math="2 × layers × seq × hidden × bpe_kv" /> — for 32 layers seq 4096 hidden 960 FP16 KV-cache ≈ 241 MB alone, larger than weights.</li>
               <li>It doesn't predict accuracy drop. INT4 vs INT2 perplexity delta needs eval, not bytes.</li>
               <li>It doesn't count tokenizer, embedding tables duplicated in some CoreML exports, or ANE compiler scratch.</li>
               <li>It ignores iOS 17+ weight compression (palettization) that can make INT4 look like 0.35 B/param on-disk but expands to 0.5 in DRAM.</li>
