@@ -802,6 +802,13 @@ const breadcrumbSchema = {
       renderAll();
     });
 
+    if (reducedMotion) {
+      animating = false;
+    }
+    animToggle.textContent = `Animate: ${animating ? 'On' : 'Off'}`;
+    animToggle.classList.toggle('is-active', animating);
+    animToggle.setAttribute('aria-pressed', String(animating));
+
     animToggle.addEventListener('click', () => {
       animating = !animating;
       animToggle.textContent = `Animate: ${animating ? 'On' : 'Off'}`;
@@ -844,7 +851,12 @@ const breadcrumbSchema = {
       const elapsed = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
       lastFrameTime = frameTime;
 
-      if (animating && !document.hidden) {
+      if (!isVisible) {
+        animFrameId = requestAnimationFrame(renderFrame);
+        return;
+      }
+
+      if (animating && !reducedMotion) {
         const freqHz = logFreqToHz(logFreq);
         animPhase += freqHz * elapsed * 2 * Math.PI;
         renderCone(animPhase);
@@ -856,7 +868,17 @@ const breadcrumbSchema = {
       animFrameId = requestAnimationFrame(renderFrame);
     }
 
-    function handleVisibilityChange() { lastFrameTime = performance.now(); }
+    let isVisible = true;
+    const io = new IntersectionObserver((entries) => {
+      isVisible = entries[0].isIntersecting && !document.hidden;
+    });
+    const canvas = document.getElementById('cone-canvas');
+    if (canvas) io.observe(canvas);
+
+    function handleVisibilityChange() { 
+      lastFrameTime = performance.now(); 
+      isVisible = !document.hidden;
+    }
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     updateReadouts();
@@ -866,6 +888,7 @@ const breadcrumbSchema = {
     document.addEventListener('astro:before-swap', () => {
       destroyed = true;
       cancelAnimationFrame(animFrameId);
+      io.disconnect();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, { once: true });
   }

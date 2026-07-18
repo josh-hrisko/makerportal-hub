@@ -148,13 +148,21 @@ const faqSchema = {
 
 <script>
 // @ts-nocheck
-import { buildLoop, buildWire, fieldAt, traceFieldLine, MU0 } from '../../lib/emfields.ts';
+import { buildLoop, buildWire, fieldAt, traceFieldLine, compileSegments, compiledFieldAt, MU0 } from '../../lib/emfields.ts';
 
 function initFieldTracer() {
   const canvas = document.getElementById('field-canvas');
   if (!canvas || canvas.dataset.init) return;
   canvas.dataset.init = 'true';
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false }); // optimization
+
+  let heatCanvas = document.createElement('canvas');
+  heatCanvas.width = canvas.width; heatCanvas.height = canvas.height;
+  let heatCtx = heatCanvas.getContext('2d');
+  
+  let lineCanvas = document.createElement('canvas');
+  lineCanvas.width = canvas.width; lineCanvas.height = canvas.height;
+  let lineCtx = lineCanvas.getContext('2d');
 
   let colors = {};
   function readColors() {
@@ -180,12 +188,15 @@ function initFieldTracer() {
   let showFlow = true;
 
   let segments = [];
+  let compiledSegments = null;
+  let heatmapCell = 5;
   let glyphs = [];        // current cross-section markers {x, z, into}
   let lines = [];         // traced polylines: {pts:[[x,z]...], b:[...]}
   let bMax = 1;
   let dashPhase = 0;
   let rafId = null;
   let destroyed = false;
+  let isVisible = true;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const el = {
@@ -274,22 +285,26 @@ function initFieldTracer() {
       eqSeeds(0, 0.18 * R, 2.8 * R, Math.floor(nSeeds / 2), -1);
     }
 
+    compiledSegments = compileSegments(segments);
     traceAll(seeds);
     computeBMax();
+    rebuildCachedLayers();
+  }
+
+  function rebuildCachedLayers() {
+    drawHeatmapToCache();
+    drawLinesToCache();
   }
 
   function traceAll(seeds) {
     lines = [];
     const opt = { step: 0.005, maxSteps: 1100, minField: MU0 * 1e-4, bound: VIEW * 1.7 };
     for (const s of seeds) {
-      const fwd = traceFieldLine(segments, s, opt);
-      const bwd = traceFieldLine(segments, s, { ...opt, reverse: true });
+      const fwd = traceFieldLine(compiledSegments, s, opt);
+      const bwd = traceFieldLine(compiledSegments, s, { ...opt, reverse: true });
       const pts = bwd.points.slice(1).reverse().concat(fwd.points);
+      const b = bwd.bValues.slice(1).reverse().concat(fwd.bValues);
       if (pts.length < 4) continue;
-      const b = pts.map((p) => {
-        const f = fieldAt(segments, p);
-        return Math.hypot(f[0], f[1], f[2]);
-      });
       lines.push({ pts: pts.map((p) => [p[0], p[2]]), b });
     }
   }
@@ -317,57 +332,77 @@ function initFieldTracer() {
     const g = c.match(/(\d+)/g); return g ? g.slice(0, 3).map(Number) : [113, 185, 227];
   }
 
-  function drawHeatmap() {
-    const W = canvas.width, H = canvas.height;
-    const cell = 5;
+  function drawHeatmapToCache() {
+    const W = heatCanvas.width, H = heatCanvas.height;
+    heatCtx.clearRect(0, 0, W, H);
+    if (!showHeat) return;
+    
+    const startT = performance.now();
+    const cell = heatmapCell;
     const cold = rgb(colors.anchor), hot = rgb(colors.cta);
     for (let py = 0; py < H; py += cell) {
       for (let px = 0; px < W; px += cell) {
         const x = invX(px + cell / 2), z = invZ(py + cell / 2);
-        const f = fieldAt(segments, [x, 0, z]);
+        const f = compiledFieldAt(compiledSegments, [x, 0, z]);
         const b = Math.hypot(f[0], f[1], f[2]);
-        let t = Math.log10(1 + b / bMax) / Math.log10(2); // 0..~1 at b=bMax
+        let t = Math.log10(1 + b / bMax) / Math.log10(2);
         t = Math.max(0, Math.min(1, t));
         if (t < 0.02) continue;
         const r = cold[0] + (hot[0] - cold[0]) * t;
         const g = cold[1] + (hot[1] - cold[1]) * t;
         const bl = cold[2] + (hot[2] - cold[2]) * t;
-        ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${0.16 * t})`;
-        ctx.fillRect(px, py, cell, cell);
+        heatCtx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${0.16 * t})`;
+        heatCtx.fillRect(px, py, cell, cell);
       }
     }
+    const endT = performance.now();
+    if (endT - startT > 8 && heatmapCell < 12) {
+      heatmapCell = heatmapCell === 5 ? 8 : 12;
+    }
+  }
+  
+  function drawLinesToCache() {
+    const W = lineCanvas.width, H = lineCanvas.height;
+    lineCtx.clearRect(0, 0, W, H);
+    
+    // symmetry axis
+    lineCtx.strokeStyle = colors.border; lineCtx.lineWidth = 1; lineCtx.globalAlpha = 0.6;
+    lineCtx.beginPath(); lineCtx.moveTo(mapX(0), 0); lineCtx.lineTo(mapX(0), H); lineCtx.stroke();
+    lineCtx.globalAlpha = 1;
+
+    const cold = rgb(colors.anchor), hot = rgb(colors.cta);
+    const buckets = new Array(32).fill(null).map(() => new Path2D());
+    
+    for (const ln of lines) {
+      const p = ln.pts;
+      for (let i = 1; i < p.length; i++) {
+        let t = Math.log10(1 + ln.b[i] / bMax) / Math.log10(2);
+        t = Math.max(0, Math.min(1, t));
+        const bIdx = Math.floor(t * 31);
+        buckets[bIdx].moveTo(mapX(p[i - 1][0]), mapZ(p[i - 1][1]));
+        buckets[bIdx].lineTo(mapX(p[i][0]), mapZ(p[i][1]));
+      }
+    }
+    
+    lineCtx.globalAlpha = 0.85;
+    lineCtx.lineWidth = 1.4;
+    for (let i = 0; i < 32; i++) {
+      const t = i / 31;
+      const r = cold[0] + (hot[0] - cold[0]) * t;
+      const g = cold[1] + (hot[1] - cold[1]) * t;
+      const bl = cold[2] + (hot[2] - cold[2]) * t;
+      lineCtx.strokeStyle = `rgb(${r | 0},${g | 0},${bl | 0})`;
+      lineCtx.stroke(buckets[i]);
+    }
+    lineCtx.globalAlpha = 1;
   }
 
   function draw() {
     const W = canvas.width, H = canvas.height;
     ctx.fillStyle = colors.canvas; ctx.fillRect(0, 0, W, H);
 
-    if (showHeat) drawHeatmap();
-
-    // symmetry axis
-    ctx.strokeStyle = colors.border; ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
-    ctx.beginPath(); ctx.moveTo(mapX(0), 0); ctx.lineTo(mapX(0), H); ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    // field lines colored by |B|
-    const cold = rgb(colors.anchor), hot = rgb(colors.cta);
-    for (const ln of lines) {
-      const p = ln.pts;
-      for (let i = 1; i < p.length; i++) {
-        const t = Math.max(0, Math.min(1, Math.log10(1 + ln.b[i] / bMax) / Math.log10(2)));
-        const r = cold[0] + (hot[0] - cold[0]) * t;
-        const g = cold[1] + (hot[1] - cold[1]) * t;
-        const bl = cold[2] + (hot[2] - cold[2]) * t;
-        ctx.strokeStyle = `rgb(${r | 0},${g | 0},${bl | 0})`;
-        ctx.globalAlpha = 0.85;
-        ctx.lineWidth = 1.4;
-        ctx.beginPath();
-        ctx.moveTo(mapX(p[i - 1][0]), mapZ(p[i - 1][1]));
-        ctx.lineTo(mapX(p[i][0]), mapZ(p[i][1]));
-        ctx.stroke();
-      }
-    }
-    ctx.globalAlpha = 1;
+    if (showHeat) ctx.drawImage(heatCanvas, 0, 0);
+    ctx.drawImage(lineCanvas, 0, 0);
 
     // marching-flow dashes to show direction
     if (showFlow) {
@@ -400,9 +435,19 @@ function initFieldTracer() {
 
   function loop() {
     if (destroyed) return;
-    if (showFlow && !reduceMotion) { dashPhase = (dashPhase + 0.6) % 18; draw(); }
+    if (isVisible && showFlow && !reduceMotion) { dashPhase = (dashPhase + 0.6) % 18; draw(); }
     rafId = requestAnimationFrame(loop);
   }
+
+  const io = new IntersectionObserver((entries) => {
+    isVisible = entries[0].isIntersecting && !document.hidden;
+  });
+  io.observe(canvas);
+
+  function handleVisibilityChange() {
+    isVisible = !document.hidden;
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
   // ---- interactions ----
   canvas.addEventListener('mousemove', (e) => {
@@ -410,7 +455,7 @@ function initFieldTracer() {
     const px = (e.clientX - rect.left) * (canvas.width / rect.width);
     const py = (e.clientY - rect.top) * (canvas.height / rect.height);
     const x = invX(px), z = invZ(py);
-    const f = fieldAt(segments, [x, 0, z]);
+    const f = compiledFieldAt(compiledSegments, [x, 0, z]);
     const b = Math.hypot(f[0], f[1], f[2]);
     const uT = b * 1e6;
     document.getElementById('cur-B').textContent =
@@ -440,9 +485,15 @@ function initFieldTracer() {
   const flowBtn = document.getElementById('flow-btn');
   flowBtn.addEventListener('click', () => { showFlow = !showFlow; flowBtn.classList.toggle('is-active', showFlow); draw(); });
 
-  const themeObserver = new MutationObserver(() => { readColors(); draw(); });
+  const themeObserver = new MutationObserver(() => { readColors(); rebuildCachedLayers(); draw(); });
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  document.addEventListener('astro:before-swap', () => { destroyed = true; if (rafId) cancelAnimationFrame(rafId); themeObserver.disconnect(); }, { once: true });
+  document.addEventListener('astro:before-swap', () => { 
+    destroyed = true; 
+    if (rafId) cancelAnimationFrame(rafId); 
+    themeObserver.disconnect(); 
+    io.disconnect();
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, { once: true });
 
   buildScene();
   draw();

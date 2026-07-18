@@ -339,7 +339,7 @@ Detailed specifications of mathematical and physical simulations available insid
 
 Daily scored technical scan items (Date: 2026-07-18):
 
-### 1. Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)
+### 1. Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)
 - **Score:** 18
 - **URL:** https://github.com/sushilk1991/velora
 - **Domain:** github.com
@@ -367,7 +367,7 @@ nilcoalescing.com/blog/TheSwif..
 - **Corroborated Sources:** hackernews
 
 
-### 4. Show HN: A sandbox for running real jailbreak techniques against local LLMs
+### 4. A sandbox for running real jailbreak techniques against local LLMs
 - **Score:** 12
 - **URL:** https://github.com/joshfischer1108/jailbreak-lab
 - **Domain:** github.com

@@ -9,6 +9,8 @@ import {
   buildWire,
   loopAxisField,
   traceFieldLine,
+  compileSegments,
+  compiledFieldAt,
 } from './emfields.ts';
 
 const rel = (a: number, b: number, tol = 1e-3) => Math.abs(a - b) <= tol * Math.max(1e-30, Math.abs(b));
@@ -55,6 +57,41 @@ describe('Circular loop', () => {
     const b2 = fieldAt(loop2, [0.05, 0, 0.1]);
     assert.ok(rel(b2[0], 2 * b1[0], 1e-9));
     assert.ok(rel(b2[2], 2 * b1[2], 1e-9));
+  });
+});
+
+describe('Compiled Kernel', () => {
+  test('compiledFieldAt exactly matches fieldAt reference implementation', () => {
+    const R = 0.2;
+    const I = 5;
+    // Test with a Helmholtz pair to get a non-trivial segment count
+    const coils = [
+      ...buildLoop([0, 0, -R / 2], R, [0, 0, 1], I, 72),
+      ...buildLoop([0, 0, R / 2], R, [0, 0, 1], I, 72),
+    ];
+    const cs = compileSegments(coils);
+    
+    // Sample points in a grid
+    for (let x = -0.3; x <= 0.3; x += 0.1) {
+      for (let y = -0.3; y <= 0.3; y += 0.1) {
+        for (let z = -0.3; z <= 0.3; z += 0.1) {
+          const p: Vec3 = [x, y, z];
+          const ref = fieldAt(coils, p);
+          const comp = compiledFieldAt(cs, p);
+          
+          const check = (c: number, r: number, name: string) => {
+            if (Math.abs(r) < 1e-10 && Math.abs(c) < 1e-10) return;
+            const err = Math.abs(c - r);
+            const rErr = err / Math.max(1e-10, Math.abs(r));
+            assert.ok(rErr < 1e-12, `${name} mismatch at ${p}: ref=${r}, comp=${c}`);
+          };
+          
+          check(comp[0], ref[0], 'x-component');
+          check(comp[1], ref[1], 'y-component');
+          check(comp[2], ref[2], 'z-component');
+        }
+      }
+    }
   });
 });
 

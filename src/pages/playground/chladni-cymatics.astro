@@ -831,10 +831,15 @@ const breadcrumbSchema = {
     let sweepSettleTimer = 0;
     function renderFrame(frameTime: number) {
       if (destroyed) return;
-      const elapsed = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
+      const elapsed = Math.min(0.04, (frameTime - lastFrameTime) / 1000);
       lastFrameTime = frameTime;
 
-      if (running && !document.hidden) {
+      if (!isVisible) {
+        animationFrameId = requestAnimationFrame(renderFrame);
+        return;
+      }
+
+      if (running && !reducedMotion) {
         if (fadeT < 1) fadeT = Math.min(1, fadeT + elapsed / FADE_SECONDS);
         if (sweeping) {
           logF += SWEEP_OCTAVES_PER_SEC * elapsed;
@@ -876,7 +881,16 @@ const breadcrumbSchema = {
       animationFrameId = requestAnimationFrame(renderFrame);
     }
 
-    function handleVisibilityChange() { lastFrameTime = performance.now(); }
+    let isVisible = true;
+    const io = new IntersectionObserver((entries) => {
+      isVisible = entries[0].isIntersecting && !document.hidden;
+    });
+    io.observe(canvas);
+
+    function handleVisibilityChange() { 
+      lastFrameTime = performance.now(); 
+      isVisible = !document.hidden;
+    }
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // ------------------------------------------------------------------
@@ -901,6 +915,7 @@ const breadcrumbSchema = {
       destroyed = true;
       cancelAnimationFrame(animationFrameId);
       themeObserver.disconnect();
+      io.disconnect();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, { once: true });
   }

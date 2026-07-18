@@ -99,11 +99,11 @@ Browser-native mathematical and physical simulations: [makerportal.ai/playground
 
 Score-weighted, source-corroborated technical signals from our latest daily scan (Scan Date: 2026-07-18): [makerportal.ai/journal](https://www.makerportal.ai/journal).
 
-1. [Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)](https://github.com/sushilk1991/velora) (Score: 18) - Domain: github.com [Tags: on-device-ai, local-llm, privacy-arch]
+1. [Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)](https://github.com/sushilk1991/velora) (Score: 18) - Domain: github.com [Tags: on-device-ai, local-llm, privacy-arch]
 2. ["The SwiftUI Way" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: 
 nilcoalescing.com/blog/TheSwif..](https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f) (Score: 17) - Domain: nilcoalescing.com [Tags: ios-craft]
 3. [Prompt submitted to cloud even when using local LLM by default](https://github.com/anomalyco/opencode/issues/15854) (Score: 12) - Domain: github.com [Tags: local-llm]
-4. [Show HN: A sandbox for running real jailbreak techniques against local LLMs](https://github.com/joshfischer1108/jailbreak-lab) (Score: 12) - Domain: github.com [Tags: local-llm]
+4. [A sandbox for running real jailbreak techniques against local LLMs](https://github.com/joshfischer1108/jailbreak-lab) (Score: 12) - Domain: github.com [Tags: local-llm]
 5. [Experiments with On-device AI — What building on Gemini Nano actually teaches you](https://dev.to/mohanvenkatakrishnan/experiments-with-on-device-ai-what-building-on-gemini-nano-actually-teaches-you-5deo) (Score: 12) - Domain: dev.to [Tags: on-device-ai]
 
 ## Studio Gear Picks

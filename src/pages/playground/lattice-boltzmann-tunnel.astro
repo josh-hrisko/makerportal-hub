@@ -236,7 +236,11 @@ function initLBM() {
     document.getElementById('ro-status').textContent = 'running';
   }
 
-  function lerp(a, b, t) { return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t, a[2] + (b[2]-a[2])*t]; }
+  function writeLerp(data, idx, a, b, t) {
+    data[idx] = a[0] + (b[0]-a[0])*t;
+    data[idx+1] = a[1] + (b[1]-a[1])*t;
+    data[idx+2] = a[2] + (b[2]-a[2])*t;
+  }
 
   function render() {
     lat.computeMacros();
@@ -248,31 +252,44 @@ function initLBM() {
       for (let x = 0; x < nx; x++) {
         const c = x + nx * y;
         const idx = (row * nx + x) * 4;
-        let col;
         if (obstacle[c]) {
-          col = solid;
+          data[idx] = solid[0]; data[idx+1] = solid[1]; data[idx+2] = solid[2];
         } else if (mode === 'speed') {
           const sp = Math.hypot(lat.ux[c], lat.uy[c]) / speedScale;
           const t = Math.max(0, Math.min(1, sp));
-          col = t < 0.5 ? lerp(bg, neg, t * 2) : lerp(neg, pos, (t - 0.5) * 2);
+          if (t < 0.5) writeLerp(data, idx, bg, neg, t * 2);
+          else writeLerp(data, idx, neg, pos, (t - 0.5) * 2);
         } else if (mode === 'pressure') {
           const dp = (lat.rho[c] - 1) * 8;
           const s = Math.max(-1, Math.min(1, dp));
-          col = s >= 0 ? lerp(bg, pos, s) : lerp(bg, neg, -s);
+          if (s >= 0) writeLerp(data, idx, bg, pos, s);
+          else writeLerp(data, idx, bg, neg, -s);
         } else {
           const w = lat.vorticity(x, y) / (speedScale * 0.09);
           const s = Math.max(-1, Math.min(1, w));
-          col = s >= 0 ? lerp(bg, pos, s) : lerp(bg, neg, -s);
+          if (s >= 0) writeLerp(data, idx, bg, pos, s);
+          else writeLerp(data, idx, bg, neg, -s);
         }
-        data[idx] = col[0]; data[idx + 1] = col[1]; data[idx + 2] = col[2]; data[idx + 3] = 255;
+        data[idx + 3] = 255;
       }
     }
     ctx.putImageData(img, 0, 0);
   }
 
+  let isVisible = true;
+  const io = new IntersectionObserver((entries) => {
+    isVisible = entries[0].isIntersecting && !document.hidden;
+  });
+  io.observe(canvas);
+  
+  function handleVisibilityChange() {
+    isVisible = !document.hidden;
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
   function loop() {
     if (destroyed) return;
-    if (playing && !unstable) {
+    if (playing && !unstable && isVisible) {
       for (let s = 0; s < 6; s++) { lat.step(u0); steps++; }
       // stability guard
       const mid = Math.round(nx / 2) + nx * Math.round(ny / 2);
@@ -345,16 +362,19 @@ function initLBM() {
 
   const themeObserver = new MutationObserver(() => { readColors(); render(); });
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  document.addEventListener('astro:before-swap', () => { destroyed = true; if (rafId) cancelAnimationFrame(rafId); themeObserver.disconnect(); }, { once: true });
-
-  // init
+  document.addEventListener('astro:before-swap', () => { 
+    destroyed = true; 
+    if (rafId) cancelAnimationFrame(rafId); 
+    themeObserver.disconnect();
+    io.disconnect();
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, { once: true });
   updateOmega();
   buildObstacle('cylinder');
   resetFlow();
   render();
   rafId = requestAnimationFrame(loop);
 }
-
 document.addEventListener('astro:page-load', initLBM);
 initLBM();
 </script>

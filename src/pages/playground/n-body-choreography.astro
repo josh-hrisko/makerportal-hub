@@ -678,7 +678,7 @@ const breadcrumbSchema = {
       const elapsed = Math.min(0.05, Math.max(0, frameTime - lastFrameTime) / 1000);
       lastFrameTime = frameTime;
 
-      if (running && !document.hidden) {
+      if (running && isVisible) {
         accumulator += elapsed * simSpeed;
         let safety = 0;
         // one simulated time unit ≈ 1 real second at 1×
@@ -698,7 +698,16 @@ const breadcrumbSchema = {
       animationFrameId = requestAnimationFrame(renderFrame);
     }
 
-    function handleVisibilityChange() { lastFrameTime = performance.now(); }
+    let isVisible = true;
+    const io = new IntersectionObserver((entries) => {
+      isVisible = entries[0].isIntersecting && !document.hidden;
+    });
+    io.observe(canvas);
+
+    function handleVisibilityChange() { 
+      lastFrameTime = performance.now(); 
+      isVisible = !document.hidden;
+    }
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // ------------------------------------------------------------------
@@ -720,6 +729,7 @@ const breadcrumbSchema = {
       destroyed = true;
       cancelAnimationFrame(animationFrameId);
       themeObserver.disconnect();
+      io.disconnect();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, { once: true });
   }

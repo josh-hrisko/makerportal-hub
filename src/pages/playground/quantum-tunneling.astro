@@ -320,10 +320,21 @@ function initQuantumTunneling() {
     document.getElementById('time-val').textContent = time.toFixed(1);
   }
 
+  let isVisible = true;
+  const io = new IntersectionObserver((entries) => {
+    isVisible = entries[0].isIntersecting && !document.hidden;
+  });
+  io.observe(canvas);
+  
+  function handleVisibilityChange() {
+    isVisible = !document.hidden;
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
   let frameCount = 0;
   function loop() {
     if (destroyed) return;
-    if (playing && cn) {
+    if (playing && cn && isVisible) {
       for (let s = 0; s < 4; s++) { cn.step(); time += dt; }
       frameCount++;
       if (frameCount % 25 === 0) rescaleView();
@@ -351,7 +362,13 @@ function initQuantumTunneling() {
 
   const themeObserver = new MutationObserver(() => { readColors(); draw(); });
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  document.addEventListener('astro:before-swap', () => { destroyed = true; if (rafId) cancelAnimationFrame(rafId); themeObserver.disconnect(); }, { once: true });
+  document.addEventListener('astro:before-swap', () => { 
+    destroyed = true; 
+    if (rafId) cancelAnimationFrame(rafId); 
+    themeObserver.disconnect();
+    io.disconnect();
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, { once: true });
 
   relaunch();
   rafId = requestAnimationFrame(loop);

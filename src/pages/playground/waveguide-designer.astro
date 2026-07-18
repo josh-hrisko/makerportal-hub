@@ -202,7 +202,6 @@ function initWaveguide() {
   };
 
   const canvas = document.getElementById('profile-canvas') as HTMLCanvasElement;
-  const tooltip = document.getElementById('tooltip')!;
 
   let ctx: CanvasRenderingContext2D;
   let cw: number;
@@ -275,7 +274,6 @@ function initWaveguide() {
     const scale = Math.min(scaleX, maxScaleY);
     
     const drawW = r.L_m * scale;
-    const drawH = maxRadiusM * 2 * scale;
     const cx = cw / 2;
     const cy = ch / 2;
     const startX = cx - drawW / 2;

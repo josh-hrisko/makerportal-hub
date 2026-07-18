@@ -149,8 +149,8 @@ export function poleZeroToCoeffs(
   poles: [PoleZero, PoleZero],
   zeros: [PoleZero, PoleZero],
 ): BiquadCoeffs {
-  const [p1, p2] = poles;
-  const [z1, z2] = zeros;
+  const [p1] = poles;
+  const [z1] = zeros;
 
   const reP = p1.r * Math.cos(p1.theta);
   const reZ = z1.r * Math.cos(z1.theta);

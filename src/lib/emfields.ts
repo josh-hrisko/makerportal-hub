@@ -77,6 +77,84 @@ export function fieldAt(segments: Segment[], p: Vec3): Vec3 {
   return [bx, by, bz];
 }
 
+export interface CompiledSegments {
+  ax: Float64Array; ay: Float64Array; az: Float64Array;
+  bx: Float64Array; by: Float64Array; bz: Float64Array;
+  ex: Float64Array; ey: Float64Array; ez: Float64Array;
+  magFactor: Float64Array;
+  count: number;
+}
+
+/** Precompute segment properties into SoA (Struct of Arrays) buffers for zero-allocation evaluation. */
+export function compileSegments(segments: Segment[]): CompiledSegments {
+  const count = segments.length;
+  const cs: CompiledSegments = {
+    ax: new Float64Array(count), ay: new Float64Array(count), az: new Float64Array(count),
+    bx: new Float64Array(count), by: new Float64Array(count), bz: new Float64Array(count),
+    ex: new Float64Array(count), ey: new Float64Array(count), ez: new Float64Array(count),
+    magFactor: new Float64Array(count),
+    count
+  };
+  for (let i = 0; i < count; i++) {
+    const s = segments[i];
+    cs.ax[i] = s.a[0]; cs.ay[i] = s.a[1]; cs.az[i] = s.a[2];
+    cs.bx[i] = s.b[0]; cs.by[i] = s.b[1]; cs.bz[i] = s.b[2];
+    
+    const dx = s.b[0] - s.a[0], dy = s.b[1] - s.a[1], dz = s.b[2] - s.a[2];
+    let len = Math.hypot(dx, dy, dz);
+    if (len < 1e-15) {
+      cs.ex[i] = 0; cs.ey[i] = 0; cs.ez[i] = 0;
+      cs.magFactor[i] = 0;
+    } else {
+      cs.ex[i] = dx / len; cs.ey[i] = dy / len; cs.ez[i] = dz / len;
+      cs.magFactor[i] = (MU0 * s.current) / (4 * Math.PI);
+    }
+  }
+  return cs;
+}
+
+/** Evaluate the field using compiled segments with zero array allocations in the hot loop. */
+export function compiledFieldAt(cs: CompiledSegments, p: Vec3): Vec3 {
+  let bx = 0, by = 0, bz = 0;
+  const px = p[0], py = p[1], pz = p[2];
+  const count = cs.count;
+  
+  for (let i = 0; i < count; i++) {
+    const ex = cs.ex[i], ey = cs.ey[i], ez = cs.ez[i];
+    if (ex === 0 && ey === 0 && ez === 0) continue;
+    
+    const ax = cs.ax[i], ay = cs.ay[i], az = cs.az[i];
+    const apx = px - ax, apy = py - ay, apz = pz - az;
+    
+    const along = apx * ex + apy * ey + apz * ez;
+    
+    const perpx = apx - ex * along;
+    const perpy = apy - ey * along;
+    const perpz = apz - ez * along;
+    
+    const d = Math.hypot(perpx, perpy, perpz);
+    if (d < 1e-9) continue;
+    
+    const nHatx = perpx / d, nHaty = perpy / d, nHatz = perpz / d;
+    
+    const bpx = px - cs.bx[i], bpy = py - cs.by[i], bpz = pz - cs.bz[i];
+    
+    const ra = Math.hypot(apx, apy, apz);
+    const rb = Math.hypot(bpx, bpy, bpz);
+    
+    const cos1 = along / ra;
+    const cos2 = (bpx * ex + bpy * ey + bpz * ez) / rb;
+    
+    const mag = (cs.magFactor[i] / d) * (cos1 - cos2);
+    
+    bx += (ey * nHatz - ez * nHaty) * mag;
+    by += (ez * nHatx - ex * nHatz) * mag;
+    bz += (ex * nHaty - ey * nHatx) * mag;
+  }
+  
+  return [bx, by, bz];
+}
+
 /** Two unit vectors spanning the plane perpendicular to `axis`. */
 function planeBasis(axis: Vec3): [Vec3, Vec3] {
   const n = norm3(axis);
@@ -120,6 +198,7 @@ export function loopAxisField(radius: number, current: number, z: number): numbe
 
 export interface FieldLine {
   points: Vec3[];
+  bValues: number[];
   /** True if the trace terminated because |B| fell below the floor. */
   faded: boolean;
 }
@@ -141,29 +220,32 @@ export interface TraceOptions {
  * the unit field direction. Field lines follow B but do NOT preserve |B|, so we
  * normalise the field at each RK4 stage to march at constant arclength.
  */
-export function traceFieldLine(segments: Segment[], start: Vec3, opts: TraceOptions): FieldLine {
+export function traceFieldLine(segments: Segment[] | CompiledSegments, start: Vec3, opts: TraceOptions): FieldLine {
   const h = opts.reverse ? -opts.step : opts.step;
   const minField = opts.minField ?? 1e-12;
   const bound = opts.bound ?? Infinity;
   const points: Vec3[] = [start];
+  const bValues: number[] = [];
   let p = start;
 
-  const dir = (q: Vec3): Vec3 | null => {
-    const b = fieldAt(segments, q);
+  const dir = (q: Vec3): [Vec3 | null, number] => {
+    const b = Array.isArray(segments) ? fieldAt(segments, q) : compiledFieldAt(segments, q);
     const m = norm3(b);
-    if (m < minField) return null;
-    return scale(b, 1 / m);
+    if (m < minField) return [null, m];
+    return [scale(b, 1 / m), m];
   };
 
+  let [k1, m1] = dir(p);
+  bValues.push(m1);
+  if (!k1) return { points, bValues, faded: true };
+
   for (let i = 0; i < opts.maxSteps; i++) {
-    const k1 = dir(p);
-    if (!k1) return { points, faded: true };
-    const k2 = dir(add(p, scale(k1, h / 2)));
-    if (!k2) return { points, faded: true };
-    const k3 = dir(add(p, scale(k2, h / 2)));
-    if (!k3) return { points, faded: true };
-    const k4 = dir(add(p, scale(k3, h)));
-    if (!k4) return { points, faded: true };
+    const [k2, ] = dir(add(p, scale(k1, h / 2)));
+    if (!k2) return { points, bValues, faded: true };
+    const [k3, ] = dir(add(p, scale(k2, h / 2)));
+    if (!k3) return { points, bValues, faded: true };
+    const [k4, ] = dir(add(p, scale(k3, h)));
+    if (!k4) return { points, bValues, faded: true };
     const incr = scale(
       [
         k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0],
@@ -173,11 +255,19 @@ export function traceFieldLine(segments: Segment[], start: Vec3, opts: TraceOpti
       h / 6,
     );
     p = add(p, incr);
+    points.push(p);
+
+    const [nextK1, nextM1] = dir(p);
+    bValues.push(nextM1);
+
     if (Math.abs(p[0]) > bound || Math.abs(p[1]) > bound || Math.abs(p[2]) > bound) {
-      points.push(p);
       break;
     }
-    points.push(p);
+    
+    k1 = nextK1;
+    if (!k1) {
+      return { points, bValues, faded: true };
+    }
   }
-  return { points, faded: false };
+  return { points, bValues, faded: false };
 }

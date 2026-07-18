@@ -196,7 +196,7 @@ async function main() {
     const targetNoon = Date.parse(`${dateStr}T12:00:00Z`);
     const backdated = backdatePool(basePool, targetNoon);
 
-    const { items: bareItems, selected, stats } = runPipeline(backdated, targetNoon, { seenSet });
+    const { items: bareItems, stats } = runPipeline(backdated, targetNoon, { seenSet });
 
     if (bareItems.length === 0) {
       console.warn(`[${dateStr}] no items after gating — skipping (stats: ${JSON.stringify(stats)})`);

@@ -29,7 +29,7 @@
  *   ~15/22 real thumbnails, the rest fall back by design.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, unlinkSync, existsSync, statSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync, unlinkSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
 

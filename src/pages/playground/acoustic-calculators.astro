@@ -666,7 +666,7 @@ const breadcrumb = {
       splCountEl.textContent = `${count} of ${MAX_SPL_SOURCES}`;
       splAddBtn.style.display = count >= MAX_SPL_SOURCES ? 'none' : '';
 
-      rows.forEach((row, i) => {
+      rows.forEach((row) => {
         const btn = row.querySelector<HTMLButtonElement>('.spl-remove-btn');
         if (btn) btn.classList.toggle('hidden', count <= 2);
       });
