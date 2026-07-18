@@ -128,7 +128,7 @@ const newCounts = new Map<string, number>();
               for (const it of items) seenIds.add(it.id);
 
               return (
-                <article class="group relative flex gap-5">
+                <article class="journal-entry-reveal group relative flex gap-5">
                   {/* Timeline dot */}
                   <div class="relative hidden shrink-0 lg:flex lg:flex-col lg:items-center">
                     <div class={`mt-8 size-[0.9rem] rounded-full border-2 bg-canvas shadow-sm transition-all group-hover:scale-110 ${latest ? 'border-primary-cta' : 'border-border group-hover:border-[var(--mp-border-strong)]'}`} style={latest ? `box-shadow: 0 0 0 4px color-mix(in srgb, ${accentCol} 18%, transparent);` : ''}>
@@ -202,7 +202,22 @@ const newCounts = new Map<string, number>();
                               const bars = signalBars(item.score);
                               return (
                                 <li class="group/item flex gap-3 rounded-[14px] border border-transparent p-2.5 -mx-2.5 transition-colors hover:border-border hover:bg-canvas">
-                                  <div class="mt-1 hidden size-1.5 shrink-0 rounded-full sm:block" style={`background:${pillar.color}`} aria-hidden="true"></div>
+                                  {item.image ? (
+                                    <span class="relative hidden w-[5.25rem] shrink-0 self-start overflow-hidden rounded-[10px] border border-border/70 sm:block">
+                                      <img
+                                        src={item.image}
+                                        alt=""
+                                        width="168"
+                                        height="96"
+                                        loading="lazy"
+                                        decoding="async"
+                                        class="journal-preview-thumb aspect-[16/9] w-full object-cover"
+                                      />
+                                      <span class="absolute inset-x-0 bottom-0 h-[2.5px]" style={`background:${pillar.color}`} aria-hidden="true"></span>
+                                    </span>
+                                  ) : (
+                                    <div class="mt-1 hidden size-1.5 shrink-0 rounded-full sm:block" style={`background:${pillar.color}`} aria-hidden="true"></div>
+                                  )}
                                   <div class="min-w-0 flex-1">
                                     <a href={item.url} target="_blank" rel="noopener noreferrer" class="line-clamp-2 text-[0.9rem] font-medium leading-[1.4] text-primary-text decoration-border underline-offset-4 hover:text-primary-cta hover:underline">
                                       {item.title}
@@ -217,7 +232,11 @@ const newCounts = new Map<string, number>();
                                       </span>
                                     </div>
                                   </div>
-                                  <span class="hidden shrink-0 font-mono text-[0.6rem] text-muted-text sm:block">{item.score}</span>
+                                  <span
+                                    class="hidden shrink-0 cursor-help font-mono text-[0.6rem] text-muted-text sm:block"
+                                    title={`Score ${item.score} — keyword hits ×3 · artifact +3 · corroboration ×3 · engagement capped 0–4 · recency +8…−3`}
+                                    aria-label={`Signal score ${item.score}. Weighted by keyword relevance, artifact bonus, cross-source corroboration, capped engagement, and recency.`}
+                                  >{item.score}</span>
                                 </li>
                               );
                             })}

@@ -13,12 +13,21 @@ function cleanHnTitle(title) {
   return title.replace(HN_PREFIX_RE, '').trim();
 }
 
-export async function fetchHackerNews() {
-  const sinceUnix = Math.floor(Date.now() / 1000) - SINCE_DAYS * 24 * 60 * 60;
+/**
+ * opts.sinceUnix / opts.untilUnix — historical window (used by generate-backlog.mjs
+ * --from/--to so backfilled days contain titles that actually trended then,
+ * not just backdated recent pool items).
+ */
+export async function fetchHackerNews(opts = {}) {
+  const sinceUnix = opts.sinceUnix ?? Math.floor(Date.now() / 1000) - SINCE_DAYS * 24 * 60 * 60;
+  const untilUnix = opts.untilUnix ?? null;
+  const numericFilters = untilUnix
+    ? `created_at_i>${sinceUnix},created_at_i<${untilUnix}`
+    : `created_at_i>${sinceUnix}`;
   const seen = new Map();
 
   for (const query of SEARCH_QUERIES) {
-    const url = `${ENDPOINT}?query=${encodeURIComponent(query)}&tags=story&numericFilters=created_at_i>${sinceUnix}&hitsPerPage=50`;
+    const url = `${ENDPOINT}?query=${encodeURIComponent(query)}&tags=story&numericFilters=${numericFilters}&hitsPerPage=50`;
     const res = await fetch(url);
     if (!res.ok) {
       console.warn(`[hn] query "${query}" failed: ${res.status}`);

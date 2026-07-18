@@ -1,0 +1,422 @@
+{
+  "generatedAt": "2026-07-05T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-627376471",
+      "source": "github",
+      "title": "hft2ane – Tool for exporting Apple Neural Engine-accelerated versions of transformers models on HuggingFace Hub.",
+      "url": "https://github.com/anentropic/hft2ane",
+      "author": "anentropic",
+      "publishedAt": "2026-07-05T05:28:33.113Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-627376471.webp"
+    },
+    {
+      "id": "github-1171688936",
+      "source": "github",
+      "title": "Orion – Local AI runtime for training & running small LLMs directly on Apple Neural Engine (ANE). No CoreML. No Metal. Offline, ",
+      "url": "https://github.com/mechramc/Orion",
+      "author": "mechramc",
+      "publishedAt": "2026-07-04T05:43:40.472Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-255979772",
+      "source": "github",
+      "title": "neural-engine – Everything we actually know about the Apple Neural Engine (ANE)",
+      "url": "https://github.com/hollance/neural-engine",
+      "author": "hollance",
+      "publishedAt": "2026-07-04T02:16:22.447Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-661598951",
+      "source": "github",
+      "title": "swiftui-video-player-example – SwiftUI video player swift Example for ios add video in the background, loop, app, subtitles, filter, avplayer, pip, srt",
+      "url": "https://github.com/swiftuiux/swiftui-video-player-example",
+      "author": "swiftuiux",
+      "publishedAt": "2026-07-04T23:14:10.713Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-661598951.webp"
+    },
+    {
+      "id": "github-1204757465",
+      "source": "github",
+      "title": "CoreML-LLM – Run LLMs on Apple devices with CoreML, optimized for Apple Neural Engine + GPU",
+      "url": "https://github.com/john-rocky/CoreML-LLM",
+      "author": "john-rocky",
+      "publishedAt": "2026-07-04T09:50:03.224Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1204757465.webp"
+    },
+    {
+      "id": "github-1182736918",
+      "source": "github",
+      "title": "ANE-Training – Apple Neural Engine reverse engineering platform + libane C API",
+      "url": "https://github.com/slavko-at-klincov-it/ANE-Training",
+      "author": "slavko-at-klincov-it",
+      "publishedAt": "2026-07-04T22:11:49.888Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 20,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1182736918.webp"
+    },
+    {
+      "id": "hackernews-48733651",
+      "source": "hackernews",
+      "title": "Rampart on CoreML",
+      "url": "https://github.com/narner/Rampart-CoreML",
+      "author": "narner",
+      "publishedAt": "2026-07-05T03:28:01.810Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 16,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48733651.webp"
+    },
+    {
+      "id": "bluesky-3mqj4fupwns2n",
+      "source": "bluesky",
+      "title": "When storing custom values in properties of an @Observable, it’s recommended to make them Equatable to minimize SwiftUI view updates. I’ve just published a post looking at how @Observable handles equal assignments and wh",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqj4fupwns2n",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-04T16:40:27.494Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 15,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqj4fupwns2n.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-04T06:29:16.620Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 15,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "hackernews-48735264",
+      "source": "hackernews",
+      "title": "Local LLMs on a Ryzen 8700G iGPU: 13-15 tok/s on gemma4, 9-12 on qwen3.6",
+      "url": "https://loomcycle.dev/blog/local-llms-on-truenas-and-the-frontend-i-had-to-build",
+      "author": "denn-gubsky",
+      "publishedAt": "2026-07-05T01:05:05.407Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 13,
+      "domain": "loomcycle.dev",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48735264.webp"
+    },
+    {
+      "id": "hackernews-48778891",
+      "source": "hackernews",
+      "title": "Track Token usage for major platforms,know your token flow",
+      "url": "https://www.lifehacksgermany.com/en",
+      "author": "1Kapish",
+      "publishedAt": "2026-07-04T08:08:25.188Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 13,
+      "domain": "lifehacksgermany.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48778891.webp"
+    },
+    {
+      "id": "bluesky-3mqkohdwbjc2s",
+      "source": "bluesky",
+      "title": "Learn why Xcode 27 shows a warning when an @Entry declaration creates a new class instance for every fallback access, how unstable environment defaults can cause unnecessary SwiftUI view updates, and how to make them sta",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mqkohdwbjc2s",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-03T13:44:15.280Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqkohdwbjc2s.webp"
+    },
+    {
+      "id": "hackernews-48743123",
+      "source": "hackernews",
+      "title": "Ragit – chat with any folder of documents using a local LLM",
+      "url": "https://github.com/ats4321/ragit",
+      "author": "atshu21",
+      "publishedAt": "2026-07-03T22:02:22.394Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48804448",
+      "source": "hackernews",
+      "title": "BurstyRouter: local LLM first then burst to end-to-end encrypted LLM",
+      "url": "https://github.com/Lore-Hex/BurstyRouter",
+      "author": "ljlolel",
+      "publishedAt": "2026-07-03T19:34:21.063Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48804448.webp"
+    },
+    {
+      "id": "hackernews-48720845",
+      "source": "hackernews",
+      "title": "Run AI chat, image gen, vision, and voice offline on your Mac",
+      "url": "https://github.com/off-grid-ai",
+      "author": "olie_h",
+      "publishedAt": "2026-07-03T01:44:26.803Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48720845.webp"
+    },
+    {
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-02T16:14:59.535Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
+      "id": "bluesky-3mqcexcrpuc2t",
+      "source": "bluesky",
+      "title": "Bold, italic, strikethrough, monospaced, and tappable links - SwiftUI's Text view renders Markdown with zero extra setup. www.hackingwithswift.com/quick-start/...",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mqcexcrpuc2t",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-03T17:28:58.625Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqcexcrpuc2t.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-01T03:28:26.950Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "arxiv-2607.02633v1",
+      "source": "arxiv",
+      "title": "GRAFT: Grafted Reference Audio for Fine-grained Pronunciation in Zero-shot Text-to-Speech",
+      "url": "http://arxiv.org/abs/2607.02633v1",
+      "author": "Antonis Asonitis",
+      "publishedAt": "2026-07-04T18:47:51.429Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2607.02633v1.webp"
+    },
+    {
+      "id": "arxiv-2606.28392v1",
+      "source": "arxiv",
+      "title": "RADIANT-PET: Reasoning-Augmented PET/CT Lesion Segmentation with Large Language Models and Reinforcement Learning",
+      "url": "http://arxiv.org/abs/2606.28392v1",
+      "author": "Jiasheng Wang",
+      "publishedAt": "2026-07-04T12:40:15.032Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CV",
+      "image": "/trends/arxiv-2606.28392v1.webp"
+    },
+    {
+      "id": "arxiv-2606.24661v1",
+      "source": "arxiv",
+      "title": "Perceptual Evaluation of Higher-Order Ambisonic Codecs on Both Synthetic Mixing and Native Recordings",
+      "url": "http://arxiv.org/abs/2606.24661v1",
+      "author": "Adrien Llave",
+      "publishedAt": "2026-07-04T04:07:00.929Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2606.24661v1.webp"
+    },
+    {
+      "id": "arxiv-2606.31365v1",
+      "source": "arxiv",
+      "title": "Beyond Cross-Reconstruction: Probing-Based Disentanglement Evaluation for Acoustic Teleportation Codecs",
+      "url": "http://arxiv.org/abs/2606.31365v1",
+      "author": "Philipp Grundhuber",
+      "publishedAt": "2026-07-04T00:51:43.439Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2606.31365v1.webp"
+    },
+    {
+      "id": "arxiv-2607.03666v1",
+      "source": "arxiv",
+      "title": "TRACE-EVC: Text-Guided Relative Affective Control for Zero-Shot Emotional Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.03666v1",
+      "author": "Zihan Zhang",
+      "publishedAt": "2026-07-03T19:02:51.914Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03666v1.webp"
+    },
+    {
+      "id": "arxiv-2607.03985v1",
+      "source": "arxiv",
+      "title": "NouveauVoice: Generating Novel Pseudo Speakers for Voice Anonymization",
+      "url": "http://arxiv.org/abs/2607.03985v1",
+      "author": "Meiying Melissa Chen",
+      "publishedAt": "2026-07-03T15:48:16.523Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03985v1.webp"
+    }
+  ]
+}

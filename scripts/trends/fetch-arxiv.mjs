@@ -31,11 +31,20 @@ const QUERY_TERMS = [
   'privacy preserving machine learning',
 ];
 
-function buildArxivQuery() {
+function buildArxivQuery(opts = {}) {
   // (cat:cs.LG OR cat:cs.CL ...) AND (on-device OR CoreML OR ...)
   const catPart = CATEGORIES.map((c) => `cat:${c}`).join(' OR ');
   const termPart = QUERY_TERMS.map((t) => `"${t}"`).join(' OR ');
-  return `(${catPart}) AND (${termPart})`;
+  let q = `(${catPart}) AND (${termPart})`;
+  // Historical window (backlog fills): restrict to papers submitted in [after, before].
+  // arXiv API supports submittedDate:[YYYYMMDDHHMM TO YYYYMMDDHHMM].
+  if (opts.submittedAfter || opts.submittedBefore) {
+    const fmt = (d) => d.replaceAll('-', '') + '0000';
+    const lo = opts.submittedAfter ? fmt(opts.submittedAfter) : '199101010000';
+    const hi = opts.submittedBefore ? fmt(opts.submittedBefore) : '999912312359';
+    q += ` AND submittedDate:[${lo} TO ${hi}]`;
+  }
+  return q;
 }
 
 function parseArxivXml(xml) {
@@ -83,8 +92,8 @@ function parseArxivXml(xml) {
   return entries;
 }
 
-export async function fetchArxiv() {
-  const query = buildArxivQuery();
+export async function fetchArxiv(opts = {}) {
+  const query = buildArxivQuery(opts);
   const url = `${ARXIV_API}?search_query=${encodeURIComponent(query)}&start=0&max_results=${MAX_RESULTS}&sortBy=submittedDate&sortOrder=descending`;
   try {
     const res = await fetch(url, {
@@ -95,7 +104,18 @@ export async function fetchArxiv() {
       return [];
     }
     const xml = await res.text();
-    const entries = parseArxivXml(xml);
+    let entries = parseArxivXml(xml);
+    // Defensive client-side filter: the OAI query should already constrain the
+    // window, but verify published dates so backfilled days never get papers
+    // from the wrong week.
+    if (opts.submittedAfter || opts.submittedBefore) {
+      const lo = opts.submittedAfter ? Date.parse(`${opts.submittedAfter}T00:00:00Z`) : -Infinity;
+      const hi = opts.submittedBefore ? Date.parse(`${opts.submittedBefore}T23:59:59Z`) : Infinity;
+      entries = entries.filter((e) => {
+        const t = Date.parse(e.published);
+        return !Number.isNaN(t) && t >= lo && t <= hi;
+      });
+    }
     return entries.map((e) => ({
       id: `arxiv-${e.id.split('/').pop()}`,
       source: 'arxiv',

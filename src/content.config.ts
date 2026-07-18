@@ -34,8 +34,9 @@ const journal = defineCollection({
         domain: z.string().optional(),
         sources: z.array(z.enum(['bluesky', 'hackernews', 'reddit', 'github', 'arxiv', 'lobsters', 'devto'])).optional(),
         image: z.string().optional(),
-        // Optional enriched fields (preserved for future, stripped in UI if unused)
-        imageUrl: z.string().optional(),
+        // arXiv subject classification (drives the custom SVG card in enrich-images.mjs).
+        // Note: imageUrl is enrichment-internal (third-party CDN URL) and is stripped
+        // by stripInternalFields() before digests are committed — never present here.
         category: z.string().optional(),
       })
     ),

@@ -223,6 +223,18 @@ function hostOf(url) {
   }
 }
 
+/**
+ * Strip enrichment-internal fields before a digest JSON is committed.
+ * `imageUrl` is a third-party CDN URL used only by enrich-images.mjs to
+ * download the asset — keeping it in committed JSONs would leak the very
+ * third-party hosts D-013 self-hosts to avoid. `category` (arXiv subject)
+ * and `image` (self-hosted thumb) are legitimate committed metadata.
+ */
+export function stripInternalFields(item) {
+  const { imageUrl, ...rest } = item;
+  return rest;
+}
+
 export function runPipeline(candidates, now = Date.now(), opts = {}) {
   // opts can be a Set directly (legacy) or { seenSet, ... }
   const seenSet = opts instanceof Set ? opts : opts.seenSet ?? opts.recentlySeen ?? null;

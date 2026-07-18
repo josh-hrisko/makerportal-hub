@@ -1078,3 +1078,43 @@
      Header now re-creates each navigation, listeners fresh. If you re-add persisted header, make nav
      script idempotent and listen to astro:page-load. */
 }
+
+/* ── Journal frontier polish: scroll-driven reveals (progressive enhancement) ──
+   Keyframe `to` intentionally omits `transform`: per CSS Animations, a property
+   missing from the 100% keyframe resolves to the element's underlying value at
+   fill-forwards — so hover transforms (archive-card lift, card scale) keep
+   working after the reveal completes instead of being pinned by the fill. */
+@keyframes journal-reveal {
+  from { opacity: 0; transform: translateY(22px) scale(0.985); }
+  to { opacity: 1; }
+}
+
+@supports (animation-timeline: view()) {
+  /* Archive index: each day entry fades/rises as it enters the viewport */
+  .journal-entry-reveal {
+    animation: journal-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 20%;
+  }
+  /* Detail page: featured top-signal card gets a slightly slower, grander reveal */
+  .journal-featured-reveal {
+    animation: journal-reveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 26%;
+  }
+  /* Detail page: grid cards cascade in */
+  .journal-card-reveal {
+    animation: journal-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 16%;
+  }
+}
+
+/* Journal preview thumbnails: gentle zoom on hover of the row */
+.journal-preview-thumb {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.group\/item:hover .journal-preview-thumb {
+  transform: scale(1.045);
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.35);
+}

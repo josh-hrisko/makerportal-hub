@@ -15,13 +15,16 @@ function daysAgoIso(days) {
   return new Date(Date.now() - days * 864e5).toISOString().split('T')[0];
 }
 
-function buildQuery(term) {
-  // Search term + pushed in last 7 days, language not restricted but boost Swift, Python, C++
+function buildQuery(term, opts = {}) {
+  // Search term + pushed window, language not restricted but boost Swift, Python, C++
   // Example: "CoreML pushed:>2026-07-11 stars:>10"
-  return `${term} pushed:>${daysAgoIso(SINCE_DAYS)} stars:>5`;
+  // opts.pushedAfter / opts.pushedBefore (YYYY-MM-DD) — historical window for backlog fills.
+  const after = opts.pushedAfter ?? daysAgoIso(SINCE_DAYS);
+  const before = opts.pushedBefore ? ` pushed:<${opts.pushedBefore}` : '';
+  return `${term} pushed:>${after}${before} stars:>5`;
 }
 
-export async function fetchGitHub() {
+export async function fetchGitHub(opts = {}) {
   const seen = new Map();
   const headers = {
     Accept: 'application/vnd.github.v3+json',
@@ -32,7 +35,7 @@ export async function fetchGitHub() {
   for (const rawTerm of SEARCH_QUERIES.slice(0, 8)) {
     // Use simplified term for GitHub (remove quotes, keep first 2 words)
     const term = rawTerm.replace(/[^a-zA-Z0-9 .-]/g, '').split(' ').slice(0, 3).join(' ');
-    const q = buildQuery(term);
+    const q = buildQuery(term, opts);
     const url = `${GITHUB_API}?q=${encodeURIComponent(q)}&sort=updated&order=desc&per_page=20`;
     try {
       const res = await fetch(url, { headers });

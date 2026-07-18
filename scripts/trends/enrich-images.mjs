@@ -17,8 +17,9 @@
  *
  * Every step degrades gracefully — no meta tag, oversized file, timeout, or
  * missing ImageMagick just means that item renders the pillar-color
- * fallback tile instead. The directory is wiped each run so only the
- * current digest's thumbnails are committed (~20 × ~25 KB per week).
+ * fallback tile instead. The directory is NEVER wiped (journal archive pages
+ * reference older days' thumbnails); growth is bounded by orphan pruning —
+ * see pruneOrphanThumbs() and D-013.
  *
  * Ops notes (learned the hard way, see D-013 in docs/DECISIONS.md):
  * - GitHub ubuntu-latest runners do NOT ship ImageMagick anymore; the
@@ -28,11 +29,12 @@
  *   ~15/22 real thumbnails, the rest fall back by design.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync, unlinkSync, existsSync, statSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, unlinkSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
 
 const OUT_DIR = join(process.cwd(), 'public', 'trends');
+const JOURNAL_DIR = join(process.cwd(), 'src', 'content', 'journal');
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const THUMB_WIDTH = 640;
@@ -389,6 +391,39 @@ async function thumbnailFor(item, converter) {
   return await ogThumbnail(item, converter);
 }
 
+/**
+ * Retention policy (D-013): the directory is never wiped (archive 404 fix), so
+ * growth is bounded by pruning *orphans* instead — any *.webp not referenced by
+ * a journal JSON and not in the current batch is deleted. Referenced history is
+ * kept forever; files left behind by renamed/removed items are reclaimed.
+ * Conservative by design: only *.webp files are ever touched.
+ */
+function pruneOrphanThumbs(currentItems) {
+  const referenced = new Set(currentItems.map((it) => `${it.id}.webp`));
+  try {
+    for (const file of readdirSync(JOURNAL_DIR).filter((f) => f.endsWith('.json'))) {
+      try {
+        const data = JSON.parse(readFileSync(join(JOURNAL_DIR, file), 'utf-8'));
+        for (const item of data.items ?? []) {
+          if (typeof item.image === 'string') referenced.add(item.image.split('/').pop());
+        }
+      } catch { /* unreadable file — keep its thumbs */ }
+    }
+  } catch { /* no journal dir yet — only current batch counts */ }
+
+  let pruned = 0;
+  try {
+    for (const file of readdirSync(OUT_DIR)) {
+      if (!file.endsWith('.webp') || referenced.has(file)) continue;
+      try {
+        unlinkSync(join(OUT_DIR, file));
+        pruned++;
+      } catch { /* leave it */ }
+    }
+  } catch { /* OUT_DIR missing — nothing to prune */ }
+  if (pruned > 0) console.log(`[images] pruned ${pruned} orphan thumbnails (not referenced by any journal entry)`);
+}
+
 /** Returns items with an `image` field where a thumbnail could be built. */
 export async function enrichWithImages(items) {
   const converter = findConverter();
@@ -415,5 +450,6 @@ export async function enrichWithImages(items) {
     });
   }
   console.log(`[images] ${count}/${items.length} thumbnails built in public/trends/`);
+  pruneOrphanThumbs(enriched);
   return enriched;
 }

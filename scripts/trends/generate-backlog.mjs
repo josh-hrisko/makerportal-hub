@@ -31,7 +31,14 @@
  *
  * Usage:
  *   node scripts/trends/generate-backlog.mjs
- *   # writes src/content/journal/2026-07-07.json ... 2026-07-14.json + 2026-07-16,17.json
+ *   # writes the default 10-day window (2026-07-07..14 + 16,17)
+ *
+ *   node scripts/trends/generate-backlog.mjs --from 2026-07-05 --to 2026-07-06
+ *   # custom range: HN/GitHub/arXiv are queried with *historical* windows so
+ *   # backfilled days contain items that genuinely trended around those dates
+ *   # (HN Algolia created_at_i range, GitHub pushed:>x pushed:<y, arXiv
+ *   # submittedDate range). Bluesky/Lobsters/Dev.to have no historical API —
+ *   # those stay on the fetch-once + backdate-jitter simulation.
  */
 import { writeFileSync, readdirSync, readFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -44,28 +51,67 @@ import { fetchArxiv } from './fetch-arxiv.mjs';
 import { fetchLobsters } from './fetch-lobsters.mjs';
 import { fetchDevto } from './fetch-devto.mjs';
 
-import { runPipeline, canonicalUrl } from './pipeline.mjs';
+import { runPipeline, canonicalUrl, stripInternalFields } from './pipeline.mjs';
 import { enrichWithImages } from './enrich-images.mjs';
 
 const OUT_DIR = join(process.cwd(), 'src', 'content', 'journal');
 mkdirSync(OUT_DIR, { recursive: true });
 
-// ── Target dates: 10 days to generate (fills gap + extends history) ────────
-// Existing: 2026-07-15, 2026-07-18
-// We'll generate: 2026-07-07..2026-07-14 (8 days) + 2026-07-16,17 (2 days) = 10 total
-// Sorted newest-first for seenSet accumulation (newer → older)
-const TARGET_DATES = [
-  '2026-07-17',
-  '2026-07-16',
-  '2026-07-14',
-  '2026-07-13',
-  '2026-07-12',
-  '2026-07-11',
-  '2026-07-10',
-  '2026-07-09',
-  '2026-07-08',
-  '2026-07-07',
-];
+// ── CLI: --from YYYY-MM-DD --to YYYY-MM-DD (optional) ──────────────────────
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function parseArgs(argv) {
+  const args = {};
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--from' && DATE_RE.test(argv[i + 1] ?? '')) args.from = argv[++i];
+    else if (argv[i] === '--to' && DATE_RE.test(argv[i + 1] ?? '')) args.to = argv[++i];
+  }
+  return args;
+}
+const cliArgs = parseArgs(process.argv.slice(2));
+const useHistoricalWindow = Boolean(cliArgs.from && cliArgs.to);
+
+function datesInRange(from, to) {
+  const out = [];
+  for (let t = Date.parse(`${to}T12:00:00Z`); t >= Date.parse(`${from}T12:00:00Z`); t -= 864e5) {
+    out.push(new Date(t).toISOString().split('T')[0]);
+  }
+  return out; // newest-first
+}
+
+// ── Target dates ───────────────────────────────────────────────────────────
+// Default: 10 days (fills gap + extends history around existing 07-15, 07-18).
+// Sorted newest-first for seenSet accumulation (newer → older).
+const TARGET_DATES = useHistoricalWindow
+  ? datesInRange(cliArgs.from, cliArgs.to)
+  : [
+      '2026-07-17',
+      '2026-07-16',
+      '2026-07-14',
+      '2026-07-13',
+      '2026-07-12',
+      '2026-07-11',
+      '2026-07-10',
+      '2026-07-09',
+      '2026-07-08',
+      '2026-07-07',
+    ];
+
+// Historical fetch windows: pool must cover items fresh at [from - jitter] .. to.
+// backdatePool jitters publishedAt to target -0..4.5d, so pull ~6 extra days back.
+const histWindow = useHistoricalWindow
+  ? (() => {
+      const fromMs = Date.parse(`${cliArgs.from}T00:00:00Z`);
+      const toMs = Date.parse(`${cliArgs.to}T23:59:59Z`);
+      const iso = (ms) => new Date(ms).toISOString().split('T')[0];
+      return {
+        hn: { sinceUnix: Math.floor((fromMs - 6 * 864e5) / 1000), untilUnix: Math.floor(toMs / 1000) },
+        github: { pushedAfter: iso(fromMs - 7 * 864e5), pushedBefore: iso(toMs) },
+        // arXiv cadence is slower (weekly batches) — widen to 14d back so the
+        // pool has enough papers for the whole range.
+        arxiv: { submittedAfter: iso(fromMs - 14 * 864e5), submittedBefore: iso(toMs) },
+      };
+    })()
+  : null;
 
 function loadExistingSeen() {
   const seen = new Set();
@@ -91,13 +137,13 @@ function loadExistingSeen() {
 
 async function fetchAllCandidates() {
   const sources = [
-    { name: 'bluesky', run: fetchBluesky },
-    { name: 'bluesky-curated', run: fetchBlueskyCurated },
-    { name: 'hackernews', run: fetchHackerNews },
-    { name: 'github', run: fetchGitHub },
-    { name: 'arxiv', run: fetchArxiv },
-    { name: 'lobsters', run: fetchLobsters },
-    { name: 'devto', run: fetchDevto },
+    { name: 'bluesky', run: () => fetchBluesky() },
+    { name: 'bluesky-curated', run: () => fetchBlueskyCurated() },
+    { name: 'hackernews', run: () => fetchHackerNews(histWindow?.hn ?? {}) },
+    { name: 'github', run: () => fetchGitHub(histWindow?.github ?? {}) },
+    { name: 'arxiv', run: () => fetchArxiv(histWindow?.arxiv ?? {}) },
+    { name: 'lobsters', run: () => fetchLobsters() },
+    { name: 'devto', run: () => fetchDevto() },
   ];
 
   const results = await Promise.allSettled(sources.map(s => s.run()));
@@ -159,8 +205,9 @@ async function main() {
 
     console.log(`[${dateStr}] funnel ${stats.fetched} → ${stats.deduped} → ${stats.gated} → ${stats.selected} (dropped: ${JSON.stringify(stats.dropped)})`);
 
-    // Enrich with images (preserves history now, doesn't wipe)
-    const enriched = await enrichWithImages(bareItems);
+    // Enrich with images (preserves history now, doesn't wipe), then strip
+    // enrichment-internal fields (imageUrl) before committing the JSON.
+    const enriched = (await enrichWithImages(bareItems)).map(stripInternalFields);
 
     const generatedAt = new Date(targetNoon).toISOString();
     writeFileSync(outPath, `${JSON.stringify({ generatedAt, items: enriched }, null, 2)}\n`);

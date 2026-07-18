@@ -21,6 +21,8 @@ export type TrendItem = {
   sources?: TrendSource[];
   /** Self-hosted og:image thumbnail (/trends/{id}.webp), built at digest time */
   image?: string;
+  /** arXiv subject classification (e.g. "cs.LG") — drives the custom SVG card */
+  category?: string;
 };
 
 export const sourceLabels: Record<TrendSource, string> = {

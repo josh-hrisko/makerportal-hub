@@ -16,6 +16,7 @@ import {
   scoreCandidate,
   selectDigest,
   runPipeline,
+  stripInternalFields,
 } from './pipeline.mjs';
 
 const NOW = Date.parse('2026-07-15T00:00:00Z');
@@ -278,5 +279,31 @@ test('curated status is merged in deduplication', () => {
   const deduped = dedupeCandidates(annotated);
   assert.equal(deduped.length, 1);
   assert.equal(deduped[0].curated, true);
+});
+
+test('stripInternalFields removes third-party imageUrl but keeps committed metadata', () => {
+  const item = {
+    id: 'bluesky-abc',
+    source: 'bluesky',
+    title: 'Local LLM on Metal',
+    url: 'https://bsky.app/profile/x/post/abc',
+    imageUrl: 'https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:x/bafkreix@jpeg',
+    image: '/trends/bluesky-abc.webp',
+    category: 'cs.LG',
+    score: 9,
+  };
+  const stripped = stripInternalFields(item);
+  assert.equal('imageUrl' in stripped, false);
+  assert.equal(stripped.image, '/trends/bluesky-abc.webp');
+  assert.equal(stripped.category, 'cs.LG');
+  // Original untouched (immutability for the enrichment pipeline)
+  assert.equal(item.imageUrl?.includes('cdn.bsky.app'), true);
+});
+
+test('stripInternalFields is a no-op when imageUrl is absent', () => {
+  const item = { id: 'hackernews-1', source: 'hackernews', title: 'x', url: 'https://example.com' };
+  const stripped = stripInternalFields(item);
+  assert.deepEqual(stripped, item);
+  assert.notEqual(stripped, item); // still a copy
 });
 

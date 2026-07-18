@@ -20,7 +20,7 @@ import { fetchDevto } from './fetch-devto.mjs';
 // Reddit disabled (D-023) — no API credentials (self-service access closed, D-011).
 // fetch-reddit.mjs is retained; re-enable by restoring this import + the sources entry below.
 // import { fetchReddit } from './fetch-reddit.mjs';
-import { runPipeline, isArtifactUrl, engagementBonus, canonicalUrl } from './pipeline.mjs';
+import { runPipeline, isArtifactUrl, engagementBonus, canonicalUrl, stripInternalFields } from './pipeline.mjs';
 import { enrichWithImages } from './enrich-images.mjs';
 
 const dateStr = new Date().toISOString().split('T')[0];
@@ -111,7 +111,8 @@ results.forEach((result, i) => {
 });
 
 const { items: bareItems, selected, stats } = runPipeline(candidates, Date.now(), { seenSet: recentSeen });
-const items = await enrichWithImages(bareItems);
+// Strip enrichment-internal fields (imageUrl = third-party CDN URL) before commit (D-013).
+const items = (await enrichWithImages(bareItems)).map(stripInternalFields);
 
 const generatedAt = new Date().toISOString();
 // Auto-publish (D-022): never create an empty journal day. If gating left nothing,
