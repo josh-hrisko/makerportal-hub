@@ -22,19 +22,9 @@ export interface PlaygroundEntry {
   relatedFieldNote?: string;
 }
 
+// Individual acoustic toolbox tools are listed on the toolbox landing page
+// (/playground/multiphysics-dsp-lab), not as top-level playground cards.
 export const playground: PlaygroundEntry[] = [
-  {
-    slug: 'multiphysics-dsp-lab',
-    title: 'Audio & Acoustics Toolbox',
-    tagline: 'Seven serious engineering tools for audio, acoustics, DSP, and loudspeaker design',
-    description:
-      'An audio engineering toolbox with room mode analysis, pole-zero filter exploration, loudspeaker enclosure design, nonlinear driver dynamics, thermal compression modeling, cone breakup visualization, and a suite of fast acoustic calculators — built for makers, students, audiophiles, and loudspeaker designers.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
-  // Individual acoustic toolbox tools are listed on the toolbox landing page
-  // (/playground/multiphysics-dsp-lab), not as top-level playground cards.
   {
     slug: 'quaternion-euler-converter',
     title: 'Quaternion ↔ Euler Converter',
@@ -64,6 +54,16 @@ export const playground: PlaygroundEntry[] = [
     tagline: 'Real coastlines, real weather, real ISS orbit',
     description:
       'A rotating globe with three real-data modes: an astronomically accurate day/night terminator, real current weather across 16 cities (refreshed on a schedule), and the ISS tracked live via real orbital mechanics computed client-side from its actual TLE elements.',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'multiphysics-dsp-lab',
+    title: 'Audio & Acoustics Toolbox',
+    tagline: 'Seven serious engineering tools for audio, acoustics, DSP, and loudspeaker design',
+    description:
+      'An audio engineering toolbox with room mode analysis, pole-zero filter exploration, loudspeaker enclosure design, nonlinear driver dynamics, thermal compression modeling, cone breakup visualization, and a suite of fast acoustic calculators — built for makers, students, audiophiles, and loudspeaker designers.',
+    pillarHint: 'dsp-audio',
     isGrounded: false,
     status: 'live',
   },
