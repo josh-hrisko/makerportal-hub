@@ -1,0 +1,609 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Ray-Matrix Optics Bench — ABCD Paraxial Ray Tracing & Laser Cavity Stability | MakerPortal';
+const description =
+  'Trace paraxial rays through a cascade of lenses, mirrors, and free space with 2×2 ABCD ray-transfer matrices. Read the system matrix and effective focal length, image an object, and test two-mirror laser resonators against the g1·g2 stability criterion — all computed live in your browser.';
+const canonical = new URL('/playground/optics-bench', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Ray-Matrix Optics Bench', item: canonical.toString() },
+  ],
+};
+
+const faqs = [
+  {
+    q: 'What is an ABCD ray-transfer matrix?',
+    a: 'In paraxial (small-angle) optics a ray is described by its height y and slope θ. Every optical element — a length of free space, a thin lens, a curved mirror — acts on that pair through a 2×2 matrix [[A, B], [C, D]]. Cascading elements just multiplies their matrices, so an entire optical system collapses to a single 2×2 matrix. It is the standard first-order design tool for imaging systems and laser cavities.',
+  },
+  {
+    q: 'Why is the determinant of the system matrix 1?',
+    a: 'For a system that begins and ends in the same medium, the determinant equals the ratio of input to output refractive index, which is 1. It is a useful sanity check: if your cascade does not come out to det ≈ 1, an element is wrong.',
+  },
+  {
+    q: 'What makes a laser resonator stable?',
+    a: 'A two-mirror cavity is stable when a ray bouncing back and forth stays bounded rather than walking off the mirrors. In terms of the g-parameters gᵢ = 1 − L/Rᵢ, that condition is 0 ≤ g1·g2 ≤ 1. Equivalently the round-trip matrix must have |(A+D)/2| ≤ 1. The plane-parallel and confocal cavities sit exactly on the edge of that region.',
+  },
+  {
+    q: 'What are the limitations of ABCD ray tracing?',
+    a: 'It is strictly first-order: it assumes small angles, ignores all aberrations (spherical, coma, chromatic), treats lenses as infinitely thin unless you build up a thick lens from interfaces, and says nothing about diffraction at apertures. It is exact in the paraxial limit and superb for layout and cavity design, but it is not a substitute for full ray-tracing or wave-optics software when aberrations matter.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Ray-Matrix Optics Bench"
+    lead="Build an optical system out of lenses, mirrors, and gaps, and watch a fan of paraxial rays trace straight through it. Every element is a 2×2 ABCD matrix; the whole cascade collapses to one matrix whose effective focal length and imaging conjugates are read out live. A second mode tests two-mirror laser cavities against the classic g1·g2 stability criterion."
+  >
+    <section class="border-b border-border" aria-labelledby="bench-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 id="bench-title" class="sr-only">Optics bench</h2>
+
+        <div class="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Optics mode">
+          <button type="button" id="tab-ray" class="pill-btn is-active" role="tab" aria-selected="true">Ray bench</button>
+          <button type="button" id="tab-cavity" class="pill-btn" role="tab" aria-selected="false">Laser resonator</button>
+        </div>
+
+        <!-- RAY BENCH -->
+        <div id="panel-ray" class="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-[0.95rem]">Elements</h3>
+              <span class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">light travels left → right</span>
+            </div>
+            <div id="element-rows" class="mt-3 space-y-2"></div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button type="button" class="pill-btn" data-add="gap">+ Gap</button>
+              <button type="button" class="pill-btn" data-add="lens">+ Lens</button>
+              <button type="button" class="pill-btn" data-add="mirror">+ Mirror</button>
+            </div>
+
+            <div class="mt-5 border-t border-border pt-4">
+              <span class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">Input rays</span>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button type="button" id="src-collimated" class="pill-btn is-active" data-src="collimated">Collimated</button>
+                <button type="button" id="src-point" class="pill-btn" data-src="point">Point source</button>
+              </div>
+              <label class="mt-3 block">
+                <span class="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text">
+                  <span id="fan-label">Beam half-height (mm)</span><span id="fan-value">10</span>
+                </span>
+                <input id="fan-slider" type="range" min="2" max="20" step="1" value="10" class="mt-1 w-full" />
+              </label>
+            </div>
+
+            <div class="mt-5 border-t border-border pt-4">
+              <span class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">Presets</span>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button type="button" class="pill-btn" data-preset="single">Single lens</button>
+                <button type="button" class="pill-btn" data-preset="relay">4f relay</button>
+                <button type="button" class="pill-btn" data-preset="telescope">Telescope</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Ray diagram</p>
+              <canvas id="ray-canvas" width="820" height="380" aria-label="Paraxial rays traced through the optical system"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="readout"><dt>System matrix</dt><dd id="ro-matrix" class="font-mono text-[0.78rem] leading-snug">—</dd></div>
+              <div class="readout"><dt>det (should = 1)</dt><dd id="ro-det">—</dd></div>
+              <div class="readout"><dt>Effective focal length</dt><dd id="ro-efl">—</dd></div>
+              <div class="readout"><dt>Total track length</dt><dd id="ro-track">—</dd></div>
+            </div>
+            <div class="rounded-[14px] border border-border bg-elevated/40 p-4">
+              <div class="flex flex-wrap items-center gap-4">
+                <label class="block">
+                  <span class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text">Object distance u (mm)</span>
+                  <input id="obj-input" type="number" value="150" min="1" step="10" class="tool-input font-mono w-32" />
+                </label>
+                <div class="readout flex-1"><dt>Image distance v</dt><dd id="ro-image">—</dd></div>
+                <div class="readout flex-1"><dt>Magnification</dt><dd id="ro-mag">—</dd></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LASER RESONATOR -->
+        <div id="panel-cavity" class="hidden grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Two-mirror cavity</h3>
+            <label class="control-label mt-4">
+              <span>Cavity length L (cm)</span><output id="L-out">100</output>
+              <input id="L-slider" type="range" min="5" max="300" step="1" value="100" />
+            </label>
+            <label class="control-label mt-3">
+              <span>Mirror 1 radius R₁ (cm)</span><output id="R1-out">150</output>
+              <input id="R1-slider" type="range" min="-400" max="400" step="5" value="150" />
+            </label>
+            <label class="control-label mt-3">
+              <span>Mirror 2 radius R₂ (cm)</span><output id="R2-out">150</output>
+              <input id="R2-slider" type="range" min="-400" max="400" step="5" value="150" />
+            </label>
+            <p class="mt-2 text-[0.7rem] leading-[1.5] text-muted-text/80">R = ±400 approximates a flat mirror (R → ∞). Positive R is concave toward the cavity.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button type="button" class="pill-btn" data-cav="planar">Plane-parallel</button>
+              <button type="button" class="pill-btn" data-cav="confocal">Confocal</button>
+              <button type="button" class="pill-btn" data-cav="hemispherical">Hemispherical</button>
+              <button type="button" class="pill-btn" data-cav="concentric">Concentric</button>
+            </div>
+            <label class="control-label mt-5">
+              <span>Wavelength λ (nm)</span><output id="lam-out">1064</output>
+              <input id="lam-slider" type="range" min="248" max="10600" step="1" value="1064" />
+            </label>
+          </div>
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <div class="flex items-center justify-between">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Stability diagram (g₁, g₂)</p>
+                <p id="cav-status" class="font-mono text-[0.7rem] font-semibold">—</p>
+              </div>
+              <canvas id="cavity-canvas" width="480" height="480" aria-label="g1 g2 stability diagram with the current cavity marked"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="readout"><dt>g₁ = 1 − L/R₁</dt><dd id="ro-g1">—</dd></div>
+              <div class="readout"><dt>g₂ = 1 − L/R₂</dt><dd id="ro-g2">—</dd></div>
+              <div class="readout"><dt>g₁·g₂</dt><dd id="ro-gg">—</dd></div>
+              <div class="readout"><dt>Round-trip (A+D)/2</dt><dd id="ro-m">—</dd></div>
+              <div class="readout"><dt>Waist w₀</dt><dd id="ro-w0">—</dd></div>
+              <div class="readout"><dt>Spot at mirror 1</dt><dd id="ro-w1">—</dd></div>
+              <div class="readout"><dt>Spot at mirror 2</dt><dd id="ro-w2">—</dd></div>
+              <div class="readout"><dt>Waist from M1</dt><dd id="ro-z1">—</dd></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="method-title">
+      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What the math is</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">
+              A ray is the vector [y, θ] — height and slope. Free space is [[1, d], [0, 1]]; a thin lens is [[1, 0], [−1/f, 1]]; a mirror of radius R behaves as a lens of focal length R/2. The full system is the ordered product of these matrices, and the effective focal length is −1/C. Two-mirror cavity stability uses gᵢ = 1 − L/Rᵢ and the fundamental Gaussian mode sizes follow from the self-consistent q-parameter.
+            </p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What it ignores</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">
+              This is strictly <strong>paraxial, first-order</strong> optics: small angles only, no aberrations (spherical, coma, astigmatism, chromatic), no diffraction at apertures, and thin elements unless you compose a thick lens from interfaces. Ray heights are exaggerated for visibility — the small-angle approximation still governs the physics. It is exact in the paraxial limit and ideal for layout and cavity design, but it is not a replacement for full ray-tracing or wave-optics simulation.
+            </p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
+          The solver lives in <code class="text-primary-cta">src/lib/optics.ts</code> and is covered by unit tests (thin-lens conjugate equation, combined focal length, confocal/planar cavity edges, Gaussian-beam expansion at one Rayleigh range).
+        </p>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .pill-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.4rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .pill-btn:hover { color: var(--mp-text); border-color: var(--mp-cta); }
+  .pill-btn.is-active {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+    background: color-mix(in srgb, var(--mp-cta) 12%, var(--mp-elevated));
+  }
+  .tool-input {
+    margin-top: 0.25rem;
+    display: block;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.45rem 0.55rem;
+    font-size: 0.85rem;
+    color: var(--mp-text);
+  }
+  .tool-input:focus { outline: none; border-color: var(--mp-cta); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-cta) 20%, transparent); }
+  #ray-canvas, #cavity-canvas {
+    margin-top: 0.6rem; width: 100%; height: auto; display: block;
+    background: var(--mp-canvas); border-radius: 10px; border: 1px solid var(--mp-border);
+  }
+  #cavity-canvas { max-width: 480px; aspect-ratio: 1 / 1; }
+  .readout {
+    border: 1px solid var(--mp-border); border-radius: 12px;
+    background: color-mix(in srgb, var(--mp-elevated) 45%, transparent); padding: 0.7rem 0.8rem;
+  }
+  .readout dt { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mp-muted); }
+  .readout dd { margin-top: 0.25rem; font-size: 0.95rem; font-weight: 600; color: var(--mp-text); }
+  .control-label { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mp-muted); }
+  .control-label output { color: var(--mp-text); font-weight: 600; }
+  .control-label input[type='range'] { grid-column: 1 / -1; width: 100%; accent-color: var(--mp-cta); }
+  .el-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.4rem; align-items: center; }
+  .el-row select, .el-row input {
+    border-radius: 8px; border: 1px solid var(--mp-border); background: var(--mp-canvas);
+    padding: 0.35rem 0.45rem; font-size: 0.78rem; color: var(--mp-text); font-family: var(--font-mono);
+  }
+  .el-row button {
+    border: 1px solid var(--mp-border); border-radius: 8px; background: var(--mp-elevated);
+    color: var(--mp-muted); width: 1.9rem; height: 1.9rem; font-size: 1rem; line-height: 1;
+  }
+  .el-row button:hover { color: var(--mp-cta); border-color: var(--mp-cta); }
+  input[type='range'] { accent-color: var(--mp-cta); }
+</style>
+
+<script>
+// @ts-nocheck
+import {
+  freeSpace, thinLens, curvedMirror, systemMatrix, traceRay, determinant,
+  effectiveFocalLength, imageDistance,
+  resonatorGParams, resonatorStable, roundTripMatrix, stabilityParameter,
+} from '../../lib/optics.ts';
+
+function initOpticsBench() {
+  const rayCanvas = document.getElementById('ray-canvas');
+  if (!rayCanvas || rayCanvas.dataset.init) return;
+  rayCanvas.dataset.init = 'true';
+  const rc = rayCanvas.getContext('2d');
+  const cavCanvas = document.getElementById('cavity-canvas');
+  const cc = cavCanvas.getContext('2d');
+
+  let colors = {};
+  function readColors() {
+    const s = getComputedStyle(document.documentElement);
+    const g = (n, f) => s.getPropertyValue(n).trim() || f;
+    colors = {
+      canvas: g('--mp-canvas', '#0f141c'), text: g('--mp-text', '#e8eef6'),
+      muted: g('--mp-muted', '#a8b9cc'), border: g('--mp-border', 'rgba(255,255,255,0.1)'),
+      cta: g('--mp-cta', '#f07a94'), anchor: g('--mp-anchor', '#71b9e3'),
+    };
+  }
+  readColors();
+
+  // ---------- Ray bench state ----------
+  let elements = [];
+  let source = 'collimated';
+  let fanHalf = 10; // mm
+
+  const presets = {
+    single: [{ t: 'gap', v: 150 }, { t: 'lens', v: 100 }, { t: 'gap', v: 300 }],
+    relay: [{ t: 'gap', v: 100 }, { t: 'lens', v: 100 }, { t: 'gap', v: 200 }, { t: 'lens', v: 100 }, { t: 'gap', v: 100 }],
+    telescope: [{ t: 'gap', v: 60 }, { t: 'lens', v: 200 }, { t: 'gap', v: 250 }, { t: 'lens', v: 50 }, { t: 'gap', v: 80 }],
+  };
+
+  const elRowsEl = document.getElementById('element-rows');
+  const fanSlider = document.getElementById('fan-slider');
+  const fanValue = document.getElementById('fan-value');
+  const fanLabel = document.getElementById('fan-label');
+  const objInput = document.getElementById('obj-input');
+
+  function elMatrix(el) {
+    // values are in mm; work in meters for optics functions.
+    if (el.t === 'gap') return freeSpace(el.v / 1000);
+    if (el.t === 'lens') return thinLens(el.v / 1000);
+    return curvedMirror(el.v / 1000);
+  }
+
+  function renderRows() {
+    elRowsEl.innerHTML = '';
+    elements.forEach((el, i) => {
+      const row = document.createElement('div');
+      row.className = 'el-row';
+      const unit = el.t === 'gap' ? 'd (mm)' : el.t === 'lens' ? 'f (mm)' : 'R (mm)';
+      row.innerHTML = `
+        <select data-i="${i}" class="el-type">
+          <option value="gap" ${el.t === 'gap' ? 'selected' : ''}>Gap</option>
+          <option value="lens" ${el.t === 'lens' ? 'selected' : ''}>Lens</option>
+          <option value="mirror" ${el.t === 'mirror' ? 'selected' : ''}>Mirror</option>
+        </select>
+        <input type="number" data-i="${i}" class="el-val" value="${el.v}" step="5" title="${unit}" />
+        <button type="button" data-i="${i}" class="el-del" aria-label="Remove element">×</button>`;
+      elRowsEl.appendChild(row);
+    });
+    elRowsEl.querySelectorAll('.el-type').forEach((s) =>
+      s.addEventListener('change', (e) => { elements[+e.target.dataset.i].t = e.target.value; renderRows(); drawRay(); }));
+    elRowsEl.querySelectorAll('.el-val').forEach((inp) =>
+      inp.addEventListener('input', (e) => { elements[+e.target.dataset.i].v = parseFloat(e.target.value) || 0; drawRay(); }));
+    elRowsEl.querySelectorAll('.el-del').forEach((b) =>
+      b.addEventListener('click', (e) => { elements.splice(+e.target.dataset.i, 1); renderRows(); drawRay(); }));
+  }
+
+  function traceRayPath(ray) {
+    const pts = [{ z: 0, y: ray.y }];
+    let z = 0; let cur = { ...ray };
+    for (const el of elements) {
+      cur = traceRay(elMatrix(el), cur);
+      if (el.t === 'gap') z += el.v / 1000;
+      pts.push({ z, y: cur.y });
+    }
+    return pts;
+  }
+
+  function totalLength() { return elements.filter((e) => e.t === 'gap').reduce((a, e) => a + e.v / 1000, 0); }
+
+  function drawRay() {
+    const W = rayCanvas.width, H = rayCanvas.height;
+    rc.fillStyle = colors.canvas; rc.fillRect(0, 0, W, H);
+    const L = totalLength();
+    const padX = 40, padY = 28;
+    const plotW = W - 2 * padX, plotH = H - 2 * padY;
+    const midY = H / 2;
+
+    // Build ray set
+    const rays = [];
+    const nRays = 9;
+    if (source === 'collimated') {
+      for (let k = 0; k < nRays; k++) {
+        const y = (-fanHalf + (2 * fanHalf * k) / (nRays - 1)) / 1000; // m
+        rays.push({ y, theta: 0 });
+      }
+    } else {
+      const spread = 0.06; // rad max slope
+      for (let k = 0; k < nRays; k++) {
+        const th = -spread + (2 * spread * k) / (nRays - 1);
+        rays.push({ y: 0, theta: th });
+      }
+    }
+
+    const paths = rays.map(traceRayPath);
+    let ymax = fanHalf / 1000;
+    for (const p of paths) for (const q of p) ymax = Math.max(ymax, Math.abs(q.y));
+    ymax *= 1.15;
+    const sx = L > 0 ? plotW / L : plotW;
+    const sy = ymax > 0 ? plotH / 2 / ymax : 1;
+    const X = (z) => padX + z * sx;
+    const Y = (y) => midY - y * sy;
+
+    // optical axis
+    rc.strokeStyle = colors.border; rc.lineWidth = 1;
+    rc.beginPath(); rc.moveTo(padX, midY); rc.lineTo(W - padX, midY); rc.stroke();
+
+    // element markers
+    let z = 0;
+    rc.font = '10px ui-monospace, monospace';
+    for (const el of elements) {
+      if (el.t === 'gap') { z += el.v / 1000; continue; }
+      const x = X(z);
+      const half = plotH / 2 * 0.92;
+      rc.strokeStyle = el.t === 'lens' ? colors.anchor : colors.cta;
+      rc.lineWidth = 2;
+      rc.beginPath(); rc.moveTo(x, midY - half); rc.lineTo(x, midY + half); rc.stroke();
+      // lens arrowheads (convex hint) or mirror ticks
+      rc.fillStyle = rc.strokeStyle;
+      const ah = 6; const conv = el.v > 0;
+      if (el.t === 'lens') {
+        rc.beginPath();
+        if (conv) { rc.moveTo(x - ah, midY - half + ah); rc.lineTo(x, midY - half); rc.lineTo(x + ah, midY - half + ah); }
+        else { rc.moveTo(x - ah, midY - half); rc.lineTo(x, midY - half + ah); rc.lineTo(x + ah, midY - half); }
+        rc.stroke();
+      }
+      rc.fillStyle = colors.muted;
+      rc.fillText(`${el.t === 'lens' ? 'f' : 'R'}=${el.v}`, x + 3, midY - half - 4);
+    }
+
+    // rays
+    paths.forEach((p, i) => {
+      const hue = source === 'collimated' ? colors.anchor : colors.cta;
+      rc.strokeStyle = hue; rc.globalAlpha = 0.55; rc.lineWidth = 1.3;
+      rc.beginPath();
+      p.forEach((q, j) => { const px = X(q.z), py = Y(q.y); if (j === 0) rc.moveTo(px, py); else rc.lineTo(px, py); });
+      rc.stroke();
+    });
+    rc.globalAlpha = 1;
+
+    // readouts
+    const M = systemMatrix(elements.map(elMatrix));
+    document.getElementById('ro-matrix').innerHTML =
+      `[${M.A.toFixed(3)}, ${(M.B * 1000).toFixed(1)}mm]<br>[${M.C.toFixed(3)}, ${M.D.toFixed(3)}]`;
+    document.getElementById('ro-det').textContent = determinant(M).toFixed(4);
+    const efl = effectiveFocalLength(M);
+    document.getElementById('ro-efl').textContent = Number.isFinite(efl) ? `${(efl * 1000).toFixed(1)} mm` : 'afocal (∞)';
+    document.getElementById('ro-track').textContent = `${(L * 1000).toFixed(0)} mm`;
+
+    // imaging
+    const u = (parseFloat(objInput.value) || 0) / 1000;
+    const img = imageDistance(M, u);
+    if (img && Number.isFinite(img.v)) {
+      document.getElementById('ro-image').textContent = `${(img.v * 1000).toFixed(1)} mm`;
+      document.getElementById('ro-mag').textContent = `${img.magnification.toFixed(3)}×`;
+    } else {
+      document.getElementById('ro-image').textContent = 'at ∞';
+      document.getElementById('ro-mag').textContent = '—';
+    }
+  }
+
+  // ---------- Cavity state ----------
+  const Lsl = document.getElementById('L-slider');
+  const R1sl = document.getElementById('R1-slider');
+  const R2sl = document.getElementById('R2-slider');
+  const lamSl = document.getElementById('lam-slider');
+  const FLAT = 1e6;
+  const rVal = (v) => (Math.abs(v) >= 400 ? (v >= 0 ? FLAT : -FLAT) : v);
+
+  function drawCavity() {
+    const W = cavCanvas.width, H = cavCanvas.height;
+    cc.fillStyle = colors.canvas; cc.fillRect(0, 0, W, H);
+    const pad = 44;
+    const range = 2.2; // g axis from -range..range
+    const gx = (g) => pad + ((g + range) / (2 * range)) * (W - 2 * pad);
+    const gy = (g) => H - pad - ((g + range) / (2 * range)) * (H - 2 * pad);
+
+    // shade stable region 0 <= g1 g2 <= 1
+    const img = cc.getImageData(0, 0, W, H);
+    const stableCol = hexToRgb(colors.anchor);
+    for (let py = pad; py < H - pad; py++) {
+      for (let px = pad; px < W - pad; px++) {
+        const g1 = ((px - pad) / (W - 2 * pad)) * 2 * range - range;
+        const g2 = ((H - pad - py) / (H - 2 * pad)) * 2 * range - range;
+        const p = g1 * g2;
+        if (p >= 0 && p <= 1) {
+          const idx = (py * W + px) * 4;
+          img.data[idx] = stableCol[0]; img.data[idx + 1] = stableCol[1]; img.data[idx + 2] = stableCol[2];
+          img.data[idx + 3] = 34;
+        }
+      }
+    }
+    cc.putImageData(img, 0, 0);
+
+    // hyperbola boundary g1·g2 = 1 (both branches drawn as one swept curve)
+    cc.strokeStyle = colors.muted; cc.lineWidth = 1; cc.globalAlpha = 0.6;
+    cc.beginPath(); let started = false;
+    for (let g1 = -range; g1 <= range; g1 += 0.01) {
+      if (Math.abs(g1) < 0.02) { started = false; continue; }
+      const g2 = 1 / g1;
+      if (Math.abs(g2) > range) { started = false; continue; }
+      const x = gx(g1), y = gy(g2);
+      if (!started) { cc.moveTo(x, y); started = true; } else cc.lineTo(x, y);
+    }
+    cc.stroke();
+    cc.globalAlpha = 1;
+
+    // axes
+    cc.strokeStyle = colors.border; cc.lineWidth = 1;
+    cc.beginPath(); cc.moveTo(pad, gy(0)); cc.lineTo(W - pad, gy(0)); cc.moveTo(gx(0), pad); cc.lineTo(gx(0), H - pad); cc.stroke();
+    cc.fillStyle = colors.muted; cc.font = '11px ui-monospace, monospace';
+    cc.fillText('g₁', W - pad + 4, gy(0) + 4); cc.fillText('g₂', gx(0) + 6, pad - 6);
+
+    // compute current cavity
+    const L = parseFloat(Lsl.value) / 100; // m
+    const R1 = rVal(parseFloat(R1sl.value)) / 100;
+    const R2 = rVal(parseFloat(R2sl.value)) / 100;
+    const lam = parseFloat(lamSl.value) * 1e-9;
+    const { g1, g2 } = resonatorGParams(L, R1, R2);
+    const stable = resonatorStable(g1, g2);
+    const M = roundTripMatrix(L, R1, R2);
+    const m = stabilityParameter(M);
+
+    // plot point
+    const px = gx(Math.max(-range, Math.min(range, g1)));
+    const py = gy(Math.max(-range, Math.min(range, g2)));
+    cc.fillStyle = stable ? colors.anchor : colors.cta;
+    cc.beginPath(); cc.arc(px, py, 6, 0, Math.PI * 2); cc.fill();
+    cc.strokeStyle = colors.text; cc.lineWidth = 1.5; cc.stroke();
+
+    // status + readouts
+    const status = document.getElementById('cav-status');
+    status.textContent = stable ? 'STABLE' : 'UNSTABLE';
+    status.style.color = stable ? colors.anchor : colors.cta;
+    document.getElementById('ro-g1').textContent = g1.toFixed(3);
+    document.getElementById('ro-g2').textContent = g2.toFixed(3);
+    document.getElementById('ro-gg').textContent = (g1 * g2).toFixed(3);
+    document.getElementById('ro-m').textContent = m.toFixed(3);
+
+    // Gaussian mode sizes (valid only when stable and interior)
+    const gg = g1 * g2;
+    if (stable && gg > 1e-6 && gg < 1 - 1e-6) {
+      // Standard two-mirror Gaussian-mode results (Kogelnik & Li).
+      const w0 = Math.sqrt((L * lam / Math.PI) * Math.sqrt(gg * (1 - gg)) / Math.pow(g1 + g2 - 2 * gg, 2));
+      const w1 = Math.sqrt((L * lam / Math.PI) * Math.sqrt(g2 / (g1 * (1 - gg))));
+      const w2 = Math.sqrt((L * lam / Math.PI) * Math.sqrt(g1 / (g2 * (1 - gg))));
+      const z1 = L * g2 * (1 - g1) / (g1 + g2 - 2 * gg);
+      document.getElementById('ro-w0').textContent = `${(w0 * 1e6).toFixed(0)} µm`;
+      document.getElementById('ro-w1').textContent = `${(w1 * 1e6).toFixed(0)} µm`;
+      document.getElementById('ro-w2').textContent = `${(w2 * 1e6).toFixed(0)} µm`;
+      document.getElementById('ro-z1').textContent = `${(z1 * 100).toFixed(1)} cm`;
+    } else {
+      for (const id of ['ro-w0', 'ro-w1', 'ro-w2', 'ro-z1']) document.getElementById(id).textContent = stable ? 'edge' : '—';
+    }
+  }
+
+  function hexToRgb(c) {
+    const m = c.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+    if (m) return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+    const rgb = c.match(/(\d+)/g);
+    return rgb ? rgb.slice(0, 3).map(Number) : [113, 185, 227];
+  }
+
+  // ---------- wiring ----------
+  document.querySelectorAll('[data-add]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const t = b.dataset.add;
+      elements.push({ t, v: t === 'gap' ? 100 : t === 'lens' ? 100 : 200 });
+      renderRows(); drawRay();
+    }));
+  document.querySelectorAll('[data-preset]').forEach((b) =>
+    b.addEventListener('click', () => {
+      elements = presets[b.dataset.preset].map((e) => ({ ...e }));
+      renderRows(); drawRay();
+    }));
+  document.querySelectorAll('[data-src]').forEach((b) =>
+    b.addEventListener('click', () => {
+      source = b.dataset.src;
+      document.querySelectorAll('[data-src]').forEach((x) => x.classList.toggle('is-active', x === b));
+      fanLabel.textContent = source === 'collimated' ? 'Beam half-height (mm)' : 'Ray fan half-angle (°)';
+      drawRay();
+    }));
+  fanSlider.addEventListener('input', () => { fanHalf = parseFloat(fanSlider.value); fanValue.textContent = fanHalf; drawRay(); });
+  objInput.addEventListener('input', drawRay);
+
+  const cavIds = [Lsl, R1sl, R2sl, lamSl];
+  const outIds = ['L-out', 'R1-out', 'R2-out', 'lam-out'];
+  cavIds.forEach((sl, i) => sl.addEventListener('input', () => { document.getElementById(outIds[i]).textContent = sl.value; drawCavity(); }));
+  const cavPresets = { planar: [100, FLAT, FLAT], confocal: [100, 100, 100], hemispherical: [100, FLAT, 120], concentric: [200, 100, 100] };
+  document.querySelectorAll('[data-cav]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const [L, r1, r2] = cavPresets[b.dataset.cav];
+      Lsl.value = String(L);
+      R1sl.value = String(r1 >= FLAT ? 400 : r1);
+      R2sl.value = String(r2 >= FLAT ? 400 : r2);
+      outIds.forEach((id, i) => document.getElementById(id).textContent = cavIds[i].value);
+      drawCavity();
+    }));
+
+  // tabs
+  const tabRay = document.getElementById('tab-ray');
+  const tabCav = document.getElementById('tab-cavity');
+  const panelRay = document.getElementById('panel-ray');
+  const panelCav = document.getElementById('panel-cavity');
+  function showTab(which) {
+    const ray = which === 'ray';
+    tabRay.classList.toggle('is-active', ray); tabCav.classList.toggle('is-active', !ray);
+    tabRay.setAttribute('aria-selected', ray); tabCav.setAttribute('aria-selected', !ray);
+    panelRay.classList.toggle('hidden', !ray);
+    panelCav.classList.toggle('hidden', ray);
+    panelCav.classList.toggle('grid', !ray);
+    if (ray) drawRay(); else drawCavity();
+  }
+  tabRay.addEventListener('click', () => showTab('ray'));
+  tabCav.addEventListener('click', () => showTab('cavity'));
+
+  const themeObserver = new MutationObserver(() => { readColors(); drawRay(); if (!panelCav.classList.contains('hidden')) drawCavity(); });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  document.addEventListener('astro:before-swap', () => themeObserver.disconnect(), { once: true });
+
+  // init
+  elements = presets.single.map((e) => ({ ...e }));
+  renderRows();
+  drawRay();
+  drawCavity();
+}
+
+document.addEventListener('astro:page-load', initOpticsBench);
+initOpticsBench();
+</script>
