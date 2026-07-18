@@ -46,11 +46,6 @@ const isActive = (href: string) => {
   return path === clean || path.startsWith(`${clean}/`);
 };
 
-const isActiveExact = (href: string) => {
-  const clean = normalizeHref(href);
-  if (!clean) return false;
-  return path === clean;
-};
 
 // Ownership: first claimant wins. Primary hrefs claimed first so they beat cross-links.
 // Pre-populated with manual mappings for shared or standalone sub-routes to ensure tab active state is deterministic.
@@ -106,7 +101,7 @@ const markActiveOnce = (href: string, seen: Set<any>) => {
   const clean = normalizeHref(href);
   if (!clean) return false;
   if (seen.has(clean)) return false;
-  if (isActiveExact(href)) {
+  if (isActive(href)) {
     seen.add(clean);
     return true;
   }
@@ -315,21 +310,30 @@ const organizationSchema = {
                           <div class={col.links.length > 6 ? 'sm:col-span-2 lg:col-span-1' : ''}>
                             <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">{col.title} {col.links.length > 6 ? `· ${col.links.length}` : ''}</p>
                             <ul class:list={['mt-3 space-y-1', col.links.length > 6 ? 'grid grid-cols-1 gap-1 sm:grid-cols-2 sm:space-y-0' : '']} role="list">
-                              {col.links.map((link) => (
-                                <li>
-                                  <a
-                                    {...linkAttrs(link.href, link.external)}
-                                    class="group block rounded-xl px-2.5 py-2 transition-colors hover:bg-elevated/80"
-                                  >
-                                    <span class="flex items-center gap-2 text-[0.9rem] font-medium text-primary-text">
-                                      {link.label}
-                                      {link.external && <span class="text-[0.7rem] text-muted-text">↗</span>}
-                                      {link.badge && <span class="rounded-full bg-primary-cta/15 px-1.5 py-0.5 font-mono text-[0.6rem] font-medium uppercase tracking-wider text-primary-cta">{link.badge}</span>}
-                                    </span>
-                                    {link.description && <span class="mt-0.5 block text-[0.75rem] text-muted-text">{link.description}</span>}
-                                  </a>
-                                </li>
-                              ))}
+                              {col.links.map((link) => {
+                                const childActive = isActive(link.href);
+                                return (
+                                  <li>
+                                    <a
+                                      {...linkAttrs(link.href, link.external)}
+                                      class:list={[
+                                        'group block rounded-xl px-2.5 py-2 transition-colors border border-transparent',
+                                        childActive ? 'bg-elevated/80 border-border/40' : 'hover:bg-elevated/85'
+                                      ]}
+                                    >
+                                      <span class:list={[
+                                        'flex items-center gap-2 text-[0.9rem] transition-colors',
+                                        childActive ? 'font-semibold text-primary-cta' : 'font-medium text-primary-text group-hover:text-primary-cta'
+                                      ]}>
+                                        {link.label}
+                                        {link.external && <span class="text-[0.7rem] text-muted-text">↗</span>}
+                                        {link.badge && <span class="rounded-full bg-primary-cta/15 px-1.5 py-0.5 font-mono text-[0.6rem] font-medium uppercase tracking-wider text-primary-cta">{link.badge}</span>}
+                                      </span>
+                                      {link.description && <span class="mt-0.5 block text-[0.75rem] text-muted-text">{link.description}</span>}
+                                    </a>
+                                  </li>
+                                );
+                              })}
                             </ul>
                           </div>
                         ))}
