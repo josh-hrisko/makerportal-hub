@@ -116,6 +116,9 @@ const faqSchema = {
               <div class="readout"><dt>CMB peak wavelength ahead</dt><dd id="ro-wien">—</dd></div>
               <div class="readout"><dt>Turnaround (flip) at</dt><dd id="ro-flip">—</dd></div>
             </div>
+            <p id="overflow-note" class="mt-3 text-[0.82rem] leading-[1.5] text-cta" style="display:none">
+              This combination exceeds Float64 precision. The hyperbolic functions overflow above a rapidity of ~710. Reduce the distance or acceleration to bring the computation back within numerical range.
+            </p>
           </div>
         </div>
       </div>
@@ -229,8 +232,11 @@ function initRelativisticFlight() {
     trip = flipAndBurn(a, dMeters);
     tauHalf = trip.turnaroundProperTime;
 
+    const isValid = Number.isFinite(trip.properTime) && Number.isFinite(trip.coordinateTime);
+
     const yr = (s) => s / JULIAN_YEAR;
     const fmtYears = (s) => {
+      if (!Number.isFinite(s)) return '—';
       const y = yr(s);
       if (y < 1) return `${(y * 12).toFixed(1)} mo`;
       if (y < 10000) return `${y.toFixed(y < 100 ? 1 : 0)} yr`;
@@ -241,14 +247,28 @@ function initRelativisticFlight() {
     document.getElementById('ro-ship').textContent = fmtYears(trip.properTime);
     document.getElementById('ro-earth').textContent = fmtYears(trip.coordinateTime);
     const pb = trip.peakBeta;
-    document.getElementById('ro-peakb').textContent = pb > 0.999 ? `${(pb).toFixed(pb > 0.99999 ? 8 : 5)} c` : `${pb.toFixed(3)} c`;
-    document.getElementById('ro-peakg').textContent = trip.peakGamma < 100 ? trip.peakGamma.toFixed(2) : trip.peakGamma.toExponential(2);
+    document.getElementById('ro-peakb').textContent = isValid
+      ? (pb > 0.999 ? `${(pb).toFixed(pb > 0.99999 ? 8 : 5)} c` : `${pb.toFixed(3)} c`)
+      : '—';
+    document.getElementById('ro-peakg').textContent = isValid
+      ? (trip.peakGamma < 100 ? trip.peakGamma.toFixed(2) : trip.peakGamma.toExponential(2))
+      : '—';
     const ly = parseFloat(destSelect.value);
-    document.getElementById('ro-contract').textContent = `${(ly / trip.peakGamma) < 0.01 ? (ly / trip.peakGamma).toExponential(2) : (ly / trip.peakGamma).toFixed(3)} ly`;
-    const cmbPeak = cmbTemperatureAhead(pb);
-    document.getElementById('ro-cmbpeak').textContent = `${cmbPeak < 1e4 ? cmbPeak.toFixed(cmbPeak < 100 ? 1 : 0) : cmbPeak.toExponential(2)} K`;
-    document.getElementById('ro-wien').textContent = fmtWavelength(WIEN / cmbPeak);
-    document.getElementById('ro-flip').textContent = `${fmtYears(tauHalf)} ship`;
+    document.getElementById('ro-contract').textContent = isValid
+      ? `${(ly / trip.peakGamma) < 0.01 ? (ly / trip.peakGamma).toExponential(2) : (ly / trip.peakGamma).toFixed(3)} ly`
+      : '—';
+    const cmbPeak = isValid ? cmbTemperatureAhead(pb) : NaN;
+    document.getElementById('ro-cmbpeak').textContent = isValid
+      ? `${cmbPeak < 1e4 ? cmbPeak.toFixed(cmbPeak < 100 ? 1 : 0) : cmbPeak.toExponential(2)} K`
+      : '—';
+    document.getElementById('ro-wien').textContent = isValid
+      ? fmtWavelength(WIEN / cmbPeak)
+      : '—';
+    document.getElementById('ro-flip').textContent = isValid ? `${fmtYears(tauHalf)} ship` : '—';
+
+    const statusNote = document.getElementById('overflow-note');
+    if (statusNote) statusNote.style.display = isValid ? 'none' : 'block';
+
     draw();
   }
 
@@ -265,6 +285,13 @@ function initRelativisticFlight() {
   function draw() {
     const W = canvas.width, H = canvas.height;
     ctx.fillStyle = colors.canvas; ctx.fillRect(0, 0, W, H);
+    if (!Number.isFinite(trip.coordinateTime) || !Number.isFinite(dMeters)) {
+      ctx.fillStyle = colors.muted; ctx.font = '14px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('Rapidity exceeds Float64 range — reduce distance or acceleration.', W / 2, H / 2);
+      ctx.textAlign = 'start';
+      return;
+    }
     const padL = 46, padR = 20, padT = 20, padB = 34;
     const plotW = W - padL - padR, plotH = H - padT - padB;
 

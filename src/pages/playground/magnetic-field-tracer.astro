@@ -263,12 +263,13 @@ function initFieldTracer() {
         seeds.push([cx + rr, 0, 0]);
       }
     } else if (preset === 'dipole') {
-      // two coaxial loops, same current, moderate separation — a stubby bar magnet
-      const sep = 0.8 * R;
+      // two coaxial loops, same current, variable separation — a stubby bar magnet
+      const sep = geom * R;
       segments = []; glyphs = [];
       addLoop(-sep / 2, current); addLoop(sep / 2, current);
-      el.geomLabel.textContent = 'Magnet length';
-      el.sceneNote.textContent = 'short coil stack ≈ bar-magnet dipole';
+      el.geomLabel.textContent = 'Loop separation';
+      el.geomOut.textContent = `${geom.toFixed(2)} R`;
+      el.sceneNote.textContent = 'coaxial loop pair ≈ bar-magnet dipole';
       eqSeeds(0, 0.18 * R, 2.8 * R, Math.ceil(nSeeds / 2));
       eqSeeds(0, 0.18 * R, 2.8 * R, Math.floor(nSeeds / 2), -1);
     }
@@ -429,6 +430,7 @@ function initFieldTracer() {
   document.querySelectorAll('[data-preset]').forEach((b) =>
     b.addEventListener('click', () => {
       preset = b.dataset.preset;
+      if (preset !== 'solenoid') el.geomOut.textContent = `${geom.toFixed(2)} R`;
       document.querySelectorAll('[data-preset]').forEach((x) => x.classList.toggle('is-active', x === b));
       buildScene(); draw();
     }));

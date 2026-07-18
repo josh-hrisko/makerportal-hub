@@ -81,10 +81,6 @@ export class Lattice {
     this.uy = new Float64Array(size);
   }
 
-  private idx(x: number, y: number): number {
-    return x + this.nx * y;
-  }
-
   /** Initialise every node to the equilibrium for a uniform flow (ux0, uy0). */
   initEquilibrium(ux0: number, uy0 = 0, rho0 = 1): void {
     this.inflowU = ux0;

@@ -201,7 +201,7 @@ export function beamRadius(q: Complex, lambda: number): number {
 }
 
 /** Radius of curvature R (m) of the beam's phase front from q. R = 1/Re(1/q). */
-export function beamCurvature(q: Complex, _lambda: number): number {
+export function beamCurvature(q: Complex): number {
   const invMag = q.re * q.re + q.im * q.im;
   const invRe = q.re / invMag;
   if (invRe === 0) return Infinity;

@@ -219,6 +219,13 @@ function initQuantumTunneling() {
     return { Vre, Vim };
   }
 
+  function rescaleView() {
+    let peak = 0;
+    for (let i = 0; i < N; i++) peak = Math.max(peak, cn.psi.re[i] * cn.psi.re[i] + cn.psi.im[i] * cn.psi.im[i]);
+    const target = peak > 1e-30 ? 0.62 / peak : 1;
+    psiScale += 0.15 * (target - psiScale);
+  }
+
   function relaunch() {
     V0 = parseFloat(sl.v0.value); width = parseFloat(sl.width.value);
     k0 = parseFloat(sl.k0.value); sigma = parseFloat(sl.sig.value);
@@ -226,10 +233,7 @@ function initQuantumTunneling() {
     cn = new CrankNicolson1D(x, dt, Vre, Vim);
     cn.setState(gaussianPacket(x, x0, k0, sigma));
     time = 0;
-    // fix a display scale from the initial peak of |ψ|²
-    let peak = 0;
-    for (let i = 0; i < N; i++) peak = Math.max(peak, cn.psi.re[i] ** 2 + cn.psi.im[i] ** 2);
-    psiScale = peak > 0 ? 0.62 / peak : 1;
+    rescaleView();
     updateEnergyReadout();
     draw();
   }
@@ -316,10 +320,13 @@ function initQuantumTunneling() {
     document.getElementById('time-val').textContent = time.toFixed(1);
   }
 
+  let frameCount = 0;
   function loop() {
     if (destroyed) return;
     if (playing && cn) {
       for (let s = 0; s < 4; s++) { cn.step(); time += dt; }
+      frameCount++;
+      if (frameCount % 25 === 0) rescaleView();
       draw();
     }
     rafId = requestAnimationFrame(loop);
