@@ -146,7 +146,7 @@ export const primaryNav: PrimaryNavItem[] = [
       {
         title: 'On this page',
         links: [
-          { label: 'Signals we’re tracking', href: '/resources#trending', description: 'Trend digest' },
+          { label: 'Latest signals', href: '/resources#trending', description: 'From the Signals Journal' },
           { label: 'Playground', href: '/playground', description: 'Interactive tools & toys' },
           { label: 'Tools we use', href: '/resources#tools', description: 'Studio toolchain' },
           { label: 'Gear', href: '/resources#gear', description: 'Hardware picks' },
@@ -170,14 +170,13 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Store',
         links: [
           { label: 'All products', href: '/shop', description: 'Digital goods' },
-          { label: 'Code packs', href: '/shop#products', description: 'Archives & starters' },
-          { label: 'Templates', href: '/shop#products', description: 'UI & project kits' },
+          { label: 'Archives', href: '/shop#products', description: 'Code packs & templates' },
         ],
       },
       {
         title: 'Partners',
         links: [
-          { label: 'Affiliate picks', href: '/resources#tools', description: 'Tools we use' },
+          { label: 'Affiliate picks', href: '/resources#gear', description: 'Gear we recommend' },
           { label: 'Advertise', href: '/advertise', description: 'Sponsor the hub' },
         ],
       },
@@ -273,7 +272,7 @@ export const hubRoutes: { path: string; priority: string; changefreq: string }[]
   { path: '/', priority: '1.0', changefreq: 'weekly' },
   { path: '/apps', priority: '0.95', changefreq: 'weekly' },
   { path: '/blog', priority: '0.95', changefreq: 'weekly' },
-  { path: '/resources', priority: '0.9', changefreq: 'weekly' },
+  { path: '/resources', priority: '0.9', changefreq: 'daily' },
   { path: '/journal', priority: '0.8', changefreq: 'daily' },
   { path: '/playground', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/quaternion-euler-converter', priority: '0.8', changefreq: 'monthly' },

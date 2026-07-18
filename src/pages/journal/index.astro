@@ -47,11 +47,12 @@ const avgSignals = sortedJournals.length ? Math.round(totalSignals / sortedJourn
   >
     <Fragment slot="hero-actions">
       <div class="mt-8 flex flex-wrap gap-3">
-        <a href="/resources#trending" class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Live signals →</a>
+        {sortedJournals[0] && <a href={`/journal/${sortedJournals[0].id}`} class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Latest report — {sortedJournals[0].id} →</a>}
+        <a href="/resources#gear" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Trending gear →</a>
         <a href="/blog" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Field notes</a>
       </div>
       {sortedJournals.length > 0 && (
-        <div class="mt-10 grid grid-cols-3 gap-3 max-w-[28rem] rounded-[16px] border border-border bg-card-bg/70 p-3 backdrop-blur-sm">
+        <div class="mt-10 grid grid-cols-3 gap-3 max-w-[28rem] rounded-[16px] border border-border bg-card-bg p-3">
           <div class="rounded-[12px] bg-canvas px-3 py-2.5">
             <p class="font-mono text-[0.55rem] uppercase tracking-[0.14em] text-muted-text">Entries</p>
             <p class="mt-1 text-[1.15rem] font-bold tracking-tight text-primary-text">{sortedJournals.length}</p>

@@ -6,8 +6,8 @@ import ButtondownSignup from '../../components/ButtondownSignup.astro';
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 
-const title = 'Field Notes — MakerPortal';
-const description = 'Notes on independent software, product decisions, interface craft, and what we learn while shipping.';
+const title = 'Field Notes — On-device AI, iOS Craft & Indie Shipping | MakerPortal';
+const description = 'Field notes on independent software, CoreML & ANE latency, SwiftUI craft, product decisions, and what we learn shipping 11 iOS apps from San Francisco.';
 ---
 
 <Layout title={title} description={description}>
@@ -36,7 +36,7 @@ const description = 'Notes on independent software, product decisions, interface
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
       <div class="border-t reading-line">
         {posts.map((post, index) => (
-          <article class="group relative grid gap-6 border-b reading-line py-10 transition-colors hover:bg-white/40 sm:grid-cols-[5rem_1fr_auto] sm:items-start sm:gap-8 sm:py-14">
+          <article class="group relative grid gap-6 border-b reading-line py-10 transition-colors hover:bg-elevated/60 sm:grid-cols-[5rem_1fr_auto] sm:items-start sm:gap-8 sm:py-14">
             <p class="font-mono text-xs reading-muted">{String(index + 1).padStart(2, '0')}</p>
             <div class="max-w-3xl">
               <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em]" style="color: var(--mp-paper-kicker)">{post.data.eyebrow}</p>

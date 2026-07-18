@@ -787,8 +787,8 @@
   }
 }
 
-/* Efficiency — content-visibility for below-fold heavy sections (gear 50 items, tools, shop products) */
-#tools, #gear, #products, #trending {
+/* Efficiency — content-visibility for below-fold heavy sections (gear 50 items, tools, shop products, apps grid, playground) */
+#tools, #gear, #products, #trending, #apps, #playground {
   content-visibility: auto;
   contain-intrinsic-size: auto 700px;
 }
@@ -826,13 +826,6 @@
     to {
       --tw-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
-  }
-}
-
-/* Make AppCard blur cheaper on mobile */
-@media (max-width: 640px) {
-  .app-card .blur-\[80px\] {
-    filter: blur(40px);
   }
 }
 

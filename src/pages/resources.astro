@@ -18,7 +18,7 @@ const allTrends: TrendItem[] = latestJournal ? (latestJournal.data.items as Tren
 const trendsGeneratedAt = latestJournal ? latestJournal.data.generatedAt : null;
 
 const trending = [...allTrends].sort((a, b) => b.score - a.score).slice(0, 7);
-const [featuredSignal, ...restSignals] = trending;
+const featuredSignal = trending[0];
 
 const pillarOf = (item: { tags: string[] }) => pillarMeta[item.tags[0]] ?? fallbackPillar;
 
@@ -78,7 +78,7 @@ const scanDate = trendsGeneratedAt
 
 const title = 'Learn — Resources, Guides & Tools | MakerPortal';
 const description =
-  'On-device AI guides, iOS craft resources, downloadable archives, and curated tools. Affiliate recommendations disclosed.';
+  'On-device AI guides, iOS craft notes, downloadable archives, interactive playground, and 50 curated gear picks with disclosure. Daily Signals Journal re-ranks gear.';
 
 const topics = [
   { title: 'On-device AI', blurb: 'CoreML, ANE latency, quantization, offline indexes, hybrid where needed.' },
@@ -123,148 +123,85 @@ const tools = [
     </div>
   </section>
 
-  {/* Signals we're tracking (D-012/D-013/D-017): data is src/content/journal/YYYY-MM-DD.json
-      (persistent daily journal collection), latest entry surfaced here. Produced and
-      auto-published daily by the gated digest pipeline (D-022) — nothing here fetches at runtime.
-      Thumbnails are self-hosted /trends/*.webp (never hotlinked — the "no tracking"
-      claim depends on that). Items without thumbnail get pillar-tinted fallback.
-      Fixed aspect boxes = no CLS; no backdrop-filter (D-006). Gear re-ranking (D-017):
-      trending pillars from this feed re-order Gear below — same 50 curated ASINs, only sort changes. */}
-  {trending.length > 0 && featuredSignal && (
+  {/* Signals Journal teaser (D-022 canonical): /journal is the one true home.
+      This section is a compact latest-signals bridge — no duplicate featured+grid,
+      no thumbnails (those live on /journal/<date>). Keeps id="trending" for
+      backward-compat anchors, but the full experience is /journal. Gear re-ranking
+      (D-017) still reads from full allTrends → pillarCounts below. */}
+  {trending.length > 0 && featuredSignal && latestJournal && (
     <section id="trending" class="border-b border-border" aria-labelledby="trending-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
-        <div class="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 id="trending-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Signals we're tracking</h2>
-            <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">A build-time scan of public discussion on on-device AI, iOS craft, and DSP — no tracking involved, just what's shaping the next field note. Trending pillars also re-rank <a href="#gear" class="text-brand-anchor hover:text-primary-text">Gear</a> below. View the full backlog in the <a href="/journal" class="text-brand-anchor hover:text-primary-text font-semibold">Signals Journal</a>.</p>
+      <div class="mx-auto max-w-[88rem] px-5 py-14 sm:px-8 sm:py-20 lg:px-10">
+        <div class="flex flex-wrap items-start justify-between gap-6">
+          <div class="max-w-[48rem]">
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 id="trending-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Signals Journal — Latest</h2>
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
+                <span class="h-1.5 w-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+                {allTrends.length} signals · {latestJournal.id}
+              </span>
+            </div>
+            <p class="mt-3 max-w-2xl text-[0.92rem] leading-[1.6] text-muted-text">
+              Daily digest auto-published to <a href={`/journal/${latestJournal.id}`} class="font-semibold text-brand-anchor hover:text-primary-text underline decoration-border underline-offset-4">{`/journal/${latestJournal.id}`}</a> — score-weighted, pillar-filtered, with self-hosted thumbnails. This is a compact teaser; the full report lives in the canonical <a href="/journal" class="font-semibold text-brand-anchor hover:text-primary-text">Signals Journal</a> archive. Trending pillars also re-rank <a href="#gear" class="text-brand-anchor hover:text-primary-text">Gear</a> below.
+            </p>
+            <div class="mt-5 flex flex-wrap gap-2.5">
+              <a href={`/journal/${latestJournal.id}`} class="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-primary-text px-4.5 text-[0.85rem] font-bold text-canvas hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
+                View full report — {latestJournal.id} → 
+              </a>
+              <a href="/journal" class="inline-flex min-h-10 items-center rounded-full border border-border bg-card-bg px-4 text-[0.85rem] font-medium text-primary-text hover:border-[var(--mp-border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
+                Browse archive
+              </a>
+              <a href="#gear" class="inline-flex min-h-10 items-center rounded-full border border-border bg-elevated px-4 text-[0.85rem] font-medium text-muted-text hover:text-primary-text hover:border-[var(--mp-border-strong)]">
+                Trending gear ↓
+              </a>
+            </div>
           </div>
           {scanDate && (
-            <p class="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text">
+            <p class="shrink-0 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text">
               <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle" aria-hidden="true"></span>
-              Scan · {scanDate} · daily
+              Scan · {scanDate} · daily 14:00 UTC
             </p>
           )}
         </div>
 
-        {/* Featured signal */}
-        <a
-          href={featuredSignal.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="group mt-8 grid overflow-hidden rounded-[20px] border border-border bg-card-bg transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated md:grid-cols-[1.1fr_1fr]"
-        >
-          <div class="relative aspect-[16/9] overflow-hidden md:aspect-auto md:min-h-[15rem]">
-            {featuredSignal.image ? (
-              <img
-                src={featuredSignal.image}
-                alt=""
-                width="640"
-                height="360"
-                loading="lazy"
-                decoding="async"
-                class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-              />
-            ) : (
-              <div
-                class="absolute inset-0 flex items-center justify-center"
-                style={`background: linear-gradient(135deg, color-mix(in srgb, ${pillarOf(featuredSignal).color} 16%, var(--mp-card-bg)), var(--mp-card-bg));`}
-                aria-hidden="true"
-              >
-                <span class="font-mono text-[0.7rem] uppercase tracking-[0.2em]" style={`color: ${pillarOf(featuredSignal).color};`}>◉ {pillarOf(featuredSignal).label}</span>
-              </div>
-            )}
-          </div>
-          <div class="flex flex-col justify-between gap-6 p-6 sm:p-8">
-            <div>
-              <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">
-                <span class="text-primary-cta">Top signal</span>
-                <span class="mx-1.5" aria-hidden="true">·</span>{(featuredSignal.sources ?? [featuredSignal.source]).map((s) => sourceLabels[s]).join(' + ')}
-                <span class="mx-1.5" aria-hidden="true">·</span>{timeAgo(featuredSignal.publishedAt)}
-              </p>
-              <h3 class="mt-3 text-[clamp(1.15rem,2.4vw,1.5rem)] font-semibold leading-[1.35] tracking-[-0.02em] text-primary-text group-hover:text-primary-cta">{featuredSignal.title}</h3>
-            </div>
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span class="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
-                <span class="h-2 w-2 rounded-full" style={`background: ${pillarOf(featuredSignal).color};`} aria-hidden="true"></span>
-                {pillarOf(featuredSignal).label}
-              </span>
-              {featuredSignal.domain && <span class="rounded-full border border-border bg-elevated px-2.5 py-0.5 font-mono text-[0.65rem] text-muted-text">{featuredSignal.domain}</span>}
-              <span class="ml-auto inline-flex items-end gap-[3px]" role="img" aria-label={`Signal strength ${signalBars(featuredSignal.score)} of 5`}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <span
-                    class="w-[4px] rounded-sm"
-                    style={`height: ${4 + n * 2}px; background: ${n <= signalBars(featuredSignal.score) ? pillarOf(featuredSignal).color : 'var(--mp-border)'};`}
-                    aria-hidden="true"
-                  ></span>
-                ))}
-              </span>
-            </div>
-          </div>
-        </a>
-
-        {/* Signal grid */}
-        <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {restSignals.map((item) => {
+        {/* Compact latest signals — no images, unified with journal but lightweight */}
+        <ul class="mt-8 divide-y divide-border rounded-[16px] border border-border bg-card-bg">
+          {trending.slice(0, 4).map((item) => {
             const pillar = pillarOf(item);
             return (
-              <li>
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-card-bg transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated"
-                >
-                  <div class="relative aspect-[16/9] overflow-hidden">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt=""
-                        width="640"
-                        height="360"
-                        loading="lazy"
-                        decoding="async"
-                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div
-                        class="absolute inset-0 flex items-center justify-center"
-                        style={`background: linear-gradient(135deg, color-mix(in srgb, ${pillar.color} 16%, var(--mp-card-bg)), var(--mp-card-bg));`}
-                        aria-hidden="true"
-                      >
-                        <span class="font-mono text-[0.65rem] uppercase tracking-[0.2em]" style={`color: ${pillar.color};`}>◉ {pillar.label}</span>
-                      </div>
-                    )}
+              <li class="group flex gap-3 p-4 sm:gap-4 sm:p-4.5">
+                <span class="mt-1.5 hidden size-1.5 shrink-0 rounded-full sm:block" style={`background:${pillar.color}`} aria-hidden="true"></span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span class="inline-flex items-center gap-1.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">
+                      <span class="size-1 rounded-full sm:hidden" style={`background:${pillar.color}`} aria-hidden="true"></span>
+                      {pillar.label}
+                    </span>
+                    {item.domain && <span class="rounded-full border border-border bg-elevated px-2 py-0.5 font-mono text-[0.55rem] text-muted-text">{item.domain}</span>}
+                    <span class="font-mono text-[0.55rem] uppercase tracking-[0.08em] text-muted-text">
+                      {(item.sources ?? [item.source]).map((s) => sourceLabels[s]).join(' + ')} · {timeAgo(item.publishedAt)}
+                    </span>
+                    <span class="ml-auto hidden items-center gap-1 font-mono text-[0.55rem] text-muted-text sm:inline-flex">
+                      score {item.score}
+                    </span>
                   </div>
-                  <div class="flex flex-1 flex-col justify-between gap-4 p-5">
-                    <div>
-                      <p class="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text">
-                        {(item.sources ?? [item.source]).map((s) => sourceLabels[s]).join(' + ')}
-                        <span class="mx-1.5" aria-hidden="true">·</span>{timeAgo(item.publishedAt)}
-                      </p>
-                      <h3 class="mt-2 text-[0.95rem] font-medium leading-[1.5] text-primary-text group-hover:text-primary-cta">{item.title}</h3>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <span class="inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">
-                        <span class="h-1.5 w-1.5 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
-                        {pillar.label}
-                      </span>
-                      {item.domain && <span class="rounded-full border border-border bg-elevated px-2 py-0.5 font-mono text-[0.62rem] text-muted-text">{item.domain}</span>}
-                      <span class="ml-auto inline-flex items-end gap-[2.5px]" role="img" aria-label={`Signal strength ${signalBars(item.score)} of 5`}>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <span
-                            class="w-[3px] rounded-sm"
-                            style={`height: ${3 + n * 2}px; background: ${n <= signalBars(item.score) ? pillar.color : 'var(--mp-border)'};`}
-                            aria-hidden="true"
-                          ></span>
-                        ))}
-                      </span>
-                    </div>
-                  </div>
-                </a>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" class="mt-1.5 block text-[0.93rem] font-medium leading-[1.45] text-primary-text underline decoration-transparent underline-offset-4 hover:text-primary-cta hover:decoration-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-card-bg rounded-sm">
+                    {item.title}
+                  </a>
+                </div>
+                <span class="hidden shrink-0 items-end gap-[2px] sm:inline-flex" role="img" aria-label={`Signal ${signalBars(item.score)} of 5`}>
+                  {[1,2,3,4,5].map((n) => (
+                    <span class="w-[3px] rounded-sm" style={`height:${3+n*2}px; background:${n<=signalBars(item.score) ? pillar.color : 'var(--mp-border)'};`} aria-hidden="true"></span>
+                  ))}
+                </span>
               </li>
             );
           })}
         </ul>
+        {allTrends.length > 4 && (
+          <p class="mt-3 text-[0.8rem] text-muted-text">
+            Showing 4 of {allTrends.length} signals from {latestJournal.id}. <a href={`/journal/${latestJournal.id}`} class="font-medium text-brand-anchor hover:text-primary-text">View all {allTrends.length} in full report →</a>
+          </p>
+        )}
       </div>
     </section>
   )}

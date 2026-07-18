@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { apps } from '../data/apps';
 import { hubRoutes } from '../data/site-nav';
 
 const escapeXml = (value: string) => value.replace(/[<>&'"]/g, (character) => ({
@@ -42,17 +41,6 @@ export const GET: APIRoute = async () => {
       changefreq: 'daily',
       priority: '0.7',
     })),
-    // Product hosts (canonical on subdomains)
-    ...apps.map((app) => {
-      const date = new Date(app.date);
-      const appLastmod = isNaN(date.getTime()) ? today : date.toISOString();
-      return {
-        url: app.url,
-        lastmod: appLastmod,
-        changefreq: 'monthly',
-        priority: '0.8',
-      };
-    }),
   ];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>

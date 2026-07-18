@@ -1,5 +1,6 @@
 ---
 import { apps } from '../data/apps';
+import { hubRoutes } from '../data/site-nav';
 
 // Quick links for empty state – curated, not exhaustive
 const quickLinks = [
@@ -14,7 +15,7 @@ const featuredApps = apps.slice(0, 4);
 ---
 
 <div id="search-modal" class="fixed inset-0 z-[100] hidden flex flex-col items-center justify-start overflow-y-auto px-4 pt-[8vh] sm:pt-[12vh] pb-[max(1rem,env(safe-area-inset-bottom))] opacity-0 transition-opacity duration-[180ms]" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search">
-  <div id="search-backdrop" class="fixed inset-0 bg-[#0A0E14]/40 backdrop-blur-[12px] supports-[backdrop-filter]:bg-canvas/70"></div>
+  <div id="search-backdrop" class="fixed inset-0 bg-[#0A0E14]/55"></div>
 
   <div id="search-container" class="relative flex w-full max-w-[42rem] max-h-[min(85vh,48rem)] flex-col overflow-hidden rounded-[24px] border border-border bg-card-bg shadow-[0_16px_64px_-16px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,0,0,0.02),inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-[220ms] scale-[0.96] opacity-0">
     <!-- Header -->
@@ -142,7 +143,7 @@ const featuredApps = apps.slice(0, 4);
         <span class="flex items-center gap-1.5 sm:hidden"><kbd class="rounded border border-border bg-card-bg px-1.5 py-0.5 text-[0.6rem]">↵</kbd> Go</span>
       </div>
       <div class="flex items-center gap-2">
-        <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">SF • {new Date().getFullYear()} • 19 pages</span>
+        <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">SF • {new Date().getFullYear()} • {apps.length} apps • {hubRoutes.length}+ routes</span>
         <span class="size-1 rounded-full bg-emerald-500"></span>
       </div>
     </div>
