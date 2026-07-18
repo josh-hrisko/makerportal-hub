@@ -4,7 +4,7 @@
  * src/content/journal/ — gate tests gate publication, no PR (D-022). Build-time
  * only — no runtime fetch, no client tracker.
  */
-export type TrendSource = 'bluesky' | 'hackernews' | 'reddit' | 'github' | 'arxiv' | 'lobsters';
+export type TrendSource = 'bluesky' | 'hackernews' | 'reddit' | 'github' | 'arxiv' | 'lobsters' | 'devto';
 
 export type TrendItem = {
   id: string;
@@ -30,6 +30,7 @@ export const sourceLabels: Record<TrendSource, string> = {
   github: 'GitHub',
   arxiv: 'arXiv',
   lobsters: 'Lobste.rs',
+  devto: 'Dev.to',
 };
 
 /** Display names + decorative accent per pillar tag (see scripts/trends/keywords.mjs). */

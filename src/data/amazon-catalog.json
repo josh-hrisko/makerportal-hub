@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-18T15:42:39.752Z",
+  "generatedAt": "2026-07-18T16:34:30.262Z",
   "items": {
     "1098107969": {
       "title": "Designing Machine Learning Systems: An Iterative Process for Production-Ready Applications",
-      "image": "https://m.media-amazon.com/images/I/412UGQGrdKL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/412UGQGrdKL._SL500_.jpg",
       "features": [],
       "detailPageURL": "https://www.amazon.com/dp/1098107969?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
       "price": "$40.00",
@@ -11,7 +11,7 @@
     },
     "1098125975": {
       "title": "Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow: Concepts, Tools, and Techniques to Build Intelligent Systems",
-      "image": "https://m.media-amazon.com/images/I/51SLnCjnj-L._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51SLnCjnj-L._SL500_.jpg",
       "features": [
         "Use scikit-learn to track an example ML project end to end",
         "Explore several models, including support vector machines, decision trees, random forests, and ensemble methods",
@@ -25,7 +25,7 @@
     },
     "B01EWOE0UU": {
       "title": "ELEGOO UNO R3 Board ATmega328P with USB Cable(Arduino-Compatible) for Arduino",
-      "image": "https://m.media-amazon.com/images/I/51tnWmQYKYL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51tnWmQYKYL._SL500_.jpg",
       "features": [
         "Clear prints on the female header connector, more precise and easier to use the wire.",
         "The ELEGOO UNO R3 BOARD now uses an 16U2 instead of the ATMega8U2 chip. Faster transfer rates and more memory.",
@@ -39,7 +39,7 @@
     },
     "B0C947BHK5": {
       "title": "Arduino Nano ESP32 with Headers [ABX00083] - ESP32-S3, USB-C, Wi-Fi, Bluetooth, HID Support, MicroPython Compatible for IoT & Embedded Projects",
-      "image": "https://m.media-amazon.com/images/I/41aMPoHsVnL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41aMPoHsVnL._SL500_.jpg",
       "features": [
         "Powerful ESP32-S3 Microcontroller: The Arduino Nano ESP32 is powered by the ESP32-S3 chip, featuring a dual-core Xtensa 32-bit LX7 processor running at up to 240 MHz. This high-performance microcontroller offers excellent computational power for IoT, wireless communication, and advanced embedded applications like real-time data processing, voice recognition, and machine learning at the edge.",
         "Comprehensive Wireless Connectivity: The board supports both Wi-Fi and Bluetooth 5.0, enabling seamless communication with other devices, networks, and cloud platforms. Whether you're building a smart home system, wearable tech, or remote sensors, the Nano ESP32 offers reliable and high-speed connectivity for wireless data transfer and control.",
@@ -53,7 +53,7 @@
     },
     "B07XTRK8D4": {
       "title": "Vilros Raspberry Pi 4 4GB Basic Starter Kit with Fan-Cooled Heavy-Duty Aluminum Alloy Case",
-      "image": "https://m.media-amazon.com/images/I/5153iQHVwyL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/5153iQHVwyL._SL500_.jpg",
       "features": [
         "KEEP YOUR PROCESSOR COOL: The busier a processor gets the more it heats up, leading to sub-optimal performance. To prevent this common issue, this kit includes an aluminum alloy case with a pre-installed fan. The aluminum alloy actively draws the heat from the pi board, while the fan further cools the board and case. These cooling mechanisms will help push the limits of your processor and increase its flexibility.",
         "SIZABLE RAM: This Raspberry Pi 4 comes equipped with 4GB of RAM, which is the same amount of RAM or more RAM than many mainstream laptops contain. With 4GB of RAM, your processor will be capable of running retro gaming setups and common computer applications, media players, and much more!",
@@ -68,7 +68,7 @@
     },
     "B0BDLHMQ9C": {
       "title": "2Pcs Raspberry Pi Pico Development Board, Raspberry Pi RP2040 Dual-core ARM Cortex M0+ Processor, Running Up to 133 MHz, Support C/C++/Python, 2MB Quad SPI Flash Integrated with SPI/I2C/UART Interface",
-      "image": "https://m.media-amazon.com/images/I/51lob5mHMgL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51lob5mHMgL._SL500_.jpg",
       "features": [
         "The Raspberry Pi Pico is a beginner-friendly microcontroller board that uses MicroPython to give you a taste of the Internet of Things and microcontrollers. The RP2040 is a well-designed microprocessor that can be utilized in almost any Internet of Things project. It has enough power to complete the task quickly.",
         "【Raspberry Pi RP2040 Microcontroller】Raspberry Pi Pico features Dual-core ARM Cortex M0+ processor, flexible clock running up to 133 MHz. With 264KB of SRAM, and 2MB of on-board Flash memory.Supports up to 16 MB of off chip flash memory via a dedicated QSPI bus",
@@ -82,7 +82,7 @@
     },
     "B0FND311F3": {
       "title": "hiBCTR 12-Piece RFID Kit: Mifare RC522 RF IC Card Sensor Module with S50 Blank Cards and Keychains, Compatible with Arduino and Raspberry Pi",
-      "image": "https://m.media-amazon.com/images/I/51CYRkNkUxL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51CYRkNkUxL._SL500_.jpg",
       "features": [
         "MF522 - AN Module: Uses original Philips MFRC522 chip to design card reading circuits.",
         "Usability and Cost: Easy to use, low cost, suitable for device and card reader development.",
@@ -96,7 +96,7 @@
     },
     "B09PZ559ZB": {
       "title": "Wishiot TF-Luna LiDAR Range Finder Sensor 0.2m-8m Single-Point Ranging Module UART/I2C 5V with 6Pin Terminal to Dupont Cable for Arduino/RPi Pico/Pixhawk/WiFi_Lora_32",
-      "image": "https://m.media-amazon.com/images/I/514MjHVBhyL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/514MjHVBhyL._SL500_.jpg",
       "features": [
         "1, Model: TF-Luna, Operating range: 0.2-8m, Distance resolution: 1cm, Power comsumption: not over 0.35W, Frame rate: 1-250Hz, Frequency: 100Hz, FOV: 2 degree, Net weight: not over 5g, Communication: UART/I2C interface, Power supply: 5V. Compatible with Raspberry Pi Pico, Pixhawk and WiFi_Lora_32 0.96\" oled display transceiver module.",
         "2, TF-Luna is a single-point ranging LiDAR, based on TOF principle. It is built with algorithms adapted to various application environments and adopts multiple adjustable configurations and parameters so as to offer excellent distance measurement performances in complex application fields and scenarios.",
@@ -110,7 +110,7 @@
     },
     "B07D7LXXWR": {
       "title": "Adafruit 3538 AMG8833 IR Thermal Camera Breakout",
-      "image": "https://m.media-amazon.com/images/I/51IWyvTjUJS._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51IWyvTjUJS._SL500_.jpg",
       "features": [
         "AMG8833: next generation of 8x8 thermal IR sensors from Panasonic",
         "Returns an array of 64 individual infrared temperature readings over I2C",
@@ -123,7 +123,7 @@
     },
     "B0F312VWW3": {
       "title": "MLX90640 Thermal Imaging Camera, 32x24 IR Sensor Array for Raspberry Pi, HVAC, Fire Detection – Low Power, High Accuracy, I2C Interface",
-      "image": "https://m.media-amazon.com/images/I/31KYWVJVigL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31KYWVJVigL._SL500_.jpg",
       "features": [
         "High-Accuracy Thermal Sensor – Features a 32x24 IR array with ±2℃ precision, ideal for HVAC systems and fire detection applications.",
         "Pi Compatible – Includes open-source development resources and tutorials, perfect for DIY electronics projects.",
@@ -137,7 +137,7 @@
     },
     "B071VF2RWM": {
       "title": "HiLetgo GY-906 MLX90614ESF Non-Contact Infrared Temperature Sensor Module IIC I2C Serial for Arduino",
-      "image": "https://m.media-amazon.com/images/I/41xaby5jCnL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41xaby5jCnL._SL500_.jpg",
       "features": [
         "MLX90614 is an infrared thermometer for non-contact temperature measurements.",
         "Both the IR sensitive thermopile detector chip and the signal conditioning ASIC are integrated in the same TO-39 can.",
@@ -151,7 +151,7 @@
     },
     "B0C36GKZ8D": {
       "title": "iMetrx Nema 17 Stepper Motor 42x23mm 5PCS 17HS4023 Pancake Motor 1.5A-3.8V 2 Phase 4 Wires 1.8 Degrees with 1Meter Cable for 3D Printer Motors",
-      "image": "https://m.media-amazon.com/images/I/51y4vUfG7ZL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51y4vUfG7ZL._SL500_.jpg",
       "features": [
         "Package include: iMetrx Nema 17 Stepper Motor 42x23mm x5pcs, 1Meter Wiring x5pcs",
         "iMetrx Nema 17 Stepper Motor has high torgue and stronger power (20-25% higher than normal motors) and a lower resistance value to reduce heating.",
@@ -165,7 +165,7 @@
     },
     "B0CP92T4QR": {
       "title": "Teyleten Robot 3D Printer Parts DRV8825 Stepper Motor Driver Module with Heat Sink for Ramps 1.4 StepStick A4988 (5pcs)",
-      "image": "https://m.media-amazon.com/images/I/41LlgT7C4bS._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41LlgT7C4bS._SL500_.jpg",
       "features": [
         "Simple Steps And Direction Control Interface",
         "Six Different Steps Resolution: The Whole Step, Half Step, 1/4-Step1 / 8-Step1 / 16-Step, 1/32-Step",
@@ -179,7 +179,7 @@
     },
     "B0B31NRSD2": {
       "title": "2Pack GPS Module,Navigation Satellite Positioning NEO-6M,Arduino GPS, Drone Microcontroller, GPS Receiver Compatible with 51 Microcontroller STM32 Arduino UNO R3 with Antenna High Sensitivity",
-      "image": "https://m.media-amazon.com/images/I/511KTCS10kL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/511KTCS10kL._SL500_.jpg",
       "features": [
         "GT-U7 main module GPS module using the original UBLOX 7th generation chip, Software is compatible with NEO-6M. GT-U7 module, with high sensitivity, low power consumption, miniaturization, its extremely high tracking sensitivity greatly expanded its positioning of the coverage;",
         "With a USB interface, you can directly use the phone data cable on the computer point of view positioning effect; With IPEX antenna interface, the default distribution of active antenna, can be quickly positioned;",
@@ -193,7 +193,7 @@
     },
     "B09LQDG1HY": {
       "title": "Teyleten Robot ATGM336H GPS+BDS Dual-Mode Module Flight Control Satellite Positioning Navigator Replacement NEO-M8N NEO-6M for Arduino 2pcs",
-      "image": "https://m.media-amazon.com/images/I/319UloH3TYL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/319UloH3TYL._SL500_.jpg",
       "features": [
         "Car positioning in navigation",
         "Mobile phones, tablet PCs, handheld devices",
@@ -206,7 +206,7 @@
     },
     "B0CP98TZJ2": {
       "title": "Miuzei MG90S 9G Micro Servo Motor Metal Geared Motor Kit for RC Car Robot Helicopter, Mini Servos for Arduino Project (4)",
-      "image": "https://m.media-amazon.com/images/I/51FTbtY2pfL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51FTbtY2pfL._SL500_.jpg",
       "features": [
         "MG90S Micro Servo Motor, upgraded SG90 high torque servo.",
         "Stall Torque: 2.0kg/cm(4.8V). Operating Speed: 0.11 seconds/60 degrees (4.8V).",
@@ -220,7 +220,7 @@
     },
     "B0FSRQG23K": {
       "title": "ELEGOO 3PCS 0.96 Inch OLED Display Screen Module Compact Self-Luminous SSD1306 I2C Display Mini Screens for Arduino Projects (White)",
-      "image": "https://m.media-amazon.com/images/I/41uxqYlmKdL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41uxqYlmKdL._SL500_.jpg",
       "features": [
         "High-Resolution Display: Clear 128x64 OLED screen ensures excellent visibility.",
         "Self-Luminous: Each pixel emits light independently for superior contrast and efficiency.",
@@ -234,7 +234,7 @@
     },
     "B0CNV9G4K1": {
       "title": "Teyleten Robot ADS1115 16 Bits 4 Channel Analog-to-Digital Converter Precised Develop Board Module Amplifier Board ADC I2C IIC for Arduino Raspberry Pi (Pack of 3pcs)",
-      "image": "https://m.media-amazon.com/images/I/410WXOt9NWL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/410WXOt9NWL._SL500_.jpg",
       "features": [
         "WIDE SUPPLY RANGE: 2.0V to 5.5V bits of resolution offered in an ultra-small, leadless",
         "INTERNAL PGA up to 860 samples per second (SPS). An onboard PGA is available on the ADS1114 and ADS1115 that",
@@ -246,7 +246,7 @@
     },
     "B0B2D5QXG5": {
       "title": "DIYmall 5PCS 16 Bits RGB LED Rings 16 X WS2812 WS2812B 5050 Lamp Light with Integrated Drivers Individually Addressable for Arduino",
-      "image": "https://m.media-amazon.com/images/I/51NnIzxCatL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51NnIzxCatL._SL500_.jpg",
       "features": [
         "LED Chip: WS2812B, Voltage: DC4-7V",
         "Each pixel is individually addressable",
@@ -260,7 +260,7 @@
     },
     "B07X478BPL": {
       "title": "Geekstory 5 PCS Micro SD Card Module Mini TF Card Adapter with Memory Storage Breakout Board SPI Interface Driver + 40 PCS Female to Male Dupont Cable Line for Arduino Raspberry Pi",
-      "image": "https://m.media-amazon.com/images/I/51LReCe6O9L._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51LReCe6O9L._SL500_.jpg",
       "features": [
         "★Support Micro SD card, Micro SDHC card (high speed card). The module (MicroSD Card Adapter) is a Micro SD card reader module, through the file system and SPI interface driver, the MCU system can completethe reading and writing of files in the MicroSD card",
         "★On-board level shifting circuit, interface level can be 5V. Power supply is 5V, onboard 5V regulator circuit. Communication interface is standard SPI interface",
@@ -274,7 +274,7 @@
     },
     "B072Q4WTWH": {
       "title": "1.54 Inch E-Ink Display Module 200x200 SPI Interface e-Paper Screen Compatible with Raspberry Pi Arduino, Ultra Low Power Electronic Paper for Shelf Labels DIY Projects",
-      "image": "https://m.media-amazon.com/images/I/41YCbSVpZbL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41YCbSVpZbL._SL500_.jpg",
       "features": [
         "✅ High-Resolution 1.54 Inch E-Ink Display with SPI Interface: This e-Paper module features 200x200 resolution with SPI interface, providing clear black-and-white display, perfect for low-power electronic paper display applications.",
         "🍓 Ultra Low Power e-Ink Screen for Energy-Efficient Projects: Designed for minimal power consumption, this 1.54 inch E-Ink screen only uses power when refreshing, making it ideal for shelf label and battery-powered display projects.",
@@ -288,7 +288,7 @@
     },
     "B0D1V336DL": {
       "title": "Type-C D1 Mini NodeMCU ESP32 ESP-WROOM-32 WLAN WiFi Bluetooth IoT Development Board 5V Compatible for Arduino (3pcs Type-C)",
-      "image": "https://m.media-amazon.com/images/I/51S-DI8uLNL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51S-DI8uLNL._SL500_.jpg",
       "features": [
         "D1 Mini NodeMCU Type-C ESP32 ESP-WROOM-32 WLAN WiFi Bluetooth IoT Development Board 5V Compatible for Arduino",
         "Designed with ultra-low power technology, it offers the full range of performance and features of the ESP32 chip. The pin arrangement provides compatibility with the modules developed for the D1 Mini ESP8266 while also offering fast WLAN, enhanced GPIO, Bluetooth functionality, and with its higher performance, a wider range of applications.",
@@ -302,7 +302,7 @@
     },
     "B0DRNTBPNT": {
       "title": "Seeed Studio XIAO nRF52840 (Pre-Soldered)",
-      "image": "https://m.media-amazon.com/images/I/31+D2nLvoPL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31+D2nLvoPL._SL500_.jpg",
       "features": [
         "Versatile Microcontroller: Incorporate the Nordic nRF52840 chip with FPU, operating up to 64 MHz, mounted multiple development ports, supported by Arduino / CircuitPython / Micropython",
         "Wireless Capabilities: Implement Bluetooth 5.0, BLE functions with onboard antenna, also provide NFC connectivity",
@@ -316,7 +316,7 @@
     },
     "B0BXDL3524": {
       "title": "EC Buying GY-MPU9250 9 Axis Sensor 9 DOF Accelerometer with Gyroscope and Magnetic Field Sensors, 16 Bit AD Converter Data Output IIC I2C SPI",
-      "image": "https://m.media-amazon.com/images/I/51NokrEHjvL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51NokrEHjvL._SL500_.jpg",
       "features": [
         "The gyroscope is designed with a single structure and small size, which makes the accelerometer, gyroscope and 3-axis magnetic energy meter integrated in a 3 mm x 3 mm QFN package",
         "For precision tracking of both fast and slow motions, the parts feature a user programmable gyroscope full-scale range of ±250, ±500, ±1000, and ±2000°/sec (dps), a user programmable accelerometer full-scale range of ±2g, ±4g, ±8g, and ±16g, and a magnetometer full-scale range of ±4800µT",
@@ -330,7 +330,7 @@
     },
     "B0DRNG1VKM": {
       "title": "INA226 Voltage Current Monitor 0-36V 20A Tester I2C IIC Power Monitoring Sensor Module",
-      "image": "https://m.media-amazon.com/images/I/41xDey-e0qL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41xDey-e0qL._SL500_.jpg",
       "features": [
         "INA226 is a current shunt and power monitor with I2C or For SMBUS compatible interface.",
         "The device simultaneously monitors the parallel voltage drop and the bus power supply voltage. The programmable calibration value, conversion time and average value are used in conjunction with the internal multiplier to directly read the current in amperes and the power in watts. The device has up to 16 programmable addresses on the I 2 C compatible interface.",
@@ -344,7 +344,7 @@
     },
     "B07WDCVGJV": {
       "title": "BOJACK 12 Values 60 pcs Variable Resistor 100 to 500K ohm 3296W Multiturn Trimmer Potentiometer Assortment Kit",
-      "image": "https://m.media-amazon.com/images/I/51EWNAyqJQS._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51EWNAyqJQS._SL500_.jpg",
       "features": [
         "BOJACK High Quality 3296W Multiturn Trimmer Potentiometer Assortment Kit",
         "Rated power: 0.5 W",
@@ -358,7 +358,7 @@
     },
     "B0CYPVMK9J": {
       "title": "ELEGOO 6PCS 400 Point Breadboard Kit Solderless Breadboards for Arduino Project Small Bread Board Electronics for Circuits PCB Prototype Board",
-      "image": "https://m.media-amazon.com/images/I/51RqIeeSByL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/51RqIeeSByL._SL500_.jpg",
       "features": [
         "400 Points Breadboard with 2 Positive & Negative Power Lines on both ends for versatile prototypes and circuit experiments and other DIY projects.",
         "Four power rails and color legend on distribution strips for efficient circuit building.",
@@ -372,7 +372,7 @@
     },
     "B074B4P7KD": {
       "title": "SanDisk Ultra SDSQUNS-016G-GN3MN 16GB 80MB/s UHS-I Class 10 microSDHC Card",
-      "image": "https://m.media-amazon.com/images/I/41XFWv1gBKL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41XFWv1gBKL._SL500_.jpg",
       "features": [
         "Country of Origin: AZERBAIJAN",
         "package dimensions : 0.050 L X 6.096 W X 12.7 H (cm)",
@@ -384,7 +384,7 @@
     },
     "B07BLP238X": {
       "title": "AOSHIKE 10Pcs 2V 130mA Micro Solar Panels Photovoltaic Solar Cells with Wires Solars Epoxy Plate DIY Projects Toys 54mm x 54mm/2.13\" x 2.13\"",
-      "image": "https://m.media-amazon.com/images/I/41OoXFov6ZL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41OoXFov6ZL._SL500_.jpg",
       "features": [
         "❶【Accurate power】The laboratory measured 2V 130mA, the actual parameters will also fluctuate slightly above and below this value.",
         "❷【Product Parameter】10Pcs Polycrystalline solar panels; Power: 2V 130mA; Size: 54mm x 54mm/2.13\" x 2.13\". Excellent low light effect,This is perfect for the experience solderer.",
@@ -398,7 +398,7 @@
     },
     "B0DSZ9D9WH": {
       "title": "hiBCTR 2 Packs Joystick Module KY-023 Dual-Axis XY Analog Thumbstick Sensor with Push Button, PS2 Style Control Lever for Arduino, Raspberry Pi, ESP32 DIY Game Controller and Robotics Projects",
-      "image": "https://m.media-amazon.com/images/I/316ltKNMeQL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/316ltKNMeQL._SL500_.jpg",
       "features": [
         "PRECISE DUAL-AXIS ANALOG CONTROL: Features two independent 10K potentiometers for X and Y axis control, providing smooth and accurate analog output. Operating on a 5V supply, the module outputs approximately 2.5V at the center position, with a full range from 0V to 5V, allowing for proportional control ideal for robotics, RC vehicles, and camera gimbals.",
         "BROAD MICROCONTROLLER COMPATIBILITY: Designed with a standard 2.54mm 5-pin interface for seamless integration with a wide range of development boards. It is fully compatible with Arduino, Raspberry Pi, ESP32, and other microcontrollers, making it a versatile choice for students, hobbyists, and professional electronics projects.",
@@ -412,7 +412,7 @@
     },
     "B0DY65KVQR": {
       "title": "2PCS PWM Vibration Motor Switch Module DC 5V for Arduino MEGA2560 R3 DIY Kit 9000RPM Minimum",
-      "image": "https://m.media-amazon.com/images/I/41SSgYnCAnL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41SSgYnCAnL._SL500_.jpg",
       "features": [
         "2PCS PWM Vibration Motor Switch Module DC 5V For Arduino MEGA2560 R3 DIY Kit 9000RPM Minimum",
         "This is a small vibration motor suitable as a non-audible indicator. When the input is high, the motor vibrates, just like your silent mode phone.",
@@ -426,7 +426,7 @@
     },
     "B07RF49TZH": {
       "title": "GREDIA 3/4\" Water Flow Sensor Food-Grade Switch Hall Effect Flowmeter Fluid Meter Counter 1-60L/min (Pack of 2）",
-      "image": "https://m.media-amazon.com/images/I/31-KKZag4UL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31-KKZag4UL._SL500_.jpg",
       "features": [
         "Connect to G3/4 inch male thread, hall effect, comes with 2 pieces",
         "Flow range:1-60L/min, Water Pressure: ≤1.2Mpa",
@@ -440,7 +440,7 @@
     },
     "B094FW6VKN": {
       "title": "2 Pcs 3.7V 600mAh 25C 802540 Rechargeable Lipo Battery with USB Charger for Syma X5C X5SW Hengqi 905 Cheerson CX-30 Quadcopter RC Drone Spare Parts",
-      "image": "https://m.media-amazon.com/images/I/41DQC8gB3wS._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41DQC8gB3wS._SL500_.jpg",
       "features": [
         "✔✔ Battery Size:45 x 25 x 9mm(1.77 x 0.98 x 0.35), Battery Weight:16 gram(0.56oz)",
         "✔✔ Volt:3.7V(1S),Capacity: 600Mah, Plug:MX-2.0 plug,Discharge Rate:25C",
@@ -454,7 +454,7 @@
     },
     "B0DZGTTBGZ": {
       "title": "12V Power Supply, 12V 2A 24W Power Supply AC100-240V to DC 12 Volt Adapter with 5.5mm x 2.1mm Tip and 9 Interchangeable Jacks Plug for LED Strip Lights, CCTV Cameras, Routers and More",
-      "image": "https://m.media-amazon.com/images/I/41JMXy+JbNL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41JMXy+JbNL._SL500_.jpg",
       "features": [
         "12V Power Supply: Input AC 100V to 240V 50/60Hz 0.6A Max, Output 12V 2Amp 24W Max Wattage, DC Polarity: Inner positive(+), Outer negative(-)",
         "12V 2A Power Supply: Please note that this 12V 2A 24W AC to DC power adapter is only suitable for devices with input voltage of 12V and maximum input current of 2A. This means that it can only provide current from 12v 0.1A (or even lower) to 12v 2A, including 0.1A, 0.2A, 0.3A, 0.3A, 0.6A, 0.6A, 0.6A, 0.6A, 0.7A, 0.8A, 0.9A, 1.5A and 2A. Any device with inputs exceeding 12v2a is not compatible",
@@ -468,7 +468,7 @@
     },
     "B09JW4QQJ2": {
       "title": "5V 3A USB C/Type-C Power Supply Adapter, 5 Volt 3000mA Power Cord Adapter for Raspberry Pi 4 Model B 1GB/2GB/4GB and More 5V 15W Office or Home Devices,UL Listed FCC",
-      "image": "https://m.media-amazon.com/images/I/31dUjk+JfGL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31dUjk+JfGL._SL500_.jpg",
       "features": [
         "AC Input: AC 100-240V, Output: 5V 3000mA (3Amps max). 1.5meters/5feet Long cord .",
         "Suitable for Raspberry Pi 4 Model B, WiFi Camera, and More 5V 15 watt max devices .",
@@ -482,7 +482,7 @@
     },
     "B01EXI8Y9S": {
       "title": "Behringer UMC1820 Audiophile 18x20 USB Audio/MIDI Interface with Midas Mic Preamplifiers and ADAT I/O | For Recording Microphones and Instruments",
-      "image": "https://m.media-amazon.com/images/I/31qVx2O9q7L._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31qVx2O9q7L._SL500_.jpg",
       "features": [
         "18x20 USB2.0 Audio/MIDI Interface with ADAT I/O for recording microphones and instruments",
         "Audiophile 24-Bit/96 kHz resolution for professional audio quality",
@@ -496,7 +496,7 @@
     },
     "B00IRVQ0F8": {
       "title": "SABRENT USB External Stereo Sound Adapter for Windows and Mac. Plug and Play No Drivers Needed. (AU-MMSA)",
-      "image": "https://m.media-amazon.com/images/I/31F6RGd5ezL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31F6RGd5ezL._SL500_.jpg",
       "features": [
         "Connectors: USB Type-A, Stereo output jack, Mono microphone-input jack.",
         "Driverless for Windows 98SE/ME/2000/XP/Server 2003/Vista/7/8/Linux/Mac OSX.",
@@ -509,7 +509,7 @@
     },
     "B07W5Z9NJD": {
       "title": "Comimark 1Pcs ADMP401 MEMS Microphone Breakout Module Board for Arduino Universal 1.3cm*1cm",
-      "image": "https://m.media-amazon.com/images/I/419477m9qbL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/419477m9qbL._SL500_.jpg",
       "features": [
         "ADMP401 3dB roll off at 100Hz and 15kHz",
         "This tiny breakout board features the ADMP401 MEMs microphone. One of the key advantages to this breakout and microphone is the bottom ported input",
@@ -523,7 +523,7 @@
     },
     "B084PP4DT8": {
       "title": "IK Multimedia iRig Pro Duo I/O USB audio interface, TRS balanced & headphones outputs, audio mixer to 24-bit, midi interface for music studio, recording, podcasting, streaming & social apps",
-      "image": "https://m.media-amazon.com/images/I/31nYazi5DaL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31nYazi5DaL._SL500_.jpg",
       "features": [
         "CREATE HIGH-QUALITY DIGITAL MUSIC PROJECTS: Take your studio wherever you go! The perfect combination of high-quality performance and value, this ultra-compact dedicated 2-channel audio interface lets you connect to iPhone, iPad, Android, and Mac/PC. Easily accessible to everyone from the beginner to the expert. The new ClassA mic preamps with extended gain range and +48V phantom power ensures professional sound quality and ultra-low noise ensure radio-ready recordings.",
         "COMPLETE RECORDING PACKAGE: For recording, mixing, and more, this compact audio mixer provides 2 Neutrik analog inputs to record microphones and your favorite instruments with 2 line-level RCA inputs to connect mixers, keyboards, audio players, and more. With plug-and-play simplicity, you'll also enjoy noise-free connections. Get started in no time because there is no software to install! This portable studio interface is powered via USB, 2 AA batteries (included) or optional Power Supply Unit.",
@@ -537,7 +537,7 @@
     },
     "B08G7T3Q9S": {
       "title": "Shure MV88+ Video Kit Digital Stereo Condenser Microphone for iPhone, Android, Mac & PC - Portable Recording Mic with DSP Controls, Headphone Monitoring & Tripod, Black",
-      "image": "https://m.media-amazon.com/images/I/31jrpw49zAL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31jrpw49zAL._SL500_.jpg",
       "features": [
         "CAPTURE EVERY MOMENT, ANYWHERE: From vlogs and interviews to livestreams and podcasts, this stereo microphone delivers detailed audio recording for creators at home, in studio, or on the go",
         "FLEXIBLE DEVICE COMPATIBILITY: Connect directly to compatible iPhone, iPad, Android, Mac, and PC devices using the included Lightning and USB-C cables for flexible mobile and desktop recording setup",
@@ -551,7 +551,7 @@
     },
     "B0CTJ8BSWN": {
       "title": "Shure MV7+ Podcast Dynamic Microphone with Stand – OBS Certified, Enhanced Audio, LED Panel, USB-C & XLR Outputs, Auto Level Mode, Digital Pop Filter – for Podcasting, Streaming, and Recording, Black",
-      "image": "https://m.media-amazon.com/images/I/212+jXZ4iZL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/212+jXZ4iZL._SL500_.jpg",
       "features": [
         "OBS CERTIFIED MICROPHONE: The MV7+ dynamic microphone delivers top-tier audio with seamless OBS integration. Voice Isolation Technology and built-in DSP ensure crystal-clear sound for podcasting, live streaming, YouTube, and content creation.",
         "LED TOUCH PANEL WITH MUTE CONTROL: Customize your mic with a multi-color LED touch panel and choose from 16.8 million hues, monitor levels, or enable pulse effects. Tap anywhere to instantly mute during streaming, gaming, or recording sessions.",
@@ -565,7 +565,7 @@
     },
     "B07X5JNT3F": {
       "title": "Blue Yeti Nano Premium USB Microphone - Shadow Grey (Renewed)",
-      "image": "https://m.media-amazon.com/images/I/31bPM4aOZAL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/31bPM4aOZAL._SL500_.jpg",
       "features": [
         "Perfect for podcasting, game streaming, Skype calls, YouTube or music",
         "No-latency headphone output, headphone volume and mic mute",
@@ -580,7 +580,7 @@
     },
     "B00MMKQOEM": {
       "title": "RØDE NT-USB+ Professional-Grade USB Condenser Microphone For Recording Studio Quality Audio Directly To A Computer Or Mobile Device, Black",
-      "image": "https://m.media-amazon.com/images/I/41osbW22c0L._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41osbW22c0L._SL500_.jpg",
       "features": [
         "Professional USB microphone with a studio-grade condenser capsule and premium components",
         "Ultra-low-noise, high-gain Revolution Preamp for pristine sound without the noise",
@@ -597,7 +597,7 @@
     },
     "B00HVLUR86": {
       "title": "Audio-Technica ATH-M50X Professional Studio Monitor Headphones, Black, Professional Grade, Critically Acclaimed, with Detachable Cable",
-      "image": "https://m.media-amazon.com/images/I/41UBMEo1VpL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41UBMEo1VpL._SL500_.jpg",
       "features": [
         "Critically acclaimed sonic performance praised by top audio engineers and pro audio reviewers",
         "Proprietary 45 millimeter large aperture drivers with rare earth magnets and copper clad aluminum wire voice coils",
@@ -612,7 +612,7 @@
     },
     "B000AJIF4E": {
       "title": "Sony MDR7506 Professional Large Diaphragm Headphone",
-      "image": "https://m.media-amazon.com/images/I/417b-fCOV3L._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/417b-fCOV3L._SL500_.jpg",
       "features": [
         "Neodymium magnets and 40 millimeter drivers for powerful, detailed sound.Specific uses for product : Professional audio system,Home audio system",
         "Closed ear design provides comfort and outstanding reduction of external noises",
@@ -628,7 +628,7 @@
     },
     "B00B0YPAYQ": {
       "title": "Sennheiser Pro Audio Sennheiser Pro Audio Wireless Microphone System, Black (MKE600)",
-      "image": "https://m.media-amazon.com/images/I/313TFcX0AvL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/313TFcX0AvL._SL500_.jpg",
       "features": [
         "Ideal video camera/camcorder microphone: Able to handle the most demanding filmic challenges",
         "High directivity: Picks up sounds coming from the direction in which the camera is pointing and effectively attenuates noise coming from the sides and rear",
@@ -642,7 +642,7 @@
     },
     "B0FQFB8FMG": {
       "title": "Apple AirPods Pro 3 Wireless Earbuds, Active Noise Cancellation, Live Translation, Heart Rate Sensing, Hearing Aid Feature, Bluetooth Headphones, Spatial Audio, High-Fidelity Sound, USB-C Charging",
-      "image": "https://m.media-amazon.com/images/I/218Mmzk0EaL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/218Mmzk0EaL._SL500_.jpg",
       "features": [
         "WORLD’S BEST IN-EAR ACTIVE NOISE CANCELLATION — Removes up to 2x more unwanted noise than AirPods Pro 2* so you can stay fully immersed in the moment.*",
         "BREAKTHROUGH AUDIO PERFORMANCE — Experience breathtaking, three-dimensional audio with AirPods Pro 3. A new acoustic architecture delivers transformed bass, detailed clarity so you can hear every instrument, and stunningly vivid vocals.",
@@ -660,7 +660,7 @@
     },
     "0262035618": {
       "title": "Deep Learning (Adaptive Computation and Machine Learning series)",
-      "image": "https://m.media-amazon.com/images/I/61AA6wv7ieL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/61AA6wv7ieL._SL500_.jpg",
       "features": [
         "Language Published: English",
         "Binding: hardcover",
@@ -672,7 +672,7 @@
     },
     "B0GMWYYRQL": {
       "title": "SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25",
-      "image": "https://m.media-amazon.com/images/I/41UpTn5oveL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41UpTn5oveL._SL500_.jpg",
       "features": [
         "NEARLY 2X FASTER THAN OUR PREVIOUS GENERATION(8) – move 1,000 high-res photos in under 60 seconds(6) with up to 2000MB/s transfer speeds(2).",
         "IP65 RATING AND UP TO 3M DROP PROTECTION(3) – protects against spills and drops.",
@@ -686,7 +686,7 @@
     },
     "B0DM8QJRN6": {
       "title": "USB C Docking Station Dual DisplayPort, 8 in 1 USB Hub with 2 DP, HDMI, VGA, USB C 2.0, A 2.0, PD Charging Port, Multi Monitor Adapter for Dell/HP/Lenovo Laptops",
-      "image": "https://m.media-amazon.com/images/I/41sT7h1-vwL._SL160_.jpg",
+      "image": "https://m.media-amazon.com/images/I/41sT7h1-vwL._SL500_.jpg",
       "features": [
         "【8 IN 1 USB C Docking Station】USB C Docking Station Dual DisplayPort with 2 DP (4K@60Hz), HDMI (4K@60Hz), VGA (1080P@60Hz), USB C 2.0, 2 USB A 2.0, and a PD Charging Port (MAX 100W). Please note: If you use it to connect to a Macbook, it only supports mirror mode, does not support extended mode, no matter how many monitors you connect",
         "【Fast and Powerful Charging】The USB C Hub features a powerful 100W PD USB C Power Charging Port, allowing you to charge your device quickly (MAX 100W)",

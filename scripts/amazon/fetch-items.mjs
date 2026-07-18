@@ -38,8 +38,9 @@ async function getAccessToken(clientId, clientSecret) {
 
 function parseItem(raw) {
   if (!raw?.asin) return null;
+  // Prefer large for modern gear grid (was medium → small). Large is ~500px, still fast with lazy loading.
   const image =
-    raw.images?.primary?.medium?.url ?? raw.images?.primary?.large?.url ?? raw.images?.primary?.small?.url;
+    raw.images?.primary?.large?.url ?? raw.images?.primary?.medium?.url ?? raw.images?.primary?.small?.url;
   const money = raw.offersV2?.listings?.[0]?.price?.money;
   return {
     asin: raw.asin,

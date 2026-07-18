@@ -14,8 +14,8 @@ export const MAX_PER_PILLAR = 6;
 export const MAX_PER_AUTHOR = 2;
 export const MAX_AGE_DAYS = 14;
 
-/** Bluesky search is raw firehose; HN/Reddit/GitHub/arXiv/Lobsters are community-curated. */
-const MIN_HITS = { bluesky: 2, hackernews: 1, reddit: 1, github: 1, arxiv: 1, lobsters: 1 };
+/** Bluesky search is raw firehose; HN/Reddit/GitHub/arXiv/Lobsters/Dev.to are community-curated. */
+const MIN_HITS = { bluesky: 2, hackernews: 1, reddit: 1, github: 1, arxiv: 1, lobsters: 1, devto: 1 };
 
 /** Primary sources you can actually cite in a field note. */
 const ARTIFACT_DOMAINS = ['arxiv.org', 'github.com', 'developer.apple.com', 'huggingface.co'];

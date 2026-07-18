@@ -24,7 +24,7 @@ const journal = defineCollection({
     items: z.array(
       z.object({
         id: z.string(),
-        source: z.enum(['bluesky', 'hackernews', 'reddit', 'github', 'arxiv', 'lobsters']),
+        source: z.enum(['bluesky', 'hackernews', 'reddit', 'github', 'arxiv', 'lobsters', 'devto']),
         title: z.string(),
         url: z.string(),
         author: z.string().optional(),
@@ -32,7 +32,7 @@ const journal = defineCollection({
         tags: z.array(z.string()).default([]),
         score: z.number(),
         domain: z.string().optional(),
-        sources: z.array(z.enum(['bluesky', 'hackernews', 'reddit', 'github', 'arxiv', 'lobsters'])).optional(),
+        sources: z.array(z.enum(['bluesky', 'hackernews', 'reddit', 'github', 'arxiv', 'lobsters', 'devto'])).optional(),
         image: z.string().optional(),
       })
     ),
