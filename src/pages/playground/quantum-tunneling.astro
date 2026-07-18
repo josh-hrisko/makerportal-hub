@@ -1,0 +1,355 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Quantum Tunneling Simulator — 1D Schrödinger Equation, Crank–Nicolson | MakerPortal';
+const description =
+  'Launch a Gaussian wave packet at a potential barrier and watch it split, reflect, and tunnel through in real time. Solves the 1D time-dependent Schrödinger equation with the unitary Crank–Nicolson method, with live transmission and reflection probabilities checked against the exact rectangular-barrier formula.';
+const canonical = new URL('/playground/quantum-tunneling', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Quantum Tunneling Simulator', item: canonical.toString() },
+  ],
+};
+
+const faqs = [
+  {
+    q: 'What is quantum tunneling?',
+    a: 'A quantum particle has a nonzero chance of passing through a potential barrier even when its energy is below the barrier height — something impossible in classical mechanics. Its wavefunction decays exponentially inside the barrier rather than stopping, so a small but real amplitude leaks out the far side. It is the mechanism behind alpha decay, the scanning tunneling microscope, and tunnel diodes.',
+  },
+  {
+    q: 'Why use the Crank–Nicolson method?',
+    a: 'Crank–Nicolson is the Cayley form of the quantum propagator: it is unitary to machine precision, so total probability is conserved exactly for a real potential, and it is unconditionally stable, so it does not blow up the way a naive explicit scheme does. Each step solves a tridiagonal complex linear system with the Thomas algorithm, which is fast and exact.',
+  },
+  {
+    q: 'Why does the transmission probability oscillate as I raise the energy above the barrier?',
+    a: 'Above the barrier the particle is not guaranteed to pass — the barrier edges act like a thin film, and the transmitted amplitude interferes with itself. At energies where the barrier width is a half-integer number of wavelengths the transmission hits 100% (resonant transmission); between those it dips. The live number tracks the exact rectangular-barrier formula.',
+  },
+  {
+    q: 'What are the limitations of this simulation?',
+    a: 'It is a single particle in one dimension on a finite uniform grid in natural units (ħ = m = 1), with hard walls softened by an absorbing layer to suppress edge reflections. The absorbing layer slightly breaks the otherwise exact unitarity near the boundaries. It captures the real time-dependent Schrödinger dynamics but is not a many-body, three-dimensional, or relativistic solver.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Quantum Tunneling Simulator"
+    lead="Fire a Gaussian wave packet at a potential barrier and watch the wavefunction do what particles cannot: split into a reflected lobe and a transmitted one that leaked straight through a wall it did not have the energy to climb. The 1D time-dependent Schrödinger equation is integrated with the unitary Crank–Nicolson scheme, and the live transmission probability is checked against the exact barrier formula."
+  >
+    <section class="border-b border-border" aria-labelledby="sim-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 id="sim-title" class="sr-only">Tunneling simulator</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[330px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Barrier &amp; packet</h3>
+            <label class="control-label mt-4">
+              <span>Barrier height V₀</span><output id="v0-out">5.0</output>
+              <input id="v0-slider" type="range" min="0" max="20" step="0.1" value="5" />
+            </label>
+            <label class="control-label mt-3">
+              <span>Barrier width</span><output id="width-out">3.0</output>
+              <input id="width-slider" type="range" min="0.2" max="10" step="0.1" value="3" />
+            </label>
+            <label class="control-label mt-3">
+              <span>Packet momentum k₀</span><output id="k0-out">3.0</output>
+              <input id="k0-slider" type="range" min="0.5" max="8" step="0.1" value="3" />
+            </label>
+            <label class="control-label mt-3">
+              <span>Packet width σ</span><output id="sig-out">4.0</output>
+              <input id="sig-slider" type="range" min="1" max="10" step="0.5" value="4" />
+            </label>
+
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3">
+              <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-[0.82rem]">
+                <div><span class="live-lab">packet energy E = k₀²/2</span><br><span id="ro-E" class="live-val">4.50</span></div>
+                <div><span class="live-lab">regime</span><br><span id="ro-regime" class="live-val">tunneling</span></div>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button type="button" id="play-btn" class="pill-btn is-active">▶ Play</button>
+              <button type="button" id="reset-btn" class="pill-btn">↺ Relaunch</button>
+              <button type="button" id="reim-btn" class="pill-btn">Show Re/Im</button>
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">|ψ(x)|² &amp; potential V(x)</p>
+                <p class="font-mono text-[0.62rem] text-muted-text/80">t = <span id="time-val">0.0</span> · norm = <span id="norm-val">1.000</span></p>
+              </div>
+              <canvas id="psi-canvas" width="820" height="420" aria-label="Probability density of the wave packet interacting with the barrier"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="readout"><dt>Reflected (left of barrier)</dt><dd id="ro-R">—</dd></div>
+              <div class="readout"><dt>Inside barrier</dt><dd id="ro-mid">—</dd></div>
+              <div class="readout"><dt>Transmitted (right)</dt><dd id="ro-T">—</dd></div>
+              <div class="readout"><dt>Exact T (plane wave)</dt><dd id="ro-Tana">—</dd></div>
+            </div>
+            <p class="text-[0.78rem] leading-[1.55] text-muted-text/80">
+              The live reflected/transmitted split is the actual wave-packet result; the exact <em>T</em> is the textbook plane-wave transmission at energy E = k₀²/2. They agree best for a narrow packet (large σ in position ⇒ sharp energy), and differ when a broad energy spread straddles the barrier top.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="method-title">
+      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
+          We solve i∂ψ/∂t = (−½∂²/∂x² + V)ψ in natural units (ħ = m = 1) on a uniform grid. Crank–Nicolson advances (I + i·dt/2·H)ψⁿ⁺¹ = (I − i·dt/2·H)ψⁿ — the Cayley approximation to the exact propagator exp(−iH·dt). Because that operator is unitary, ∫|ψ|² is conserved to machine precision; each step is a tridiagonal complex solve via the Thomas algorithm. A thin imaginary (absorbing) potential at the domain edges soaks up outgoing amplitude so the walls do not reflect it back.
+        </p>
+        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What is faithful</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">The full time-dependent Schrödinger dynamics — dispersion, interference, exponential decay inside the barrier, and the reflected/transmitted split — are all real, not cartooned. Unitarity is verified by unit test over hundreds of steps.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What it simplifies</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">One particle, one dimension, non-relativistic, on a finite grid. The absorbing layer trades a little exactness near the edges for the absence of wall reflections. No spin, no many-body correlations, no 2D/3D scattering.</p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
+          The solver lives in <code class="text-primary-cta">src/lib/quantum.ts</code> (Crank–Nicolson stepper, complex Thomas solver, exact rectangular-barrier transmission), unit-tested for norm conservation and the analytic transmission limits.
+        </p>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .pill-btn { border-radius: 9999px; border: 1px solid var(--mp-border); background: var(--mp-elevated); padding: 0.4rem 0.9rem; font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mp-muted); transition: color 0.15s, border-color 0.15s, background 0.15s; }
+  .pill-btn:hover { color: var(--mp-text); border-color: var(--mp-cta); }
+  .pill-btn.is-active { color: var(--mp-text); border-color: var(--mp-cta); background: color-mix(in srgb, var(--mp-cta) 12%, var(--mp-elevated)); }
+  #psi-canvas { margin-top: 0.6rem; width: 100%; height: auto; display: block; background: var(--mp-canvas); border-radius: 10px; border: 1px solid var(--mp-border); }
+  .readout { border: 1px solid var(--mp-border); border-radius: 12px; background: color-mix(in srgb, var(--mp-elevated) 45%, transparent); padding: 0.7rem 0.8rem; }
+  .readout dt { font-family: var(--font-mono); font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mp-muted); }
+  .readout dd { margin-top: 0.25rem; font-size: 0.95rem; font-weight: 600; color: var(--mp-text); }
+  .control-label { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mp-muted); }
+  .control-label output { color: var(--mp-text); font-weight: 600; }
+  .control-label input[type='range'] { grid-column: 1 / -1; width: 100%; accent-color: var(--mp-cta); }
+  .live-lab { font-family: var(--font-mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mp-muted); }
+  .live-val { font-weight: 700; color: var(--mp-text); font-size: 0.96rem; }
+  input[type='range'] { accent-color: var(--mp-cta); }
+</style>
+
+<script>
+// @ts-nocheck
+import { CrankNicolson1D, gaussianPacket, rectangularBarrierTransmission } from '../../lib/quantum.ts';
+
+function initQuantumTunneling() {
+  const canvas = document.getElementById('psi-canvas');
+  if (!canvas || canvas.dataset.init) return;
+  canvas.dataset.init = 'true';
+  const ctx = canvas.getContext('2d');
+
+  let colors = {};
+  function readColors() {
+    const s = getComputedStyle(document.documentElement);
+    const g = (n, f) => s.getPropertyValue(n).trim() || f;
+    colors = {
+      canvas: g('--mp-canvas', '#0f141c'), text: g('--mp-text', '#e8eef6'),
+      muted: g('--mp-muted', '#a8b9cc'), border: g('--mp-border', 'rgba(255,255,255,0.1)'),
+      cta: g('--mp-cta', '#f07a94'), anchor: g('--mp-anchor', '#71b9e3'),
+    };
+  }
+  readColors();
+
+  // Grid
+  const N = 1000;
+  const xMin = -70, xMax = 70;
+  const x = new Float64Array(N);
+  const dx = (xMax - xMin) / (N - 1);
+  for (let i = 0; i < N; i++) x[i] = xMin + i * dx;
+  const dt = 0.02;
+  const x0 = -35; // packet start
+
+  const sl = {
+    v0: document.getElementById('v0-slider'), width: document.getElementById('width-slider'),
+    k0: document.getElementById('k0-slider'), sig: document.getElementById('sig-slider'),
+  };
+  const out = {
+    v0: document.getElementById('v0-out'), width: document.getElementById('width-out'),
+    k0: document.getElementById('k0-out'), sig: document.getElementById('sig-out'),
+  };
+
+  let cn = null;
+  let V0 = 5, width = 3, k0 = 3, sigma = 4;
+  let psiScale = 1;
+  let time = 0;
+  let playing = true;
+  let rafId = null;
+  let destroyed = false;
+  let showReIm = false;
+
+  const barrierLeft = () => -width / 2;
+  const barrierRight = () => width / 2;
+
+  function buildPotential() {
+    const Vre = new Float64Array(N);
+    const Vim = new Float64Array(N);
+    const bl = barrierLeft(), br = barrierRight();
+    for (let i = 0; i < N; i++) {
+      if (x[i] >= bl && x[i] <= br) Vre[i] = V0;
+      // absorbing layers near the edges (imaginary, negative → damps)
+      const absW = 14;
+      const dLeft = x[i] - xMin, dRight = xMax - x[i];
+      if (dLeft < absW) { const f = (absW - dLeft) / absW; Vim[i] -= 2.5 * f * f; }
+      if (dRight < absW) { const f = (absW - dRight) / absW; Vim[i] -= 2.5 * f * f; }
+    }
+    return { Vre, Vim };
+  }
+
+  function relaunch() {
+    V0 = parseFloat(sl.v0.value); width = parseFloat(sl.width.value);
+    k0 = parseFloat(sl.k0.value); sigma = parseFloat(sl.sig.value);
+    const { Vre, Vim } = buildPotential();
+    cn = new CrankNicolson1D(x, dt, Vre, Vim);
+    cn.setState(gaussianPacket(x, x0, k0, sigma));
+    time = 0;
+    // fix a display scale from the initial peak of |ψ|²
+    let peak = 0;
+    for (let i = 0; i < N; i++) peak = Math.max(peak, cn.psi.re[i] ** 2 + cn.psi.im[i] ** 2);
+    psiScale = peak > 0 ? 0.62 / peak : 1;
+    updateEnergyReadout();
+    draw();
+  }
+
+  function updateEnergyReadout() {
+    const E = (k0 * k0) / 2;
+    document.getElementById('ro-E').textContent = E.toFixed(2);
+    const regime = E < V0 - 1e-9 ? 'tunneling (E < V₀)' : E > V0 + 1e-9 ? 'over-barrier (E > V₀)' : 'at barrier top';
+    document.getElementById('ro-regime').textContent = regime;
+    document.getElementById('ro-Tana').textContent = rectangularBarrierTransmission(E, V0, width).toFixed(4);
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.fillStyle = colors.canvas; ctx.fillRect(0, 0, W, H);
+    const padX = 8, baseY = H - 30;
+    const plotW = W - 2 * padX;
+    const X = (xv) => padX + ((xv - xMin) / (xMax - xMin)) * plotW;
+    const availH = baseY - 20;
+
+    // potential barrier (scaled so V0 uses a fixed fraction of height reference = 20)
+    const Vref = 20;
+    const bl = barrierLeft(), br = barrierRight();
+    const barH = Math.min(1, V0 / Vref) * availH * 0.8;
+    ctx.fillStyle = colors.muted; ctx.globalAlpha = 0.16;
+    ctx.fillRect(X(bl), baseY - barH, X(br) - X(bl), barH);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = colors.muted; ctx.globalAlpha = 0.5; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(X(bl), baseY - barH); ctx.lineTo(X(br), baseY - barH); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // energy level line
+    const E = (k0 * k0) / 2;
+    const eY = baseY - Math.min(1, E / Vref) * availH * 0.8;
+    ctx.strokeStyle = colors.anchor; ctx.globalAlpha = 0.4; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padX, eY); ctx.lineTo(W - padX, eY); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.fillStyle = colors.anchor; ctx.font = '10px ui-monospace, monospace';
+    ctx.fillText('E', W - padX - 40, eY - 4);
+
+    // baseline
+    ctx.strokeStyle = colors.border; ctx.beginPath(); ctx.moveTo(padX, baseY); ctx.lineTo(W - padX, baseY); ctx.stroke();
+
+    const re = cn.psi.re, im = cn.psi.im;
+
+    // Re/Im (faint)
+    if (showReIm) {
+      const amp = Math.sqrt(psiScale) * availH * 0.5;
+      for (const [arr, col] of [[re, colors.anchor], [im, colors.cta]]) {
+        ctx.strokeStyle = col; ctx.globalAlpha = 0.32; ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i < N; i++) { const px = X(x[i]), py = baseY - availH * 0.42 - arr[i] * amp; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // |ψ|² filled
+    ctx.beginPath();
+    ctx.moveTo(X(x[0]), baseY);
+    for (let i = 0; i < N; i++) {
+      const p = (re[i] * re[i] + im[i] * im[i]) * psiScale;
+      ctx.lineTo(X(x[i]), baseY - p * availH);
+    }
+    ctx.lineTo(X(x[N - 1]), baseY);
+    ctx.closePath();
+    ctx.fillStyle = colors.cta; ctx.globalAlpha = 0.22; ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = colors.cta; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) { const p = (re[i] * re[i] + im[i] * im[i]) * psiScale; const px = X(x[i]), py = baseY - p * availH; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+    ctx.stroke();
+
+    // probability zones
+    let R = 0, mid = 0, T = 0;
+    for (let i = 0; i < N; i++) {
+      const p = (re[i] * re[i] + im[i] * im[i]) * dx;
+      if (x[i] < bl) R += p; else if (x[i] > br) T += p; else mid += p;
+    }
+    document.getElementById('ro-R').textContent = R.toFixed(4);
+    document.getElementById('ro-mid').textContent = mid.toFixed(4);
+    document.getElementById('ro-T').textContent = T.toFixed(4);
+    document.getElementById('norm-val').textContent = (R + mid + T).toFixed(3);
+    document.getElementById('time-val').textContent = time.toFixed(1);
+  }
+
+  function loop() {
+    if (destroyed) return;
+    if (playing && cn) {
+      for (let s = 0; s < 4; s++) { cn.step(); time += dt; }
+      draw();
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // wiring
+  const onParam = (key) => () => { out[key].textContent = parseFloat(sl[key].value).toFixed(1); relaunch(); };
+  sl.v0.addEventListener('input', onParam('v0'));
+  sl.width.addEventListener('input', onParam('width'));
+  sl.k0.addEventListener('input', onParam('k0'));
+  sl.sig.addEventListener('input', onParam('sig'));
+
+  const playBtn = document.getElementById('play-btn');
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
+    playBtn.classList.toggle('is-active', playing);
+  });
+  document.getElementById('reset-btn').addEventListener('click', relaunch);
+  const reimBtn = document.getElementById('reim-btn');
+  reimBtn.addEventListener('click', () => { showReIm = !showReIm; reimBtn.classList.toggle('is-active', showReIm); draw(); });
+
+  const themeObserver = new MutationObserver(() => { readColors(); draw(); });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  document.addEventListener('astro:before-swap', () => { destroyed = true; if (rafId) cancelAnimationFrame(rafId); themeObserver.disconnect(); }, { once: true });
+
+  relaunch();
+  rafId = requestAnimationFrame(loop);
+}
+
+document.addEventListener('astro:page-load', initQuantumTunneling);
+initQuantumTunneling();
+</script>

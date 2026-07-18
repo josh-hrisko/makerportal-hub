@@ -161,6 +161,51 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: false,
     status: 'live',
   },
+  {
+    slug: 'lattice-boltzmann-tunnel',
+    title: 'Lattice Boltzmann Wind Tunnel',
+    tagline: 'A Von Kármán vortex street, computed live',
+    description:
+      'A real-time 2D wind tunnel running a D2Q9 lattice Boltzmann solver. Place a cylinder, plate, or airfoil in the stream, turn up the Reynolds number until the wake sheds a Von Kármán vortex street, and colour the flow by vorticity, speed, or pressure — or paint your own obstacles on the canvas.',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'optics-bench',
+    title: 'Ray-Matrix Optics Bench',
+    tagline: 'Paraxial rays through lenses, mirrors, and cavities',
+    description:
+      'Build an optical system from lenses, mirrors, and gaps and trace a fan of paraxial rays straight through it with 2×2 ABCD matrices. Read the system matrix and effective focal length, image an object, and test two-mirror laser resonators against the g₁·g₂ stability criterion.',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'quantum-tunneling',
+    title: 'Quantum Tunneling Simulator',
+    tagline: 'Watch a wave packet leak through a wall',
+    description:
+      'Launch a Gaussian wave packet at a potential barrier and watch it split, reflect, and tunnel through in real time. Solves the 1D time-dependent Schrödinger equation with the unitary Crank–Nicolson method, with live transmission and reflection probabilities checked against the exact barrier formula.',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'magnetic-field-tracer',
+    title: 'Magnetic Field Line Tracer',
+    tagline: 'Biot–Savart field lines, marched by RK4',
+    description:
+      'Trace magnetic field lines through space from current loops and wires using the Biot–Savart law and a 4th-order Runge–Kutta integrator. Explore Helmholtz pairs, magnetic bottles, solenoids, and dipoles in a live cross-section with the field magnitude read out under your cursor.',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'relativistic-spaceflight',
+    title: 'Relativistic Starship Journey',
+    tagline: '1g to the stars, drawn on a Minkowski diagram',
+    description:
+      'Fly a starship at constant proper acceleration and watch special relativity unfold: ship time versus Earth time, Lorentz contraction, the relativistic Doppler shift of the cosmic microwave background, and a live Minkowski spacetime diagram of the hyperbolic worldline. Flip-and-burn trips to real destinations, computed exactly.',
+    isGrounded: false,
+    status: 'live',
+  },
 ];
 
 export function livePlayground(): PlaygroundEntry[] {

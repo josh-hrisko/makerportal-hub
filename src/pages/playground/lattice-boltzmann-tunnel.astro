@@ -1,0 +1,360 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Lattice Boltzmann Wind Tunnel — Real-Time 2D CFD & the Von Kármán Vortex Street | MakerPortal';
+const description =
+  'A real-time 2D wind tunnel in your browser. A D2Q9 lattice Boltzmann solver streams fluid past cylinders, plates, and airfoils; raise the Reynolds number to watch a laminar wake break into a shedding Von Kármán vortex street. Visualize vorticity, speed, or pressure, and paint your own obstacles.';
+const canonical = new URL('/playground/lattice-boltzmann-tunnel', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Lattice Boltzmann Wind Tunnel', item: canonical.toString() },
+  ],
+};
+
+const faqs = [
+  {
+    q: 'What is the Lattice Boltzmann Method?',
+    a: 'Instead of solving the Navier–Stokes equations directly, LBM tracks nine discrete populations of fictitious particles on each lattice node (the D2Q9 stencil). Every step the populations relax toward a local equilibrium (collision) and then hop to neighbouring nodes (streaming). In the low-speed limit this mesoscopic bookkeeping provably reproduces incompressible Navier–Stokes flow, and it is beautifully parallel and simple to code.',
+  },
+  {
+    q: 'What is a Von Kármán vortex street?',
+    a: 'Above a Reynolds number of roughly 90, the wake behind a bluff body like a cylinder stops being steady and starts shedding vortices alternately from each side, forming a staggered double row of swirls that drifts downstream. It is what makes power lines "sing" in the wind and forced the Tacoma Narrows bridge into its famous oscillation. Switch to the vorticity view and raise the Reynolds number to see it form.',
+  },
+  {
+    q: 'What sets the Reynolds number here?',
+    a: 'Reynolds number Re = u·L/ν compares inertia to viscosity, where u is the inflow speed, L the obstacle size, and ν the kinematic viscosity. In LBM the viscosity is set by the relaxation rate ω (ν = (1/ω − ½)/3). Raising the Reynolds slider lowers the viscosity toward the stability limit ω → 2, which is where lattice artefacts start to appear.',
+  },
+  {
+    q: 'How accurate is this simulation?',
+    a: 'It is a genuine mesoscopic solver, not a decorative animation — but it is a deliberately lightweight one. It runs single-precision on a coarse grid with simple bounce-back (staircased) obstacle boundaries and is weakly compressible, so it is quantitatively rough at high Reynolds numbers and is not a substitute for a validated finite-volume CFD code. It is excellent for building intuition about wakes, shedding, and boundary layers.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Lattice Boltzmann Wind Tunnel"
+    lead="A real-time 2D wind tunnel running a D2Q9 lattice Boltzmann solver. Place a cylinder, plate, or airfoil in the stream and turn up the Reynolds number until the steady wake destabilizes into a shedding Von Kármán vortex street. Colour the flow by vorticity, speed, or pressure — and paint your own obstacles right on the canvas."
+  >
+    <section class="border-b border-border" aria-labelledby="tunnel-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 id="tunnel-title" class="sr-only">Wind tunnel</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Flow</h3>
+            <label class="control-label mt-4">
+              <span>Inflow speed</span><output id="u-out">0.10</output>
+              <input id="u-slider" type="range" min="0.02" max="0.16" step="0.005" value="0.1" />
+            </label>
+            <label class="control-label mt-3">
+              <span>Reynolds number</span><output id="re-out">150</output>
+              <input id="re-slider" type="range" min="10" max="300" step="5" value="150" />
+            </label>
+            <p class="mt-1 text-[0.68rem] leading-[1.5] text-muted-text/80">Re ≳ 90 sheds vortices; near Re = 300 the coarse grid nears its ω → 2 stability limit.</p>
+
+            <div class="mt-5 border-t border-border pt-4">
+              <span class="font-mono text-[0.64rem] uppercase tracking-[0.07em] text-muted-text">Obstacle</span>
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" class="pill-btn is-active" data-obs="cylinder">Cylinder</button>
+                <button type="button" class="pill-btn" data-obs="plate">Flat plate</button>
+                <button type="button" class="pill-btn" data-obs="airfoil">Airfoil</button>
+                <button type="button" class="pill-btn" data-obs="clear">Clear</button>
+              </div>
+              <p class="mt-2 text-[0.68rem] leading-[1.5] text-muted-text/80">Drag on the canvas to paint your own obstacle.</p>
+            </div>
+
+            <div class="mt-5 border-t border-border pt-4">
+              <span class="font-mono text-[0.64rem] uppercase tracking-[0.07em] text-muted-text">Colour by</span>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button type="button" class="pill-btn is-active" data-mode="vorticity">Vorticity</button>
+                <button type="button" class="pill-btn" data-mode="speed">Speed</button>
+                <button type="button" class="pill-btn" data-mode="pressure">Pressure</button>
+              </div>
+            </div>
+
+            <div class="mt-5 flex flex-wrap gap-2">
+              <button type="button" id="play-btn" class="pill-btn is-active">⏸ Pause</button>
+              <button type="button" id="reset-btn" class="pill-btn">↺ Reset flow</button>
+            </div>
+
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3">
+              <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[0.82rem]">
+                <div><span class="live-lab">viscosity ν</span><br><span id="ro-nu" class="live-val">—</span></div>
+                <div><span class="live-lab">relaxation ω</span><br><span id="ro-omega" class="live-val">—</span></div>
+                <div><span class="live-lab">steps</span><br><span id="ro-steps" class="live-val">0</span></div>
+                <div><span class="live-lab">status</span><br><span id="ro-status" class="live-val">running</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="min-w-0">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Flow field</p>
+                <p id="mode-legend" class="font-mono text-[0.62rem] text-muted-text/80">blue = clockwise · red = counter-clockwise</p>
+              </div>
+              <canvas id="lbm-canvas" width="240" height="96" aria-label="Lattice Boltzmann fluid flow past an obstacle"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="method-title">
+      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
+          Each node carries nine populations on the D2Q9 stencil. Every step they collide — relaxing toward the equilibrium fᵢᵉ𝑞 = wᵢ·ρ·[1 + 3(cᵢ·u) + 9/2(cᵢ·u)² − 3/2|u|²] at rate ω — then stream to neighbours. Solid cells reflect populations by full-way bounce-back. The inflow is a fixed-velocity boundary, the outflow is zero-gradient, and vorticity is the discrete curl of the recovered velocity field. In the low-Mach limit this recovers incompressible Navier–Stokes with ν = (1/ω − ½)/3.
+        </p>
+        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What is real physics</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Mass and momentum are conserved by the collision (unit-tested), the wake instability and shedding frequency emerge on their own, and the Reynolds-number dependence is genuine — not a scripted animation.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What it simplifies</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">A coarse grid, single-relaxation-time BGK, weak compressibility, and staircased bounce-back walls. It is quantitatively rough at high Re and near ω = 2, and is not a validated finite-volume/finite-element CFD code.</p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
+          The solver lives in <code class="text-primary-cta">src/lib/fluid-lbm.ts</code> (D2Q9 equilibrium, BGK collision, bounce-back, streaming), unit-tested for the velocity-set moments, equilibrium moment recovery, and mass/momentum conservation.
+        </p>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .pill-btn { border-radius: 9999px; border: 1px solid var(--mp-border); background: var(--mp-elevated); padding: 0.4rem 0.75rem; font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mp-muted); transition: color 0.15s, border-color 0.15s, background 0.15s; }
+  .pill-btn:hover { color: var(--mp-text); border-color: var(--mp-cta); }
+  .pill-btn.is-active { color: var(--mp-text); border-color: var(--mp-cta); background: color-mix(in srgb, var(--mp-cta) 12%, var(--mp-elevated)); }
+  #lbm-canvas { margin-top: 0.6rem; width: 100%; height: auto; display: block; background: var(--mp-canvas); border-radius: 10px; border: 1px solid var(--mp-border); image-rendering: auto; cursor: crosshair; aspect-ratio: 240 / 96; }
+  .control-label { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mp-muted); }
+  .control-label output { color: var(--mp-text); font-weight: 600; }
+  .control-label input[type='range'] { grid-column: 1 / -1; width: 100%; accent-color: var(--mp-cta); }
+  .live-lab { font-family: var(--font-mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mp-muted); }
+  .live-val { font-weight: 700; color: var(--mp-text); font-size: 0.9rem; }
+  input[type='range'] { accent-color: var(--mp-cta); }
+</style>
+
+<script>
+// @ts-nocheck
+import { Lattice, omegaFromViscosity, viscosityFromOmega } from '../../lib/fluid-lbm.ts';
+
+function initLBM() {
+  const canvas = document.getElementById('lbm-canvas');
+  if (!canvas || canvas.dataset.init) return;
+  canvas.dataset.init = 'true';
+  const ctx = canvas.getContext('2d');
+
+  const nx = 240, ny = 96;
+  canvas.width = nx; canvas.height = ny;
+
+  let colors = {};
+  function readColors() {
+    const s = getComputedStyle(document.documentElement);
+    const g = (n, f) => s.getPropertyValue(n).trim() || f;
+    const rgb = (c) => { const m = c.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i); if (m) return [parseInt(m[1],16),parseInt(m[2],16),parseInt(m[3],16)]; const p = c.match(/(\d+)/g); return p ? p.slice(0,3).map(Number) : [128,128,128]; };
+    colors = {
+      canvas: rgb(g('--mp-canvas', '#0f141c')), text: rgb(g('--mp-text', '#e8eef6')),
+      muted: rgb(g('--mp-muted', '#a8b9cc')), cta: rgb(g('--mp-cta', '#f07a94')),
+      anchor: rgb(g('--mp-anchor', '#71b9e3')),
+    };
+  }
+  readColors();
+
+  const lat = new Lattice(nx, ny, 1.8);
+  const img = ctx.createImageData(nx, ny);
+  const obstacle = new Uint8Array(nx * ny);
+
+  let u0 = 0.1;
+  let Re = 150;
+  let mode = 'vorticity';
+  let playing = true;
+  let steps = 0;
+  let rafId = null;
+  let destroyed = false;
+  let unstable = false;
+
+  const cyl = { cx: Math.round(nx * 0.26), cy: Math.round(ny / 2), r: Math.round(ny * 0.16) };
+
+  function updateOmega() {
+    const D = 2 * cyl.r;
+    let nu = (u0 * D) / Re;
+    let omega = omegaFromViscosity(nu);
+    omega = Math.max(0.5, Math.min(1.96, omega));
+    lat.omega = omega;
+    document.getElementById('ro-nu').textContent = viscosityFromOmega(omega).toFixed(4);
+    document.getElementById('ro-omega').textContent = omega.toFixed(3);
+  }
+
+  function buildObstacle(type) {
+    obstacle.fill(0);
+    const set = (x, y) => { if (x >= 1 && x < nx - 1 && y >= 0 && y < ny) obstacle[x + nx * y] = 1; };
+    if (type === 'cylinder') {
+      for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++)
+        if ((x - cyl.cx) ** 2 + (y - cyl.cy) ** 2 <= cyl.r * cyl.r) set(x, y);
+    } else if (type === 'plate') {
+      const px = cyl.cx, half = Math.round(ny * 0.22);
+      for (let y = cyl.cy - half; y <= cyl.cy + half; y++) for (let x = px - 1; x <= px + 1; x++) set(x, y);
+    } else if (type === 'airfoil') {
+      // tilted teardrop: ellipse rotated by angle of attack
+      const aoa = -0.28, a = ny * 0.34, b = ny * 0.09;
+      const ca = Math.cos(aoa), sa = Math.sin(aoa);
+      for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
+        const dx = x - cyl.cx - 6, dy = y - cyl.cy;
+        const rx = dx * ca + dy * sa, ry = -dx * sa + dy * ca;
+        // teardrop: taper the trailing edge
+        const taper = rx > 0 ? 1 - rx / (a * 1.15) : 1;
+        if (taper > 0 && (rx / a) ** 2 + (ry / (b * Math.max(0.15, taper))) ** 2 <= 1) set(x, y);
+      }
+    }
+    lat.setObstacle(obstacle);
+  }
+
+  function resetFlow() {
+    lat.initEquilibrium(u0, 0);
+    lat.setObstacle(obstacle);
+    steps = 0; unstable = false;
+    document.getElementById('ro-status').textContent = 'running';
+  }
+
+  function lerp(a, b, t) { return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t, a[2] + (b[2]-a[2])*t]; }
+
+  function render() {
+    lat.computeMacros();
+    const data = img.data;
+    const bg = colors.canvas, neg = colors.anchor, pos = colors.cta, solid = colors.muted;
+    const speedScale = u0 * 1.9;
+    for (let y = 0; y < ny; y++) {
+      const row = ny - 1 - y; // flip so +y is up
+      for (let x = 0; x < nx; x++) {
+        const c = x + nx * y;
+        const idx = (row * nx + x) * 4;
+        let col;
+        if (obstacle[c]) {
+          col = solid;
+        } else if (mode === 'speed') {
+          const sp = Math.hypot(lat.ux[c], lat.uy[c]) / speedScale;
+          const t = Math.max(0, Math.min(1, sp));
+          col = t < 0.5 ? lerp(bg, neg, t * 2) : lerp(neg, pos, (t - 0.5) * 2);
+        } else if (mode === 'pressure') {
+          const dp = (lat.rho[c] - 1) * 8;
+          const s = Math.max(-1, Math.min(1, dp));
+          col = s >= 0 ? lerp(bg, pos, s) : lerp(bg, neg, -s);
+        } else {
+          const w = lat.vorticity(x, y) / (speedScale * 0.09);
+          const s = Math.max(-1, Math.min(1, w));
+          col = s >= 0 ? lerp(bg, pos, s) : lerp(bg, neg, -s);
+        }
+        data[idx] = col[0]; data[idx + 1] = col[1]; data[idx + 2] = col[2]; data[idx + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  function loop() {
+    if (destroyed) return;
+    if (playing && !unstable) {
+      for (let s = 0; s < 6; s++) { lat.step(u0); steps++; }
+      // stability guard
+      const mid = Math.round(nx / 2) + nx * Math.round(ny / 2);
+      if (!Number.isFinite(lat.rho[mid]) || lat.rho[mid] > 5 || lat.rho[mid] < 0.1) {
+        unstable = true;
+        document.getElementById('ro-status').textContent = 'reset (unstable)';
+        setTimeout(resetFlow, 400);
+      }
+      document.getElementById('ro-steps').textContent = steps;
+      render();
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // painting obstacles
+  let painting = false;
+  function paintAt(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round((e.clientX - rect.left) / rect.width * nx);
+    const y = ny - 1 - Math.round((e.clientY - rect.top) / rect.height * ny);
+    const br = 3;
+    for (let dy = -br; dy <= br; dy++) for (let dx = -br; dx <= br; dx++) {
+      if (dx*dx + dy*dy > br*br) continue;
+      const xx = x + dx, yy = y + dy;
+      if (xx >= 1 && xx < nx - 1 && yy >= 0 && yy < ny) obstacle[xx + nx * yy] = 1;
+    }
+    lat.setObstacle(obstacle);
+  }
+  canvas.addEventListener('mousedown', (e) => { painting = true; paintAt(e); });
+  canvas.addEventListener('mousemove', (e) => { if (painting) paintAt(e); });
+  window.addEventListener('mouseup', () => { painting = false; });
+  canvas.addEventListener('touchstart', (e) => { painting = true; paintAt(e.touches[0]); e.preventDefault(); }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => { if (painting) { paintAt(e.touches[0]); e.preventDefault(); } }, { passive: false });
+  canvas.addEventListener('touchend', () => { painting = false; });
+
+  // wiring
+  const uSlider = document.getElementById('u-slider'), reSlider = document.getElementById('re-slider');
+  uSlider.addEventListener('input', () => { u0 = parseFloat(uSlider.value); document.getElementById('u-out').textContent = u0.toFixed(3); updateOmega(); });
+  reSlider.addEventListener('input', () => { Re = parseFloat(reSlider.value); document.getElementById('re-out').textContent = Re; updateOmega(); });
+
+  document.querySelectorAll('[data-obs]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const t = b.dataset.obs;
+      document.querySelectorAll('[data-obs]').forEach((x) => x.classList.toggle('is-active', x === b));
+      if (t === 'clear') { obstacle.fill(0); lat.setObstacle(obstacle); }
+      else { buildObstacle(t); }
+      resetFlow();
+    }));
+
+  const legends = {
+    vorticity: 'blue = clockwise · red = counter-clockwise',
+    speed: 'dark = slow · red = fast',
+    pressure: 'blue = low · red = high pressure',
+  };
+  document.querySelectorAll('[data-mode]').forEach((b) =>
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode;
+      document.querySelectorAll('[data-mode]').forEach((x) => x.classList.toggle('is-active', x === b));
+      document.getElementById('mode-legend').textContent = legends[mode];
+      render();
+    }));
+
+  const playBtn = document.getElementById('play-btn');
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
+    playBtn.classList.toggle('is-active', playing);
+  });
+  document.getElementById('reset-btn').addEventListener('click', resetFlow);
+
+  const themeObserver = new MutationObserver(() => { readColors(); render(); });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  document.addEventListener('astro:before-swap', () => { destroyed = true; if (rafId) cancelAnimationFrame(rafId); themeObserver.disconnect(); }, { once: true });
+
+  // init
+  updateOmega();
+  buildObstacle('cylinder');
+  resetFlow();
+  render();
+  rafId = requestAnimationFrame(loop);
+}
+
+document.addEventListener('astro:page-load', initLBM);
+initLBM();
+</script>
