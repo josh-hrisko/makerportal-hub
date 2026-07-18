@@ -5,30 +5,24 @@ import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import ButtondownSignup from '../components/ButtondownSignup.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../data/affiliate-links';
 import { getCollection } from 'astro:content';
-import { sourceLabels, pillarMeta, fallbackPillar } from '../data/trends';
+import { pillarMeta, fallbackPillar } from '../data/trends';
 import type { TrendItem } from '../data/trends';
 import { playground } from '../data/playground';
 
-// Fetch the journal entries to get the latest daily signals
+// Fetch the journal entries to compute trending pillars for gear re-ranking (D-017)
+// No journal content is rendered on /resources anymore — canonical home is /journal
 const journals = await getCollection('journal');
 const sortedJournals = journals.sort((a, b) => b.id.localeCompare(a.id));
 const latestJournal = sortedJournals[0];
 
 const allTrends: TrendItem[] = latestJournal ? (latestJournal.data.items as TrendItem[]) : [];
-const trendsGeneratedAt = latestJournal ? latestJournal.data.generatedAt : null;
 
-const trending = [...allTrends].sort((a, b) => b.score - a.score).slice(0, 7);
-const featuredSignal = trending[0];
-
-const pillarOf = (item: { tags: string[] }) => pillarMeta[item.tags[0]] ?? fallbackPillar;
-
-// Trending pillar frequency from full digest (not just top 7) — used to re-rank gear
 const pillarCounts: Record<string, number> = {};
 for (const t of allTrends) {
   for (const tag of t.tags ?? []) pillarCounts[tag] = (pillarCounts[tag] ?? 0) + 1;
 }
 const trendingPillarEntries = Object.entries(pillarCounts).sort((a, b) => b[1] - a[1]);
-const trendingPillars = trendingPillarEntries.map(([k]) => k); // sorted most→least frequent
+const trendingPillars = trendingPillarEntries.map(([k]) => k);
 const topTrendingPillars = trendingPillars.slice(0, 3);
 const trendingPillarSet = new Set(trendingPillars);
 
@@ -67,16 +61,8 @@ const gearGroups = baseGearGroups
     return { ...group, items: sortedItems, score: groupScore, trendingItems, originalIdx };
   })
   .sort((a, b) => b.score - a.score || b.trendingItems - a.trendingItems || a.originalIdx - b.originalIdx);
-const signalBars = (score: number) => Math.max(1, Math.min(5, Math.round(score / 3)));
-const timeAgo = (iso: string) => {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 864e5));
-  return days === 0 ? 'today' : `${days}d ago`;
-};
-const scanDate = trendsGeneratedAt
-  ? new Date(trendsGeneratedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  : null;
 
-const title = 'Learn — Resources, Guides & Tools | MakerPortal';
+const title = 'Resources — Guides, Playground & Tools | MakerPortal';
 const description =
   'On-device AI guides, iOS craft notes, downloadable archives, interactive playground, and 50 curated gear picks with disclosure. Daily Signals Journal re-ranks gear.';
 
@@ -123,88 +109,24 @@ const tools = [
     </div>
   </section>
 
-  {/* Signals Journal teaser (D-022 canonical): /journal is the one true home.
-      This section is a compact latest-signals bridge — no duplicate featured+grid,
-      no thumbnails (those live on /journal/<date>). Keeps id="trending" for
-      backward-compat anchors, but the full experience is /journal. Gear re-ranking
-      (D-017) still reads from full allTrends → pillarCounts below. */}
-  {trending.length > 0 && featuredSignal && latestJournal && (
-    <section id="trending" class="border-b border-border" aria-labelledby="trending-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-14 sm:px-8 sm:py-20 lg:px-10">
-        <div class="flex flex-wrap items-start justify-between gap-6">
-          <div class="max-w-[48rem]">
-            <div class="flex flex-wrap items-center gap-3">
-              <h2 id="trending-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">Signals Journal — Latest</h2>
-              <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
-                <span class="h-1.5 w-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
-                {allTrends.length} signals · {latestJournal.id}
-              </span>
-            </div>
-            <p class="mt-3 max-w-2xl text-[0.92rem] leading-[1.6] text-muted-text">
-              Daily digest auto-published to <a href={`/journal/${latestJournal.id}`} class="font-semibold text-brand-anchor hover:text-primary-text underline decoration-border underline-offset-4">{`/journal/${latestJournal.id}`}</a> — score-weighted, pillar-filtered, with self-hosted thumbnails. This is a compact teaser; the full report lives in the canonical <a href="/journal" class="font-semibold text-brand-anchor hover:text-primary-text">Signals Journal</a> archive. Trending pillars also re-rank <a href="#gear" class="text-brand-anchor hover:text-primary-text">Gear</a> below.
-            </p>
-            <div class="mt-5 flex flex-wrap gap-2.5">
-              <a href={`/journal/${latestJournal.id}`} class="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-primary-text px-4.5 text-[0.85rem] font-bold text-canvas hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
-                View full report — {latestJournal.id} → 
-              </a>
-              <a href="/journal" class="inline-flex min-h-10 items-center rounded-full border border-border bg-card-bg px-4 text-[0.85rem] font-medium text-primary-text hover:border-[var(--mp-border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
-                Browse archive
-              </a>
-              <a href="#gear" class="inline-flex min-h-10 items-center rounded-full border border-border bg-elevated px-4 text-[0.85rem] font-medium text-muted-text hover:text-primary-text hover:border-[var(--mp-border-strong)]">
-                Trending gear ↓
-              </a>
-            </div>
-          </div>
-          {scanDate && (
-            <p class="shrink-0 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted-text">
-              <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle" aria-hidden="true"></span>
-              Scan · {scanDate} · daily 14:00 UTC
-            </p>
+  {/* Signals Journal lives at /journal — compact bridge (no duplicate feed) */}
+  <section class="border-b border-border" aria-labelledby="signals-bridge-title">
+    <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+      <div class="flex flex-col gap-4 rounded-[20px] border border-border bg-card-bg p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div>
+          <h2 id="signals-bridge-title" class="text-[1.15rem] font-semibold text-primary-text">Signals Journal</h2>
+          <p class="mt-1.5 max-w-xl text-[0.9rem] leading-[1.6] text-muted-text">Daily developer signals — auto-published to <span class="font-mono text-[0.8rem]">/journal</span>. Trending pillars re-rank <a href="#gear" class="text-brand-anchor hover:text-primary-text">Gear</a> below.</p>
+          {latestJournal && (
+            <p class="mt-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Latest · {latestJournal.id} · {allTrends.length} signals</p>
           )}
         </div>
-
-        {/* Compact latest signals — no images, unified with journal but lightweight */}
-        <ul class="mt-8 divide-y divide-border rounded-[16px] border border-border bg-card-bg">
-          {trending.slice(0, 4).map((item) => {
-            const pillar = pillarOf(item);
-            return (
-              <li class="group flex gap-3 p-4 sm:gap-4 sm:p-4.5">
-                <span class="mt-1.5 hidden size-1.5 shrink-0 rounded-full sm:block" style={`background:${pillar.color}`} aria-hidden="true"></span>
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span class="inline-flex items-center gap-1.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">
-                      <span class="size-1 rounded-full sm:hidden" style={`background:${pillar.color}`} aria-hidden="true"></span>
-                      {pillar.label}
-                    </span>
-                    {item.domain && <span class="rounded-full border border-border bg-elevated px-2 py-0.5 font-mono text-[0.55rem] text-muted-text">{item.domain}</span>}
-                    <span class="font-mono text-[0.55rem] uppercase tracking-[0.08em] text-muted-text">
-                      {(item.sources ?? [item.source]).map((s) => sourceLabels[s]).join(' + ')} · {timeAgo(item.publishedAt)}
-                    </span>
-                    <span class="ml-auto hidden items-center gap-1 font-mono text-[0.55rem] text-muted-text sm:inline-flex">
-                      score {item.score}
-                    </span>
-                  </div>
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" class="mt-1.5 block text-[0.93rem] font-medium leading-[1.45] text-primary-text underline decoration-transparent underline-offset-4 hover:text-primary-cta hover:decoration-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-card-bg rounded-sm">
-                    {item.title}
-                  </a>
-                </div>
-                <span class="hidden shrink-0 items-end gap-[2px] sm:inline-flex" role="img" aria-label={`Signal ${signalBars(item.score)} of 5`}>
-                  {[1,2,3,4,5].map((n) => (
-                    <span class="w-[3px] rounded-sm" style={`height:${3+n*2}px; background:${n<=signalBars(item.score) ? pillar.color : 'var(--mp-border)'};`} aria-hidden="true"></span>
-                  ))}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        {allTrends.length > 4 && (
-          <p class="mt-3 text-[0.8rem] text-muted-text">
-            Showing 4 of {allTrends.length} signals from {latestJournal.id}. <a href={`/journal/${latestJournal.id}`} class="font-medium text-brand-anchor hover:text-primary-text">View all {allTrends.length} in full report →</a>
-          </p>
-        )}
+        <div class="flex shrink-0 flex-wrap gap-2">
+          <a href="/journal" class="inline-flex min-h-10 items-center rounded-full bg-primary-text px-5 text-[0.85rem] font-bold text-canvas hover:opacity-90">Open Signals →</a>
+          <a href={latestJournal ? `/journal/${latestJournal.id}` : '/journal'} class="inline-flex min-h-10 items-center rounded-full border border-border bg-elevated px-5 text-[0.85rem] font-medium text-muted-text hover:text-primary-text hover:border-[var(--mp-border-strong)]">Latest report</a>
+        </div>
       </div>
-    </section>
-  )}
+    </div>
+  </section>
 
   <section id="playground" class="border-b border-border" aria-labelledby="playground-title">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">

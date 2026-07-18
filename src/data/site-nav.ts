@@ -102,14 +102,14 @@ export const primaryNav: PrimaryNavItem[] = [
     },
   },
   {
-    id: 'notes',
-    label: 'Journal',
+    id: 'blog',
+    label: 'Blog',
     href: '/blog',
     columns: [
       {
         title: 'Field notes',
         links: [
-          { label: 'All notes', href: '/blog', description: 'Building in public' },
+          { label: 'All posts', href: '/blog', description: 'Building in public' },
           { label: 'RSS feed', href: '/rss.xml', description: 'Subscribe in any reader' },
           { label: 'Studio journal', href: 'https://makersportal.com', description: 'Longer essays', external: true },
         ],
@@ -127,26 +127,25 @@ export const primaryNav: PrimaryNavItem[] = [
       title: 'Thinking in public',
       description: 'CoreML experiments, SwiftUI edges, shipping discipline — the fuel for SEO, AEO, and social.',
       href: '/blog',
-      cta: 'Read notes →',
+      cta: 'Read blog →',
     },
   },
   {
-    id: 'learn',
-    label: 'Guides',
+    id: 'resources',
+    label: 'Resources',
     href: '/resources',
     columns: [
       {
         title: 'Resources',
         links: [
           { label: 'Resource hub', href: '/resources', description: 'Guides & downloads' },
-          { label: 'Signals journal', href: '/journal', description: 'Daily trend backlog' },
+          { label: 'Signals Journal', href: '/journal', description: 'Daily trend archive' },
           { label: 'Agent map', href: '/llms', description: 'Human + AI index (llms.txt)' },
         ],
       },
       {
         title: 'On this page',
         links: [
-          { label: 'Latest signals', href: '/resources#trending', description: 'From the Signals Journal' },
           { label: 'Playground', href: '/playground', description: 'Interactive tools & toys' },
           { label: 'Tools we use', href: '/resources#tools', description: 'Studio toolchain' },
           { label: 'Gear', href: '/resources#gear', description: 'Hardware picks' },
@@ -159,6 +158,36 @@ export const primaryNav: PrimaryNavItem[] = [
       description: 'Topic hubs, downloads, and affiliate-ready tool guides — structured for millions of sessions.',
       href: '/resources',
       cta: 'Browse resources →',
+    },
+  },
+  {
+    id: 'signals',
+    label: 'Signals',
+    href: '/journal',
+    columns: [
+      {
+        title: 'Archive',
+        links: [
+          { label: 'All scans', href: '/journal', description: 'Chronological backlog' },
+          { label: 'Latest signals', href: '/resources#gear', description: 'Trending gear picks' },
+          { label: 'Agent map', href: '/llms', description: 'Human + AI index' },
+        ],
+      },
+      {
+        title: 'How it works',
+        links: [
+          { label: 'Scoring', href: '/journal', description: 'Gating & ranking' },
+          { label: 'Pillars', href: '/resources#gear', description: '6 topic pillars' },
+          { label: 'Daily 14:00 UTC', href: '/journal', description: 'Auto-published' },
+        ],
+      },
+    ],
+    featured: {
+      kicker: 'Daily · Auto-published',
+      title: 'Signals Journal',
+      description: 'Every day saved at its own URL — score-weighted, pillar-filtered, with self-hosted thumbnails and source corroboration.',
+      href: '/journal',
+      cta: 'Open archive →',
     },
   },
   {
@@ -230,9 +259,9 @@ export const footerColumns: FooterColumn[] = [
     links: [
       { label: 'Home', href: '/' },
       { label: 'Apps', href: '/apps' },
-      { label: 'Journal', href: '/blog' },
-      { label: 'Guides', href: '/resources' },
-      { label: 'Signals journal', href: '/journal' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Resources', href: '/resources' },
+      { label: 'Signals', href: '/journal' },
       { label: 'Shop', href: '/shop' },
       { label: 'Watch', href: '/watch' },
     ],

@@ -36,6 +36,13 @@ const signalBars = (score: number) => Math.max(1, Math.min(5, Math.round(score /
 const totalSignals = sortedJournals.reduce((sum, j) => sum + (j.data.items as TrendItem[]).length, 0);
 const dateRange = sortedJournals.length > 0 ? `${sortedJournals[sortedJournals.length - 1].id} → ${sortedJournals[0].id}` : null;
 const avgSignals = sortedJournals.length ? Math.round(totalSignals / sortedJournals.length) : 0;
+
+// Deduplicate preview across days to reduce "repeat" perception:
+// newest day shows its top 3, older days only show signals not already seen in newer days.
+// This makes the archive index feel like a changelog of *new* signals per day.
+const seenIds = new Set<string>();
+// Pre-compute how many unique new signals each day introduces (for UI)
+const newCounts = new Map<string, number>();
 ---
 
 <Layout title={title} description={description}>
@@ -109,12 +116,16 @@ const avgSignals = sortedJournals.length ? Math.round(totalSignals / sortedJourn
               const tagCounts = {} as any;
               for (const it of items) for (const t of (it as any).tags ?? []) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
               const sortedTagEntries = Object.entries(tagCounts).sort((a: any,b: any) => (b[1] as number)-(a[1] as number)).slice(0,4);
-              // Top pillar = most frequent tag of the day, so the accent bar and the
-              // "Top pillar" label agree with the frequency-sorted chips below (rather
-              // than reflecting whichever tag the first item happened to list first).
               const topTag = sortedTagEntries[0]?.[0] as string | undefined;
               const accentCol = topTag ? pillarOf(topTag).color : '#4C6492';
-              const topThreePreview = [...items].sort((a, b) => b.score - a.score).slice(0, 3);
+              // Deduped preview: only signals not yet seen in newer days
+              const sortedByScore = [...items].sort((a, b) => b.score - a.score);
+              const fresh = sortedByScore.filter((it: any) => !seenIds.has(it.id));
+              const topThreePreview = fresh.length > 0 ? fresh.slice(0, 3) : sortedByScore.slice(0, 3);
+              const newCount = fresh.length;
+              newCounts.set(dStr, newCount);
+              // Mark all items of this day as seen for older entries
+              for (const it of items) seenIds.add(it.id);
 
               return (
                 <article class="group relative flex gap-5">
@@ -178,12 +189,12 @@ const avgSignals = sortedJournals.length ? Math.round(totalSignals / sortedJourn
                         </div>
                       </div>
 
-                      {/* Right: Top 3 signals */}
+                      {/* Right: Top signals — deduped across newer days to avoid repeat */}
                       <div class="w-full border-t border-border bg-[color-mix(in_srgb,var(--mp-card-bg)_96%,var(--mp-canvas))] lg:w-[30rem] lg:border-l lg:border-t-0">
                         <div class="p-6 sm:p-7">
                           <h3 class="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">
-                            <span>Top signals</span>
-                            <span class="rounded-full bg-canvas border border-border px-2 py-0.5 text-[0.55rem]">Score weighted</span>
+                            <span>{fresh.length > 0 ? `${Math.min(3, fresh.length)} new today` : 'All seen before'} • top signals</span>
+                            <span class="rounded-full bg-canvas border border-border px-2 py-0.5 text-[0.55rem]">{fresh.length > 0 ? `${fresh.length} new` : 'deduped'}</span>
                           </h3>
                           <ul class="mt-4 flex flex-col gap-3">
                             {topThreePreview.map((item: any) => {
