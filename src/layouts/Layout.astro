@@ -40,6 +40,7 @@ const normalizeHref = (href: string) => {
 };
 
 const isActive = (href: string) => {
+  if (href.includes('#')) return false; // do not highlight in-page anchor links in dropdown menus
   const clean = normalizeHref(href);
   if (!clean) return false;
   if (clean === '/') return path === '/';

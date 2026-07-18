@@ -118,7 +118,6 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Formats',
         links: [
           { label: 'Articles', href: '/blog#articles', description: 'Essays & craft notes' },
-          { label: 'Sponsored', href: '/advertise', description: 'Partner placements', badge: 'Open' },
         ],
       },
     ],
@@ -139,14 +138,13 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Resources',
         links: [
           { label: 'Resource hub', href: '/resources', description: 'Guides & downloads' },
-          { label: 'Signals Journal', href: '/journal', description: 'Daily trend archive' },
+          { label: 'Playground', href: '/playground', description: 'Interactive tools & toys' },
           { label: 'Agent map', href: '/llms', description: 'Human + AI index (llms.txt)' },
         ],
       },
       {
         title: 'On this page',
         links: [
-          { label: 'Playground', href: '/playground', description: 'Interactive tools & toys' },
           { label: 'Tools we use', href: '/resources#tools', description: 'Studio toolchain' },
           { label: 'Gear', href: '/resources#gear', description: 'Hardware picks' },
         ],
@@ -233,7 +231,6 @@ export const primaryNav: PrimaryNavItem[] = [
           { label: 'Team', href: '/team', description: 'People & roles' },
           { label: 'Contact', href: '/contact', description: 'Human inbox' },
           { label: 'Press / kit', href: '/press', description: 'Logos & facts' },
-          { label: 'Advertise', href: '/advertise', description: 'Sponsorships' },
         ],
       },
       {
