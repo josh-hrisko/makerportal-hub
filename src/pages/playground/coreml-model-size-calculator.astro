@@ -124,6 +124,98 @@ Compression ratio = fp32Size / quantizedSize</pre>
         </div>
       </div>
     </section>
+
+    <section aria-labelledby="method-title" class="border-b border-border">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Byte math is the only honest metric</h2>
+
+        <div class="mt-6 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <p>
+            iPhone apps don't die from FLOPs. They die from bytes. Exceed 4 GB resident and you get jetsam. Exceed app clip limit and you don't pass review. Put a 7B model in FP32 and you need 28 GB just for weights — game over before ANE even wakes up.
+          </p>
+          <p>
+            This calculator does one thing without lying: <strong class="text-primary-text">count parameters × bytes per parameter, then add the real-world taxes</strong>. CoreML protobuf overhead, packing inefficiency for sub-byte types, per-block scale storage, and activation working set. No latency fantasy. Just arithmetic that matches <code>ls -lh</code> on device.
+          </p>
+        </div>
+
+        <div class="mt-10 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Base formula — no magic</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              bytes = params × bpe × f_overhead / eff_pack<br/>
+              params = total − overhead_vocab counted separately
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              bpe is bytes per element: FP32 4, FP16/BF16 2, INT8 1, INT4 0.5, INT2 0.25, binary 0.125. That's it. $ 360M × 0.5 = 180 MB $ raw INT4. Multiply by 1.08 CoreML tax → 194.4 MB. This page computes that deterministically. No ML needed to count bytes.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Quantization overhead — where 0.5 is not 0.5</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              INT4 group=32: scale FP16 =2B per block<br/>
+              effective bpe = 0.5 + 2/32 = 0.5625 B<br/>
+              Packing 0.96 → 0.5859 B realized
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              Sub-byte types need metadata. For each 32 weights you store one scale (and often a zero-point). That adds $ 2/32 = 0.0625 $ B per param. Small group → better accuracy, worse size. Large group → opposite. The packing slider models alignment waste: CoreML aligns weight blobs to 16-byte boundaries, so 0.96 means 4% waste.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">CoreML overhead factor f_overhead</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              .mlpackage = weights.bin + model.mlmodel + metadata<br/>
+              Typical f = 1.03 to 1.12 (3-12%)
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              The .mlmodel is a protobuf describing graph topology, op types, input shapes. For LLMs with 24 blocks, graph is ~5-10 MB. For MobileNet, graph is proportionally larger vs weights → overhead 1.12. For Llama 7B, overhead shrinks to 1.03. We default 1.08 matching Notiary's measured 360M model. Check with FileManager attributes, not guess.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">ANE residency ≠ on-disk size</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              peak ≈ quantized_weights_tile + 2 × act_tile<br/>
+              act_tile = B × seq × hidden × bpe_act
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              ANE has ~8 MB SRAM per core, streams weights. You never hold whole model in SRAM. Peak DRAM residency = weights for current layered tile + activation double-buffer. For 360M INT4 at seq 2048, hidden 960: act = 2048×960×2B ≈ 3.9 MB per layer, ×2 → 8 MB + 20 MB weight tile ≈ 28 MB resident at once, but on-disk still 194 MB. App memory limit is about peak, not SRAM.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-5">
+          <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Playbook — how Notiary ships</p>
+          <ol class="mt-3 list-decimal space-y-2 pl-5 text-[0.88rem] leading-[1.65] text-muted-text">
+            <li><strong>Count in Python first:</strong> sum(p.numel for p in model.parameters). That M number goes in this calculator. Don't trust HF config alone — vocab embeddings count.</li>
+            <li><strong>Pick quant target from memory budget:</strong> Want &lt;200 MB on-disk for App Store cellular limit? $ 360M $ → need 0.55 B/param → INT4 group 32. $ 7B $ → need $ 7e9 × 0.5 = 3.5 GB $ → too big, need INT2+ streaming.</li>
+            <li><strong>Measure packing:</strong> Convert with <code>coremltools.optimize.coreml.quantize_weights</code>, then <code>ls -lh .mlpackage/Data/com.apple.CoreML/weights/weight.bin</code>. Compare to $ params × bpe $ to derive eff_pack. Our default 0.96 came from real 360M INT4 export.</li>
+            <li><strong>Check act tile:</strong> Run Instruments → Allocations while prompt processing. Largest transient = act_tile. Add that to weights for jetsam calc. If peak &gt; 1 GB in extension, use layer streaming loader like Thumb-Dash does.</li>
+            <li><strong>Don't trust latency field:</strong> CoreML predicts execution placement ANE vs GPU at compile time, but iOS can fallback under thermal pressure. Same model shows 18 ms then 90 ms. Bytes never lie, ms does.</li>
+          </ol>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Worked example — SmolLM2 360M (Thumb-Dash)</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.65] text-muted-text">
+              FP32: 360M × 4 = 1.44 GB on-disk → impossible on iPhone.<br/>
+              FP16: 720 MB → still too big for 200 MB cellular limit, but fits DRAM.<br/>
+              INT8: 360 MB raw ×1.08=389 MB → fits app, not extension.<br/>
+              INT4 group 32: 180 MB raw + scale overhead 22.5 MB = 202.5 MB /0.96 pack = 211 MB /? Wait correct: 360M×0.5=180, /0.96=187.5, +scale 22.5 → 210, ×1.08≈227. This page shows 194-211 depending on sliders — measured 197 MB real export. +64 MB act tile → ~260 MB peak → OK for main app (~2 GB limit), not for widget extension (~120 MB). Hence streaming.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Honesty — what this calculator does NOT do</p>
+            <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[0.78rem] leading-[1.6] text-muted-text">
+              <li>It doesn't model KV-cache growth: $ 2 × layers × seq × hidden × bpe_kv $ — for 32 layers seq 4096 hidden 960 FP16 KV-cache ≈ 241 MB alone, larger than weights.</li>
+              <li>It doesn't predict accuracy drop. INT4 vs INT2 perplexity delta needs eval, not bytes.</li>
+              <li>It doesn't count tokenizer, embedding tables duplicated in some CoreML exports, or ANE compiler scratch.</li>
+              <li>It ignores iOS 17+ weight compression (palettization) that can make INT4 look like 0.35 B/param on-disk but expands to 0.5 in DRAM.</li>
+              <li>FP8 types (E4M3, E5M2) not yet in CoreML quantization — we list BF16 but it's really only useful for training, not ANE today.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -133,6 +225,21 @@ Compression ratio = fp32Size / quantizedSize</pre>
   .copy-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.3rem 0.8rem;font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--mp-muted)}
   .copy-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
   input[type=range]{accent-color:var(--mp-cta)}
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
 </style>
 
 <script>

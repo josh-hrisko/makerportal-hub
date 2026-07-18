@@ -56,26 +56,217 @@ const breadcrumbSchema = {
       </div>
     </section>
 
-    <section aria-labelledby="explainer-title">
-      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="explainer-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">What's actually happening</h2>
-        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          Your drawing is captured as a sequence of 2D coordinates. We treat the canvas as a complex plane, where each point is a complex number: <code class="text-primary-cta">z = x + i·y</code>. 
-        </p>
-        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          By applying a <strong>Discrete Fourier Transform (DFT)</strong>, we decompose your spatial drawing into a series of pure circular motions (epicycles). The DFT calculates a set of complex coefficients (<code class="text-primary-cta">X<sub>k</sub></code>), where each coefficient corresponds to a specific frequency. The <em>magnitude</em> of the coefficient determines the radius of that circle, and the <em>angle</em> determines its starting phase.
-        </p>
-        <div class="mt-6 rounded-[16px] border border-border bg-elevated/40 p-5 font-mono text-[0.85rem] leading-[1.6] text-muted-text">
-          <p class="mb-1 font-semibold text-primary-text">Discrete Fourier Transform (Analysis)</p>
-          <p class="mb-3 text-[0.7rem] text-muted-text/80">// Extracts the frequency components (X_k) from the N spatial points</p>
-          <p>X<sub>k</sub> = &Sigma; (x<sub>n</sub> + i&middot;y<sub>n</sub>) &middot; e<sup>-i&middot;2&pi;&middot;k&middot;n / N</sup></p>
-          <p class="mt-5 mb-1 font-semibold text-primary-text">Epicycle Path Reconstruction (Synthesis)</p>
-          <p class="mb-3 text-[0.7rem] text-muted-text/80">// Chains the rotating vectors tip-to-tail to redraw the path over time 't'</p>
-          <p>p(t) = (1/N) &Sigma; X<sub>k</sub> &middot; e<sup>i&middot;2&pi;&middot;k&middot;t / N</sup></p>
+    <section aria-labelledby="explainer-title" class="border-b border-border bg-elevated/20">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+        <div class="max-w-[44rem]">
+          <p class="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-cta">Essence</p>
+          <h2 id="explainer-title" class="mt-3 text-[clamp(1.6rem,3.5vw,2.4rem)] font-[700] leading-[0.95] tracking-[-0.05em] text-primary-text">Any doodle is just circles spinning at the right speeds.</h2>
+          <div class="mt-6 space-y-5 text-[1.02rem] leading-[1.75] text-muted-text">
+            <p>
+              Draw a star, a heart, a shaky signature. Once you lift the pen, the path doesn't look like a single messy line anymore — it becomes a machine built from pure circular motion, one circle riding on the tip of another, all spinning at integer multiples of a base rate, reconstructing your exact wobble.
+            </p>
+            <p>
+              Ptolemy tried this to explain planets, stacking epicycles upon epicycles to fit retrograde loops. Fourier proved you can do it perfectly for <em>any</em> closed curve. Same math that powers spectral analysis in <a href="/blog/inside-biquadia" class="text-primary-cta underline underline-offset-2">Biquadia</a>, just rotated 90 degrees in your mind: instead of decomposing sound pressure over time into sine waves, you decompose $x(t)$ and $y(t)$ over time into spinning complex exponentials.
+            </p>
+            <p>
+              This playground makes that literal. You give it $z(t)=x(t)+i\,y(t)$, a walk in the complex plane. It computes how much of each pure spin $e^&#123;i 2\pi k t / N&#125;$ you need, then plays them back tip-to-tail. The tip draws you.
+            </p>
+          </div>
         </div>
-        <p class="mt-4 max-w-2xl text-[0.85rem] leading-[1.6] text-muted-text/80">
-          When we chain these rotating vectors tip-to-tail, the final tip traces your exact path. If we drop the highest frequency terms (the smallest, fastest, jittery circles), we get a smoothed approximation of your drawing. This is the exact same math used in audio compression and signal filtering—just visualized on a 2D canvas. It's also the reason <a href="/blog/inside-biquadia" class="text-primary-cta underline underline-offset-2">Biquadia</a>'s spectral view exists: the same frequency-domain decomposition, run on an audio signal instead of a 2D drawing.
-        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="intuition-title" class="border-b border-border">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <div class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <h2 id="intuition-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The intuition — ink as complex numbers</h2>
+            <div class="mt-5 space-y-4 text-[0.95rem] leading-[1.75] text-muted-text">
+              <p>
+                The canvas is the complex plane. Each point you draw is $z = x + i y$. Why complex? Because rotation becomes multiplication. Multiply by $e^&#123;i\theta&#125;$ and you rotate by $\theta$ with no matrix, no bookkeeping. A pure circle at constant speed is just $r e^&#123;i(2\pi f t + \phi)&#125;$ — radius $r$, frequency $f$, starting angle $\phi$.
+              </p>
+              <p>
+                Your drawing is a loop $z(t)$ with $t$ from $0$ to $1$. Fourier's trick: any such loop, no matter how jagged, is a sum of circles spinning at integer rates $k = \dots,-2,-1,0,1,2,\dots$. $k=0$ doesn't spin — it's the centroid, the average position. $k=1$ goes once around during your loop. $k=-1$ goes once the other way. $k=2$ twice as fast, and so on.
+              </p>
+              <p>
+                Magnitude controls size. If coefficient $X_k$ has large $|X_k|$, its circle is big and carries most of the shape. Phase controls orientation — where the circle starts at $t=0$. Add all circles tip-to-tail and the final tip traces $z(t)$ exactly. Remove small circles and you still get the gist but lose fine jitter. That is low-pass filtering.
+              </p>
+              <p>
+                Three details make this playground feel right:
+              </p>
+              <ul class="list-disc pl-5 space-y-2 marker:text-muted-text/60">
+                <li><strong class="text-primary-text">Resampling to 140 points.</strong> Your hand produces uneven spacing — fast strokes leave few samples, slow strokes leave many. The code walks the polyline by arc length and emits $N=140$ uniformly spaced points via $resamplePath$. That erases drawing speed and keeps only geometry. Constant $SAMPLE\_COUNT=140$ keeps the DFT at $O(N^2)$ cheap and the animation crisp.</li>
+                <li><strong class="text-primary-text">Centroid first.</strong> Mean $c_x,c_y$ is subtracted before transform, computed as $c = \frac&#123;1&#125;&#123;N&#125;\sum_&#123;n&#125; z_n$. The animation origin is that $c$. Without this, the $k=0$ term would dominate with a huge radius to the page corner, and everything else would be a tiny detail orbiting far away.</li>
+                <li><strong class="text-primary-text">Sorted by amplitude.</strong> Raw frequency order is $0,1,2,\dots,N/2,-N/2+1,\dots,-1$. Visually more useful: sort by $|X_k|/N$, biggest radius first. Then slider $1 \to 60$ peels away importance rather than arbitrary high frequency. You see structure emerge, not noise.</li>
+              </ul>
+              <p>
+                Animation runs $LOOP\_MS=9000$ ms per cycle — $t$ sweeps $0 \to 1$ every nine seconds, slow enough to see each epicycle turn. The pink trail buffer holds $TRAIL\_MAX = N \times 3 = 420$ points, about three full loops of history, then overwrites. That persistence lets you compare reconstruction vs ideal without infinite ink.
+              </p>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="math-card !bg-card-bg">
+              <p class="math-label">Think like this</p>
+              <p class="mt-3 text-[0.92rem] leading-[1.6] text-primary-text">A circle of radius $r$ spinning at $k$ turns per loop and offset by $\phi$ is $r e^&#123;i(2\pi k t + \phi)&#125;$. Chain 60 of them: first circle's tip becomes second's center. Biggest first. That's all this page does.</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">Radius and phase decoded</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.6] text-primary-text">$r_k = |X_k| / N$ &nbsp; radius<br/>$\phi_k = \arg X_k = \operatorname&#123;atan2&#125;(\operatorname&#123;Im&#125; X_k, \operatorname&#123;Re&#125; X_k)$ &nbsp; start angle<br/>$f_k = k$ &nbsp; turns per loop, negative = clockwise</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">In code each term stores re, im, freq, amp, phase. $amp=\sqrt&#123;re^2+im^2&#125;$ is already divided by $N$, $phase=\operatorname&#123;atan2&#125;(im,re)$.</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">Why uniform resample matters</p>
+              <p class="mt-3 text-[0.84rem] leading-[1.6] text-muted-text">If you kept raw mouse samples, fast strokes would be underweighted. Arc-length parameterization makes $t$ geometric, not temporal. 140 points captures a 5-point star's 10 corners easily, yet keeps DFT at $140^2 \approx 19600$ complex multiply-adds — instant in JS.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="math-title" class="border-b border-border bg-elevated/20">
+      <div class="mx-auto max-w-[72rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.6rem,3.5vw,2.2rem)] font-[700] tracking-[-0.05em] text-primary-text">The math — DFT to epicycles, no black boxes</h2>
+
+        <div class="mt-10 grid gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+          <div class="space-y-8">
+            <div>
+              <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">1. From stroke to signal</h3>
+              <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
+                <p>After resampling you have $N=140$ points $(x_n,y_n)$, $n=0\dots N-1$, closed so $z_N=z_0$. Build $z_n = x_n + i y_n$. Subtract centroid $c_x + i c_y$ to place animation origin at shape center. Call the zero-mean signal $\tilde&#123;z&#125;_n$.</p>
+                <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
+                  $$ \tilde&#123;z&#125;_n = (x_n - c_x) + i (y_n - c_y),\quad c_x = \frac&#123;1&#125;&#123;N&#125;\sum_&#123;n=0&#125;^&#123;N-1&#125; x_n,\; c_y = \frac&#123;1&#125;&#123;N&#125;\sum_&#123;n=0&#125;^&#123;N-1&#125; y_n $$
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">2. Analysis — Discrete Fourier Transform</h3>
+              <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
+                <p>DFT asks: how much of each pure spin $e^&#123;i 2\pi k n / N&#125;$ lives inside $\tilde&#123;z&#125;_n$? Project onto each spin:</p>
+                <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
+                  $$ X_k = \sum_&#123;n=0&#125;^&#123;N-1&#125; \tilde&#123;z&#125;_n\, e^&#123;-i 2\pi k n / N&#125;,\qquad k=0\dots N-1 $$
+                  $$ e^&#123;-i\theta&#125; = \cos\theta - i\sin\theta $$
+                  <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">Code loops exactly this: $re += \tilde&#123;x&#125;_n\cos\phi + \tilde&#123;y&#125;_n\sin\phi$, $im += -\tilde&#123;x&#125;_n\sin\phi + \tilde&#123;y&#125;_n\cos\phi$ with $\phi=2\pi k n / N$, then $re/=N, im/=N$. So stored $re,im$ already include $1/N$.</p>
+                </div>
+                <p>Interpretation: $X_k / N$ is amplitude and phase of the circle that spins $k$ times per loop. In raw DFT ordering, $k \gt N/2$ corresponds to negative frequency $k-N$, i.e., clockwise spins. The code converts: $freq = k \le N/2 \,?\, k : k-N$. That's why you see both positive and negative $freq$ in sorted terms — you need both directions to make non-circular shapes.</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">3. Synthesis — epicycle reconstruction</h3>
+              <div class="mt-3 space-y-4 text-[0.92rem] leading-[1.7] text-muted-text">
+                <p>Rebuild the path at continuous time $t\in[0,1)$ by summing circles:</p>
+                <div class="rounded-[14px] border border-border bg-card-bg p-5 font-mono text-[0.82rem] leading-[1.8] text-primary-text">
+                  $$ p(t) = c + \frac&#123;1&#125;&#123;N&#125;\sum_&#123;k&#125; X_k\, e^&#123;i 2\pi k t&#125; \approx c + \sum_&#123;k\in\text&#123;kept&#125;&#125; r_k e^&#123;i(2\pi f_k t + \phi_k)&#125; $$
+                  $$ r_k = |X_k|/N,\quad \phi_k = \arg X_k $$
+                  <p class="mt-3 font-sans text-[0.8rem] leading-[1.6] text-muted-text">In animation $t = ((now - loopStart) \bmod LOOP\_MS)/LOOP\_MS$, $LOOP\_MS=9000$. Each frame computes $ang_k = 2\pi f_k t + \phi_k$, steps $x_&#123;k+1&#125;=x_k+r_k\cos ang_k$, $y_&#123;k+1&#125;=y_k+r_k\sin ang_k$ tip-to-tail. Trail pushes final $(x,y)$.</p>
+                </div>
+                <p>Use $M$ terms instead of $N$ and you get low-pass filtering. Dropping high $|k|$ removes fast wobble — exactly how JPEG discards high DCT coefficients, how audio codecs shave brilliance, how Biquadia's filter shelves high frequencies. Keeping only biggest $|X_k|$ rather than lowest $|k|$ is even smarter: biggest circles first, perceptually optimal compression.</p>
+                <p>Sharp corners need high $|k|$. Truncate and you see Gibbs phenomenon: ringing overshoot near discontinuities, about $9\%$ overshoot that never vanishes, only compresses in width as you add terms. That's why a star point looks rounded with few terms, then develops a tiny ripple that hugs the tip as you crank to 60.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="math-card !bg-card-bg">
+              <p class="math-label">State that actually travels</p>
+              <p class="mt-2 font-mono text-[0.9rem] text-primary-text">$$ \mathbf&#123;X&#125; = [X_0,\dots,X_&#123;N-1&#125;],\; N=140 $$</p>
+              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">140 complex coefficients, DC removed for origin. Sorted view keeps $M\le 60$ of them. Slider maps $M$ to visual fidelity. No FFT — naive $O(N^2)$ DFT, $19.6k$ ops, faster to write than to import FFT and clearer to read.</p>
+            </div>
+            <div class="math-card !bg-card-bg">
+              <p class="math-label">Frequency mapping</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text">$$ f_k = \begin&#123;cases&#125; k & k\le N/2\\ k-N & k \gt N/2 \end&#123;cases&#125; $$</p>
+              <p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">$f_k \gt 0$ counter-clockwise, $f_k \lt 0$ clockwise. Need both to trace arbitrary loops. A perfect circle needs only $k=1$ (or $-1$). A figure-8 needs $k=\pm1$ balanced.</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">Low-pass as smoothing</p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.7] text-primary-text">$$ p_M(t) = c + \sum_&#123;j=1&#125;^&#123;M&#125; r_j e^&#123;i(2\pi f_j t+\phi_j)&#125; $$</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Energy compaction: usually top 8 circles hold $90\%+$ of power for cartoon shapes. Rest is edges, hand tremor, sampling noise. Slider is literally a bandwidth knob.</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">Why Gibbs rings</p>
+              <p class="mt-2 font-mono text-[0.82rem] leading-[1.7] text-primary-text">$$ \text&#123;step discontinuity&#125; \implies \hat&#123;f&#125;_M \text&#123; overshoots &#125; \approx 1.089\ldots $$</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A sharp corner is high-frequency. Truncate Fourier series and partial sum overshoots by $\approx 9\%$. Add more terms: overshoot moves closer to corner, doesn't vanish. Draw a star and push slider $20\to60$ — watch tips ripple, that's Gibbs live.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="playbook-title" class="border-b border-border">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="playbook-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Playbook — what to draw, what the slider means</h2>
+        <div class="mt-8 grid gap-8 md:grid-cols-[1.15fr_0.85fr]">
+          <div class="space-y-6">
+            <div>
+              <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Start with presets</h3>
+              <div class="mt-3 space-y-3 text-[0.92rem] leading-[1.7] text-muted-text">
+                <p><strong class="text-primary-text">Circle:</strong> one dominant $k=1$ circle, others near zero. Slider $1\to2$ jumps from dot at centroid to perfect circle. Pure tone in audio terms.</p>
+                <p><strong class="text-primary-text">Star:</strong> 5 points = 5-fold symmetry. Spectrum spikes at $k=\pm5,\pm10,\dots$. With 5-8 terms you get lumpy star; $15+$ sharpens points but Gibbs ripples appear at tips. Shows why high $|k|$ equals edge detail.</p>
+                <p><strong class="text-primary-text">Infinity / figure-8:</strong> needs $k=1$ and $k=-1$ with almost equal amplitude — counter and clockwise battles. Two terms give an ellipse, three give a pinched loop. Nice demonstration that you can't make a figure-8 from only CCW circles.</p>
+                <p><strong class="text-primary-text">Heart:</strong> smooth bulge plus sharp cusp at bottom. Low $k$ capture bulge, cusp needs high $k$. Watch bottom point evolve: $M=5$ rounded, $M=20$ pointed, $M=40$ slight ringing either side.</p>
+                <p><strong class="text-primary-text">Spiral:</strong> not closed, but code closes it with a line back to center. That closure edge is a discontinuity, so spectrum spreads wide — needs many terms, low-pass looks like shrinking coil. Good stress test for Gibbs.</p>
+                <p><strong class="text-primary-text">MP monogram:</strong> multiple straight segments + bowl. Fourier hates straight lines and corners — needs many high frequencies. Demonstrates compression limit: text is hard.</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">The terms slider decoded</h3>
+              <div class="mt-3 space-y-3 text-[0.92rem] leading-[1.7] text-muted-text">
+                <p><strong class="text-primary-text">$M=1$</strong> — dot at centroid $c$. You removed all rotation, left only DC. Slightly anticlimactic, proves DC handling works.</p>
+                <p><strong class="text-primary-text">$M=2$ to $3$</strong> — best-fit ellipse(s). Two largest circles make an ellipse, third adds offset bulge. Any smooth loop looks roughly elliptical at this level — same reason first two principal components capture most variance.</p>
+                <p><strong class="text-primary-text">$M=5$ to $10$</strong> — recognizable. Star shows 5 points, heart shows asymmetry, infinity pinches. This band is sweet spot for “aha” — enough structure, not too much clutter.</p>
+                <p><strong class="text-primary-text">$M=15$ to $30$</strong> — details, corners start to bite. You trade cleanliness for fidelity. Good range to see Gibbs begin.</p>
+                <p><strong class="text-primary-text">$M=40$ to $60$</strong> — nearly pixel-perfect, includes hand tremor and resampling artifacts. At $60$ you kept $60/140 \approx 43\%$ of coefficients — close to lossless. Beyond 60 diminishing returns; remaining terms are near noise floor.</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-cta">Draw your own — tips</h3>
+              <ul class="mt-3 list-disc pl-5 space-y-2 text-[0.9rem] leading-[1.7] text-muted-text marker:text-muted-text/60">
+                <li>Draw <em>slowly</em> and close the loop near start — closure gap is linearly interpolated and creates a high-frequency edge.</li>
+                <li>Single non-intersecting loop beats scribble. Self-intersections still work, but spectrum smears — more high $|k|$ needed.</li>
+                <li>If you want clean circles, keep it convex. If you want ringing, draw sharp zig-zag — that's Gibbs you can trigger on demand.</li>
+                <li>Loop time $LOOP\_MS=9000$ is fixed for perception, not tied to draw speed. That decoupling is deliberate — geometry, not timing.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-5">
+              <p class="font-mono text-[0.64rem] uppercase tracking-[0.1em] text-muted-text">Tweaks that matter</p>
+              <div class="mt-4 space-y-4 text-[0.88rem] leading-[1.6] text-muted-text">
+                <div>
+                  <p class="font-semibold text-primary-text">$SAMPLE\_COUNT=140$</p>
+                  <p>Uniform arc-length resample, $O(L)$ walk. 140 balances detail vs $N^2$ cost and visual clutter. Raise it and you get hairline fidelity but slider needs more terms; lower and sharp corners alias.</p>
+                </div>
+                <div>
+                  <p class="font-semibold text-primary-text">$LOOP\_MS=9000$ ms</p>
+                  <p>Full period for $t$ wrap. Chosen so $k=10$ circle completes 10 turns in 9 s — you can still follow it by eye. Faster would blur, slower would drag. Trail $TRAIL\_MAX=420$ = 3 loops covers persistence without unbounded memory.</p>
+                </div>
+                <div>
+                  <p class="font-semibold text-primary-text">Sorting by $amp$ not $|k|$</p>
+                  <p>Low $|k|$ first would give classic low-pass. Sorting by $|X_k|/N$ gives perceptual low-pass — biggest visual contributors first. For star, $k=5$ outranks $k=2$ despite higher frequency, because symmetry demands it.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="math-card">
+              <p class="math-label">Honesty — what is real</p>
+              <p class="mt-3 text-[0.84rem] leading-[1.6] text-muted-text">DFT formula exact, implemented as double loop matching textbook definition, no FFT trickery. Centroid computed as mean then subtracted — origin is true DC. Complex exponentials use $cos$/$sin$ via $Math.hypot$/$atan2$ for phase. Magnitude and phase decode directly to radius and start angle — no hidden scaling. Sorting stable and deterministic.</p>
+            </div>
+
+            <div class="math-card">
+              <p class="math-label">Honesty — what it simplifies</p>
+              <p class="mt-3 text-[0.84rem] leading-[1.6] text-muted-text">Resampling erases time — your fast vs slow strokes become equal length. Closure forced by modulo wrap: last point to first via straight line, even if you left a gap. No windowing, no pre-filter, so sharp closure edge leaks high frequency. Uniform sampling not perceptually weighted. Canvas is float32 raster, not analytic curve — trail anti-aliased by browser. O(N²) DFT doesn't scale to thousands of points, but we never go there. Trail is approximate history, cleared on slider change to avoid mixing reconstructions.</p>
+            </div>
+
+            <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+              <p class="font-semibold text-primary-text">Why this matters for audio DSP</p>
+              <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">Same transform, different domain. <a href="/blog/inside-biquadia" class="text-primary-cta underline underline-offset-2">Biquadia</a>'s spectrogram shows $X_k(t)$ sliding over windows of audio. Here $t$ is not time but position along loop. Sorting by amp is like finding dominant harmonics — fundamental vs overtones. Low-pass by dropping high $|k|$ is identical to low-pass filter in audio: it smooths transients, causes pre-ring near attacks, which is Gibbs in time domain. Once you see it on a star, you'll hear it on a snare.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </PlaygroundShell>

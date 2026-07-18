@@ -176,18 +176,47 @@ a2 = 0.722500</pre>
           <p id="audio-ctx-note" class="mt-3 font-mono text-[0.7rem] text-muted-text/60">AudioContext not started — click Play</p>
         </div>
 
-        <!-- Method & limitations section -->
-        <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
-          <p class="font-semibold text-primary-text">How it works</p>
-          <ul class="mt-2 list-disc pl-5 space-y-1">
-            <li>Each pole/zero pair represents a second-order section (biquad). The conjugate pair ensures real-valued coefficients.</li>
-            <li>Frequency response is computed directly from the transfer function <code>H(z) = (1 - 2r<sub>z</sub>cosθ<sub>z</sub>&middot;z<sup>-1</sup> + r<sub>z</sub><sup>2</sup>&middot;z<sup>-2</sup>) / (1 - 2r<sub>p</sub>cosθ<sub>p</sub>&middot;z<sup>-1</sup> + r<sub>p</sub><sup>2</sup>&middot;z<sup>-2</sup>)</code> evaluated at <code>z = e<sup>jω</sup></code> — this is the exact z-plane geometry, not an approximation.</li>
-            <li>Magnitude in dB: <code>20&middot;log<sub>10</sub>|H(e<sup>jω</sup>)|</code>. Phase: <code>arg(H(e<sup>jω</sup>))</code> in degrees.</li>
-            <li>Poles constrained to |z| &le; 0.995 for stability (poles on or outside the unit circle produce unstable filters).</li>
-            <li>Zeros can be anywhere; zeros on the unit circle produce deep nulls (notch). Zeros at the origin produce a pure resonance (bandpass).</li>
-            <li>Phase wraps at &plusmn;180&deg; (atan2). Group delay is the negative derivative of phase with respect to angular frequency.</li>
-            <li>Audio uses Web Audio <code>IIRFilterNode</code> with the exact coefficients above. <a href="/playground/biquad-filter-designer" class="text-primary-cta underline underline-offset-2">Biquad Filter Designer</a> explores RBJ EQ Cookbook coefficient math in depth.</li>
-          </ul>
+        <!-- Method & limitations section — frontier writeup -->
+        <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-6 sm:p-7 text-[0.88rem] leading-[1.75] text-muted-text">
+          <p class="font-semibold text-primary-text text-[1.08rem] tracking-[-0.02em]">How it works — poles push, zeros pull</p>
+
+          <div class="mt-6 space-y-8">
+            <div>
+              <p class="font-semibold text-primary-text text-[0.92rem]">1. Why the z-plane is the real story</p>
+              <p class="mt-2">Magnitude plots lie by omission. They show what a filter does, not why. The z-plane shows why. Every filter is just places where it blows up (poles) and places where it nulls (zeros). Move a dot, the whole frequency response reshapes because distance from that dot to the unit circle is gain. This playground makes that geometry tactile — drag a pole, hear resonance rise — instead of hiding it behind $f0$ and $Q$ knobs. For the knob view, see <a href="/playground/biquad-filter-designer" class="text-primary-cta underline underline-offset-2">Biquad Filter Designer</a>.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-primary-text text-[0.92rem]">2. Intuition — angles are frequency, radius is damping</p>
+              <p class="mt-2">Imagine the unit circle is a clock that runs $0$ to $Fs/2$. Angle $\theta$ around that circle is frequency: $f = \theta / 2\pi * Fs$. Radius $r$ is how sharp the resonance is. A pole at $r = 0.95$ near $\theta = \pi/4$ boosts around $Fs * 0.125$ Hz. Drag it to $r = 0.99$ and it rings like a cowbell. Drag it outside $|z| = 1$ and the filter explodes — infinite amplitude, unstable.</p>
+              <p class="mt-2">Zeros do the opposite. A zero on the unit circle ($r = 1$) produces a perfect null — no signal gets through at that angle. Put a zero at $r = 0$ (origin) and it disappears from magnitude except as overall gain, leaving only the poles — that is your bandpass. Put pole and zero on top of each other at same angle and radius $r_z = 1/r_p$ and you get allpass: flat magnitude, phase moves. Two conjugate pairs keep coefficients real, so we always keep top and bottom mirrors linked.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-primary-text text-[0.92rem]">3. The math — from geometry to biquad coeffs</p>
+              <p class="mt-2">One conjugate pole pair at $r_p, \theta_p$ and one zero pair at $r_z, \theta_z$ is a biquad:</p>
+              <p class="mt-2">$$H(z) = (1 - 2 r_z \cos\theta_z z^&#123;-1&#125; + r_z^&#123;2&#125; z^&#123;-2&#125;) / (1 - 2 r_p \cos\theta_p z^&#123;-1&#125; + r_p^&#123;2&#125; z^&#123;-2&#125;)$$</p>
+              <p class="mt-2">So $b0 = 1$, $b1 = -2 r_z \cos\theta_z$, $b2 = r_z^&#123;2&#125;$, $a1 = -2 r_p \cos\theta_p$, $a2 = r_p^&#123;2&#125;$, normalized with $a0 = 1$. Up to a gain factor, that is <code>poleZeroToCoeffs</code> in <code>dsp.ts</code>.</p>
+              <p class="mt-2">Frequency response is evaluation on $z = e^&#123;j\omega&#125;$ where $\omega = 2\pi f / Fs$. That is not an approximation — it is the definition:</p>
+              <p class="mt-2">$$H(e^&#123;j\omega&#125;) = (1 + b1 e^&#123;-j\omega&#125; + b2 e^&#123;-j2\omega&#125;) / (1 + a1 e^&#123;-j\omega&#125; + a2 e^&#123;-j2\omega&#125;)$$</p>
+              <p class="mt-2">Geometrically, $|H(e^&#123;j\omega&#125;)|$ equals product of distances from $e^&#123;j\omega&#125;$ to each zero divided by product of distances to each pole. Phase is sum zero angles minus sum pole angles. That is what you see when you drag: closeness to unit circle $=$ depth or peak. Phase wraps at $\pm180$ deg via $\text&#123;atan2&#125;$, so we plot wrapped phase. True group delay is $gd = -d \arg H / d\omega$ — the slope of that phase curve.</p>
+              <p class="mt-2">Stability is simple: $|p| \lt  1$. We clamp poles to $0.995$ max. Zeros can be anywhere, even $|z| = 1.5$, which gives rising high-frequency shelf energy.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-primary-text text-[0.92rem]">4. How to play</p>
+              <p class="mt-2"><span class="font-semibold text-primary-text">Drag first:</span> Grab the cyan pole, drag outward — resonance sharpens, magnitude peak rises from $3$ dB to $30$ dB. Drag angle — peak frequency slides. Grab the orange zero, drag to unit circle at same angle as pole — peak turns into perfect notch, because zero cancels pole distance.</p>
+              <p class="mt-2"><span class="font-semibold text-primary-text">Presets decode:</span> Lowpass: zero at $\theta = \pi$ on circle, pole near $\theta = 0$. Highpass flips it. Bandpass: zero at origin $r_z = 0$. Notch: zero and pole same angle, $r_z = 1.0$, $r_p = 0.85$. Allpass: $r_z = 1 / r_p$ same angle — magnitude flat, phase twists. Peaking: $r_z \lt  r_p$ same angle, moderate $r_p$ — EQ bell without deep null.</p>
+              <p class="mt-2"><span class="font-semibold text-primary-text">Sliders vs drag:</span> Radius slider is $Q$ in disguise — $Q \approx 1 / (2(1 - r_p))$ near the circle. Angle slider maps to $f = \theta / 2\pi * Fs$, shown in Hz readout at current $Fs$. Try $Fs = 48$ kHz, pole $r = 0.93$, $\theta = 0.35$ rad — about $2.6$ kHz. Keep $48$ kHz selected for audio; Web Audio uses that $Fs$ for <code>IIRFilterNode</code>.</p>
+              <p class="mt-2"><span class="font-semibold text-primary-text">Hearing it:</span> White noise exposes magnitude. Sine sweep exposes resonance and nulls as loudness changes. Bypass off lets you hear exactly the $H(z)$ you drew.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-primary-text text-[0.92rem]">5. Honesty check</p>
+              <p class="mt-2">This is a single biquad. Real equalizers cascade $4$–$12$ — see Biquad Designer for that. Conjugate enforcement keeps coefficients real; we do not support single real pole/zero on real axis as independent drag — that would need $r_z^&#123;2&#125;$ logic plus order $1$ branch. Phase wrapping causes visual jumps at $\pm180$ deg; unwrapped phase would show continuous $\arg H$ but is harder to read. Group delay we do not plot yet, but it is the derivative you are seeing implicitly as phase slope.</p>
+              <p class="mt-2">Stability clamp $r_p \le 0.995$ saves your speakers and Web Audio — real poles on or outside unit circle are mathematically valid but unstable and will blow up to $NaN$ quickly in $32$-bit float IIR. Web Audio <code>IIRFilterNode</code> may also coerce near-unstable coefficients to identity silently — if magnitude suddenly flattens at $r_p \gt  0.99$, browser is protecting you. Sample rate matters: same $\theta$ at $44.1$ kHz vs $96$ kHz is different Hz — we recompute $\omega = 2\pi f / Fs$ on $Fs$ change, but audio context only updates on restart. Quantization: coefficients computed in $64$-bit double here, executed in $32$-bit float in audio thread — narrow notches at high $Fs$ lose depth first.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>

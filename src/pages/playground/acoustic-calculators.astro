@@ -361,38 +361,134 @@ const breadcrumb = {
 
         </div>
 
-        <!-- Method & limitations -->
+        <!-- Method & limitations — frontier -->
         <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 sm:p-6 text-[0.86rem] leading-[1.65] text-muted-text">
-          <p class="font-semibold text-text">Method &amp; limitations</p>
-          <div class="mt-3 space-y-3">
+          <p class="font-mono text-[0.64rem] uppercase tracking-[0.12em] text-cta">Essence</p>
+          <p class="mt-2 font-semibold text-[1.02rem] leading-[1.45] text-text tracking-[-0.02em]">Every knob here is physics you can point at. Temperature sets how fast molecules shove each other, that sets wavelength, that sets whether your room is a closet or a cave at 40 Hz.</p>
+          <div class="mt-3 max-w-3xl space-y-3 text-[0.88rem] leading-[1.7]">
+            <p>Sound isn't mysterious. It's air acting like a spring. Cold air is sluggish, hot air is snappy, a speaker cone moves and the shove travels at $c$. If you know $c$, you know the size of a wave, how long it takes to cross a stage, whether two speakers add or fight, and how long a room holds onto a clap. These calculators share one $c(T)$ baseline because in real life they do — same air, same day.</p>
+          </div>
+
+          <p class="mt-8 font-semibold text-text">Method &amp; limitations</p>
+          <div class="mt-4 space-y-7">
+
             <div>
-              <p class="font-semibold text-[0.78rem] text-text">Speed of sound</p>
-              <p>Computed via ISO&nbsp;9613-1: <code>c = 331.3 &middot; &radic;(1 + T/273.15)</code>, where T is temperature in Celsius. This assumes dry air at standard pressure (101.325 kPa). Humidity adds up to ~0.4% at 100% RH / 40 °C, which is negligible for most audio work. The wavelength, delay, and Helmholtz calculators all pull c from the temperature input in the Speed of Sound card.</p>
+              <p class="font-semibold text-[0.78rem] text-text">Speed of sound — why hot rooms are faster</p>
+              <div class="mt-2 space-y-3">
+                <p>From kinetic theory: $$ c = \sqrt&#123;\gamma R T_k / M&#125; $$ where $\gamma=1.4$, $R$ is gas constant, $M$ molar mass, $T_k = T+273.15$ K. For dry air at 1 atm this collapses to ISO 9613-1:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ c(T) = 331.3 \sqrt&#123;1 + \frac&#123;T&#125;&#123;273.15&#125;&#125; $$</p>
+                <p>At 20 C that's 343.2 m/s. Picture O2 and N2 darting faster when warm — a pressure pulse gets handed off quicker. Humidity makes $M$ lighter so $c$ rises less than 0.5% even at 100% RH / 40 C, negligible for audio alignment. Pressure itself cancels: denser but also stiffer. This $c$ feeds wavelength, delay, and Helmholtz cards. If you leave temperature at 20 C while your venue is 30 C, your delay is about 1.7% short — 5 mm per meter, audible as comb in line-array rigs.</p>
+              </div>
             </div>
+
             <div>
-              <p class="font-semibold text-[0.78rem] text-text">RT60 — Sabine vs. Eyring</p>
-              <p>The Sabine equation (<code>T60 = 0.161·V / A</code>) treats the room as a diffuse, well-mixed field and assumes continuous absorption. It is accurate for &alpha; &lt; 0.2 (live rooms). Eyring (<code>T60 = 0.161·V / (&minus;S·ln(1&minus;&alpha;))</code>) corrects for higher absorption by modelling the sound as a discrete decay series. Eyring converges to Sabine at low &alpha; but gives shorter times at high &alpha;. Neither equation accounts for air absorption at high frequencies (significant above 2 kHz in large rooms), non-rectangular geometries, or frequency-dependent &alpha;. The critical distance uses <code>d<sub>c</sub> = &radic;(Q·R / 16&pi;)</code> with room constant <code>R = S·&alpha;/(1&minus;&alpha;)</code>. The Schroeder frequency (<code>f<sub>s</sub> = 2000&middot;&radic;(T60/V)</code>) marks the transition from modal to diffuse field behaviour.</p>
+              <p class="font-semibold text-[0.78rem] text-text">Wavelength ↔ Frequency ↔ Period</p>
+              <div class="mt-2 space-y-3">
+                <p>The wave repeats every $\lambda$, so it must satisfy $$ c = f \lambda, \quad \lambda = \frac&#123;c&#125;&#123;f&#125;, \quad T_&#123;per&#125; = \frac&#123;1&#125;&#123;f&#125; $$</p>
+                <p>That's it. No hidden constant. A 440 Hz A is about 0.78 m — about a guitar body. 20 Hz is 17 m, bigger than most rooms, which is why bass pressurizes instead of propagates. 20 kHz is 17 mm, smaller than a tweeter dome, which is why it beams. If speaker spacing is greater than $\lambda/2$, you get spatial aliasing; if a port is less than $\lambda/10$, lumped models still work. Keep that mental ruler handy.</p>
+              </div>
             </div>
+
             <div>
-              <p class="font-semibold text-[0.78rem] text-text">SPL Summation</p>
-              <p>Assumes <strong>incoherent</strong> sources (random phase). For coherent sources (identical signals in phase), add 6 dB per doubling instead. This calculator uses the incoherent rule: sum the linear pressures, then convert back to dB. For N identical sources: <code>SPL_total = SPL_single + 10·log10(N)</code>.</p>
+              <p class="font-semibold text-[0.78rem] text-text">Delay ↔ Distance</p>
+              <div class="mt-2 space-y-3">
+                <p>Time of flight is trivial but central:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ d = c t, \quad t = \frac&#123;d&#125;&#123;c&#125;, \quad N_&#123;samp&#125; = t f_s $$</p>
+                <p>1 ms is 34.3 cm at 20 C. Haas says less than 30 ms arrivals fuse; greater than 50 ms they echo. For alignment, match subs and mains within 0.5 ms at crossover — about 17 cm. The calculator also gives samples at 48 kHz because your DSP delay line lives in samples, not meters. Temperature matters again: a summer outdoor stage needs 2% less electrical delay than winter.</p>
+              </div>
             </div>
+
             <div>
-              <p class="font-semibold text-[0.78rem] text-text">dB / Ratio</p>
-              <p>Voltage or sound-pressure ratios use the 20·log10 convention (doubling = +6 dB). Power or intensity ratios use 10·log10 (doubling = +3 dB). Toggle between the two conventions; the calculator updates bidirectionally.</p>
+              <p class="font-semibold text-[0.78rem] text-text">SPL Summation — incoherent power, not pressure</p>
+              <div class="mt-2 space-y-3">
+                <p>Sound level meters read pressure squared averaged over time. Intensities add for uncorrelated sources (two drummers, two HVAC units). So convert each dB back to power, sum, convert back:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ L_&#123;\Sigma&#125; = 10 \log_&#123;10&#125; \left( \sum_&#123;i=1&#125;^&#123;N&#125; 10^&#123;L_i/10&#125; \right) $$</p>
+                <p>Equal sources: $$ L_&#123;tot&#125; = L_&#123;single&#125; + 10\log_&#123;10&#125; N $$. Two 80 dB incoherent = 83.0 dB. Ten = 90 dB. If perfectly coherent and in-phase (same signal, same wire), pressures add linearly:</p>
+                <p class="font-mono text-[0.78rem] text-text">$$ L_&#123;coh&#125; = 20 \log_&#123;10&#125; \left( \sum_i 10^&#123;L_i/20&#125; \right) = L_&#123;single&#125; + 20\log_&#123;10&#125; N $$</p>
+                <p>That gives +6 dB per doubling. Reality lives between — correlated low-frequency room modes give almost +6, diffuse mid frequencies +3. Don't blindly add decibels.</p>
+              </div>
             </div>
+
             <div>
-              <p class="font-semibold text-[0.78rem] text-text">Helmholtz &amp; Port Length</p>
-              <p>The Helmholtz formula with flanged end-correction (<code>L_eff = L + 0.85&middot;r</code>): <code>f = (c/2&pi;)·&radic;(S/(V·L_eff))</code>. The port length formula inverts this for a given tuning frequency. Both assume a single circular port, rigid walls, and an enclosure dimension much smaller than the wavelength of interest — the standard lumped-element model. Real-world results are affected by port flares, internal damping material, and driver compliance, so treat these as starting estimates for box design.</p>
+              <p class="font-semibold text-[0.78rem] text-text">dB ↔ Ratio — why 20 vs 10</p>
+              <div class="mt-2 space-y-3">
+                <p>Decibel is always 10 log of a power ratio. Power scales as amplitude squared. So for field quantities (pressure $p$, voltage $V$, velocity):</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ L_p = 20 \log_&#123;10&#125; \left| \frac&#123;p&#125;&#123;p_0&#125; \right|, \qquad L_W = 10 \log_&#123;10&#125; \frac&#123;W&#125;&#123;W_0&#125; $$</p>
+                <p>Inversions: $$ \frac&#123;p&#125;&#123;p_0&#125; = 10^&#123;L/20&#125;, \quad \frac&#123;W&#125;&#123;W_0&#125; = 10^&#123;L/10&#125; $$ Doubling power = 10 log10 2 = +3.01 dB. Doubling pressure = 20 log10 2 = +6.02 dB. Same physical change, different bookkeeping because power goes as $p^2$. Voltage gain in audio follows 20 log; amplifier power follows 10 log. Toggle matters — 6 dB vs 3 dB mistakes blow drivers.</p>
+              </div>
             </div>
+
             <div>
-              <p class="font-semibold text-[0.78rem] text-text">Doppler Shift</p>
-              <p>Calculates the shifted frequency <code>f' = f · (c + v_o) / (c - v_s)</code>. Velocities are signed: positive values indicate motion <em>towards</em> the other party. Negative values indicate motion <em>away</em>.</p>
+              <p class="font-semibold text-[0.78rem] text-text">RT60 — Sabine vs Eyring, the honest story</p>
+              <div class="mt-2 space-y-3">
+                <p>Sabine (1898) imagined energy sloshing uniformly, losing a tiny fraction $A/S$ per bounce. Mean free path $4V/S$, reflections per second $cS/4V$, exponential decay $E(t)=E_&#123;0&#125; e^&#123;-cAt/4V&#125;$. Set $10\log_&#123;10&#125;(E/E_&#123;0&#125;)=-60$ dB:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ T_&#123;60&#125;^&#123;Sab&#125; = 0.161 \frac&#123;V&#125;&#123;A&#125;, \quad A = \sum S_i \alpha_i = \bar&#123;\alpha&#125; S $$</p>
+                <p>0.161 = $55.26/c$ ~ $24\ln10 /c$ — it's just unit conversion for 60 dB and $c\approx343$. Works for $\bar&#123;\alpha&#125; \lt 0.2$ live rooms.</p>
+                <p>Eyring (1930) fixes high absorption by not approximating $\ln(1-\alpha)\approx -\alpha$. Treat energy as geometric series: after $n$ reflections $E_n = E_0 (1-\bar&#123;\alpha&#125;)^n$. Solve for 60 dB drop:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ T_&#123;60&#125;^&#123;Eyr&#125; = 0.161 \frac&#123;V&#125;&#123;-S \ln(1-\bar&#123;\alpha&#125;)&#125; $$</p>
+                <p>When $\bar&#123;\alpha&#125;\ll1$, $- \ln(1-\bar&#123;\alpha&#125;)\approx\bar&#123;\alpha&#125;$ and Eyring tends to Sabine. When $\bar&#123;\alpha&#125;=0.6$, Eyring can be 2x shorter — and more realistic. Both ignore air absorption (about 0.01 dB/m at 2 kHz, grows as $f^2$), frequency-dependent $\alpha$, and non-diffuse geometry. That's why real rooms measured with swept sine differ by plus or minus 20%.</p>
+                <p>Two derived tools: room constant and critical distance. $$ R = \frac&#123;S \bar&#123;\alpha&#125;&#125;&#123;1-\bar&#123;\alpha&#125;&#125;, \quad d_c = \sqrt&#123;\frac&#123;Q R&#125;&#123;16\pi&#125;&#125; $$ $d_c$ is where direct $\propto1/r^2$ equals reverberant field — beyond it you hear room, not speaker. $Q$ is source directivity. Schroeder's crossover:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ f_s = 2000 \sqrt&#123;\frac&#123;T_&#123;60&#125;&#125;&#123;V&#125;&#125; $$</p>
+                <p>Below $f_s$ you hear individual eigenmodes as booms; above, a smooth decay. Constant 2000 assumes about 10 modes overlap within a half-power bandwidth — rules of thumb vary 1500 to 4000, we pick 2000. Use it to know when to fix geometry vs add absorption.</p>
+              </div>
             </div>
+
             <div>
-              <p class="font-semibold text-[0.78rem] text-text">Mass Law &amp; NR Curves</p>
-              <p>The Mass Law provides a theoretical estimate for Transmission Loss (TL) of a single homogeneous panel in a random incidence sound field: <code>TL = 20·log10(m·f) - 47.2 dB</code>. Real panels will deviate due to stiffness and coincidence dip effects. NR Curves use the standard ISO formulas <code>L_n = a_n + b_n · NR</code> to yield maximum allowed SPL limits for each octave band.</p>
+              <p class="font-semibold text-[0.78rem] text-text">Helmholtz &amp; Port Length — the bottle as spring-mass</p>
+              <div class="mt-2 space-y-3">
+                <p>Blow across a bottle: air plug in neck is mass $m_&#123;air&#125;=\rho S L_&#123;eff&#125;$, cavity volume is spring with compliance $V/\rho c^&#123;2&#125;$. Resonance of that mass-spring:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ f_H = \frac&#123;c&#125;&#123;2\pi&#125; \sqrt&#123;\frac&#123;S&#125;&#123;V L_&#123;eff&#125;&#125;&#125; $$</p>
+                <p>End correction because moving air extends past physical ends. For one flanged end (box wall) + one free end: $$ L_&#123;eff&#125; = L + 0.85 r $$ with $r=\sqrt&#123;S/\pi&#125;$. Both ends flanged gives $L+1.7r$; both free gives $L+1.2r$. The $0.85r$ is Rayleigh's radiation reactance — extra air dragged along.</p>
+                <p>Inversion for box tuning: $$ L_&#123;eff&#125; = \frac&#123;S c^2&#125;&#123;4\pi^2 f_b^2 V&#125;, \quad L = L_&#123;eff&#125; -0.85r $$ That's the port length card. Assumptions: $L\ll\lambda$, $V^&#123;1/3&#125;\ll\lambda$ (lumped), circular unflared port, rigid lossless walls, no fill. Real ports with flare act longer at high SPL (end correction changes with velocity), damping material lowers effective $V$ by 10-20%, and driver Vas adds compliance. Start here, then measure and trim by 15%.</p>
+              </div>
             </div>
+
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">Doppler Shift — wavefronts chasing their source</p>
+              <div class="mt-2 space-y-3">
+                <p>If source moves toward observer, each crest is emitted from a closer point — wavelengths compress. Observer moving toward meets crests faster. For $v_s$ source toward observer, $v_o$ observer toward source (positive toward each other):</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ f' = f \frac&#123;c + v_o&#125;&#123;c - v_s&#125; $$</p>
+                <p>If $v_s\to c$, denominator goes to 0 and $f'\to\infty$ — boom, shock forms. Negative $v_s$ means receding, drops pitch. At audio speeds (10 m/s car is 3% of $c$) shift is about 0.3 semitones per 10 m/s — subtle but Doppler for rotating Leslie horn at 5 m/s rim speed is why it choruses. Keep $c$ from temperature to avoid phantom cents.</p>
+              </div>
+            </div>
+
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">Mass Law &amp; NR Curves — transmission and comfort</p>
+              <div class="mt-2 space-y-3">
+                <p>A limp wall's inertia resists being driven by sound. Random-incidence transmission loss for single leaf:</p>
+                <p class="rounded-[10px] border border-border/50 bg-canvas/60 px-3 py-2 font-mono text-[0.78rem] text-text">$$ TL \approx 20\log_&#123;10&#125;(m f) - 47.2 $$ dB</p>
+                <p>$m$ surface mass kg/m2, $f$ Hz. 6 dB per octave, 6 dB per doubling mass — mass times frequency law. Real panels dip at coincidence $f_&#123;c&#125; = c^&#123;2&#125;/2\pi \sqrt&#123;m/B&#125;$ where bending wave matches trace wavelength; above that stiffness helps again. Double-leaf adds mass-spring-mass resonance. Use Mass Law as upper bound for limp, heavy, damped walls.</p>
+                <p>NR (Noise Rating) ISO 1996: linear curves $L_n = a_n + b_n NR$ where $n$ indexes octave band 31.5 Hz to 8 kHz, $a_n,b_n$ tabulated constants. Your measured octave SPL must sit below the curve to claim that NR. NR 25 is concert hall, 35 bedroom, 45 open office. It's a single-number mask for annoyance and speech interference, not a physical law.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="mt-10 rounded-[12px] border border-border bg-canvas/60 p-4">
+            <p class="font-mono text-[0.64rem] uppercase tracking-[0.12em] text-muted-text">Playbook — how to actually use this</p>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2 text-[0.82rem] leading-[1.6]">
+              <div>
+                <p class="font-semibold text-text">Speaker alignment in 60 s</p>
+                <p>Measure air temp, set top card. Enter physical distance between subs and tops in delay card — read ms and 48k samples. Flip: enter your DSP's ms to see distance. Keep within 0.5 ms at crossover.</p>
+              </div>
+              <div>
+                <p class="font-semibold text-text">Room quick-check</p>
+                <p>Put your room L,W,H and average $\alpha$ 0.15 furnished. Note Schroeder $f_s$. Below $f_s$, use mode analyzer; above, use absorption. If critical distance $d_c$ is less than listening distance, you hear more room than direct — move closer or add absorption.</p>
+              </div>
+              <div>
+                <p class="font-semibold text-text">Box tuning without guessing</p>
+                <p>Want 38 Hz from 30 L with 5 cm dia port: enter in Helmholtz or port-length card. Get $L\approx 26$ cm effective. Cut 5% long, measure impedance peak, trim. If chuffing, increase area $S$ and recalc — $L$ scales as $S$ for same $f_b$.</p>
+              </div>
+              <div>
+                <p class="font-semibold text-text">Noise target</p>
+                <p>Pick NR 35 for a studio aircon limit, read grid for allowed SPL per octave. If 500 Hz band breaks the curve, that's HVAC midband whine — treat it first. If low bands break, it's rumble — mass law tells you how much wall mass you need.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 text-[0.74rem] leading-[1.55]">
+            <p class="font-semibold text-[0.72rem] text-text uppercase tracking-[0.06em]">What this is not</p>
+            <p class="mt-1">No air absorption in RT60, no frequency-dependent $\alpha(f)$, no non-rectangular rooms, no modal coupling, no port nonlinearity or driver compliance shift, no coincidence or double-leaf TL, no humidity correction for $c$ unless you want it. These are design-estimate instruments — verified against Sabine, Eyring, and lumped Helmholtz, but validated against measurement in your air, your box, your walls.</p>
           </div>
         </div>
 

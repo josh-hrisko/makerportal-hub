@@ -178,26 +178,70 @@ const breadcrumbSchema = {
       </div>
     </section>
 
-    <!-- Method & Limitations -->
+    <!-- Method & Limitations — frontier rewrite -->
     <section aria-labelledby="method-title">
       <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
-        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">How a cone stops being a piston</h2>
+        <p class="mt-3 max-w-3xl text-[0.95rem] leading-[1.7] text-muted-text">At low frequency your cone is a perfect piston. At high frequency it forgets. Bending waves race across it, hit the edge, reflect, and stand still. That is breakup — and once it starts, on-axis response turns into interference art.</p>
+
+        <div class="mt-8 grid gap-5 md:grid-cols-2">
           <div class="math-card">
-            <p class="math-label">What this is</p>
-            <p class="mt-2 text-[0.78rem] leading-[1.55]">An illustrative modal-shape explorer — not a finite-element analysis. The cone is modeled as a simplified circular plate/membrane with trigonometric approximations of Bessel-like mode shapes. The frequency response is synthetic and qualitative.</p>
+            <p class="math-label">1 — The piston illusion</p>
+            <p class="mt-2 text-[0.86rem] leading-[1.65] text-muted-text">
+              Below the first modal frequency every point on the cone moves in lockstep. The air load sees one area, one velocity, one phase. Push the button — the whole disk goes. This holds while wavelength in the cone material is long compared to radius and while bending stiffness keeps the shape rigid.
+              Once the cone can fit a half bending wavelength across its radius, different rings start moving opposite to each other. Cancellation on-axis, lobes off-axis. Your flat piston response is gone, replaced by modal peaks and dips that shift with every material choice.
+            </p>
           </div>
           <div class="math-card">
-            <p class="math-label">What it is not</p>
-            <p class="mt-2 text-[0.78rem] leading-[1.55]">This does not account for cone profile (curvilinear vs straight), surround compliance, voice-coil mass, dust cap, material anisotropy, non-uniform thickness, coupled bending/membrane waves, or directivity effects. It is an on-axis approximation for conceptual understanding.</p>
+            <p class="math-label">2 — Bending waves, not sound waves</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.65] text-muted-text">
+              Sound in air travels at constant speed. Bending waves in a plate don't — they are dispersive. Their speed grows with frequency. That matters because it sets when breakup hits.
+            </p>
+            <p class="mt-3 font-mono text-[0.78rem] leading-[1.55]">
+              Bending stiffness for a thin isotropic plate: $$ B = \frac&#123;E t^3&#125;&#123;12(1-\nu^2)&#125; $$ where $E$ is Young's modulus, $t$ thickness, $\nu$ Poisson's ratio.
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              Bending wave speed: $$ c_b = \left(\frac&#123;B&#125;&#123;\rho h&#125;\right)^&#123;1/4&#125;\sqrt&#123;\omega&#125; $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              Stiffer ($E$ up) raises $c_b$, pushes nodal circles outward. Heavier ($\rho h$ up) lowers it. Ratio $B^2$ controls everything — which is why carbon fiber at $E=120$ GPa shreds the same diameter at 4× higher frequency than polypropylene. The explorer collapses this into a single material scale $\sqrt&#123;E/\rho&#125;/D$ for speed.
+            </p>
           </div>
           <div class="math-card">
-            <p class="math-label">Material properties</p>
-            <p class="mt-2 text-[0.78rem] leading-[1.55]">Young's modulus and density values are approximate literature values (e.g., Titanium E=110 GPa, &rho;=4500 kg/m³) — actual properties vary significantly with manufacturing process, fillers, weave patterns (for composites), and temperature. The breakup scale &radic;(E/&rho;) captures the dominant material factor but omits damping.</p>
+            <p class="math-label">3 — Modal breakup: Bessel, not magic</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
+              A clamped circular plate does not ring like a guitar string. Its mode shapes are Bessel functions in radius, cosine in azimuth:
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ w_&#123;mn&#125;(r,\theta) \propto J_m(\alpha_&#123;mn&#125; r/R)\cos(m\theta) $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              $m=0$ modes are pure radial: one central dome, then a nodal circle appears at first root of $J_0$ ($3.83$), then two circles at $7.01$, etc. Those are Modes 2 and 3 in the selector. $m=1,2$ modes add diametral nodal lines — Mode 4 splits left-right, Mode 5 mixes both with clover-leaf patterns.
+              Breakup frequency for the $(m,n)$ mode roughly follows:
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ f_&#123;mn&#125; \propto \frac&#123;t&#125;&#123;R^2&#125;\sqrt&#123;\frac&#123;E&#125;&#123;\rho(1-\nu^2)&#125;&#125; \cdot \alpha_&#123;mn&#125;^2 $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              Shrink diameter $D=2R$ — $f$ climbs as $1/D^2$ for constant thickness, closer to $1/D$ here because we treat effective $t/R$ as thin. In the UI: double diameter, watch $f_b$ halve. Switch paper → Aluminum → $f_b$ jumps 2.5×.
+            </p>
           </div>
           <div class="math-card">
-            <p class="math-label">Use this for</p>
-            <p class="mt-2 text-[0.78rem] leading-[1.55]">Understanding the qualitative transition from piston to breakup behavior. Exploring how diameter and material stiffness shift the breakup frequency. Visualizing mode shapes that appear in real cones. For design decisions, use measurements or proper FEA/BEA analysis.</p>
+            <p class="math-label">4 — Playbook: reading the explorer</p>
+            <ul class="mt-2 space-y-2 text-[0.78rem] leading-[1.55] text-muted-text" style="list-style: disc; padding-left: 1.1rem;">
+              <li><strong class="text-primary-text">Auto mode:</strong> The solver picks the dominant mode from $f/f_b$. Below $0.6 f_b$ = piston. $0.6–1.05$ = breakup onset (Mode 1 swelling). Beyond that, modal mix grows. The frequency response plot is synthetic but honest in shape: flat piston, a lift before breakup (edge anti-phase narrows directivity, on-axis rises), then jagged modal region.</li>
+              <li><strong class="text-primary-text">Phase coherence meter:</strong> Estimate of $\left|\sum e^&#123;j\phi_i&#125;\right|/N$. 100% = all points in-phase. Drops past $f_b$ as opposing rings cancel. Once coherence drops below 40%, equalization cannot fix it — you need a stiffer cone or a smaller radiating area.</li>
+              <li><strong class="text-primary-text">Material trick:</strong> Not just modulus. Real loss factor $\eta$ damps nodal peaks. Paper — low $E$ but high damping = gentle breakup. Aluminum — high $E$ but very low damping = vicious 8–12 dB ringing. That is why this explorer colors displacement but skips damping visualization.</li>
+              <li><strong class="text-primary-text">Design rule:</strong> Keep intended crossover / passband below $0.7 f_&#123;breakup&#125;$. If you must cross in breakup, measure off-axis and add notch filters, or switch to composite sandwich that pushes $f_b$ up while adding constrained-layer damping.</li>
+            </ul>
+          </div>
+          <div class="math-card">
+            <p class="math-label">5 — Honesty: what this is not</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              Not FEA. No cone curvature (curvilinear profiles stiffen radial modes), no surround or spider edge termination, no voice-coil mass, no dust cap, no anisotropy (woven carbon bias stiffness differs $2×$ across axes), no geometric non-uniformity, no coupled membrane-bending waves, no acoustic loading.
+              Thickness $t$ is collapsed into material scale. Real cones taper. The Bessel approximation assumes uniform clamp — real edge is compliant.
+              Use this to build intuition for $f_&#123;breakup&#125; \propto \sqrt&#123;E/\rho&#125;/D$ and to recognize mode shapes in Klippel scans or laser vibrometry. For decisions, measure or run proper shell FEA + BEM.
+            </p>
           </div>
         </div>
       </div>

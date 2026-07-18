@@ -77,23 +77,23 @@ Full studio catalog available at [makerportal.ai/apps](https://www.makerportal.a
 Browser-native mathematical and physical simulations: [makerportal.ai/playground](https://www.makerportal.ai/playground).
 
 - [Quaternion ↔ Euler Converter](https://www.makerportal.ai/playground/quaternion-euler-converter): The exact head-orientation math running inside MotionLink (Grounded in shipped app) ↳ Related to MotionLink
-- [Draw → Fourier Epicycles](https://www.makerportal.ai/playground/fourier-epicycles): Any shape, decomposed into spinning circles (Exploratory toy)
-- [Live Earth](https://www.makerportal.ai/playground/globe): Real coastlines, real weather, real ISS orbit (Exploratory toy)
-- [Audio & Acoustics Toolbox](https://www.makerportal.ai/playground/multiphysics-dsp-lab): Seven serious engineering tools for audio, acoustics, DSP, and loudspeaker design (Exploratory toy)
-- [Double Pendulum + Phase Space](https://www.makerportal.ai/playground/double-pendulum): Chaotic motion, painted as pure geometry (Exploratory toy)
+- [Draw → Fourier Epicycles](https://www.makerportal.ai/playground/fourier-epicycles): Any shape, decomposed into spinning circles (Independent research instrument)
+- [Live Earth](https://www.makerportal.ai/playground/globe): Real coastlines, real weather, real ISS orbit (Independent research instrument)
+- [Audio & Acoustics Toolbox](https://www.makerportal.ai/playground/multiphysics-dsp-lab): Seven serious engineering tools for audio, acoustics, DSP, and loudspeaker design (Independent research instrument)
+- [Double Pendulum + Phase Space](https://www.makerportal.ai/playground/double-pendulum): Chaotic motion, painted as pure geometry (Independent research instrument)
 - [Biquad Filter Designer](https://www.makerportal.ai/playground/biquad-filter-designer): Hear a cascade, not just see a curve (Grounded in shipped app) ↳ Related to Biquadia
 - [Head-Tracked Stereo Pan](https://www.makerportal.ai/playground/head-tracked-stereo-pan): Rotate a virtual head, hear the pan move (Grounded in shipped app) ↳ Related to MotionLink
 - [CoreML Model Size & Quantization Calculator](https://www.makerportal.ai/playground/coreml-model-size-calculator): Exact on-device footprint math, no throughput guesswork (Grounded in shipped app) ↳ Related to Notiary
 - [BLE GATT / CSV Frame Visualizer](https://www.makerportal.ai/playground/ble-gatt-visualizer): How raw serial bytes become a CSV row (Grounded in shipped app) ↳ Related to BLExAR
 - [Agentic DSP Pipeline Step-Through](https://www.makerportal.ai/playground/agentic-dsp-pipeline): Record → retrieve → generate → verify → iterate (Grounded in shipped app) ↳ Related to AuraLinter
-- [Chladni Cymatics](https://www.makerportal.ai/playground/chladni-cymatics): Sound made visible — standing wave sand patterns (Exploratory toy)
-- [N-Body Orbital Choreography](https://www.makerportal.ai/playground/n-body-choreography): Gravity, three bodies, and a stable dance (Exploratory toy)
-- [Conformal Mapping Explorer](https://www.makerportal.ai/playground/conformal-mapping): Watch a grid warp under a complex function (Exploratory toy)
-- [Lattice Boltzmann Wind Tunnel](https://www.makerportal.ai/playground/lattice-boltzmann-tunnel): A Von Kármán vortex street, computed live (Exploratory toy)
-- [Ray-Matrix Optics Bench](https://www.makerportal.ai/playground/optics-bench): Paraxial rays through lenses, mirrors, and cavities (Exploratory toy)
-- [Quantum Tunneling Simulator](https://www.makerportal.ai/playground/quantum-tunneling): Watch a wave packet leak through a wall (Exploratory toy)
-- [Magnetic Field Line Tracer](https://www.makerportal.ai/playground/magnetic-field-tracer): Biot–Savart field lines, marched by RK4 (Exploratory toy)
-- [Relativistic Starship Journey](https://www.makerportal.ai/playground/relativistic-spaceflight): 1g to the stars, drawn on a Minkowski diagram (Exploratory toy)
+- [Chladni Cymatics](https://www.makerportal.ai/playground/chladni-cymatics): Sound made visible — standing wave sand patterns (Independent research instrument)
+- [N-Body Orbital Choreography](https://www.makerportal.ai/playground/n-body-choreography): Gravity, three bodies, and a stable dance (Independent research instrument)
+- [Conformal Mapping Explorer](https://www.makerportal.ai/playground/conformal-mapping): Watch a grid warp under a complex function (Independent research instrument)
+- [Lattice Boltzmann Wind Tunnel](https://www.makerportal.ai/playground/lattice-boltzmann-tunnel): A Von Kármán vortex street, computed live (Independent research instrument)
+- [Ray-Matrix Optics Bench](https://www.makerportal.ai/playground/optics-bench): Paraxial rays through lenses, mirrors, and cavities (Independent research instrument)
+- [Quantum Tunneling Simulator](https://www.makerportal.ai/playground/quantum-tunneling): Watch a wave packet leak through a wall (Independent research instrument)
+- [Magnetic Field Line Tracer](https://www.makerportal.ai/playground/magnetic-field-tracer): Biot–Savart field lines, marched by RK4 (Independent research instrument)
+- [Relativistic Starship Journey](https://www.makerportal.ai/playground/relativistic-spaceflight): 1g to the stars, drawn on a Minkowski diagram (Independent research instrument)
 
 ## Trending Signals
 

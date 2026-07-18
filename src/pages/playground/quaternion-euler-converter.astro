@@ -297,13 +297,32 @@ const faqSchema = {
           </div>
           <div class="lg:order-1">
             <h3 class="text-[1.15rem] font-[650] text-primary-text">Why Euler angles break: gimbal lock</h3>
-            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">Euler angles rotate sequentially: first yaw around Z, then pitch around the new Y, then roll around the new X. When pitch hits ±90°, the yaw and roll axes align. You lose a degree of freedom because yaw and roll now rotate around the same physical axis, making it impossible to separate them.</p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              Picture three nested rings. Outer ring yaws around world $Z$, middle ring pitches around new $Y$, inner ring rolls around new $X$. With small pitch, those axes are distinct — you have three independent knobs. Now pitch the middle ring to $90^\circ$. Outer yaw axis folds flat onto inner roll axis. You still have three rings, but only two distinct directions. Twist yaw, you turn roll. Twist roll, you turn yaw. One degree of freedom is gone.
+            </p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              Algebra says same thing. $R = R_z(\text&#123;yaw&#125;) R_y(\text&#123;pitch&#125;) R_x(\text&#123;roll&#125;)$. At $pitch=90^\circ$,
+              $R_y(90^\circ)=\begin&#123;bmatrix&#125;0 & 0 & 1\\0 & 1 & 0\\-1 & 0 & 0\end&#123;bmatrix&#125;$, and product collapses to $R = R_z(yaw - roll) R_y(90^\circ)$. Yaw minus roll is what matters; their individual values are not even observable. Jacobian $\partial R / \partial(yaw,pitch,roll)$ drops rank $3\to2$. Inverse mapping yaw/pitch/roll from a rotation matrix becomes ill-conditioned: tiny noise slams you from $(30^\circ,90^\circ,0^\circ)$ to $(130^\circ,90^\circ,100^\circ)$.
+            </p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              It is not a bug in code. You cannot cover $SO(3)$ — the space of all rotations — with three numbers globally without a singularity. Same reason you cannot comb a sphere flat. Euler chose to put singularities at north-south pitch $\pm90^\circ$. Any other Euler convention just moves them elsewhere.
+            </p>
             <div class="mt-5 math-card">
-              <p class="math-label">Verified, not asserted</p>
-              <p class="mt-2 text-[0.8rem] leading-[1.6]">(yaw 30°, pitch 90°, roll 0°) → same quaternion as (yaw 50°, pitch 90°, roll 20°) → same quaternion as (yaw 0°, pitch 90°, roll −30°)</p>
-              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">All three orientations share <code>yaw − roll = 30°</code> and resolve to the exact same quaternion. The <code>asin</code> clamp in the code catches this boundary to prevent NaNs.</p>
-              <button type="button" class="gimbal-example-btn mt-3 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="30" data-pitch="90" data-roll="0">Load (30°, 90°, 0°)</button>
-              <button type="button" class="gimbal-example-btn ml-2 mt-3 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="50" data-pitch="90" data-roll="20">Load (50°, 90°, 20°)</button>
+              <p class="math-label">Verified, not asserted — same rotation, three labels</p>
+              <p class="mt-2 text-[0.8rem] leading-[1.6]">(yaw $30^\circ$, pitch $90^\circ$, roll $0^\circ$) $\to$ same $q$ as (yaw $50^\circ$, pitch $90^\circ$, roll $20^\circ$) $\to$ same $q$ as (yaw $0^\circ$, pitch $90^\circ$, roll $-30^\circ$). All share $yaw - roll = 30^\circ$. Literally same four numbers $x,y,z,w$ after normalization, not just close.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+                In code, $pitch = \arcsin(2(w y - z x))$. At $pitch=\pm90^\circ$, argument approaches $\pm1$ and rounding pushes it to $\pm1.0000002$. Without $\max(-1,\min(1,\cdot))$ clamp you get $NaN$ and your 3D head vanishes. With clamp you get stable $90^\circ$ but yaw/roll split is arbitrary — we zero roll by convention.
+              </p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button type="button" class="gimbal-example-btn rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="30" data-pitch="90" data-roll="0">Load (30°, 90°, 0°)</button>
+                <button type="button" class="gimbal-example-btn rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="50" data-pitch="90" data-roll="20">Load (50°, 90°, 20°)</button>
+                <button type="button" class="gimbal-example-btn rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text hover:border-primary-cta hover:text-primary-text" data-yaw="0" data-pitch="90" data-roll="-30">Load (0°, 90°, -30°)</button>
+              </div>
+            </div>
+            <div class="mt-5 math-card">
+              <p class="math-label">Why quaternion does not lock</p>
+              <p class="mt-2 text-[0.82rem] leading-[1.6]">$q = (a_x \sin(\theta/2), a_y \sin(\theta/2), a_z \sin(\theta/2), \cos(\theta/2))$. One axis $a$, one angle $\theta$. No sequence of dependent axes to collapse. Composition is one Hamilton product $q_1 \otimes q_2$, interpolation is great-circle slerp $q(t)=\frac&#123;\sin((1-t)\Omega)&#125;&#123;\sin\Omega&#125; q_0 + \frac&#123;\sin(t\Omega)&#125;&#123;\sin\Omega&#125; q_1$, constant angular velocity, shortest path, no poles.</p>
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Gimbal lock is loss of ability to tell yaw from roll. Quaternion never had that factorization, so nothing to lose.</p>
             </div>
           </div>
         </div>

@@ -250,14 +250,105 @@ const breadcrumb = {
           </div>
         </div>
 
-        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
-          <p class="font-semibold text-primary-text">Method &amp; limitations</p>
-          <p class="mt-2">This designer models a <strong>sealed-box</strong> (acoustic suspension) or <strong>vented-box</strong> (bass-reflex) enclosure using classic small-signal high-pass transfer functions.</p>
-          <p class="mt-2 font-mono text-[0.78rem]">Sealed: |H(f)| = (f/fc)² / √<span style="text-decoration:overline;">(1 − (f/fc)²)² + (f / fc·Qtc)²</span></p>
-          <p class="mt-2 font-mono text-[0.78rem]">Vented: |H(f)|² = Ω⁸ / ((Ω⁴ - BΩ² + D)² + (AΩ³ - CΩ)²)</p>
-          <p class="mt-2 text-[0.78rem]">where Ω = f/fs, h = fb/fs, α = Vas/Vb. A, B, C, D are Small's 1973 vented-box polynomial coefficients incorporating leakage losses (Ql).</p>
-          <p class="mt-2">Reference efficiency η₀ uses the simplified form: η₀ = (4π²/c³) · fs³ · Vas / Qes, where Qes = 1 / (1/Qts − 1/Qms) and c = 343 m/s. Sensitivity = 112 + 10·log₁₀(η₀) dB @ 1W/1m. SPL assumes half-space (2π) radiation.</p>
-          <p class="mt-4 text-[0.78rem]"><strong>Assumptions &amp; caveats:</strong> Rigid box walls, no standing waves, small-signal Thiele–Small parameters (linear). Does not model power compression, BL nonlinearity, voice-coil inductance, port turbulence, or baffle-step effects. Max SPL estimate combines Xmax excursion limit and thermal power handling. Real-world results may vary — this is a design tool, not a measurement system.</p>
+        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text" aria-labelledby="method-title">
+          <h2 id="method-title" class="text-[clamp(1.25rem,2.6vw,1.6rem)] font-[680] tracking-[-0.03em] text-primary-text">The box is a spring, the port is a mass</h2>
+          <p class="mt-2 max-w-3xl text-[0.88rem] leading-[1.65]">Thiele and Small proved you can treat a loudspeaker and box as a filter. The driver is a resonator, the box is a second spring, the port is a Helmholtz mass. Get the ratios right, you choose the high-pass shape. Get them wrong, you get one-note boom.</p>
+
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
+            <div class="math-card">
+              <p class="math-label">1 — Compliance ratio is the master knob</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Every datasheet gives you $f_s$, $Q_&#123;ts&#125;$, $V_&#123;as&#125;$. $V_&#123;as&#125;$ is the volume of air that has same compliance as the driver suspension. Put the driver in a box of volume $V_b$ and you add another spring in parallel. The key ratio:
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ \alpha = \frac&#123;V_&#123;as&#125;&#125;&#123;V_b&#125; $$
+              </p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Big box → $\alpha$ small → soft extra spring, $f_c$ barely above $f_s$. Small box → $\alpha$ large → stiff spring, $f_c$ pushed up. You cannot cheat volume — smaller box always costs low-end unless you raise $Q$.
+              </p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">2 — Sealed box math: choose your Qtc</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Sealed is a 2nd-order high-pass. Its entire character is $Q_&#123;tc&#125;$:
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ Q_&#123;tc&#125; = Q_&#123;ts&#125;\sqrt&#123;1+\alpha&#125; \quad\quad f_c = f_s\sqrt&#123;1+\alpha&#125; $$
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ V_b = \frac&#123;V_&#123;as&#125;&#125;&#123;(Q_&#123;tc&#125;/Q_&#123;ts&#125;)^2 - 1&#125; $$
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ |H(f)| = \frac&#123;(f/f_c)^2&#125;&#123;\sqrt&#123;(1-(f/f_c)^2)^2 + (f/(f_c Q_&#123;tc&#125;))^2&#125;&#125; $$
+              </p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                $Q_&#123;tc&#125;=0.5$ critically damped transient-perfect, lean. $0.577$ Bessel — best phase linearity. $0.707$ Butterworth — maximally flat amplitude, the universal default. $1.0$ adds +1.5 dB peaking, warmer but rings. The slider recomputes $V_b$ for each target — that is why hitting Butterworth shrinks or grows the box in real time.
+              </p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Box losses $Q_a$ (absorption) and $Q_l$ (leakage) enter as $1/Q_&#123;tc&#125;=1/Q_&#123;tc,ideal&#125;+1/Q_a+1/Q_l$. Typical stuffed box: $Q_a\approx 30–100$, leaky unsealed: $Q_l\approx 10–20$.
+              </p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">3 — Vented box: 4th-order Helmholtz bargain</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Ported adds a Helmholtz resonator $f_b$. Below $f_b$ port and driver cancel, above both sum. Transfer becomes 4th-order:
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ |H|^2 = \frac&#123;\Omega^8&#125;&#123;(\Omega^4 - B\Omega^2 + D)^2 + (A\Omega^3 - C\Omega)^2&#125; $$
+              </p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                where $\Omega=f/f_s$, $h=f_b/f_s$, and $A,B,C,D$ are Small's 1973 coefficients containing $\alpha$ and $Q_l$. QB3 is quasi-Butterworth 3rd-order approximation — punch over extension. SBB4 super 4th-order boombox, best for low $Q_&#123;ts&#125;$ drivers in large boxes. SC4 sub-Chebyshev 4, ripple allowed for deepest $f_3$ at expense of group delay.
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                Port length: $$ L_p = \frac&#123;c^2 S_p&#125;&#123;4\pi^2 f_b^2 V_b&#125; - 0.732 r_p $$
+              </p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                That end-correction $0.732 r_p$ is flanged. This tool uses exact acoustic mass calc from $S_p$.
+              </p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">4 — Hoffman's Iron Law &amp; why specs lie</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Reference efficiency for half-space:
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ \eta_0 = \frac&#123;4\pi^2&#125;&#123;c^3&#125;\frac&#123;f_s^3 V_&#123;as&#125;&#125;&#123;Q_&#123;es&#125;&#125; \quad Q_&#123;es&#125;= \frac&#123;1&#125;&#123;1/Q_&#123;ts&#125;-1/Q_&#123;ms&#125;&#125; $$
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ Sens = 112 + 10\log_&#123;10&#125;\eta_0 \quad dB @ 1W/1m $$
+              </p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Hoffman's Iron Law says you only get two of three: small box, deep bass, high efficiency. Formally:
+              </p>
+              <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+                $$ \eta_0 \cdot V_b \cdot f_3^3 = constant $$
+              </p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Shrink $V_b$ 50%, you lose 3 Hz extension or 3 dB sensitivity. No port or DSP escapes it long-term — EQ restores response but not $\eta_0$, so power demand and $X_&#123;max&#125;$ blow up.
+                Max SPL here min() of thermal power $Sens+10\log_&#123;10&#125;P$ and excursion limit $SPL_&#123;Xmax&#125;=20\log_&#123;10&#125;( \rho_0 2\pi f^2 V_d/ p_0)$ where $V_d=S_d X_&#123;max&#125;$.
+              </p>
+            </div>
+            <div class="math-card md:col-span-2">
+              <p class="math-label">5 — How to use &amp; where it breaks</p>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p class="text-[0.78rem] font-semibold text-primary-text">Playbook</p>
+                  <ul class="mt-1 space-y-1 text-[0.74rem] leading-[1.55] text-muted-text" style="list-style: disc; padding-left: 1.1rem;">
+                    <li>Start sealed, hit Butterworth 0.707 to see required $V_b$. If box too big, accept Qtc 0.9–1.0 or go vented.</li>
+                    <li>Vented excels when $Q_&#123;ts&#125; \lt  0.4$. If $Q_&#123;ts&#125; \gt  0.5$, sealed usually wins — vented needs absurdly large box for flat alignment.</li>
+                    <li>Tune $f_b$ near $f_s$ for SBB4, above $f_s$ for punch QB3, below for extension SC4. Watch port length — if $L_p \gt  2×$ box depth, increase diameter or accept higher tuning.</li>
+                    <li>Use $f_3$ and cone-shaped $V_b$ visual: cube-root scaling shows volume not linear — +6 L at small box is huge.</li>
+                  </ul>
+                </div>
+                <div>
+                  <p class="text-[0.78rem] font-semibold text-primary-text">Honesty</p>
+                  <p class="mt-1 text-[0.74rem] leading-[1.55] text-muted-text">
+                    Small-signal only. No standing waves, panel flex, leakage nonlinearity, port chuffing, voice-coil inductance, BL droop, power compression, baffle step, or room gain. Assumes $2\pi$ half-space and rigid walls. Real driver $Q_&#123;ts&#125;$ shifts with excursion and heat. Max SPL combines $X_&#123;max&#125;$ and thermal but not simultaneously. Use for alignment intuition, then measure impedance and nearfield.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

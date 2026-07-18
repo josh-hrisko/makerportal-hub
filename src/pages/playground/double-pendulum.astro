@@ -273,7 +273,7 @@ const breadcrumbSchema = {
             </p>
             <p class="rounded-[12px] border border-border bg-elevated/40 p-4 font-mono text-[0.76rem] leading-[1.6]">
               <strong class="text-primary-text uppercase tracking-[0.08em] text-[0.7rem]">Why splits, not wrap lines:</strong><br/>
-              Angles live on a circle. If $\theta$ jumps from $+179°$ to $-179°$, the shortest path on the circle is $2°$, not $358°$. Drawing a line across the chart would be a lie — it would claim the pendulum teleported through $\theta=0$. So the renderer cuts the segment whenever $|x_&#123;n+1&#125;-x_n| > 0.45W$. You lose a pixel of ink and keep the topology honest.
+              Angles live on a circle. If $\theta$ jumps from $+179°$ to $-179°$, the shortest path on the circle is $2°$, not $358°$. Drawing a line across the chart would be a lie — it would claim the pendulum teleported through $\theta=0$. So the renderer cuts the segment whenever $|x_&#123;n+1&#125;-x_n| \gt  0.45W$. You lose a pixel of ink and keep the topology honest.
             </p>
           </div>
           <div class="space-y-4">

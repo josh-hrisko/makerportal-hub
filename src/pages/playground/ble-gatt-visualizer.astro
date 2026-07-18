@@ -87,7 +87,7 @@ const breadcrumb = {
               <label class="block"><span class="font-mono text-[0.62rem] uppercase text-muted-text">Sample data rate Hz</span><input id="rate" type="number" value="20" class="tool-input" /></label>
             </div>
 
-            <label class="mt-4 block"><span class="font-mono text-[0.62rem] uppercase text-muted-text">Raw serial input (ASCII, \\n delimited)</span>
+            <label class="mt-4 block"><span class="font-mono text-[0.62rem] uppercase text-muted-text">Raw serial input (ASCII, \n delimited)</span>
               <textarea id="raw-input" rows="5" class="tool-input font-mono text-[0.78rem]">0.000,512,23.5
 0.050,515,23.6
 0.100,510,23.5
@@ -122,7 +122,7 @@ const breadcrumb = {
             </div>
             <div class="mt-4 flex gap-2"><button id="btn-export" class="rounded-full bg-primary-text px-4 py-1.5 text-[0.75rem] font-bold text-canvas">Export CSV</button><span id="csv-stats" class="font-mono text-[0.68rem] text-muted-text"></span></div>
 
-            <div class="mt-6 rounded-[12px] border border-amber-200/50 bg-amber-50 p-3 text-[0.75rem] leading-[1.5] text-amber-900">
+            <div class="mt-4 rounded-[12px] border border-amber-200/50 bg-amber-50 p-3 text-[0.75rem] leading-[1.5] text-amber-900">
               <strong>Gotcha:</strong> HM-10 at 20 B MTU splits "0.100,510,23.5\n" (14 B) across packets only when previous packet had leftover, but nRF52 at 185 B can batch 10+ rows per notification → higher throughput, less wakeups, better battery. BLExAR auto-detects MTU via `maximumWriteValueLength`.
             </div>
 
@@ -134,6 +134,117 @@ const breadcrumb = {
         </div>
       </div>
     </section>
+
+    <section aria-labelledby="method-title" class="border-b border-border">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Why a UART bridge needs no length byte</h2>
+        <div class="mt-6 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <p>
+            BLE has no serial cable. It has a database: services contain characteristics, each with a value and properties. The HM-10 cheats — it pretends an old Bluetooth 2.0 SPP UART is just one service <code>FFE0</code> with one characteristic <code>FFE1</code> that both writes and notifies. Byte goes in via <code>writeWithoutResponse</code>, byte comes out via notification. That's the entire bridge.
+          </p>
+          <p>
+            BLExAR leans on that cheat to the extreme: Arduino does <code>Serial.print(t); Serial.print(','); Serial.print(adc); Serial.print('\n')</code> — raw ASCII — and iOS reconstructs rows by hunting for newline <code>0x0A</code>. No header, no checksum, no length prefix. Simple enough that a dropped packet just kills one CSV row instead of desyncing the whole stream.
+          </p>
+        </div>
+
+        <div class="mt-10 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">GATT hierarchy — what you scan for</p>
+            <p class="mt-2 font-mono text-[0.8rem] leading-[1.6]">
+              Service FFE0 (HM-10 vendor)<br/>
+              └ Char FFE1: writeWithoutResponse | notify<br/>
+              Service 180A Device Info<br/>
+              └ Char 2A24 Model Number: read<br/><br/>
+              Service 6E400001-B5A3-F393-E0A9-E50E24DCCA9E (Nordic NUS)<br/>
+              ├ Char 6E400002 ... write | writeWithoutResponse (RX: central→periph)<br/>
+              └ Char 6E400003 ... notify (TX: periph→central)
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              nRF52 splits RX/TX into two characteristics — proper UART symmetry. HM-10 merges them — simpler, but you can't set different permissions. Custom BLExAR extension adds <code>6E400004</code> as CSV control: write "START" / "STOP" to toggle logging without stopping BLE. Both stacks work, we show all three tabs above.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">MTU and fragmentation math</p>
+            <p class="mt-2 font-mono text-[0.8rem] leading-[1.6]">
+              row_bytes = len("0.100,510,23.5\n") = 14 B<br/>
+              HM-10 MTU = 20 B → 1.42 rows per notification<br/>
+              nRF52 MTU = 185 B → ~13 rows per notification<br/>
+              Throughput = rows_per_notif × notif_rate (30 Hz typical)
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              At 20 Hz sampling, HM-10 still mostly sends one complete row per notification — unless previous row straddles boundary, then <code>"0.100,510,23.5\n0.150"</code> and next packet completes <code>",518,23.7\n"</code>. That's why <code>lineBuffer</code> exists: accumulate Data until 0x0A. At MTU 185, you batch 13 rows, wake CPU less, battery lasts. iOS reports MTU via <code>peripheral.maximumWriteValueLength</code> and <code>maximumWriteValueLength(for: .withoutResponse)</code>.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">CSV framing — why newline beats length prefix</p>
+            <p class="mt-2 font-mono text-[0.8rem] leading-[1.6]">
+              Input: ASCII "t,adc,temp\n"<br/>
+              No binary: readable in Serial Monitor<br/>
+              Delimiter: ',' → split, 0x0A → row commit<br/>
+              Partial: buffer holds "0.15" until "\n" arrives
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              Length-prefixed binary is more efficient, but if one length byte corrupts, you lose sync forever. Newline-delimited ASCII is self-resynchronizing — worst case you lose one row. For lab sensors that output numbers, human-readable wins. BLExAR validates with <code>parts.count &gt;=2 && parseFloat(parts[0]) is finite</code> — that's the green check above. Inject a null byte with the button to see it turn red.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">HM-10 vs nRF52 — real differences</p>
+            <ul class="mt-2 list-disc space-y-1 pl-4 text-[0.78rem] leading-[1.6] text-muted-text">
+              <li><strong>HM-10 (CC2540):</strong> MTU 20, baud 9600 default, AT commands over same UART, no flow control, 1 connection, ~8 KB RAM. Needs AT+BAUD, AT+NAME.</li>
+              <li><strong>nRF52 (nRF52832):</strong> MTU 185 (iOS) / 512 (BLE 5), 2 Mbit PHY, DLE, up to 20 connections, 64 KB RAM, proper flow, battery service 180F included. Needs SoftDevice S132.</li>
+              <li>Both speak same CSV — just transport differs. That's why BLExAR probes both UUIDs on scan.</li>
+              <li>HM-10 caps at ~1.2 kB/s useful due to 20 B × 30 notif/s. nRF52 at 185×30 → 5.5 kB/s → supports 50 Hz × 20 B rows easily.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-5">
+          <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Playbook — sender and receiver</p>
+          <div class="mt-4 grid gap-6 md:grid-cols-2">
+            <div>
+              <p class="font-semibold text-[0.86rem] text-primary-text">Arduino side (sender)</p>
+              <ol class="mt-2 list-decimal space-y-1.5 pl-5 text-[0.84rem] leading-[1.6] text-muted-text">
+                <li><code>Serial.begin(9600)</code> for HM-10, 115200 for nRF52.</li>
+                <li>Never use <code>Serial.println</code> with default float precision — <code>print(val,3)</code> limits to 3 decimals → fixed 12-14 B rows → predictable MTU packing.</li>
+                <li>Use <code>delay(50)</code> for 20 Hz. No faster than MTU allows: at 20 B MTU, 50 Hz × 14 B = 700 B/s OK, but notify rate 30 Hz → queue builds → packet loss.</li>
+                <li>Add timestamp <code>millis()/1000.0</code> first column — iOS side uses it for x-axis, packet loss detection.</li>
+              </ol>
+            </div>
+            <div>
+              <p class="font-semibold text-[0.86rem] text-primary-text">iOS side — BLExAR exact loop (Swift)</p>
+              <ol class="mt-2 list-decimal space-y-1.5 pl-5 text-[0.84rem] leading-[1.6] text-muted-text">
+                <li>Scan: <code>central.scanForPeripherals(withServices: [FFE0, 6E400001])</code>.</li>
+                <li>Connect → discoverServices → discoverCharacteristics FFE1 / 002+003.</li>
+                <li><code>setNotifyValue(true)</code> on TX characteristic (FFE1 or 6E400003).</li>
+                <li>On <code>didUpdateValueFor</code>: <code>lineBuffer.append(characteristic.value)</code>.</li>
+                <li>While <code>firstIndex(of: 0x0A) != nil</code>: slice line, UTF8 decode, <code>split(',')</code>, validate numeric, append to CSV file via <code>FileHandle</code>, update UI.</li>
+                <li>If leftover > 512 bytes without NL, drop buffer — corrupted stream guard.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Throughput ceiling and battery</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+              BLE notify interval min 15 ms on iOS = 66 notifs/s, but average 30/s. HM-10: 20 B ×30 =600 B/s → 42 rows/s at 14 B/row. nRF52: 185×30=5.5 kB/s → 396 rows/s. So HM-10 barely does 20 Hz reliably if rows grow (e.g., 6 columns IMU). That's why advanced builds switch to binary: pack float32 ×3 =12 B + 4 B timestamp =16 B per sample = 1 row in 20 B MTU even at 50 Hz → 1.5 kB/s needed, still OK on HM-10. BLExAR keeps ASCII for readability but notes binary option in field guide.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Honesty — what this bridge can't do</p>
+            <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[0.78rem] leading-[1.6] text-muted-text">
+              <li>No acknowledgment per row — <code>writeWithoutResponse</code> + notify = unacked. If radio drops packet, row disappears. Checksum would catch, but BLExAR prefers simplicity: timestamp gaps reveal loss.</li>
+              <li>HM-10 has no flow control over BLE — if Arduino spams at 115200 baud but BLE only drains 600 B/s, internal buffer overflows at 64 bytes → silent truncation. Must pace with delay.</li>
+              <li>ASCII <code>0x00</code> injection (try the fuzz button) breaks UTF8 decode — BLExAR's Data → String with <code>.utf8</code> returns nil → row marked invalid. Real sensors shouldn't emit null, but wiring noise can.</li>
+              <li>iOS backgrounding kills scan after 10 s unless you have <code>bluetooth-central</code> background mode + active connection. CSV logging in background works, discovery doesn't.</li>
+              <li>This visualizer mocks BLE stack — no real CBCentralManager. MTU chunking simulation matches iOS behavior, but actual fragmentation is handled by Link Layer, not GATT.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </PlaygroundShell>
 </Layout>
 
@@ -143,6 +254,21 @@ const breadcrumb = {
   .copy-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.25rem 0.6rem;font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em}
   .copy-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
   .stack-btn{border:1px solid transparent}
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
 </style>
 
 <script>

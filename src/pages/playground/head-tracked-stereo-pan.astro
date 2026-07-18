@@ -127,6 +127,130 @@ const breadcrumb = {
         </div>
       </div>
     </section>
+
+    <section aria-labelledby="method-title" class="border-b border-border">
+      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">How head tracking becomes left/right</h2>
+        
+        <div class="mt-6 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
+          <p>
+            Your ears never move in world space. The world spins around you. Turn left 60°, keep a speaker fixed in front of the room, and now that speaker is 60° to your right — louder in the right ear. World-locked audio means compensating for head rotation so sources stay put while you move.
+          </p>
+          <p>
+            MotionLink solves this with one sensor stream: <strong class="text-primary-text">CMHeadphoneMotionManager.attitude.quaternion</strong>. A unit quaternion <code>q = (x,y,z,w)</code> with no gimbal lock. From it we extract yaw, build a forward vector, and drive both a cheap <code>StereoPannerNode</code> and a proper 3D <code>PannerNode</code>. The demo above lets you hear both at once.
+          </p>
+        </div>
+
+        <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
+          <div>
+            <h3 class="text-[1.1rem] font-[650] text-primary-text">Intuition in 20 seconds</h3>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              At 0° yaw you face +X. Source at +X is centered. Yaw left is positive Z rotation. The head turns left, the source should pan right. So <code>pan = sin(yaw)</code> works: 0 at 0°, +1 at +90° left turn = source hard right, -1 at -90° = hard left. No trig beyond that for stereo.
+            </p>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              For full 3D we don't pan at all — we rotate the listener. Source stays at (1,0,0). Listener stays at origin. Only orientation changes. WebAudio's HRTF panner then does interaural time and level difference for you.
+            </p>
+            <div class="mt-5 rounded-[14px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-text">Playbook mental model</p>
+              <ol class="mt-2 list-decimal pl-5 text-[0.86rem] leading-[1.6] text-muted-text">
+                <li>Fixed world: source at +X.</li>
+                <li>Head turns → yaw changes → forward vector swings.</li>
+                <li>Left turn → right ear dominance. You hear source move right, but it didn't.</li>
+                <li>Right turn → opposite.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="rounded-[20px] border border-border bg-card-bg p-5">
+            <svg viewBox="0 0 340 200" class="mx-auto w-full max-w-[340px]" role="img" aria-label="Top view of head yaw and pan mapping">
+              <circle cx="170" cy="100" r="54" fill="none" stroke="var(--mp-border)" stroke-width="1.5" />
+              <path d="M 170 100 L 224 100" stroke="#CE445D" stroke-width="3" marker-end="url(#arrow-r)" />
+              <path d="M 170 100 L 170 46" stroke="var(--mp-border)" stroke-width="1.5" stroke-dasharray="4 4" />
+              <path d="M 198 68 A 40 40 0 0 0 224 100" fill="none" stroke="#4a7bb8" stroke-width="2" />
+              <text x="212" y="72" font-family="ui-monospace" font-size="11" fill="#4a7bb8">yaw</text>
+              <rect x="240" y="36" width="12" height="12" fill="#CE445D" rx="2" />
+              <text x="258" y="46" font-family="ui-monospace" font-size="10" fill="var(--mp-muted)">+X forward (nose)</text>
+              <text x="64" y="108" font-family="ui-monospace" font-size="11" fill="var(--mp-text)">L</text>
+              <text x="270" y="108" font-family="ui-monospace" font-size="11" fill="var(--mp-text)">R</text>
+              <defs><marker id="arrow-r" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#CE445D" /></marker></defs>
+            </svg>
+            <p class="mt-3 text-center text-[0.78rem] text-muted-text">Top view. Yaw left = positive. Forward vector rotates left, pan goes right to keep source world-locked.</p>
+          </div>
+        </div>
+
+        <div class="mt-14 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Yaw from quaternion — no Euler gimbal trap</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              yaw = atan2(2(w·z + x·y), 1 − 2(y² + z²))
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              That's ZYX convention matching <code>CMHeadphoneMotionManager</code> where +Z yaw is left turn, +Y pitch is up, +X roll is ear-to-shoulder. Clamp pitch asin input to [-1,1] to avoid NaN at ±90°. Yaw never singularities here — it extracts cleanly even at pitch = ±90° where Euler yaw+roll become ambiguous. This page uses the same formula as <a href="/playground/quaternion-euler-converter" class="text-brand-anchor">quaternion converter</a>.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Forward vector from quaternion</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              fwd = [2(xz + w·y), 2(yz − w·x), 1 − 2(x² + y²)]
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              Rotate the basis vector +X = [1,0,0] by quaternion q: <code>f = q · [1,0,0] · q⁻¹</code>. Expand Hamilton product → this closed form. No matrix needed. In Swift SIMD, same 3 lines. Feed f into <code>AVAudioEnvironmentNode.listenerAngularOrientation</code> or WebAudio <code>listener.forwardX/Y/Z</code>.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Cheap stereo (what you hear first)</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              pan = sin(yaw)  ∈ [−1, 1]<br/>
+              StereoPannerNode pan: −1 left, 0 center, 1 right
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              Sinusoidal law sounds more natural than linear <code>yaw/90°</code> because it preserves power. At 60° yaw, <code>sin(60°)=0.866</code> — almost hard-panned but not brutal. Keep gain at 0.3 in demo so pink noise peaks don't clip when summed. Works for headphones only; speakers need more.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">True 3D — HRTF path</p>
+            <p class="mt-2 font-mono text-[0.82rem] leading-[1.6]">
+              source pos = (1,0,0) world<br/>
+              listener pos = (0,0,0)<br/>
+              listener fwd/up from q<br/>
+              PannerNode.panningModel = 'HRTF'
+            </p>
+            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
+              Don't move the source. Move listener orientation. WebAudio computes interaural time difference (ITD) and level difference (ILD) via built-in HRTF. For vertical, add <code>up = [2(xy − w·z), 1−2(x²+z²), 2(yz + w·x)]</code>. AVAudioEnvironmentNode uses same fwd+up pair. That's production path in Biquadia's head-tracked monitor.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-10 rounded-[16px] border border-border bg-elevated/40 p-5">
+          <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Implementation playbook — MotionLink → WebAudio / AVAudioEngine</p>
+          <ol class="mt-3 list-decimal space-y-2 pl-5 text-[0.88rem] leading-[1.65] text-muted-text">
+            <li><strong>Read quaternion at 60 Hz:</strong> <code>motionManager.startDeviceMotionUpdates(to: queue)</code> → <code>data.attitude.quaternion</code> on AirPods Pro. Store first quaternion as baseline — zero is wherever headphones were when you called start, not north.</li>
+            <li><strong>Relative rotation:</strong> <code>q_rel = q_current * q_baseline_inverse</code>. Without this, head center drifts every launch.</li>
+            <li><strong>Extract yaw for quick pan:</strong> <code>yaw = atan2(2(q.w*q.z + q.x*q.y), 1−2(q.y*q.y + q.z*q.z))</code> → <code>panner.pan = sin(yaw)</code>. Latency ~20 ms, cheap, good enough for music.</li>
+            <li><strong>Extract forward + up for HRTF:</strong> Use closed forms above. iOS: <code>AVAudioMakeAngularOrientation(fwd)</code>. Web: <code>audioListener.forwardX/Y/Z + upX/Y/Z</code>. Keep source fixed.</li>
+            <li><strong>Smooth it:</strong> One-pole lowpass at 8 Hz on yaw: <code>y_filt += (y − y_filt) * (1−exp(-2π*8*dt))</code>. Kills sensor jitter without adding lag you can feel.</li>
+          </ol>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          <div class="math-card">
+            <p class="math-label">Why StereoPannerNode then PannerNode?</p>
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+              StereoPanner is a constant-power law: two gains gL,gR with <code>gL²+gR²=1</code>. It does not model head shadow. PannerNode in HRTF mode does — comb filtering above 4 kHz that your brain reads as direction. This demo chains both so you can bypass and hear difference. On iOS, replace with <code>AVAudioEnvironmentNode</code> which is same HRTF core but Metal-accelerated.
+            </p>
+          </div>
+          <div class="math-card">
+            <p class="math-label">Honesty — what this demo fakes</p>
+            <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[0.78rem] leading-[1.6] text-muted-text">
+              <li>StereoPanner gives azimuth only. No elevation, no distance, no front/back discrimination. Real 3D needs HRTF or Ambisonics.</li>
+              <li>WebAudio HRTF dataset is generic KEMAR, not your personal HRTF. Front/back confusions at ±30° are expected.</li>
+              <li>CMHeadphoneMotionManager zero is relative. Without baseline subtraction, recentering on app foreground is mandatory or your mix spins.</li>
+              <li>180° yaw flip (facing away) still gives pan=0 with sin law. True 3D keeps left/right correct while source moves behind — that's why we keep both nodes.</li>
+              <li>Thermal drift on AirPods: yaw can wander 1-2° per minute. Filter it, don't chase it with gain changes.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -134,6 +258,21 @@ const breadcrumb = {
   .copy-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.3rem 0.8rem;font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--mp-muted)}
   .copy-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
   input[type=range]{accent-color:var(--mp-cta)}
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
 </style>
 
 <script>
@@ -181,8 +320,6 @@ function initHeadPan(){
       for(let lon=0;lon<=longBands;lon++){
         const phi=lon*2*Math.PI/longBands;
         const sinP=Math.sin(phi), cosP=Math.cos(phi);
-        const x=cosP*sinT, y=sinP*sinT, z=cosT;
-        // map: head forward +X is nose direction: we build with X forward? Our sphere in X forward? Currently x from sinT*cosP is radial, but we want forward +X = nose. So we will author with X = cosT? Let's just make forward X = x? Actually we want head forward +X, so nose along +X. Sphere coordinate: we want +X to be front. So x = cos? Let's author with x = cosT? Simpler: we already have model Y up Z up confusion. We'll just build sphere and then map [x,y,z] where x=original x? We'll map such that forward is +X, left +Y, up +Z, same as drone convention.
         // Using spherical coords where +Z up = cosT, forward X = sinT*cosP, left Y = sinT*sinP
         verts.push([sinT*cosP*R, sinT*sinP*R, cosT*R]);
       }
@@ -259,7 +396,7 @@ function initHeadPan(){
       ctx.fillStyle=ax.color; ctx.font='10px ui-monospace'; ctx.fillText(ax.label, origin.x+tip[0]*scale+6, origin.y-tip[1]*scale);
     }
     for(const fd of faceData){
-      if(fd.normal[2]<=0.0 && !fd.fi) continue; // slight cull, keep most for sphere
+      if(fd.normal[2]<=0.0 && !fd.fi) continue;
       if(fd.normal[2]<=-0.2) continue;
       const face=headModel.faces[fd.fi];
       const pts=fd.pts;
@@ -301,10 +438,6 @@ function initHeadPan(){
       try{
         audioCtx.listener.forwardX.value=fwd[0]; audioCtx.listener.forwardY.value=fwd[1]; audioCtx.listener.forwardZ.value=fwd[2];
         if(stereoPanner) stereoPanner.pan.value=pan;
-        if(pannerNode){
-          // keep source front world-locked: source at (1,0,0) in world, listener at origin oriented by quat
-          // For PannerNode, we don't move source, we move listener orientation, so pan is automatic via HRTF? We'll also set simple pan as fallback
-        }
       }catch{}
     }
   }

@@ -191,76 +191,103 @@ const breadcrumbSchema = {
       </div>
     </section>
 
-    <!-- Method & Limitations Section -->
+    <!-- Method & Limitations — frontier rewrite -->
     <section aria-labelledby="method-title" class="border-b border-border">
       <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The motor is linear until you ask it to work</h2>
+        <p class="mt-3 max-w-3xl text-[0.95rem] leading-[1.7] text-muted-text">
+          Thiele-Small looks innocent at 1 watt. Push a driver to $X_&#123;max&#125;$ and three curves betray you: $Bl(x)$ falls when coil leaves the gap, $K_&#123;ms&#125;(x)$ stiffens when spider and surround stretch, $Le(x)$ breathes with position. Each one is a distortion generator. This lab lets you dial them and watch the sine turn into something else.
+        </p>
 
-        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
-          <p>
-            This is an explicit <strong class="text-primary-text">lumped-parameter educational model</strong> of a moving-coil loudspeaker driver. The simulation solves the coupled electromechanical differential equations using simple Euler integration with a fixed timestep of 1/8000&thinsp;s, driven by a sinusoidal input voltage.
-          </p>
-          <p>
-            Bl(x), Kms(x), and Le(x) are modeled as <strong class="text-primary-text">simple polynomial functions</strong> — real drivers have more complex, measured nonlinear curves that can include asymmetry from offset coils, progressive spider stiffness, and hysteresis effects not captured here.
-          </p>
-        </div>
-
-        <div class="mt-7 grid gap-4 md:grid-cols-2">
+        <div class="mt-8 grid gap-5 md:grid-cols-2">
           <div class="math-card">
-            <p class="math-label">Governing equations</p>
-            <p class="mt-2 font-mono text-[0.8rem] leading-[1.65]">
-              F = Bl(x)&middot;i &minus; Kms(x)&middot;x<br/>
-              i = (V<sub>in</sub> &minus; Bl(x)&middot;v) / Re<br />
-              a = F / Mms<br />
-              v = &int; a dt<br />
-              x = &int; v dt<br />
-              Bl(x) = Bl<sub>0</sub>(1 &minus; &beta;|x/X<sub>max</sub>|)<br />
-              Kms(x) = Kms<sub>0</sub>(1 + &gamma;(x/X<sub>max</sub>)&sup2;)<br />
-              Le(x) = Le<sub>0</sub>(1 + &delta;|x/X<sub>max</sub>|)
+            <p class="math-label">1 — Bl(x): force factor droop</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
+              Ideal motor gives constant $Bl$. Real gap has finite height. As coil moves out, fewer turns sit in $B$-field. Force per amp drops. If coil is centered, droop is symmetric; if offset (common after sag or assembly), one side drops earlier — even-order distortion.
+            </p>
+            <p class="mt-3 font-mono text-[0.78rem] leading-[1.55]">
+              $$ F_&#123;motor&#125; = Bl(x) \cdot i $$
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ Bl(x) = Bl_0 (1 - \beta |x / X_&#123;max&#125;|) $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              $\beta$ is asymmetry/shape knob. In Klippel measurements you see a bell curve, not this triangle — peak $Bl_0$ at rest, down to 70% at $X_&#123;max&#125;$ for a good long-throw, 50% for a cheap one. Twice excursion → twice loss → current has to rise → more heat → more compression. That coupling is outside this model, but you feel it in the motor SVG when status flips to "Coil out of gap".
             </p>
           </div>
+
           <div class="math-card">
-            <p class="math-label">What this model does NOT simulate</p>
-            <ul class="mt-2 space-y-1.5 text-[0.78rem] leading-[1.6] text-muted-text" style="list-style: disc; padding-left: 1.2rem;">
-              <li>Flux modulation from induced coil current</li>
-              <li>Eddy currents in the pole piece</li>
-              <li>Thermal effects (voice coil heating)</li>
-              <li>Cone breakup or bending modes</li>
-              <li>Port nonlinearity (vented boxes)</li>
-              <li>Equivalent-circuit or FEM analysis</li>
+            <p class="math-label">2 — Kms(x): spider gets angry</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
+              Suspension compliance is progressive. Small $x$, soft. Large $x$, spider fibers align, surround folds stretch — stiffness climbs quadratically. This is symmetric by nature, so it makes odd harmonics.
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ K_&#123;ms&#125;(x) = K_&#123;ms0&#125;(1 + \gamma (x/X_&#123;max&#125;)^2) $$
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ K_&#123;ms0&#125; = M_&#123;ms&#125;(2\pi f_s)^2 $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              Fixed $f_s=40$ Hz here gives $K_&#123;ms0&#125;$. $\gamma$ multiplies the square term. $\gamma=0.2$ is a soft progressive spider, $\gamma=1$ is a harsh bottoming surround. Because force is $K_&#123;ms&#125;(x) \cdot x$, you get an $x^3$ term — same math that makes a Duffing oscillator generate 3rd harmonic. Push Vrms and watch waveform flatten on peaks.
+            </p>
+          </div>
+
+          <div class="math-card">
+            <p class="math-label">3 — Le(x): inductance modulates</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
+              Voice-coil inductance depends on how much steel it overlaps. Move out, $L_e$ drops ~$\delta$. That sounds harmless until you realize impedance changes with position, so current waveform distorts even with perfect voltage drive. Add flux modulation (current itself modulates $B$) and you get $Bl(i)$ — not modeled here but measured by Klippel $L_&#123;e&#125;(x,i)$.
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ Le(x) = Le_0 (1 + \delta |x/X_&#123;max&#125;|) $$
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ i = \frac&#123;V_&#123;in&#125; - Bl(x) v&#125;&#123;R_e&#125; \quad\text&#123;DC approx, full: + Le·di/dt&#125;$$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              The back-EMF $Bl(x)v$ is velocity times force factor — it fights input voltage. When $Bl$ droops at peak $x$, back-EMF collapses, current spikes. That spike hits non-flat $K_&#123;ms&#125;$ and you have intermodulation. In the canvas lower half, watch $Bl(x)$ bell shrink with $\beta$ and dot trace current position.
+            </p>
+          </div>
+
+          <div class="math-card">
+            <p class="math-label">4 — Where distortion comes from: Taylor tells all</p>
+            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
+              Any memoryless nonlinearity can be expanded:
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.55]">
+              $$ y = a_1 x + a_2 x^2 + a_3 x^3 + ... $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              Drive $x = \hat&#123;X&#125;\sin\omega t$:
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+              $$ x^2 = \frac&#123;\hat&#123;X&#125;^2&#125;&#123;2&#125;(1 - \cos 2\omega t) \rightarrow \text&#123;2nd harmonic + DC shift&#125; $$
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+              $$ x^3 = \frac&#123;\hat&#123;X&#125;^3&#125;&#123;4&#125;(3\sin\omega t - \sin 3\omega t) \rightarrow \text&#123;3rd harmonic + fundamental compression&#125; $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              So asymmetric $Bl(x)$ → even order (2nd), symmetric $K_&#123;ms&#125;(x)$ → odd order (3rd). Real driver does both. THD here computed from displacement spectrum via numerical harmonic extraction:
+            </p>
+            <p class="mt-2 font-mono text-[0.78rem] leading-[1.5]">
+              $$ THD = \frac&#123;\sqrt&#123;V_2^2+V_3^2+V_4^2&#125;&#125;&#123;V_1&#125; $$
+            </p>
+            <p class="mt-2 text-[0.78rem] leading-[1.55] text-muted-text">
+              Klippel's measurement rig does this for real with laser and current sense, plotting $Bl(x)$, $K_&#123;ms&#125;(x)$, $Le(x)$ versus $x$. Golden rule: keep $Bl$ above 80% and $K_&#123;ms&#125;$ within 50% over intended $X$. Once outside, no motor feedback fixes mechanical bottoming.
+            </p>
+          </div>
+
+          <div class="math-card">
+            <p class="math-label">5 — Playbook &amp; honesty</p>
+            <p class="mt-2 text-[0.78rem] font-semibold text-primary-text">How to use</p>
+            <ul class="mt-1 space-y-1.5 text-[0.74rem] leading-[1.55] text-muted-text" style="list-style: disc; padding-left: 1.1rem;">
+              <li>Set $V_&#123;rms&#125;=12$ V, $f=60$ Hz, $\beta=0.1$, $\gamma=0.2$ — this is a decent 6" woofer. Waveform looks sinusoidal, THD 2–5%, $Bl(x)$ dot stays near top.</li>
+              <li>Now push Vrms to 30 V or drop $X_&#123;max&#125;$ to 2 mm. Excursion exceeds gap, coil dot leaves bell, displacement waveform flattens, 3rd harmonic bar pops up in spectrum.</li>
+              <li>Isolate mechanisms: $\beta=0$, $\gamma=0.8$ → pure suspension odd distortion. $\beta=0.5$, $\gamma=0$ → even. Combine — you get real driver stew.</li>
+              <li>Lower $M_&#123;ms&#125;$ raises acceleration $a=F/M$, raises $f_s$ via $K_&#123;ms0&#125;=M(2\pi f_s)^2$ — lighter cone distorts more at high freq? Check.</li>
             </ul>
-            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
-              The THD estimate is an approximation derived from harmonic amplitudes of the displacement waveform. Use this tool to understand the <strong class="text-primary-text">qualitative mechanisms</strong> of driver nonlinearity — not for driver design validation.
-            </p>
-          </div>
-        </div>
-
-        <div class="mt-7 grid gap-4 md:grid-cols-2">
-          <div class="math-card">
-            <p class="math-label">Integration method</p>
-            <p class="mt-2 font-mono text-[0.8rem] leading-[1.65]">
-              Euler integration at 1/8000&thinsp;s timestep. Each frame, the simulation advances ~27&ndash;268 physics steps (depending on frame rate). The state vector [x, v, i] is updated sequentially:
-            </p>
-            <p class="mt-2 font-mono text-[0.76rem] leading-[1.55] text-muted-text">
-              Bl &larr; Bl(x<sub>n</sub>)<br/>
-              Kms &larr; Kms(x<sub>n</sub>)<br/>
-              Le &larr; Le(x<sub>n</sub>)<br/>
-              i<sub>n+1</sub> &larr; i<sub>n</sub> + (V<sub>in</sub> &minus; Re&middot;i<sub>n</sub> &minus; Bl&middot;v<sub>n</sub>) / Le &times; dt<br/>
-              a<sub>n</sub> &larr; (Bl&middot;i<sub>n+1</sub> &minus; Kms&middot;x<sub>n</sub>) / Mms<br/>
-              v<sub>n+1</sub> &larr; v<sub>n</sub> + a<sub>n</sub> &times; dt<br/>
-              x<sub>n+1</sub> &larr; x<sub>n</sub> + v<sub>n+1</sub> &times; dt
-            </p>
-          </div>
-          <div class="math-card">
-            <p class="math-label">Kms<sub>0</sub> derivation</p>
-            <p class="mt-2 text-[0.82rem] leading-[1.65] text-muted-text">
-              The linear stiffness Kms<sub>0</sub> is not an independent input — it is computed from the free-air resonance relationship:
-            </p>
-            <p class="mt-2 font-mono text-[0.8rem] leading-[1.65]">
-              Kms<sub>0</sub> = Mms &times; (2&pi;f<sub>s</sub>)&sup2;
-            </p>
-            <p class="mt-2 text-[0.82rem] leading-[1.65] text-muted-text">
-              with a fixed f<sub>s</sub> = 40&thinsp;Hz. The model allows you to vary Mms and the nonlinear coefficients to explore how stiffness interacts with the motor force.
+            <p class="mt-3 text-[0.78rem] font-semibold text-primary-text">What this omits</p>
+            <p class="mt-1 text-[0.74rem] leading-[1.55] text-muted-text">
+              Euler at 8 kHz timestep, no flux modulation $Bl(i)$, no eddy-current hysteresis in pole, no thermal memory, no cone breakup, no port nonlinearity, no equivalent circuit of $Q_&#123;ms&#125;$, $Q_&#123;es&#125;$. $Bl$, $K_&#123;ms&#125;$, $Le$ shapes are simplified polynomials — real curves have asymmetry, plateau, and hysteresis loops. THD is displacement THD via 1024-sample history, not acoustic SPL THD. Use for qualitative cause → effect, not for validating a driver design. For that, need Klippel LSI or laser vibrometer.
             </p>
           </div>
         </div>

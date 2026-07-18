@@ -178,22 +178,86 @@ const faqSchema = {
     <section aria-labelledby="method-title">
       <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
-        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <p class="mt-4 max-w-3xl text-[0.92rem] leading-[1.75] text-muted-text">
+          Paraxial optics looks like a trick: take a messy pile of glass and empty space and crush it into one $2 \times 2$ matrix. That matrix tells you where any ray goes. No wave integrals, no Snell's law at each surface. If a ray stays close to the axis and shallow, two numbers are enough — height and slope — and every element is just a linear nudge on that pair.
+        </p>
+
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-semibold text-primary-text">What the math is</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">
-              A ray is the vector [y, θ] — height and slope. Free space is [[1, d], [0, 1]]; a thin lens is [[1, 0], [−1/f, 1]]; a mirror of radius R behaves as a lens of focal length R/2. The full system is the ordered product of these matrices, and the effective focal length is −1/C. Two-mirror cavity stability uses gᵢ = 1 − L/Rᵢ and the fundamental Gaussian mode sizes follow from the self-consistent q-parameter.
-            </p>
+            <div class="mt-3 space-y-4 text-[0.88rem] leading-[1.7] text-muted-text">
+              <p>
+                A ray is $ \begin&#123;bmatrix&#125; y \\ \theta \end&#123;bmatrix&#125; $. $y$ is transverse height in meters, $\theta$ is slope in radians, with $\sin\theta \approx \theta$. That is the whole state. Propagation does not need calculus — it is matrix multiplication.
+              </p>
+              <p>
+                Free space of length $d$: $ \begin&#123;bmatrix&#125; 1 & d \\ 0 & 1 \end&#123;bmatrix&#125; $. Intuition: $y' = y + d\theta$, height grows proportional to slope times distance, slope unchanged. If you coast, you drift up if you were pointing up.
+              </p>
+              <p>
+                Thin lens of focal length $f$: $ \begin&#123;bmatrix&#125; 1 & 0 \\ -1/f & 1 \end&#123;bmatrix&#125; $. Height unchanged entering the glass, slope gets a kick $\Delta\theta = -y/f$. Positive $f$ bends inward, negative bends outward. It is literally a proportional controller on height.
+              </p>
+              <p>
+                Curved mirror radius $R$: unfold the reflection and it looks identical to a lens. $C = -2/R$, so $f = R/2$. Concave toward incoming light is positive $R$ and focusing. Flat mirror is identity — $R \to \infty$ makes $C \to 0$.
+              </p>
+              <p>
+                Cascade: $M_&#123;sys&#125; = M_n \cdots M_2 M_1$. Order matters. First element is rightmost. Multiply them all, you get one matrix with elements $A, B, C, D$. If input and output media match, $\det M_&#123;sys&#125; = AD - BC = 1$. That is not numerology — it is conservation of etendue in first order, and your first debug check.
+              </p>
+              <p>
+                Effective focal length falls out immediately: $EFL = -1/C$. Why? Send in a collimated ray with $\theta=0$, height $y$. Output slope is $C y$. Focal point is where that ray crosses the axis, at $y / |\theta'| = -1/C$. If $C=0$, system is afocal — telescope, $4f$ relay. Collimated in, collimated out.
+              </p>
+            </div>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-semibold text-primary-text">What it ignores</p>
             <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">
-              This is strictly <strong>paraxial, first-order</strong> optics: small angles only, no aberrations (spherical, coma, astigmatism, chromatic), no diffraction at apertures, and thin elements unless you compose a thick lens from interfaces. Ray heights are exaggerated for visibility — the small-angle approximation still governs the physics. It is exact in the paraxial limit and ideal for layout and cavity design, but it is not a replacement for full ray-tracing or wave-optics simulation.
+              This is strictly <strong>paraxial, first-order</strong> optics: small angles only, no aberrations (spherical, coma, astigmatism, chromatic), no diffraction at apertures, and thin elements unless you build a thick lens from two refracting interfaces. Ray heights in the diagram are exaggerated for visibility — the math still assumes $\theta \ll 1$ rad.
+            </p>
+            <ul class="mt-4 list-disc space-y-2 pl-5 text-[0.84rem] leading-[1.6] text-muted-text/90">
+              <li>No aberration theory. Real lenses smear focus; ABCD imagines perfect conics focused to a point.</li>
+              <li>No stop, vignetting, or diffraction. A $10$ mm "beam" here would clip in hardware; here it traces forever.</li>
+              <li>No dispersion. $n(\lambda)$ is constant in this model, so chromatic focal shift is absent.</li>
+              <li>No polarization or coatings. Fresnel loss and phase on reflection are not tracked.</li>
+            </ul>
+            <p class="mt-4 text-[0.84rem] leading-[1.6] text-muted-text/80">
+              It is exact in the paraxial limit and ideal for layout, first-order imaging conjugates, and cavity architecture, but it is not a replacement for sequential ray-tracing or wave-optics propagation when you care about spot quality.
             </p>
           </div>
         </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-card-bg p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Resonator stability</p>
+            <p class="mt-2 text-[0.88rem] font-semibold text-primary-text">When does a photon stay in the box?</p>
+            <div class="mt-2 space-y-3 text-[0.86rem] leading-[1.65] text-muted-text">
+              <p>
+                For two mirrors separated by $L$, define $g_i = 1 - L/R_i$. This single number captures geometry: flat mirror has $g=1$, confocal $R=L$ gives $g=0$, concentric $R=L/2$ gives $g=-1$.
+              </p>
+              <p>
+                Trace a ray one round trip: $M_&#123;rt&#125; = M(R_1) \cdot P(L) \cdot M(R_2) \cdot P(L)$. Stability asks whether repeated application blows up or stays bounded. Eigenvalue analysis of a $2\times2$ symplectic matrix gives the clean criterion $0 \le g_1 g_2 \le 1$. Inside: bounded, Gaussian eigenmode exists. Outside: walk-off. Edge cases — plane-parallel $g_1 g_2=1$ and confocal $g_1 g_2=0$ — are marginally stable in theory, alignment-sensitive in practice.
+              </p>
+              <p>
+                Equivalent form: $|(A+D)/2| \le 1$, where $M_&#123;rt&#125; = \begin&#123;bmatrix&#125; A & B \\ C & D \end&#123;bmatrix&#125;$. We evaluate both so you can see they agree. The canvas plots $(g_1,g_2)$ with the stable hyperbolic region shaded.
+              </p>
+            </div>
+          </div>
+          <div class="rounded-[16px] border border-border bg-card-bg p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Gaussian beams — beyond rays</p>
+            <p class="mt-2 text-[0.88rem] font-semibold text-primary-text">A complex number holds curvature and width</p>
+            <div class="mt-2 space-y-3 text-[0.86rem] leading-[1.65] text-muted-text">
+              <p>
+                Geometrical rays say nothing about focus size. Gaussian optics fixes it with $q$. Definition: $1/q = 1/R - i \lambda / (\pi w^2)$, where $R$ is phase-front curvature, $w$ is $1/e^2$ radius. Imaginary part stores width, real part stores curvature.
+              </p>
+              <p>
+                Propagation law is identical in form to ray optics: $q' = (A q + B)/(C q + D)$. That is not a coincidence — it is Collins diffraction integral evaluated for a Gaussian. At a waist $R=\infty$, so $q = i z_R$ with Rayleigh range $z_R = \pi w_0^2 / \lambda$.
+              </p>
+              <p>
+                In a stable resonator, demand $q$ reproduce itself after one round trip up to same $q$. Solve $q = (A q + B)/(C q + D)$ with $M_&#123;rt&#125;$. The resulting $w_0, w_1, w_2$ are what we display. When $g_1 g_2$ approaches $0$ or $1$, $w$ diverges — that is the physics telling you edge resonators have huge spots and tight tolerances.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
-          The solver lives in <code class="text-primary-cta">src/lib/optics.ts</code> and is covered by unit tests (thin-lens conjugate equation, combined focal length, confocal/planar cavity edges, Gaussian-beam expansion at one Rayleigh range).
+          Solver lives in <code class="text-primary-cta">src/lib/optics.ts</code> — pure functions, no DOM. Tested against thin-lens conjugate $1/u + 1/v = 1/f$, combined focal lengths, confocal/planar edges $g_1 g_2$, and Gaussian expansion $w(z_R)=\sqrt&#123;2&#125; w_0$.
         </p>
       </div>
     </section>
