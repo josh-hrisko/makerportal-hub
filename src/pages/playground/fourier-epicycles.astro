@@ -1,11 +1,68 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('fourier-epicycles') || link.pillars?.includes('dsp-audio'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.id === 'behringer-umc1820' ? -1 : b.id === 'behringer-umc1820' ? 1 : 0));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
 const title = 'Draw Anything, Watch It Become Spinning Circles — Fourier Epicycles | MakerPortal';
 const description =
   'Draw any closed shape and watch it decompose into rotating circles (a discrete Fourier series) that trace your exact path — the same frequency-domain math as spectral analysis, applied to a drawing instead of audio.';
 const canonical = new URL('/playground/fourier-epicycles', Astro.site);
+
+const dftJsCode = `function computeDFT(points) {
+  const N = points.length;
+  const cx = points.reduce((s, p) => s + p.x, 0) / N;
+  const cy = points.reduce((s, p) => s + p.y, 0) / N;
+  const signal = points.map(p => ({ re: p.x - cx, im: p.y - cy }));
+  const terms = [];
+  for (let k = 0; k < N; k++) {
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++) {
+      const phi = (2 * Math.PI * k * n) / N;
+      re += signal[n].re * Math.cos(phi) + signal[n].im * Math.sin(phi);
+      im += -signal[n].re * Math.sin(phi) + signal[n].im * Math.cos(phi);
+    }
+    re /= N; im /= N;
+    const freq = k <= N / 2 ? k : k - N;
+    terms.push({ re, im, freq,
+      amp: Math.hypot(re, im),
+      phase: Math.atan2(im, re) });
+  }
+  terms.sort((a, b) => b.amp - a.amp);
+  return { terms, centroid: { x: cx, y: cy } };
+}
+
+function reconstruct(terms, centroid, t, M) {
+  let x = centroid.x, y = centroid.y;
+  for (let i = 0; i < M; i++) {
+    const { freq, amp, phase } = terms[i];
+    const ang = 2 * Math.PI * freq * t + phase;
+    x += amp * Math.cos(ang);
+    y += amp * Math.sin(ang);
+  }
+  return { x, y };
+}`;
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Fourier Epicycles',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  isPartOf: { '@type': 'SoftwareApplication', name: 'MakerPortal', url: 'https://www.makerportal.ai' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,12 +73,46 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Fourier Epicycles', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'What is a DFT and how does it decompose a drawing?',
+    a: 'The Discrete Fourier Transform (DFT) asks: how much of each pure spin e^(i·2π·k·n/N) lives inside your signal? It takes your N sample points as a complex signal z_n = x_n + i·y_n and projects them onto N complex exponentials — one for each integer frequency k. Each output X_k is a complex number whose magnitude tells you the radius of a circle spinning k times per loop, and whose angle tells you where that circle starts. The shape is literally the sum of those circles drawn tip-to-tail.',
+  },
+  {
+    q: 'What are epicycles and why do they trace any closed shape?',
+    a: 'An epicycle is a circle whose center rides on the circumference of another circle. Ptolemy stacked them to model planetary retrograde motion centuries before calculus existed. Fourier proved mathematically that any closed curve — no matter how jagged — can be expressed as an infinite sum of circles spinning at integer multiples of a base frequency. The playground computes a finite approximation using N=140 terms: the largest circles carry the overall silhouette, and the smallest circles add fine detail. The final tip of the last circle is exactly one point on the reconstructed path.',
+  },
+  {
+    q: 'How does the Fourier series relate to this epicycle visualization?',
+    a: 'A Fourier series represents a periodic function as a sum of sines and cosines. The epicycle visualization is the same idea rotated into the complex plane: each term X_k·e^(i·2π·k·t) is a circle of radius |X_k| rotating at frequency k. The real part gives x(t), the imaginary part gives y(t). So your drawing on the 2D canvas is literally a periodic complex-valued function z(t) = x(t) + i·y(t), and the DFT gives you its Fourier coefficients. It is the exact same math as a spectrogram, just with the time axis traded for position along the curve.',
+  },
+  {
+    q: 'Why does N=140 limit the capture fidelity? What is the Nyquist limit here?',
+    a: 'With N=140 sample points, the highest frequency you can represent without aliasing is k = N/2 = 70 (the Nyquist frequency). Any shape detail smaller than about 1/70 of the loop is undersampled — sharp corners, tight zig-zags, or hand tremor faster than that spatial frequency will alias into lower frequencies. The resampling to 140 uniform arc-length points also erases your drawing speed: fast strokes and slow strokes become equally dense along the path, so only the geometry matters. Shapes with features finer than ~1/140 of the total arc length will be blurred or lost.',
+  },
+  {
+    q: 'How does signal reconstruction work from DFT coefficients back to the drawing?',
+    a: 'Reconstruction is the synthesis step: start at the centroid, add the largest circle first (its tip becomes the center of the next), then chain circles tip-to-tail in amplitude-sorted order. At any time t between 0 and 1, each term contributes r_k·cos(2π·f_k·t + φ_k) to x and r_k·sin(2π·f_k·t + φ_k) to y. The final (x, y) is a point on the reconstructed curve. Using all N terms gives you the exact input shape back. Using fewer terms — controlled by the slider — is low-pass filtering: you drop the smallest, fastest circles and get a smoothed approximation. This is the same principle behind JPEG compression (dropping high DCT coefficients) and MP3 encoding (dropping inaudible high frequencies).',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -53,6 +144,72 @@ import Math from '../../components/Math.astro';
             <span id="term-readout">— / —</span>
           </label>
           <input type="range" id="term-slider" min="1" max="60" value="24" class="w-full" disabled />
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel above answers to the math below. Here is what each piece of the canvas, the presets, the slider, and the reconstruction is actually doing — and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The epicycle canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The coordinate mapping.</strong> The canvas is the complex plane. Every point <Math math="(x,y)" /> you draw is treated as <Math math="z = x + i y" />. The left edge maps to negative real values, the right edge to positive real values, and the Y-axis is the imaginary axis. This is not just a coordinate trick — it is what makes rotation become multiplication by <Math math="e^{i\theta}" /> with zero matrix overhead.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Epicycle circles and arms.</strong> Each term draws a faint circle of radius <Math math="r_k = |X_k|/N" /> centered at the previous term's tip, plus a radial arm from that center to its own tip. Circles smaller than 1.5 px are skipped visually but still contribute to position. The arms chain tip-to-tail in amplitude-sorted order — largest first — so you see the structure emerge from the biggest contributors down to the fine detail.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">How a drawing becomes a path.</strong> Mouse or touch events collect raw screen coordinates on <code>pointerdown</code>/<code>pointermove</code>/<code>pointerup</code>. The raw polyline is resampled to <Math math="N=140" /> uniformly arc-length-spaced points via <code>resamplePath</code>, erasing drawing speed. The path is then treated as closed: the last point connects back to the first via modulo indexing. That closure edge is the only synthetic geometry — everything else is your hand.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The terms slider.</strong> Maps <Math math="M" /> from 1 to <Math math="\min(60, N)" />. At <Math math="M=1" /> you see only the centroid (the DC term, which does not spin — it is the average position). Each step adds the next-largest circle. The slider is disabled until a path is finalized. Changing it clears the trail to avoid mixing reconstructions from different term counts.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> There is no numerical integration and no differential equation. Each frame computes <Math math="t = ((now - loopStart) \bmod 9000) / 9000" />, steps through <Math math="M" /> terms computing <Math math="x_{k+1}=x_k+r_k\cos(2\pi f_k t+\phi_k)" /> and <Math math="y_{k+1}=y_k+r_k\sin(2\pi f_k t+\phi_k)" />, pushes the final <Math math="(x,y)" /> into a 420-point trail buffer, and draws. Pure trigonometric reconstruction — the epicycles are the formula, not a simulation of the formula.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The DFT — what runs when you lift the pen</p>
+              <Math math="X_k = \sum_{n=0}^{N-1} \tilde{z}_n\, e^{-i 2\pi k n / N},\qquad k=0\dots N-1" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is the naive <Math math="O(N^2)" /> DFT — two nested loops, no FFT. Each <Math math="X_k" /> is divided by <Math math="N" /> before storage, so <Math math="|X_k|" /> is already the circle radius. The frequency mapping assigns <Math math="k \le N/2" /> to positive (counter-clockwise) and <Math math="k \gt N/2" /> to <Math math="k-N" /> (clockwise). Both directions are needed for non-circular shapes.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, presets, and reconstruction</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The presets.</strong> Six hardcoded paths: a circle (pure <Math math="k=1" />), a 5-point star (spikes at <Math math="k=\pm5,\pm10,\dots" />), a lemniscate (needs balanced <Math math="k=1" /> and <Math math="k=-1" />), a parametric heart, a logarithmic spiral (closed by a return line to center), and an MP monogram (multiple straight segments — Fourier hates straight lines). Each preset exercises a different spectral property.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The DFT algorithm.</strong> <Math math="O(N^2)" /> naive DFT — two nested loops, no FFT. For each frequency <Math math="k" />, the inner loop accumulates <Math math="re += \tilde{x}_n\cos\phi + \tilde{y}_n\sin\phi" /> and <Math math="im += -\tilde{x}_n\sin\phi + \tilde{y}_n\cos\phi" /> with <Math math="\phi=2\pi k n / N" />, then divides by <Math math="N" />. At <Math math="N=140" />, that's ~19,600 complex multiply-adds — instant in JS, and clearer to read than importing an FFT library.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Term sorting by amplitude.</strong> After computing all <Math math="X_k" />, the array is sorted descending by <Math math="|X_k|" />. This means the slider peels away importance rather than arbitrary high frequency. For a star, <Math math="k=5" /> outranks <Math math="k=2" /> despite being higher frequency — symmetry demands it. You see structure emerge, not noise. This is perceptual low-pass filtering, not classical frequency-cutoff low-pass.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Centroid subtraction.</strong> Before the DFT, the mean <Math math="(c_x, c_y)" /> is subtracted from every point. This zeroes the DC component so the animation origin sits at the shape's center instead of at some canvas corner. Without this, the <Math math="k=0" /> term would dominate with an enormous radius to the page corner, and everything else would be a tiny orbiting detail.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Path resampling and frequency mapping.</strong> The raw polyline is resampled to <Math math="N=140" /> uniform arc-length points via <code>resamplePath</code> — a linear walk along each segment at constant step size. This erases drawing speed and leaves only geometry. The frequency mapping <Math math="f_k = k \text{ if } k \le N/2 \text{ else } k-N" /> converts standard DFT ordering (which packs positive frequencies in the first half and negative in the second) into signed integers: positive = counter-clockwise, negative = clockwise. Both directions are essential — a figure-8 needs <Math math="k=1" /> and <Math math="k=-1" /> with near-equal amplitude.</p>
+              </li>
+            </ol>
+          </div>
         </div>
       </div>
     </section>
@@ -216,7 +373,7 @@ import Math from '../../components/Math.astro';
               <div class="mt-3 space-y-3 text-[0.92rem] leading-[1.7] text-muted-text">
                 <p><strong class="text-primary-text"><Math math="M=1" /></strong> — dot at centroid <Math math="c" />. You removed all rotation, left only DC. Slightly anticlimactic, proves DC handling works.</p>
                 <p><strong class="text-primary-text"><Math math="M=2" /> to $3$</strong> — best-fit ellipse(s). Two largest circles make an ellipse, third adds offset bulge. Any smooth loop looks roughly elliptical at this level — same reason first two principal components capture most variance.</p>
-                <p><strong class="text-primary-text"><Math math="M=5" /> to $10$</strong> — recognizable. Star shows 5 points, heart shows asymmetry, infinity pinches. This band is sweet spot for “aha” — enough structure, not too much clutter.</p>
+                <p><strong class="text-primary-text"><Math math="M=5" /> to $10$</strong> — recognizable. Star shows 5 points, heart shows asymmetry, infinity pinches. This band is sweet spot for "aha" — enough structure, not too much clutter.</p>
                 <p><strong class="text-primary-text"><Math math="M=15" /> to $30$</strong> — details, corners start to bite. You trade cleanliness for fidelity. Good range to see Gibbs begin.</p>
                 <p><strong class="text-primary-text"><Math math="M=40" /> to $60$</strong> — nearly pixel-perfect, includes hand tremor and resampling artifacts. At $60$ you kept <Math math="60/140 \approx 43\%" /> of coefficients — close to lossless. Beyond 60 diminishing returns; remaining terms are near noise floor.</p>
               </div>
@@ -270,6 +427,144 @@ import Math from '../../components/Math.astro';
         </div>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">N=140 limits the capture fidelity</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">With <Math math="N=140" /> sample points the Nyquist limit is <Math math="k_{\max}=70" />. Any shape feature finer than about <Math math="1/70" /> of the loop perimeter is undersampled and will alias into lower frequencies — sharp corners, rapid zig-zags, or hand tremor faster than that spatial bandwidth. Shapes drawn in a single quick flick with few mouse samples will be coarsely interpolated. The resampling also erases your stroke speed, which is usually desirable but means fast-sketched detail is lost. Try the MP preset at <Math math="M=60" />: the straight vertical strokes of the letters never fully sharpen because N=140 cannot encode a true step.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">DFT vs. continuous Fourier series</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">This page uses a discrete Fourier transform on 140 samples, not the continuous Fourier integral <Math math="\int f(t) e^{-i\omega t} dt" />. The DFT implicitly assumes your signal is periodic with period <Math math="N" /> — that's why the path is forced closed. If you draw a spiral that doesn't naturally close, the straight-line closure edge injects a broadband discontinuity whose high-frequency energy spreads across many terms. A continuous Fourier series of a truly smooth closed curve would have exponentially decaying coefficients; the DFT gives you polynomial decay at best, limited by the sampling resolution. Also, the DFT lacks windowing: the hard closure acts like a rectangular window, causing spectral leakage that shows up as noise in the smaller <Math math="|X_k|" /> terms.</p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.85rem] text-muted-text">If you want to see the same transform applied to actual audio signals — same math, different domain — read the Biquadia internals: <a href="/blog/inside-biquadia" class="text-brand-anchor hover:text-primary-text">the Biquadia deep-dive →</a></p>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">JavaScript, the DFT and reconstruction</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">These functions run in every browser on this page. The DFT is a textbook double-loop — no FFT, no libraries. Drop it into any canvas project. If you are feeding real-time audio through an <a href={gearById['behringer-umc1820']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">audio interface</a>, the same logic ports directly to C or Python for live spectral analysis.</p>
+        <div class="mt-8">
+          <div>
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">DFT + epicycle reconstruction</p>
+              <button type="button" class="copy-btn" data-copy-target="code-dft-epicycles">Copy</button>
+            </div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+              <Code id="code-dft-epicycles" code={dftJsCode} lang="javascript" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              DSP lab stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio DSP tools
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                {/* Image — 4:3 with subtle radial tint, matches /resources#gear */}
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -301,6 +596,49 @@ import Math from '../../components/Math.astro';
   }
   input[type='range']:disabled {
     opacity: 0.4;
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 
@@ -653,4 +991,20 @@ import Math from '../../components/Math.astro';
 
   document.addEventListener('astro:page-load', initFourierEpicycles);
   initFourierEpicycles();
+</script>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = (btn as HTMLButtonElement).dataset.copyTarget;
+      const el = document.getElementById(id!);
+      if (!el) return;
+      try {
+        await navigator.clipboard.writeText(el.textContent || '');
+        const orig = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => (btn.textContent = orig), 1200);
+      } catch {}
+    });
+  });
 </script>

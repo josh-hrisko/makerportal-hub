@@ -269,7 +269,7 @@
     "asin": "B01EXI8Y9S",
     "note": "Audio interface used building Biquadia — 8-preamp USB I/O for real-time DSP testing.",
     "category": "Audio interface",
-    "relatedTo": ["inside-biquadia", "biquadia"],
+    "relatedTo": ["inside-biquadia", "biquadia", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -278,7 +278,7 @@
     "asin": "B00IRVQ0F8",
     "note": "USB audio interface used in early Biquadia MEMS-mic prototyping.",
     "category": "Audio",
-    "relatedTo": ["biquadia"],
+    "relatedTo": ["biquadia", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -287,7 +287,7 @@
     "asin": "B07W5Z9NJD",
     "note": "MEMS mic breakout used for real-time DSP experiments feeding into Biquadia.",
     "category": "Audio",
-    "relatedTo": ["biquadia"],
+    "relatedTo": ["biquadia", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -296,7 +296,7 @@
     "asin": "B084PP4DT8",
     "note": "Portable 2-channel USB-C audio interface used for mobile Biquadia field recording.",
     "category": "Audio interface",
-    "relatedTo": ["biquadia"],
+    "relatedTo": ["biquadia", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -305,7 +305,7 @@
     "asin": "B08G7T3Q9S",
     "note": "Portable stereo condenser mic kit used for Biquadia field/video capture.",
     "category": "Microphone",
-    "relatedTo": ["biquadia"],
+    "relatedTo": ["biquadia", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -314,7 +314,7 @@
     "asin": "B0CTJ8BSWN",
     "note": "USB/XLR hybrid mic used building and testing nymic.",
     "category": "Microphone",
-    "relatedTo": ["nymic"],
+    "relatedTo": ["nymic", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -323,7 +323,7 @@
     "asin": "B07X5JNT3F",
     "note": "Compact USB condenser mic used for nymic testing.",
     "category": "Microphone",
-    "relatedTo": ["nymic"],
+    "relatedTo": ["nymic", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -332,7 +332,7 @@
     "asin": "B00MMKQOEM",
     "note": "USB condenser mic used for nymic testing.",
     "category": "Microphone",
-    "relatedTo": ["nymic"],
+    "relatedTo": ["nymic", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -341,7 +341,7 @@
     "asin": "B00HVLUR86",
     "note": "Reference monitoring headphones used for akous's binaural audio testing.",
     "category": "Headphones",
-    "relatedTo": ["akous"],
+    "relatedTo": ["akous", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -350,7 +350,7 @@
     "asin": "B000AJIF4E",
     "note": "Reference studio headphones used for akous's binaural audio testing.",
     "category": "Headphones",
-    "relatedTo": ["akous"],
+    "relatedTo": ["akous", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
@@ -359,7 +359,7 @@
     "asin": "B00B0YPAYQ",
     "note": "Wireless mic system used for akous's ambient/binaural field recording.",
     "category": "Microphone",
-    "relatedTo": ["akous"],
+    "relatedTo": ["akous", "fourier-epicycles"],
     "pillars": ["dsp-audio"]
   },
   {
