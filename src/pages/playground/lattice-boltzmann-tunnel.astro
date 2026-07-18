@@ -1,11 +1,24 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import Math from '../../components/Math.astro';
 
 const title = 'Lattice Boltzmann Wind Tunnel — Real-Time 2D CFD & the Von Kármán Vortex Street | MakerPortal';
 const description =
   'A real-time 2D wind tunnel in your browser. A D2Q9 lattice Boltzmann solver streams fluid past cylinders, plates, and airfoils; raise the Reynolds number to watch a laminar wake break into a shedding Von Kármán vortex street. Visualize vorticity, speed, or pressure, and paint your own obstacles.';
 const canonical = new URL('/playground/lattice-boltzmann-tunnel', Astro.site);
+
+const webAppSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Lattice Boltzmann Wind Tunnel',
+  url: canonical.toString(),
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -17,22 +30,49 @@ const breadcrumbSchema = {
   ],
 };
 
+const lbmCollisionCode = `export const CX = [0, 1, 0, -1, 0, 1, -1, -1, 1];
+export const CY = [0, 0, 1, 0, -1, 1, 1, -1, -1];
+export const W = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36];
+export const CS2 = 1 / 3;
+
+export function equilibrium(rho: number, ux: number, uy: number,
+  out: Float64Array | number[]): void {
+  const usq = 1.5 * (ux * ux + uy * uy);
+  for (let i = 0; i < 9; i++) {
+    const cu = 3 * (CX[i] * ux + CY[i] * uy);
+    out[i] = W[i] * rho * (1 + cu + 0.5 * cu * cu - usq);
+  }
+}
+
+// Inside collide(): for each lattice cell c
+//   rho = sum_i f[i][c]
+//   ux  = (1/rho) * sum_i CX[i] * f[i][c]
+//   uy  = (1/rho) * sum_i CY[i] * f[i][c]
+//   for i in 0..8: f[i][c] += omega * (eq[i] - f[i][c])
+
+// stream(): periodic wrap in a temp buffer, then swap
+// bounceBack(): swap opposite pairs inside solid cells (1↔3, 2↔4, 5↔7, 6↔8)`;
+
 const faqs = [
   {
     q: 'What is the Lattice Boltzmann Method?',
-    a: 'Instead of solving the Navier–Stokes equations directly, LBM tracks nine discrete populations of fictitious particles on each lattice node (the D2Q9 stencil). Every step the populations relax toward a local equilibrium (collision) and then hop to neighbouring nodes (streaming). In the low-speed limit this mesoscopic bookkeeping provably reproduces incompressible Navier–Stokes flow, and it is beautifully parallel and simple to code.',
+    a: 'Instead of solving the Navier–Stokes equations directly, LBM tracks nine discrete populations of fictitious particles on each lattice node (the D2Q9 stencil). Every step the populations relax toward a local equilibrium (BGK collision) and then hop to neighbouring nodes (streaming). In the low-speed limit this mesoscopic bookkeeping provably reproduces incompressible Navier–Stokes flow, and it is beautifully parallel and simple to code.',
   },
   {
-    q: 'What is a Von Kármán vortex street?',
-    a: 'Above a Reynolds number of roughly 90, the wake behind a bluff body like a cylinder stops being steady and starts shedding vortices alternately from each side, forming a staggered double row of swirls that drifts downstream. It is what makes power lines "sing" in the wind and forced the Tacoma Narrows bridge into its famous oscillation. Switch to the vorticity view and raise the Reynolds number to see it form.',
+    q: 'What is the D2Q9 velocity set?',
+    a: 'D2Q9 means two spatial dimensions and nine discrete velocities per node: a rest particle (0,0), four cardinal links at (±1,0) and (0,±1), and four diagonal links at (±1,±1). Together they guarantee fourth-order isotropy of the lattice tensors — necessary and sufficient to recover the Navier–Stokes stress tensor in the continuum limit. The nine weights are 4/9 for rest, 1/9 for cardinals, and 1/36 for diagonals.',
   },
   {
-    q: 'What sets the Reynolds number here?',
-    a: 'Reynolds number Re = u·L/ν compares inertia to viscosity, where u is the inflow speed, L the obstacle size, and ν the kinematic viscosity. In LBM the viscosity is set by the relaxation rate ω (ν = (1/ω − ½)/3). Raising the Reynolds slider lowers the viscosity toward the stability limit ω → 2, which is where lattice artefacts start to appear.',
+    q: 'What does BGK single-relaxation-time collision mean?',
+    a: 'BGK (Bhatnagar-Gross-Krook) collision approximates the full Boltzmann collision integral by a linear relaxation toward local equilibrium: fᵢ ← fᵢ + ω(fᵢᵉq − fᵢ). All nine populations relax at the same rate ω = 1/τ. It is the simplest collision operator that still conserves mass and momentum. More advanced operators (multi-relaxation-time, entropic) improve stability at high Reynolds numbers but add significant computational cost.',
   },
   {
-    q: 'How accurate is this simulation?',
-    a: 'It is a genuine mesoscopic solver, not a decorative animation — but it is a deliberately lightweight one. It runs single-precision on a coarse grid with simple bounce-back (staircased) obstacle boundaries and is weakly compressible, so it is quantitatively rough at high Reynolds numbers and is not a substitute for a validated finite-volume CFD code. It is excellent for building intuition about wakes, shedding, and boundary layers.',
+    q: 'How are Reynolds number and viscosity linked in this simulation?',
+    a: 'Reynolds number Re = U·D/ν, where U is the inflow speed, D the obstacle diameter, and ν the kinematic viscosity. In LBM, ν = c_s²(τ − 0.5)Δt with c_s² = 1/3 in lattice units. The slider computes τ from your chosen Re via ω = 1/(3ν + 0.5). Raise Re → lower ν → ω moves toward 2.0 (the stability ceiling). At Re ≳ 300 on this 240×96 grid, ω ≈ 1.96 and lattice artefacts emerge.',
+  },
+  {
+    q: 'What are the practical limits of this simulation?',
+    a: 'It is a genuine mesoscopic solver — not a decorative animation — but it is deliberately lightweight. It runs single-precision on a coarse 240×96 grid with simple bounce-back (staircased) obstacle boundaries, single-relaxation-time BGK, and weak compressibility (Ma ~ 0.1). Quantitatively it is rough at high Re and near ω = 2, and it is not a substitute for a validated finite-volume CFD code. A stability guard monitors the midpoint cell density and auto-resets the flow if it diverges.',
   },
 ];
 
@@ -45,6 +85,7 @@ const faqSchema = {
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(webAppSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
@@ -121,8 +162,44 @@ const faqSchema = {
       <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
         <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          Each node carries nine populations on the D2Q9 stencil. Every step they collide — relaxing toward the equilibrium fᵢᵉ𝑞 = wᵢ·ρ·[1 + 3(cᵢ·u) + 9/2(cᵢ·u)² − 3/2|u|²] at rate ω — then stream to neighbours. Solid cells reflect populations by full-way bounce-back. The inflow is a fixed-velocity boundary, the outflow is zero-gradient, and vorticity is the discrete curl of the recovered velocity field. In the low-Mach limit this recovers incompressible Navier–Stokes with ν = (1/ω − ½)/3.
+          Each node carries nine populations on the D2Q9 stencil. Every step they collide — relaxing toward the equilibrium at rate ω — then stream to neighbours. Solid cells reflect populations by full-way bounce-back. The inflow is a fixed-velocity boundary, the outflow is zero-gradient, and vorticity is the discrete curl of the recovered velocity field. In the low-Mach limit this recovers incompressible Navier–Stokes with ν = cₛ²(τ − ½).
         </p>
+
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="math-card">
+            <p class="math-label">D2Q9 velocity set</p>
+            <Math math="e_i \in \{(0,0),\ (\pm1,0),\ (0,\pm1),\ (\pm1,\pm1)\}" display class="mt-2" />
+          </div>
+          <div class="math-card lg:col-span-2">
+            <p class="math-label">Lattice Boltzmann equation (collide + stream)</p>
+            <Math math="f_i(\mathbf{x} + \mathbf{c}_i\Delta t,\ t + \Delta t) = f_i(\mathbf{x}, t) - \frac{1}{\tau}\bigl[f_i(\mathbf{x}, t) - f_i^{eq}(\mathbf{x}, t)\bigr]" display class="mt-2" />
+          </div>
+          <div class="math-card lg:col-span-2">
+            <p class="math-label">BGK equilibrium (second-order Hermite expansion)</p>
+            <Math math="f_i^{eq} = w_i\,\rho\left[1 + 3(\mathbf{c}_i\!\cdot\!\mathbf{u}) + \frac{9}{2}(\mathbf{c}_i\!\cdot\!\mathbf{u})^2 - \frac{3}{2}|\mathbf{u}|^2\right]" display class="mt-2" />
+          </div>
+          <div class="math-card">
+            <p class="math-label">D2Q9 weights</p>
+            <Math math="w_0 = \frac{4}{9},\quad w_{1-4} = \frac{1}{9},\quad w_{5-8} = \frac{1}{36}" display class="mt-2" />
+          </div>
+          <div class="math-card">
+            <p class="math-label">Kinematic viscosity</p>
+            <Math math="\nu = c_s^2(\tau - \tfrac{1}{2})\Delta t,\qquad c_s = \frac{1}{\sqrt{3}}" display class="mt-2" />
+          </div>
+          <div class="math-card">
+            <p class="math-label">Reynolds to relaxation</p>
+            <Math math="Re = \frac{U\cdot D}{\nu}\quad\Longrightarrow\quad \tau = 3\nu + \tfrac{1}{2} = \frac{3UD}{Re} + \tfrac{1}{2}" display class="mt-2" />
+          </div>
+          <div class="math-card">
+            <p class="math-label">CFL-like stability constraint</p>
+            <Math math="\tau > 0.5,\qquad \omega = \frac{1}{\tau} \in (0.5,\ 2.0)" display class="mt-2" />
+          </div>
+          <div class="math-card sm:col-span-2 lg:col-span-3">
+            <p class="math-label">Macroscopic (conserved moments)</p>
+            <Math math="\rho = \sum_{i=0}^{8} f_i,\qquad \mathbf{u} = \frac{1}{\rho}\sum_{i=0}^{8} f_i\,\mathbf{c}_i" display class="mt-2" />
+          </div>
+        </div>
+
         <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
             <p class="font-semibold text-primary-text">What is real physics</p>
@@ -136,6 +213,125 @@ const faqSchema = {
         <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
           The solver lives in <code class="text-primary-cta">src/lib/fluid-lbm.ts</code> (D2Q9 equilibrium, BGK collision, bounce-back, streaming), unit-tested for the velocity-set moments, equilibrium moment recovery, and mass/momentum conservation.
         </p>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel above answers to the math below. Here is what each piece of the visualization and control panel is actually doing, and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The flow canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Grid geometry.</strong> <Math math="240 \times 96" /> lattice nodes with <Math math="x" /> horizontal and <Math math="y" /> vertical. The y-axis is flipped for rendering so positive-y points up (physics convention), while canvas row zero sits at the visual top.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Colour modes.</strong> <strong>Vorticity</strong> maps clockwise rotation to blue and counter-clockwise to red. <strong>Speed</strong> ramps black → blue → red with the inflow speed as scale. <strong>Pressure</strong> draws low-pressure regions in blue and high-pressure in red, computed from the density field via <Math math="\Delta p \propto (\rho - 1)" />.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Obstacle rendering.</strong> Solid cells are filled with a muted neutral tone distinct from the flow palette. Drag-to-paint uses a brush radius of 3 lattice units with a circular mask, and obstacles are communicated to the solver as a single <Math math="Uint8Array" /> mask that triggers bounce-back and skips collision.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Pixel-perfect ImageData rendering.</strong> The colour map writes directly into a <code>Uint8ClampedArray</code> backed by the canvas <code>ImageData</code>, then blits in one <code>putImageData</code> call per frame. No texture uploads, no WebGL — just a raw pixel buffer, perfectly matching the lattice resolution.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Inflow and outflow boundaries.</strong> The left column and top/bottom rows are forced to the uniform inflow equilibrium (Dirichlet). The right column copies the second-to-last column (zero-gradient Neumann outflow). The long sides wrap periodically via the stream step's modulo indexing.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">Collision and stream — one full step</p>
+              <Math math="f_i(\mathbf{x}+\mathbf{c}_i\Delta t,\ t+\Delta t) = f_i(\mathbf{x},t) + \Omega_i,\qquad \Omega_i = -\frac{1}{\tau}\bigl[f_i(\mathbf{x},t) - f_i^{eq}(\mathbf{x},t)\bigr]" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Collide → bounce-back → stream → re-impose boundaries. That four-step sequence runs six times per animation frame, giving approximately 360 lattice steps per second at 60 fps.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, readouts, and LBM machinery</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Inflow speed slider.</strong> Sets the x-velocity <Math math="u_0" /> at the left boundary in lattice units. When Reynolds is fixed, changing the speed updates <Math math="\omega" /> implicitly because <Math math="\nu = UD/Re" />. When you then move the Re slider, it recomputes <Math math="\omega" /> from that expression.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Reynolds number slider.</strong> Computes kinematic viscosity from <Math math="\nu = (u_0 \cdot D) / Re" /> using the cylinder diameter <Math math="D" />, then derives <Math math="\omega = 1/(3\nu + 0.5)" /> and clamps it to <Math math="[0.5, 1.96]" />. You are sliding the physics parameter directly — not a visual effect multiplier.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Obstacle presets.</strong> <strong>Cylinder</strong> is a filled circle (radius ≈ 16% of channel height). <strong>Flat plate</strong> is a vertical line segment. <strong>Airfoil</strong> is a tilted teardrop with angle of attack −0.28 rad, tapered toward the trailing edge. <strong>Clear</strong> zeroes the mask and resets the flow.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Play, pause, reset.</strong> Pause freezes the solver loop — the canvas holds the last rendered frame. Reset re-initialises every node to the uniform inflow equilibrium and clears the step counter. State persists across mode changes.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Readouts and render loop.</strong> The live panel shows <Math math="\nu" /> (viscosity), <Math math="\omega" /> (relaxation rate), step count, and status. Six LBM steps run per rAF frame. A stability guard checks the midpoint cell after each batch: if <Math math="\rho" /> is NaN, <Math math="&gt;5" />, or <Math math="&lt;0.1" />, the flow auto-resets and the status line reports the reason.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">τ > 0.5 or crash</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">
+              The relaxation time <Math math="\tau" /> must exceed 0.5 — otherwise the effective viscosity <Math math="\nu = c_s^2(\tau - 0.5)" /> becomes zero or negative and the scheme is unconditionally unstable. At <Math math="\tau = 0.5" /> (<Math math="\omega = 2.0" />) the collision just overwrites populations with equilibrium every step; numerical round-off cannot dissipate, and high-frequency modes grow without bound. The practical ceiling is around <Math math="\omega \approx 1.96" /> (<Math math="\tau \approx 0.51" />) — beyond that, lattice-scale oscillations (chequerboard modes) contaminate the solution. Raise the Reynolds slider until the flow resets and you have hit the limit.
+            </p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Compressibility artifacts</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">
+              LBM is weakly compressible by construction — pressure fluctuations propagate as acoustic waves at speed <Math math="c_s = 1/\sqrt{3}" />, giving an effective Mach number of <Math math="Ma \approx 0.1-0.2" /> in this setup. It is not a true incompressible Navier–Stokes solver. At higher Reynolds numbers the density variations become visible in the pressure colour mode, and at the stability limit they can trigger the auto-reset guard. This is a deliberate trade-off: true incompressibility would require a pressure-Poisson solve at each step, which would consume far more CPU than the lightweight collisional scheme running here.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">TypeScript, the collision-stream core</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The full solver is in <code class="text-primary-cta">src/lib/fluid-lbm.ts</code>. Below is the essential collision-stream loop — the equilibrium function, BGK relaxation, and the macroscopic moment recovery. Drop it into any TypeScript codebase alongside the D2Q9 constants and it runs.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">D2Q9 equilibrium + BGK collision</p>
+            <button type="button" class="copy-btn" data-copy-target="code-lbm-collision">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-lbm-collision" code={lbmCollisionCode} lang="typescript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   </PlaygroundShell>
@@ -152,6 +348,37 @@ const faqSchema = {
   .live-lab { font-family: var(--font-mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mp-muted); }
   .live-val { font-weight: 700; color: var(--mp-text); font-size: 0.9rem; }
   input[type='range'] { accent-color: var(--mp-cta); }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
 </style>
 
 <script>

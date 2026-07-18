@@ -1,4 +1,5 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 
@@ -6,6 +7,56 @@ const title = 'Conformal Mapping Explorer — Watch a Grid Warp Under f(z) | Mak
 const description =
   'A grid on the complex plane, warped live under f(z) — pick a preset (z², 1/z, exp(z), a Möbius transform...) or type your own expression, and scrub a homotopy slider to morph between the flat grid and its image.';
 const canonical = new URL('/playground/conformal-mapping', Astro.site);
+
+const conformalCodeJS = `// Complex arithmetic — plain { re, im } objects, no eval
+const cAdd = (a, b) => ({ re: a.re + b.re, im: a.im + b.im });
+const cMul = (a, b) => ({
+  re: a.re * b.re - a.im * b.im,
+  im: a.re * b.im + a.im * b.re
+});
+const cDiv = (a, b) => {
+  const d = b.re * b.re + b.im * b.im;
+  return {
+    re: (a.re * b.re + a.im * b.im) / d,
+    im: (a.im * b.re - a.re * b.im) / d
+  };
+};
+const cExp = (a) => {
+  const r = Math.exp(a.re);
+  return { re: r * Math.cos(a.im), im: r * Math.sin(a.im) };
+};
+
+// Evaluate parsed AST against complex z
+function evalNode(node, z) {
+  switch (node.type) {
+    case 'num': return { re: node.value, im: 0 };
+    case 'z': return z;
+    case 'add': return cAdd(evalNode(node.left, z), evalNode(node.right, z));
+    case 'mul': return cMul(evalNode(node.left, z), evalNode(node.right, z));
+    case 'call': return FUNCS[node.name](evalNode(node.arg, z));
+    // ... div, sub, pow, neg
+  }
+}
+
+// Homotopy: blend identity z with full map f(z)
+function mapPoint(z, t, ast) {
+  const fz = evalNode(ast, z);
+  return {
+    re: (1 - t) * z.re + t * fz.re,
+    im: (1 - t) * z.im + t * fz.im
+  };
+}`;
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Conformal Mapping Explorer',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,12 +67,48 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Conformal Mapping Explorer', item: canonical.toString() },
   ],
 };
+
+const faqs = [
+  {
+    q: 'What is a conformal map?',
+    a: 'A conformal map preserves angles locally. Take any two curves that cross on the complex plane — after applying a conformal f(z), they still cross at the same angle, even if the whole shape is stretched, rotated, or bent. The condition is that f is analytic and its derivative f′(z) is not zero at that point. The first-order Taylor expansion f(z) ≈ f(z₀) + f′(z₀)(z − z₀) shows why: multiplying by the complex number f′(z₀) just rotates and scales. It does not shear.',
+  },
+  {
+    q: 'Why use a homotopy slider instead of just showing the final mapped grid?',
+    a: 'Watching the flat identity grid morph into f(z) lets you track where each line came from. Without the t-slider, a line that erupts from the origin under z² appears out of nowhere. With the homotopy p(t,z) = (1−t)z + t f(z), you see the line slide continuously from its pre-image. The blend is not conformal at intermediate t — it is an affine mix, not an analytic composition — but it makes direction of deformation visible.',
+  },
+  {
+    q: 'What happens at critical points where f′(z) = 0?',
+    a: 'Conformality breaks. For f(z) = z², f′(z) = 2z is zero at the origin. A 90° right-angle crossing becomes 180° — the grid pinches into a cusp. For z³, 90° becomes 270°. In general, if the local expansion near z₀ is f(z) ≈ a(z − z₀)ᵏ with k ≥ 2, angles multiply by k. The renderer shows this honestly: watch orthogonal blue and orange lines collapse at the origin for z². That is not a rendering artifact.',
+  },
+  {
+    q: 'Can I type any complex function into the expression box?',
+    a: 'The parser supports +, −, ×, /, ^, parentheses, the imaginary unit i, constants pi and e, and functions sin, cos, tan, exp, log, sqrt, conj, and abs of z. It is a small hand-written recursive-descent parser — no eval, no new Function, and no code injection possible. If your expression is not in the supported grammar, an error message appears below the input. Multi-valued functions like log and sqrt use their principal branches.',
+  },
+  {
+    q: 'What are the gaps in the grid when I use 1/z, log(z), or sqrt(z)?',
+    a: 'Gaps are truth, not bugs. When a mapped point lands outside the view window (|p| > view × 2.4) or becomes non-finite (pole, essential singularity, branch cut), the renderer lifts the pen. That gap is exactly where a pole lives — for 1/z at z = 0, for example, the mapped point goes to infinity so the line breaks. Similarly, log(z) has a branch cut along the negative real axis where the argument jumps from +π to −π.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
 import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -193,6 +280,121 @@ import Math from '../../components/Math.astro';
         </p>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel on that canvas answers to the math below. Here is what each piece of the visualization and controls is actually doing, and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The conformal grid canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The Cartesian grid before transformation.</strong> A family of horizontal lines (fixed <Math math="\text{Im}\,z" />, rendered in blue/teal) and vertical lines (fixed <Math math="\text{Re}\,z" />, rendered in orange/red). At t=0, this is what you see: an ordinary rectangular lattice on <Math math="[-R,R]\times[-R,R]" /> with a configurable number of lines set by the grid density slider.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">How each grid point (x + iy) gets mapped via f(z).</strong> The script samples every grid line at 90 points, evaluates the parsed AST at each complex coordinate <Math math="z = x + iy" />, then blends with the identity via the homotopy <Math math="p(t,z) = (1-t)z + t f(z)" />. Each evaluated point goes through a clamp-radius check — if <Math math="|p| > \text{view} \times 2.4" /> or if the result is non-finite, the pen lifts, creating a visible gap.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Color encoding.</strong> Horizontal grid lines (constant imaginary part) get a blue-family hue that shifts slightly per line — warmer toward positive imaginary values, cooler toward negative. Vertical lines (constant real part) get an orange/red-family hue, shading toward the positive real axis. The axis lines (where fixed component is near zero) are drawn with a slightly heavier stroke so the origin stands out.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The angle-preservation visual test.</strong> Pick any intersection in the mapped grid at t=1. If <Math math="f'(z_0) \neq 0" />, the blue and orange curves still cross at <Math math="90^\circ" />. Scroll in with the domain radius, watch small patches of the grid stay approximately square. Where the crossing angle visibly diverges from <Math math="90^\circ" />, you have found a critical point — <Math math="f'(z_0)=0" />.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The homotopy slider morphing identity → f(z).</strong> Drag t from 0 to 1 and watch every grid line track continuously from its pre-image to its image. The animation toggle runs an rAF loop bouncing t between 0 and 1. The intermediate frames are not meant to be conformal — they are a visual bridge connecting the familiar flat grid to the unfamiliar warped one, so you never lose track of which line is which.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">Conformality condition — when angles survive</p>
+              <Math math="f'(z_0) \neq 0 \implies \text{angles preserved at } z_0" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Equivalently, f satisfies the Cauchy–Riemann equations: <Math math="\frac{\partial u}{\partial x} = \frac{\partial v}{\partial y}" /> and <Math math="\frac{\partial u}{\partial y} = -\frac{\partial v}{\partial x}" />, where <Math math="f(z)=u(x,y)+i\,v(x,y)" />. The derivative <Math math="f'(z_0)" /> is the complex number that—as a linear map—is just a rotation times a dilation. No shear component. That is what conformity means in coordinates.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, presets, and mathematics</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Function presets.</strong> Eight one-click presets span the taxonomy of complex functions: identity, monomials (<Math math="z^2, z^3" />), reciprocal, exponential, sine, Möbius transformation, and the Joukowski airfoil map. Selecting any preset fills the expression input and recompiles the parser — no page reload, no hidden state.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The homotopy slider.</strong> <Math math="f_t(z) = (1-t)z + t \cdot f(z)" /> with <Math math="t \in [0,1]" />. This is the simplest continuous deformation from identity to the target function — an affine combination of two maps, not an analytic composition. At t=0 you see the source domain, at t=1 the full image. The formula is a straight-line interpolation in the complex codomain, pointwise. It is not conformal at intermediate t, and that is intentional: it prioritizes visual traceability over mathematical purity.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Grid resolution.</strong> The density slider controls how many horizontal and vertical grid lines are drawn (odd integers from 7 to 33). Each line is sampled at 90 sub-segments, so the worst-case evaluation count is <Math math="33 \times 2 \times 90 = 5940" /> complex function evaluations per frame. A larger density reveals finer features of <Math math="f(z)" /> but costs more compute — the slider gives you that tradeoff directly.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> Drawing runs synchronously on every control change — slider input, expression edit, preset selection. There is no idle rAF spin except during animation. The canvas is cleared, axes are stroked in translucent grey, then the two grid families are drawn in sequence (horizontal lines first, vertical lines second). Each family shares a hue range that shifts subtly per line for visual separation.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The domain and viewport mapping.</strong> The domain radius slider controls how wide a square <Math math="[-R,R]\times[-R,R]" /> of the complex plane is sampled. The viewport is fixed at <Math math="[-3.2, 3.2]" /> in screen units — so a domain radius of 2.5 means the sampled grid is slightly larger than the view. Points that map outside <Math math="\pm 7.68" /> (view × 2.4) are clamped out, producing gaps at poles. This dual-radius design keeps the origin centered while letting you zoom the mathematics independently.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Branch cuts create discontinuities</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Multi-valued functions — <Math math="\sqrt{z}" />, <Math math="\log z" />, and any non-integer power — require choosing a branch. Our parser picks the principal branch: <Math math="\arg z \in (-\pi, \pi]" />. That means the negative real axis is a cut where the argument jumps from <Math math="+\pi" /> to <Math math="-\pi" />. Grid lines that cross that axis will show a sharp tear in the canvas. It is not a rendering defect — it is the price of picking one sheet of a multi-sheeted Riemann surface. The map is continuous everywhere except across that chosen cut.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Grid resolution vs. feature scale</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">With 7 to 33 grid lines across the domain and 90 sample points per line, the canvas can miss features whose spatial scale is smaller than the inter-line spacing. A rapid oscillation like <Math math="\sin(10z)" /> or the essential singularity of <Math math="\exp(1/z)" /> near the origin will alias or produce misleading straight segments where the true curve wiggles at sub-pixel frequency. Crank the grid density to 33 and shrink the domain radius to zoom in — that is the intended workflow for resolving fine structure.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">A look under the hood — JavaScript</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The full source runs in-page. This excerpt shows the core: complex arithmetic on plain <code>{ re, im }</code> objects, the recursive-descent AST evaluator, and the homotopy blend that drives every pixel on the canvas.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Conformal-mapping core — no eval, no libraries</p>
+            <button type="button" class="copy-btn" data-copy-target="code-conformal">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-conformal" code={conformalCodeJS} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -245,6 +447,37 @@ import Math from '../../components/Math.astro';
   }
   input[type='range'] {
     accent-color: var(--mp-cta);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
   }
 </style>
 
@@ -564,6 +797,21 @@ function initConformalMapping() {
     destroyed = true;
     if (animFrameId) cancelAnimationFrame(animFrameId);
   }, { once: true });
+
+  // Copy button wiring
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copyTarget;
+      const codeEl = targetId ? document.getElementById(targetId) : null;
+      if (!codeEl) return;
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent ?? '');
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      } catch {}
+    });
+  });
 }
 
 document.addEventListener('astro:page-load', initConformalMapping);
