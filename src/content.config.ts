@@ -34,6 +34,9 @@ const journal = defineCollection({
         domain: z.string().optional(),
         sources: z.array(z.enum(['bluesky', 'hackernews', 'reddit', 'github', 'arxiv', 'lobsters', 'devto'])).optional(),
         image: z.string().optional(),
+        // Optional enriched fields (preserved for future, stripped in UI if unused)
+        imageUrl: z.string().optional(),
+        category: z.string().optional(),
       })
     ),
   }),

@@ -392,7 +392,9 @@ async function thumbnailFor(item, converter) {
 /** Returns items with an `image` field where a thumbnail could be built. */
 export async function enrichWithImages(items) {
   const converter = findConverter();
-  rmSync(OUT_DIR, { recursive: true, force: true });
+  // Preserve historic thumbnails: do NOT wipe OUT_DIR (fix for journal archive 404s).
+  // Previously this wiped the dir each run, leaving only the latest day's images and
+  // breaking /journal/<old-date> pages that still reference their thumbnails.
   mkdirSync(OUT_DIR, { recursive: true });
 
   if (!converter) {

@@ -4,7 +4,7 @@
     {
       "id": "hackernews-48944208",
       "source": "hackernews",
-      "title": "Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)",
+      "title": "Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)",
       "url": "https://github.com/sushilk1991/velora",
       "author": "sushilk1991",
       "publishedAt": "2026-07-17T07:07:38Z",
@@ -57,7 +57,7 @@
     {
       "id": "hackernews-48946222",
       "source": "hackernews",
-      "title": "Show HN: A sandbox for running real jailbreak techniques against local LLMs",
+      "title": "A sandbox for running real jailbreak techniques against local LLMs",
       "url": "https://github.com/joshfischer1108/jailbreak-lab",
       "author": "joshfischer1108",
       "publishedAt": "2026-07-17T11:54:03Z",
@@ -108,7 +108,7 @@
     {
       "id": "hackernews-48934991",
       "source": "hackernews",
-      "title": "Show HN: An MCP server that frames screen recordings and shots in Apple bezels",
+      "title": "An MCP server that frames screen recordings and shots in Apple bezels",
       "url": "https://github.com/cwooddgr/bezelbub/tree/main/bezelbub-mcp",
       "author": "igneous_rocker",
       "publishedAt": "2026-07-16T14:21:32Z",
@@ -206,7 +206,8 @@
       "sources": [
         "arxiv"
       ],
-      "image": "/trends/arxiv-2607.13278v2.webp"
+      "image": "/trends/arxiv-2607.13278v2.webp",
+      "category": "cs.SD"
     },
     {
       "id": "bluesky-3mqkohdwbjc2s",
@@ -257,7 +258,8 @@
       "sources": [
         "arxiv"
       ],
-      "image": "/trends/arxiv-2607.11706v1.webp"
+      "image": "/trends/arxiv-2607.11706v1.webp",
+      "category": "cs.SD"
     },
     {
       "id": "arxiv-2607.07015v1",
@@ -274,7 +276,8 @@
       "sources": [
         "arxiv"
       ],
-      "image": "/trends/arxiv-2607.07015v1.webp"
+      "image": "/trends/arxiv-2607.07015v1.webp",
+      "category": "cs.SD"
     },
     {
       "id": "arxiv-2607.10183v2",
@@ -291,7 +294,8 @@
       "sources": [
         "arxiv"
       ],
-      "image": "/trends/arxiv-2607.10183v2.webp"
+      "image": "/trends/arxiv-2607.10183v2.webp",
+      "category": "cs.LG"
     },
     {
       "id": "arxiv-2607.08800v1",
@@ -308,7 +312,8 @@
       "sources": [
         "arxiv"
       ],
-      "image": "/trends/arxiv-2607.08800v1.webp"
+      "image": "/trends/arxiv-2607.08800v1.webp",
+      "category": "cs.SD"
     },
     {
       "id": "arxiv-2607.05276v1",
@@ -325,7 +330,8 @@
       "sources": [
         "arxiv"
       ],
-      "image": "/trends/arxiv-2607.05276v1.webp"
+      "image": "/trends/arxiv-2607.05276v1.webp",
+      "category": "cs.SD"
     },
     {
       "id": "devto-4138176",

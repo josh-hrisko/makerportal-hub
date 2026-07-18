@@ -4,7 +4,7 @@
     {
       "id": "hackernews-48894351",
       "source": "hackernews",
-      "title": "Show HN: Biscotti – on-device meeting transcription for macOS",
+      "title": "Biscotti – on-device meeting transcription for macOS",
       "url": "https://news.ycombinator.com/item?id=48894351",
       "author": "scosman",
       "publishedAt": "2026-07-13T15:38:26Z",
@@ -23,7 +23,7 @@
     {
       "id": "hackernews-48907681",
       "source": "hackernews",
-      "title": "Show HN: Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "title": "Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
       "url": "https://github.com/projectargus-cc/libargus.cc",
       "author": "KingJoker",
       "publishedAt": "2026-07-14T14:40:46Z",
@@ -58,7 +58,7 @@
     {
       "id": "hackernews-48861746",
       "source": "hackernews",
-      "title": "Show HN: SpeechCompass – speaker direction for captioning group conversations",
+      "title": "SpeechCompass – speaker direction for captioning group conversations",
       "url": "https://github.com/google-deepmind/speech-compass/",
       "author": "olwal",
       "publishedAt": "2026-07-10T16:01:26Z",
@@ -164,7 +164,7 @@
     {
       "id": "hackernews-48782406",
       "source": "hackernews",
-      "title": "Show HN: Local privacy-first Microsoft Recall alternative with Gemma 4",
+      "title": "Local privacy-first Microsoft Recall alternative with Gemma 4",
       "url": "https://github.com/ayushh0110/ScreenMind/blob/main/README.md",
       "author": "skye0110",
       "publishedAt": "2026-07-04T03:30:43Z",
@@ -216,7 +216,7 @@
     {
       "id": "hackernews-48874905",
       "source": "hackernews",
-      "title": "Show HN: Catch your local LLM falling back to CPU",
+      "title": "Catch your local LLM falling back to CPU",
       "url": "https://github.com/logxio/picchio",
       "author": "logickkk1",
       "publishedAt": "2026-07-11T19:17:35Z",
@@ -233,7 +233,7 @@
     {
       "id": "hackernews-48863722",
       "source": "hackernews",
-      "title": "Show HN: Local Motion – Use Cursor Agents and Chat with a Local LLM",
+      "title": "Local Motion – Use Cursor Agents and Chat with a Local LLM",
       "url": "https://github.com/mattmireles/local-motion",
       "author": "MediaSquirrel",
       "publishedAt": "2026-07-10T18:50:24Z",
@@ -250,7 +250,7 @@
     {
       "id": "hackernews-48855138",
       "source": "hackernews",
-      "title": "Show HN: TensorSharp: Open-Source Local LLM Inference Engine",
+      "title": "TensorSharp: Open-Source Local LLM Inference Engine",
       "url": "https://tensorsharp.ai/",
       "author": "zhongkaifu",
       "publishedAt": "2026-07-10T02:42:07Z",
@@ -266,7 +266,7 @@
     {
       "id": "hackernews-48829604",
       "source": "hackernews",
-      "title": "Show HN: Comcent CE – An open-source self-hosted Voice Infrastructure platform",
+      "title": "Comcent CE – An open-source self-hosted Voice Infrastructure platform",
       "url": "https://github.com/comcent-io/comcent-ce",
       "author": "pavanputhra",
       "publishedAt": "2026-07-08T09:22:23Z",
@@ -301,7 +301,7 @@
     {
       "id": "hackernews-48814952",
       "source": "hackernews",
-      "title": "Show HN: Fast, native Mac file manager (filters, fuzzy find, 9 MB, no Electron)",
+      "title": "Fast, native Mac file manager (filters, fuzzy find, 9 MB, no Electron)",
       "url": "https://whimfiles.com",
       "author": "whimbyte",
       "publishedAt": "2026-07-07T08:12:12Z",
@@ -349,7 +349,7 @@
     {
       "id": "hackernews-48784211",
       "source": "hackernews",
-      "title": "Show HN: Psycurate – Curated place for privacy-first, free psychological tools",
+      "title": "Psycurate – Curated place for privacy-first, free psychological tools",
       "url": "https://psycurate.com",
       "author": "mursu",
       "publishedAt": "2026-07-04T10:01:15Z",
@@ -365,7 +365,7 @@
     {
       "id": "hackernews-48764190",
       "source": "hackernews",
-      "title": "Ask HN: What are you go to LLM models for the following",
+      "title": "What are you go to LLM models for the following",
       "url": "https://news.ycombinator.com/item?id=48764190",
       "author": "mrburton",
       "publishedAt": "2026-07-02T16:55:04Z",
