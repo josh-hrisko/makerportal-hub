@@ -1,0 +1,431 @@
+{
+  "generatedAt": "2026-07-17T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-1176264980",
+      "source": "github",
+      "title": "meeting-transcriber – On-device meeting transcriber for macOS — auto-records Teams/Zoom/Webex, transcribes & separates speakers locally. No cl",
+      "url": "https://github.com/pasrom/meeting-transcriber",
+      "author": "pasrom",
+      "publishedAt": "2026-07-13T03:20:42.189Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": 26,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1176264980.webp"
+    },
+    {
+      "id": "github-1296688895",
+      "source": "github",
+      "title": "BigMoeOnEdge – Run MoE models larger than device RAM by streaming only the routed experts from flash - lossless, built on stock llama.c",
+      "url": "https://github.com/Helldez/BigMoeOnEdge",
+      "author": "Helldez",
+      "publishedAt": "2026-07-17T08:49:44.181Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1296688895.webp"
+    },
+    {
+      "id": "github-1089922766",
+      "source": "github",
+      "title": "swift-2026-course – 🚀 Complete Swift & Apple Platforms 2026 guide: iOS 26, ML, Foundation Models, SwiftUI, Xcode 26, monetization strategie",
+      "url": "https://github.com/durellwilson/swift-2026-course",
+      "author": "durellwilson",
+      "publishedAt": "2026-07-16T18:02:26.195Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft"
+      ],
+      "score": 23,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1089922766.webp"
+    },
+    {
+      "id": "github-1069760430",
+      "source": "github",
+      "title": "openmed – Local-first healthcare AI: clinical NER & HIPAA PII de-identification that runs 100% on-device. 1,000+ medical models, 1",
+      "url": "https://github.com/maziyarpanahi/openmed",
+      "author": "maziyarpanahi",
+      "publishedAt": "2026-07-14T14:01:49.462Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": 22,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1069760430.webp"
+    },
+    {
+      "id": "github-541831874",
+      "source": "github",
+      "title": "onnx2tf – A tool for converting ONNX files to LiteRT/TFLite/TensorFlow, PyTorch native code (nn.Module), TorchScript (.pt), state_",
+      "url": "https://github.com/PINTO0309/onnx2tf",
+      "author": "PINTO0309",
+      "publishedAt": "2026-07-17T08:05:19.403Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-541831874.webp"
+    },
+    {
+      "id": "github-1247964551",
+      "source": "github",
+      "title": "localharness – An open-source, model-agnostic agent harness for local LLMs. Define agents in YAML (tools, memory, deny-first permission",
+      "url": "https://github.com/ahwurm/localharness",
+      "author": "ahwurm",
+      "publishedAt": "2026-07-17T02:51:59.123Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1247964551.webp"
+    },
+    {
+      "id": "arxiv-2607.02371v1",
+      "source": "arxiv",
+      "title": "VisionAId: An Offline-First Multimodal Android Assistant for People with Visual Impairment, Featuring Personalized Object Retrieval",
+      "url": "http://arxiv.org/abs/2607.02371v1",
+      "author": "Cristian-Gabriel Florea",
+      "publishedAt": "2026-07-13T20:22:09.433Z",
+      "tags": [
+        "on-device-ai",
+        "dsp-audio",
+        "privacy-arch"
+      ],
+      "score": 21,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CV",
+      "image": "/trends/arxiv-2607.02371v1.webp"
+    },
+    {
+      "id": "bluesky-3mqkohdwbjc2s",
+      "source": "bluesky",
+      "title": "Learn why Xcode 27 shows a warning when an @Entry declaration creates a new class instance for every fallback access, how unstable environment defaults can cause unnecessary SwiftUI view updates, and how to make them sta",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mqkohdwbjc2s",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-17T01:58:59.085Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 16,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreifjdjblflau7aaeidwe4b2ufxuayfxi53wd5yup2ctjp6nkfblyae",
+      "image": "/trends/bluesky-3mqkohdwbjc2s.webp"
+    },
+    {
+      "id": "bluesky-3mplspadywk2l",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-17T00:18:35.539Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 16,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreig76io2y27hudzb2mgxdfiao4aci5eoeu4yjj2tyfpzqlf3qqv6ey",
+      "image": "/trends/bluesky-3mplspadywk2l.webp"
+    },
+    {
+      "id": "hackernews-48931429",
+      "source": "hackernews",
+      "title": "Trellis2.c – Local 3D generation with Vulkan and CUDA",
+      "url": "https://github.com/Wimacs/trellis2.c",
+      "author": "wimaxs",
+      "publishedAt": "2026-07-17T06:51:33.902Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 15,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48931429.webp"
+    },
+    {
+      "id": "bluesky-3mqj4fupwns2n",
+      "source": "bluesky",
+      "title": "When storing custom values in properties of an @Observable, it’s recommended to make them Equatable to minimize SwiftUI view updates. I’ve just published a post looking at how @Observable handles equal assignments and wh",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqj4fupwns2n",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-16T17:52:27.810Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 15,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreibn2qmls2hjd45badorxtnbldp2mvtzb35wlhncqxdhvpib6cvofa",
+      "image": "/trends/bluesky-3mqj4fupwns2n.webp"
+    },
+    {
+      "id": "bluesky-3mpr6bvskxs2l",
+      "source": "bluesky",
+      "title": "Lock Screen widgets and always-on Apple Watch displays can accidentally expose user data. The privacySensitive() modifier tells SwiftUI which views to redact in those contexts. www.hackingwithswift.com/quick-start/...",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mpr6bvskxs2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-16T23:08:49.611Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 14,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mpr6bvskxs2l.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-16T02:27:54.688Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 14,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-15T16:23:46.178Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 14,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:qpwjy4niboffveom5wsemo6p/bafkreih7w4zneu356mqq3hvyuzvf7xcna5kzyjji5hmsn33hgdfujzblvy",
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
+      "id": "hackernews-48880594",
+      "source": "hackernews",
+      "title": "Ollama vs. Llama.cpp – Quick Benchmark",
+      "url": "https://blawg.pages.dev/ollama-vs-llama-server",
+      "author": "caveman23",
+      "publishedAt": "2026-07-17T08:35:05.245Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 13,
+      "domain": "blawg.pages.dev",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.03666v1",
+      "source": "arxiv",
+      "title": "TRACE-EVC: Text-Guided Relative Affective Control for Zero-Shot Emotional Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.03666v1",
+      "author": "Zihan Zhang",
+      "publishedAt": "2026-07-16T03:33:15.055Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 13,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03666v1.webp"
+    },
+    {
+      "id": "hackernews-48898224",
+      "source": "hackernews",
+      "title": "I gave a local LLM a \"delete production\" button and watched what it did",
+      "url": "https://medium.com/@dhanushg295/my-local-35b-avoids-every-trap-tool-1d2d2f1850cc",
+      "author": "_dhanush_",
+      "publishedAt": "2026-07-16T12:30:00.292Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "medium.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2606.28392v1",
+      "source": "arxiv",
+      "title": "RADIANT-PET: Reasoning-Augmented PET/CT Lesion Segmentation with Large Language Models and Reinforcement Learning",
+      "url": "http://arxiv.org/abs/2606.28392v1",
+      "author": "Jiasheng Wang",
+      "publishedAt": "2026-07-15T04:04:23.959Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 11,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CV",
+      "image": "/trends/arxiv-2606.28392v1.webp"
+    },
+    {
+      "id": "hackernews-48883305",
+      "source": "hackernews",
+      "title": "Juggler – an open-source GUI coding agent, by the creator of JUCE",
+      "url": "https://github.com/juggler-ai/juggler",
+      "author": "julesrms",
+      "publishedAt": "2026-07-13T01:58:43.209Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 11,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48883305.webp"
+    },
+    {
+      "id": "hackernews-48880654",
+      "source": "hackernews",
+      "title": "LocalMask – local-first CLI that masks PII and secrets before LLMs",
+      "url": "https://localmaskpro.com",
+      "author": "sgury",
+      "publishedAt": "2026-07-15T19:31:09.280Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 10,
+      "domain": "localmaskpro.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48880654.webp"
+    },
+    {
+      "id": "arxiv-2607.02633v1",
+      "source": "arxiv",
+      "title": "GRAFT: Grafted Reference Audio for Fine-grained Pronunciation in Zero-shot Text-to-Speech",
+      "url": "http://arxiv.org/abs/2607.02633v1",
+      "author": "Antonis Asonitis",
+      "publishedAt": "2026-07-14T07:55:44.585Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 9,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2607.02633v1.webp"
+    },
+    {
+      "id": "arxiv-2607.03985v1",
+      "source": "arxiv",
+      "title": "NouveauVoice: Generating Novel Pseudo Speakers for Voice Anonymization",
+      "url": "http://arxiv.org/abs/2607.03985v1",
+      "author": "Meiying Melissa Chen",
+      "publishedAt": "2026-07-14T02:11:53.734Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 9,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03985v1.webp"
+    },
+    {
+      "id": "arxiv-2606.31365v1",
+      "source": "arxiv",
+      "title": "Beyond Cross-Reconstruction: Probing-Based Disentanglement Evaluation for Acoustic Teleportation Codecs",
+      "url": "http://arxiv.org/abs/2606.31365v1",
+      "author": "Philipp Grundhuber",
+      "publishedAt": "2026-07-13T06:17:28.237Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 9,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2606.31365v1.webp"
+    },
+    {
+      "id": "devto-4168130",
+      "source": "devto",
+      "title": "Part 2 — Search, palette, and settings",
+      "url": "https://dev.to/nerd_snipe_dev/part-2-intermediate-search-palette-and-settings-gif",
+      "author": "nerd_snipe_dev",
+      "publishedAt": "2026-07-15T15:53:18.928Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 8,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4168130.webp"
+    }
+  ]
+}

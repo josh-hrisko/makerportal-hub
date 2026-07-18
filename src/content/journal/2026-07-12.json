@@ -1,0 +1,424 @@
+{
+  "generatedAt": "2026-07-12T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-1299894670",
+      "source": "github",
+      "title": "Juicer – Juicer is a 100% free, open-source, local-first macOS utility for power users and developers. It consolidates app uninst",
+      "url": "https://github.com/amfi-disable/Juicer",
+      "author": "amfi-disable",
+      "publishedAt": "2026-07-12T03:38:29.932Z",
+      "tags": [
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": 20,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1299894670.webp"
+    },
+    {
+      "id": "github-1251265302",
+      "source": "github",
+      "title": "ActivityTrace – On-device cross-app memory search for Android. No AI, no cloud, no internet permission.",
+      "url": "https://github.com/DavidNeurieder/ActivityTrace",
+      "author": "DavidNeurieder",
+      "publishedAt": "2026-07-12T00:04:26.950Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 20,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1251265302.webp"
+    },
+    {
+      "id": "github-1146753014",
+      "source": "github",
+      "title": "OpenLore – Deterministic, local-first memory and guardrails for AI coding agents with no LLM in the hot path.",
+      "url": "https://github.com/clay-good/OpenLore",
+      "author": "clay-good",
+      "publishedAt": "2026-07-12T01:41:56.558Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1146753014.webp"
+    },
+    {
+      "id": "github-785259548",
+      "source": "github",
+      "title": "DirectNAot – DirectN AOT compatible version. Only for .NET Core 9 and beyond. Interop Code for : DXGI, WIC, DirectX 9 to 12, Direct2D",
+      "url": "https://github.com/smourier/DirectNAot",
+      "author": "smourier",
+      "publishedAt": "2026-07-12T00:45:01.996Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-785259548.webp"
+    },
+    {
+      "id": "github-1171439290",
+      "source": "github",
+      "title": "AudioAuditor – A beautiful program for analyzing audio quality — detects fake lossless, clipping, MQA, and AI-generated audio; includes",
+      "url": "https://github.com/Angel2mp3/AudioAuditor",
+      "author": "Angel2mp3",
+      "publishedAt": "2026-07-12T00:23:09.453Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1171439290.webp"
+    },
+    {
+      "id": "github-920317644",
+      "source": "github",
+      "title": "docmind-ai-llm – DocMind AI is a powerful, open-source Streamlit application leveraging LlamaIndex, LangGraph, and local Large Language M",
+      "url": "https://github.com/BjornMelin/docmind-ai-llm",
+      "author": "BjornMelin",
+      "publishedAt": "2026-07-11T22:33:46.691Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-920317644.webp"
+    },
+    {
+      "id": "bluesky-3mplspadywk2l",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-10T14:45:59.393Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreig76io2y27hudzb2mgxdfiao4aci5eoeu4yjj2tyfpzqlf3qqv6ey",
+      "image": "/trends/bluesky-3mplspadywk2l.webp"
+    },
+    {
+      "id": "hackernews-48923505",
+      "source": "hackernews",
+      "title": "Hedy runs its real-time meeting AI on-device (Mac/Windows/iOS)",
+      "url": "https://www.hedy.ai/post/local-ai-meetings-hedy-3-2/",
+      "author": "julp",
+      "publishedAt": "2026-07-12T02:02:59.823Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 12,
+      "domain": "hedy.ai",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48923505.webp"
+    },
+    {
+      "id": "bluesky-3mqtc4sfows25",
+      "source": "bluesky",
+      "title": "SwiftUI has three similarly named grouping modifiers: geometryGroup(), compositingGroup() and drawingGroup(). If, like me, you sometimes forget which one does what, I’ve just published a guide explaining how they differ ",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqtc4sfows25",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-10T20:14:05.222Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 12,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreieoajqc4zuqek7ra5fa2isf3jb3axeoyqiiqref2ebsqmky5qzyxu",
+      "image": "/trends/bluesky-3mqtc4sfows25.webp"
+    },
+    {
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-09T15:02:45.118Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:qpwjy4niboffveom5wsemo6p/bafkreih7w4zneu356mqq3hvyuzvf7xcna5kzyjji5hmsn33hgdfujzblvy",
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
+      "id": "devto-4130752",
+      "source": "devto",
+      "title": "Swift Package Manager: Modular Programming",
+      "url": "https://dev.to/fraser-scott-morrison/spm-modular-programming-architecture-2a98",
+      "author": "fraser-scott-morrison",
+      "publishedAt": "2026-07-11T23:05:51.571Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 11,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4130752.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-07T20:00:59.106Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 11,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "bluesky-3mqcexcrpuc2t",
+      "source": "bluesky",
+      "title": "Bold, italic, strikethrough, monospaced, and tappable links - SwiftUI's Text view renders Markdown with zero extra setup. www.hackingwithswift.com/quick-start/...",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mqcexcrpuc2t",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-10T19:19:07.512Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqcexcrpuc2t.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-08T20:02:34.568Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "hackernews-48925453",
+      "source": "hackernews",
+      "title": "Limits, an on-device iOS app for tracking AI usage limits",
+      "url": "https://getlimits.app",
+      "author": "treexs",
+      "publishedAt": "2026-07-10T14:49:14.876Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 9,
+      "domain": "getlimits.app",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48925453.webp"
+    },
+    {
+      "id": "arxiv-2607.00362v1",
+      "source": "arxiv",
+      "title": "SoK: Attack and Defense Landscape of Mobile On-device AI Systems",
+      "url": "http://arxiv.org/abs/2607.00362v1",
+      "author": "Yujin Huang",
+      "publishedAt": "2026-07-08T01:50:36.241Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 9,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CR",
+      "image": "/trends/arxiv-2607.00362v1.webp"
+    },
+    {
+      "id": "hackernews-48932411",
+      "source": "hackernews",
+      "title": "On-device AI that respects your privacy",
+      "url": "https://news.ycombinator.com/item?id=48932411",
+      "author": "fujidevv",
+      "publishedAt": "2026-07-09T15:12:10.399Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 8,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48883349",
+      "source": "hackernews",
+      "title": "Dari AI – An all-in-one AI assistant for macOS that runs on-device",
+      "url": "https://apps.apple.com/kz/app/dari-ai/id6779357765?mt=12",
+      "author": "KZ_AI",
+      "publishedAt": "2026-07-09T02:51:21.629Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 5,
+      "domain": "apps.apple.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48883349.webp"
+    },
+    {
+      "id": "hackernews-48907681",
+      "source": "hackernews",
+      "title": "Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-11T19:18:20.180Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -79,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48907681.webp"
+    },
+    {
+      "id": "arxiv-2607.04983v2",
+      "source": "arxiv",
+      "title": "LLM for the development of FCM",
+      "url": "http://arxiv.org/abs/2607.04983v2",
+      "author": "Alexis Kafantaris",
+      "publishedAt": "2026-07-12T04:44:25.180Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.NE",
+      "image": "/trends/arxiv-2607.04983v2.webp"
+    },
+    {
+      "id": "hackernews-48925332",
+      "source": "hackernews",
+      "title": "LHIC – A local-first browser agent with 30ms latency and $0 LLM cost",
+      "url": "https://github.com/chengmatt416/LHIC",
+      "author": "pinyencheng",
+      "publishedAt": "2026-07-12T00:50:03.396Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": -84,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48925332.webp"
+    },
+    {
+      "id": "arxiv-2607.07015v1",
+      "source": "arxiv",
+      "title": "EscFOA: Enhancing Spatial Learning for Visually Impaired Learners via Generative Spatial Audio in 360-Degree Educational Environments",
+      "url": "http://arxiv.org/abs/2607.07015v1",
+      "author": "Ziyu Luo",
+      "publishedAt": "2026-07-11T11:46:19.327Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.07015v1.webp"
+    },
+    {
+      "id": "devto-4151334",
+      "source": "devto",
+      "title": "VideoIO, PCM Mixing And Timed Whisper Captions",
+      "url": "https://dev.to/codenameone/videoio-pcm-mixing-and-timed-whisper-captions-1l3n",
+      "author": "codenameone",
+      "publishedAt": "2026-07-12T01:59:39.859Z",
+      "tags": [
+        "metal-ane"
+      ],
+      "score": -87,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4151334.webp"
+    },
+    {
+      "id": "arxiv-2607.11706v1",
+      "source": "arxiv",
+      "title": "VoxENES 2026: Benchmarking Generalization of Speech Spoofing Detectors Against LLM-Era TTS and Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.11706v1",
+      "author": "Aastha Sharma",
+      "publishedAt": "2026-07-11T10:07:48.003Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.11706v1.webp"
+    }
+  ]
+}

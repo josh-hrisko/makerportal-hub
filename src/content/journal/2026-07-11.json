@@ -1,0 +1,431 @@
+{
+  "generatedAt": "2026-07-11T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-1140781612",
+      "source": "github",
+      "title": "chwezi-dev-engine – 170+ Claude Code / Codex  skills. Production-grade  skills system for web apps & mobile architecture, APIs, databases, w",
+      "url": "https://github.com/peterbamuhigire/chwezi-dev-engine",
+      "author": "peterbamuhigire",
+      "publishedAt": "2026-07-11T00:38:59.234Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1140781612.webp"
+    },
+    {
+      "id": "github-817326197",
+      "source": "github",
+      "title": "screenpipe – YC (S26) | Record your screen 24/7 and plug into your agents. Local, private, secure. Connect to OpenClaw, Hermes agent ",
+      "url": "https://github.com/screenpipe/screenpipe",
+      "author": "screenpipe",
+      "publishedAt": "2026-07-10T22:50:55.936Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-817326197.webp"
+    },
+    {
+      "id": "github-887033010",
+      "source": "github",
+      "title": "scout – CloudKit as a Log Storage",
+      "url": "https://github.com/kasianov-mikhail/scout",
+      "author": "kasianov-mikhail",
+      "publishedAt": "2026-07-10T22:01:37.418Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-887033010.webp"
+    },
+    {
+      "id": "github-1283347055",
+      "source": "github",
+      "title": "PhantomCrowd-Simulacra – PhantomCrowd AI Marketing Simulator 2026: Content Spread Forecasting with Local LLM",
+      "url": "https://github.com/charan820/PhantomCrowd-Simulacra",
+      "author": "charan820",
+      "publishedAt": "2026-07-10T19:28:28.001Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1283347055.webp"
+    },
+    {
+      "id": "github-565300035",
+      "source": "github",
+      "title": "Engine – Engine makes it easier to create idiomatic APIs and Views that feel natural in SwiftUI without sacrificing performance",
+      "url": "https://github.com/nathantannar4/Engine",
+      "author": "nathantannar4",
+      "publishedAt": "2026-07-10T16:20:12.593Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-565300035.webp"
+    },
+    {
+      "id": "github-1061327311",
+      "source": "github",
+      "title": "FluidVoice – Fastest and only macOS Dictation app with on-device STT and custom trained AI enhancement model. A local Wispr Flow alte",
+      "url": "https://github.com/altic-dev/FluidVoice",
+      "author": "altic-dev",
+      "publishedAt": "2026-07-10T16:15:58.914Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1061327311.webp"
+    },
+    {
+      "id": "bluesky-3mqj4fupwns2n",
+      "source": "bluesky",
+      "title": "When storing custom values in properties of an @Observable, it’s recommended to make them Equatable to minimize SwiftUI view updates. I’ve just published a post looking at how @Observable handles equal assignments and wh",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqj4fupwns2n",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-11T01:20:48.425Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 15,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreibn2qmls2hjd45badorxtnbldp2mvtzb35wlhncqxdhvpib6cvofa",
+      "image": "/trends/bluesky-3mqj4fupwns2n.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-09T21:50:13.997Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 14,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-08T16:43:41.993Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-07T07:51:24.710Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 10,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:qpwjy4niboffveom5wsemo6p/bafkreih7w4zneu356mqq3hvyuzvf7xcna5kzyjji5hmsn33hgdfujzblvy",
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
+      "id": "bluesky-3mplspadywk2l",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-07T13:59:24.506Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 9,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreig76io2y27hudzb2mgxdfiao4aci5eoeu4yjj2tyfpzqlf3qqv6ey",
+      "image": "/trends/bluesky-3mplspadywk2l.webp"
+    },
+    {
+      "id": "arxiv-2607.02371v1",
+      "source": "arxiv",
+      "title": "VisionAId: An Offline-First Multimodal Android Assistant for People with Visual Impairment, Featuring Personalized Object Retrieval",
+      "url": "http://arxiv.org/abs/2607.02371v1",
+      "author": "Cristian-Gabriel Florea",
+      "publishedAt": "2026-07-07T11:42:06.592Z",
+      "tags": [
+        "on-device-ai",
+        "dsp-audio",
+        "privacy-arch"
+      ],
+      "score": -79,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CV",
+      "image": "/trends/arxiv-2607.02371v1.webp"
+    },
+    {
+      "id": "hackernews-48894351",
+      "source": "hackernews",
+      "title": "Biscotti – on-device meeting transcription for macOS",
+      "url": "https://news.ycombinator.com/item?id=48894351",
+      "author": "scosman",
+      "publishedAt": "2026-07-09T14:15:31.357Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": -82,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.03666v1",
+      "source": "arxiv",
+      "title": "TRACE-EVC: Text-Guided Relative Affective Control for Zero-Shot Emotional Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.03666v1",
+      "author": "Zihan Zhang",
+      "publishedAt": "2026-07-10T12:10:54.164Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03666v1.webp"
+    },
+    {
+      "id": "arxiv-2607.07015v1",
+      "source": "arxiv",
+      "title": "EscFOA: Enhancing Spatial Learning for Visually Impaired Learners via Generative Spatial Audio in 360-Degree Educational Environments",
+      "url": "http://arxiv.org/abs/2607.07015v1",
+      "author": "Ziyu Luo",
+      "publishedAt": "2026-07-10T02:00:41.674Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.07015v1.webp"
+    },
+    {
+      "id": "hackernews-48907681",
+      "source": "hackernews",
+      "title": "Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-08T05:10:07.881Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -86,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48907681.webp"
+    },
+    {
+      "id": "hackernews-48944208",
+      "source": "hackernews",
+      "title": "Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)",
+      "url": "https://github.com/sushilk1991/velora",
+      "author": "sushilk1991",
+      "publishedAt": "2026-07-08T00:54:22.166Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "privacy-arch"
+      ],
+      "score": -86,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48944208.webp"
+    },
+    {
+      "id": "devto-4151334",
+      "source": "devto",
+      "title": "VideoIO, PCM Mixing And Timed Whisper Captions",
+      "url": "https://dev.to/codenameone/videoio-pcm-mixing-and-timed-whisper-captions-1l3n",
+      "author": "codenameone",
+      "publishedAt": "2026-07-11T11:23:55.421Z",
+      "tags": [
+        "metal-ane"
+      ],
+      "score": -87,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4151334.webp"
+    },
+    {
+      "id": "hackernews-48904884",
+      "source": "hackernews",
+      "title": "BYO AI free notetaking with optional screen reading for OpenClaw/hermes",
+      "url": "https://stagewhisper.io/lite",
+      "author": "piotraleksander",
+      "publishedAt": "2026-07-11T00:35:48.975Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": -87,
+      "domain": "stagewhisper.io",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48904884.webp"
+    },
+    {
+      "id": "hackernews-48880594",
+      "source": "hackernews",
+      "title": "Ollama vs. Llama.cpp – Quick Benchmark",
+      "url": "https://blawg.pages.dev/ollama-vs-llama-server",
+      "author": "caveman23",
+      "publishedAt": "2026-07-10T23:18:10.459Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -87,
+      "domain": "blawg.pages.dev",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.05276v1",
+      "source": "arxiv",
+      "title": "ProPS: Prompted Profile Synthesis for Natural Language-Conditioned Speaker Embedding Distributions",
+      "url": "http://arxiv.org/abs/2607.05276v1",
+      "author": "Thomas Thebaud",
+      "publishedAt": "2026-07-10T11:58:24.931Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.05276v1.webp"
+    },
+    {
+      "id": "hackernews-48929747",
+      "source": "hackernews",
+      "title": "Running Gemma4 on Apple Neural Engine",
+      "url": "https://rockyshikoku.medium.com/running-gemma4-on-apple-neural-engine-79fa0cb39dd2",
+      "author": "nmfisher",
+      "publishedAt": "2026-07-10T10:47:06.498Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": -87,
+      "domain": "rockyshikoku.medium.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48929747.webp"
+    },
+    {
+      "id": "arxiv-2606.28392v1",
+      "source": "arxiv",
+      "title": "RADIANT-PET: Reasoning-Augmented PET/CT Lesion Segmentation with Large Language Models and Reinforcement Learning",
+      "url": "http://arxiv.org/abs/2606.28392v1",
+      "author": "Jiasheng Wang",
+      "publishedAt": "2026-07-10T09:56:36.943Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CV",
+      "image": "/trends/arxiv-2606.28392v1.webp"
+    },
+    {
+      "id": "arxiv-2607.02633v1",
+      "source": "arxiv",
+      "title": "GRAFT: Grafted Reference Audio for Fine-grained Pronunciation in Zero-shot Text-to-Speech",
+      "url": "http://arxiv.org/abs/2607.02633v1",
+      "author": "Antonis Asonitis",
+      "publishedAt": "2026-07-10T03:57:27.439Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2607.02633v1.webp"
+    }
+  ]
+}

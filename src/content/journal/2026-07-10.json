@@ -1,0 +1,430 @@
+{
+  "generatedAt": "2026-07-10T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-1291414309",
+      "source": "github",
+      "title": "reame – A lean, fully-tested LLM inference server for the hardware you already have — free tiers, shared VPS, 2-core ARM boxes. ",
+      "url": "https://github.com/swellweb/reame",
+      "author": "swellweb",
+      "publishedAt": "2026-07-09T17:59:51.889Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1291414309.webp"
+    },
+    {
+      "id": "github-1101260587",
+      "source": "github",
+      "title": "MAMA – Local-first operating memory for AI coding agents - Claude Code, Codex, and any MCP client. Tracks decisions and their e",
+      "url": "https://github.com/jungjaehoon-lifegamez/MAMA",
+      "author": "jungjaehoon-lifegamez",
+      "publishedAt": "2026-07-09T05:11:53.207Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 20,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-1118209602",
+      "source": "github",
+      "title": "local-studio – Control panel for VLLM, Sglang, llama.cpp, exllamav3",
+      "url": "https://github.com/sybil-solutions/local-studio",
+      "author": "sybil-solutions",
+      "publishedAt": "2026-07-10T05:42:43.207Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-1199474157",
+      "source": "github",
+      "title": "verceltics – Open-source SwiftUI workspace for iPhone and iPad: manage hosting, domains, DNS, and deployments; monitor analytics, sea",
+      "url": "https://github.com/apoorvdarshan/verceltics",
+      "author": "apoorvdarshan",
+      "publishedAt": "2026-07-09T22:50:49.126Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1199474157.webp"
+    },
+    {
+      "id": "github-97556265",
+      "source": "github",
+      "title": "catboost – A fast, scalable, high performance Gradient Boosting on Decision Trees library, used for ranking, classification, regres",
+      "url": "https://github.com/catboost/catboost",
+      "author": "catboost",
+      "publishedAt": "2026-07-09T21:48:52.041Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-97556265.webp"
+    },
+    {
+      "id": "github-969319010",
+      "source": "github",
+      "title": "MetalHUDHelper – Menu bar App for toggling the Apple Metal Performance HUD globally on macOS",
+      "url": "https://github.com/oliwonders/MetalHUDHelper",
+      "author": "oliwonders",
+      "publishedAt": "2026-07-09T19:38:59.060Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "bluesky-3mplspadywk2l",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-09T23:11:25.883Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 16,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreig76io2y27hudzb2mgxdfiao4aci5eoeu4yjj2tyfpzqlf3qqv6ey",
+      "image": "/trends/bluesky-3mplspadywk2l.webp"
+    },
+    {
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-09T01:15:58.420Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 14,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:qpwjy4niboffveom5wsemo6p/bafkreih7w4zneu356mqq3hvyuzvf7xcna5kzyjji5hmsn33hgdfujzblvy",
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
+      "id": "bluesky-3mqkblevz4p2m",
+      "source": "bluesky",
+      "title": "🎨 𝐶𝑢𝑠𝑡𝑜𝑚 𝑏𝑖𝑛𝑑𝑖𝑛𝑔𝑠 𝑖𝑛 𝑆𝑤𝑖𝑓𝑡𝑈𝐼: 𝑐𝑙𝑜𝑠𝑢𝑟𝑒𝑠 𝑣𝑠 𝑠𝑢𝑏𝑠𝑐𝑟𝑖𝑝𝑡𝑠 by Natalia Panferova (@natpanferova.bsky.social)\n\nWe've all used 𝐵𝑖𝑛𝑑𝑖𝑛𝑔(𝑔𝑒𝑡:𝑠𝑒𝑡:) and wondered why our views ",
+      "url": "https://bsky.app/profile/snappiosweekly.bsky.social/post/3mqkblevz4p2m",
+      "author": "snappiosweekly.bsky.social",
+      "publishedAt": "2026-07-10T03:07:57.157Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:vpewrnwx6nrpou6qmnvy6fb4/bafkreibkf2exrhug4pdwhr3iceeqx62uk2or2jxvaw2l6zb7ivxph4b63y",
+      "image": "/trends/bluesky-3mqkblevz4p2m.webp"
+    },
+    {
+      "id": "bluesky-3mqjonibszf2g",
+      "source": "bluesky",
+      "title": "Fatbobman’s Swift Weekly #144 is now available!\nWhen Every Data Write Comes at a New Price\n\n🔭 Swift Task lifetime when an iOS device is locked\n🧷 anyAppleOS in Swift 6.4\n⚡ The Anatomy of a Reusable SwiftUI View\n\nmore...",
+      "url": "https://bsky.app/profile/fatbobman.com/post/3mqjonibszf2g",
+      "author": "fatbobman.com",
+      "publishedAt": "2026-07-10T00:52:54.294Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "weekly.fatbobman.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:v4xyqtxo3nao6ur6s6ydfqmj/bafkreiadsf2l25d2vbvlekz2aszce3soao7gtiyd5me4fbq5ab6skcczia",
+      "image": "/trends/bluesky-3mqjonibszf2g.webp"
+    },
+    {
+      "id": "bluesky-3mqpqeycnck2n",
+      "source": "bluesky",
+      "title": "New on the Kickstart blog: The ultimate indie iOS app launch checklist! A complete app launch checklist for indie iOS developers – all the key tasks from 45 days before launch to 60 days after. www.kickstart.tools/blog/t",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mqpqeycnck2n",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-09T22:04:17.645Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "kickstart.tools",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreibi6t6td35jjrjonpfajhqqp63i6mtuzin6gww65tdniedfyqljpa",
+      "image": "/trends/bluesky-3mqpqeycnck2n.webp"
+    },
+    {
+      "id": "bluesky-3mqj4fupwns2n",
+      "source": "bluesky",
+      "title": "When storing custom values in properties of an @Observable, it’s recommended to make them Equatable to minimize SwiftUI view updates. I’ve just published a post looking at how @Observable handles equal assignments and wh",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqj4fupwns2n",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-09T06:10:06.289Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 12,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreibn2qmls2hjd45badorxtnbldp2mvtzb35wlhncqxdhvpib6cvofa",
+      "image": "/trends/bluesky-3mqj4fupwns2n.webp"
+    },
+    {
+      "id": "arxiv-2607.02371v1",
+      "source": "arxiv",
+      "title": "VisionAId: An Offline-First Multimodal Android Assistant for People with Visual Impairment, Featuring Personalized Object Retrieval",
+      "url": "http://arxiv.org/abs/2607.02371v1",
+      "author": "Cristian-Gabriel Florea",
+      "publishedAt": "2026-07-09T05:22:08.378Z",
+      "tags": [
+        "on-device-ai",
+        "dsp-audio",
+        "privacy-arch"
+      ],
+      "score": -75,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CV",
+      "image": "/trends/arxiv-2607.02371v1.webp"
+    },
+    {
+      "id": "hackernews-48883305",
+      "source": "hackernews",
+      "title": "Juggler – an open-source GUI coding agent, by the creator of JUCE",
+      "url": "https://github.com/juggler-ai/juggler",
+      "author": "julesrms",
+      "publishedAt": "2026-07-09T22:59:54.507Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -82,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48883305.webp"
+    },
+    {
+      "id": "arxiv-2606.24661v1",
+      "source": "arxiv",
+      "title": "Perceptual Evaluation of Higher-Order Ambisonic Codecs on Both Synthetic Mixing and Native Recordings",
+      "url": "http://arxiv.org/abs/2606.24661v1",
+      "author": "Adrien Llave",
+      "publishedAt": "2026-07-09T15:23:24.373Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2606.24661v1.webp"
+    },
+    {
+      "id": "arxiv-2607.02633v1",
+      "source": "arxiv",
+      "title": "GRAFT: Grafted Reference Audio for Fine-grained Pronunciation in Zero-shot Text-to-Speech",
+      "url": "http://arxiv.org/abs/2607.02633v1",
+      "author": "Antonis Asonitis",
+      "publishedAt": "2026-07-09T15:20:09.530Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2607.02633v1.webp"
+    },
+    {
+      "id": "arxiv-2607.03666v1",
+      "source": "arxiv",
+      "title": "TRACE-EVC: Text-Guided Relative Affective Control for Zero-Shot Emotional Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.03666v1",
+      "author": "Zihan Zhang",
+      "publishedAt": "2026-07-09T12:39:40.884Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03666v1.webp"
+    },
+    {
+      "id": "hackernews-48898478",
+      "source": "hackernews",
+      "title": "Open source on-device AI apps (and counting), no cloud, works offline",
+      "url": "https://github.com/zetic-ai/awesome-on-device-ai-apps",
+      "author": "rishabh121108",
+      "publishedAt": "2026-07-09T01:22:03.997Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": -84,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48898478.webp"
+    },
+    {
+      "id": "hackernews-48946283",
+      "source": "hackernews",
+      "title": "Prompt submitted to cloud even when using local LLM by default",
+      "url": "https://github.com/anomalyco/opencode/issues/15854",
+      "author": "josh-wrale",
+      "publishedAt": "2026-07-10T00:46:41.479Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -85,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48946283.webp"
+    },
+    {
+      "id": "hackernews-48908349",
+      "source": "hackernews",
+      "title": "Megaphone – On-device macOS dictation built on Apple's SpeechAnalyzer",
+      "url": "https://github.com/Kuberwastaken/megaphone",
+      "author": "kuberwastaken",
+      "publishedAt": "2026-07-08T15:47:33.850Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": -85,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48908349.webp"
+    },
+    {
+      "id": "hackernews-48894351",
+      "source": "hackernews",
+      "title": "Biscotti – on-device meeting transcription for macOS",
+      "url": "https://news.ycombinator.com/item?id=48894351",
+      "author": "scosman",
+      "publishedAt": "2026-07-06T06:32:50.118Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": -86,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48907681",
+      "source": "hackernews",
+      "title": "Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-05T23:03:20.999Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -86,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48907681.webp"
+    },
+    {
+      "id": "arxiv-2607.10183v2",
+      "source": "arxiv",
+      "title": "Automated Tensor Scheduling for Hybrid CPU-GPU LLM Inference on Consumer Devices",
+      "url": "http://arxiv.org/abs/2607.10183v2",
+      "author": "Yangyijian Liu",
+      "publishedAt": "2026-07-09T11:17:03.991Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.DC",
+      "image": "/trends/arxiv-2607.10183v2.webp"
+    },
+    {
+      "id": "arxiv-2607.08800v1",
+      "source": "arxiv",
+      "title": "Dual-BEATs: Unlocking Zero-Shot Stereo Audio Perception in Audio Large Language Models via Dithering",
+      "url": "http://arxiv.org/abs/2607.08800v1",
+      "author": "Shuo-Chun Lin",
+      "publishedAt": "2026-07-08T14:24:02.044Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.08800v1.webp"
+    }
+  ]
+}

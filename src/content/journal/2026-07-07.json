@@ -1,0 +1,433 @@
+{
+  "generatedAt": "2026-07-07T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-940594927",
+      "source": "github",
+      "title": "awesome-native-macosx-apps – The best Mac apps — fast, lightweight, and bloat-free. No Electron. Curated for Mac power users who care about performan",
+      "url": "https://github.com/open-saas-directory/awesome-native-macosx-apps",
+      "author": "open-saas-directory",
+      "publishedAt": "2026-07-07T00:24:03.240Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-940594927.webp"
+    },
+    {
+      "id": "github-1189918673",
+      "source": "github",
+      "title": "lean-ctx – Control what your AI can see. LeanCTX (Lean Context) is the context intelligence layer for AI agents — one local Rust bi",
+      "url": "https://github.com/yvgude/lean-ctx",
+      "author": "yvgude",
+      "publishedAt": "2026-07-06T21:16:45.504Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-771153053",
+      "source": "github",
+      "title": "yolo-flutter-app – Flutter plugin for Ultralytics YOLO",
+      "url": "https://github.com/ultralytics/yolo-flutter-app",
+      "author": "ultralytics",
+      "publishedAt": "2026-07-06T18:14:23.192Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-771153053.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-06T18:10:24.945Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 18,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "github-1098774407",
+      "source": "github",
+      "title": "kronk – Your personal engine for running open source models locally. Use Go for hardware accelerated local inference with llama.",
+      "url": "https://github.com/ardanlabs/kronk",
+      "author": "ardanlabs",
+      "publishedAt": "2026-07-06T16:32:29.839Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1098774407.webp"
+    },
+    {
+      "id": "github-1264044496",
+      "source": "github",
+      "title": "wizard – Self-extending autonomous agent in one Rust binary. One-line install, any provider (OpenAI-compatible, Anthropic, xAI) o",
+      "url": "https://github.com/teddytennant/wizard",
+      "author": "teddytennant",
+      "publishedAt": "2026-07-06T14:43:24.213Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1264044496.webp"
+    },
+    {
+      "id": "github-1259737987",
+      "source": "github",
+      "title": "Chaty – Private, on-device AI desktop app — GGUF (llama.cpp) & MLX models, a local coding agent, RAG knowledge base, Deep Resear",
+      "url": "https://github.com/Fangyuan025/Chaty",
+      "author": "Fangyuan025",
+      "publishedAt": "2026-07-05T07:07:12.846Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1259737987.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-07T02:46:46.995Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 17,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "bluesky-3mqtc4sfows25",
+      "source": "bluesky",
+      "title": "SwiftUI has three similarly named grouping modifiers: geometryGroup(), compositingGroup() and drawingGroup(). If, like me, you sometimes forget which one does what, I’ve just published a guide explaining how they differ ",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqtc4sfows25",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-06T21:13:54.361Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 15,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreieoajqc4zuqek7ra5fa2isf3jb3axeoyqiiqref2ebsqmky5qzyxu",
+      "image": "/trends/bluesky-3mqtc4sfows25.webp"
+    },
+    {
+      "id": "bluesky-3mqpqeycnck2n",
+      "source": "bluesky",
+      "title": "New on the Kickstart blog: The ultimate indie iOS app launch checklist! A complete app launch checklist for indie iOS developers – all the key tasks from 45 days before launch to 60 days after. www.kickstart.tools/blog/t",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mqpqeycnck2n",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-07T00:49:31.222Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "kickstart.tools",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreibi6t6td35jjrjonpfajhqqp63i6mtuzin6gww65tdniedfyqljpa",
+      "image": "/trends/bluesky-3mqpqeycnck2n.webp"
+    },
+    {
+      "id": "bluesky-3mplspadywk2l",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-06T11:38:48.827Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreig76io2y27hudzb2mgxdfiao4aci5eoeu4yjj2tyfpzqlf3qqv6ey",
+      "image": "/trends/bluesky-3mplspadywk2l.webp"
+    },
+    {
+      "id": "bluesky-3mqkohdwbjc2s",
+      "source": "bluesky",
+      "title": "Learn why Xcode 27 shows a warning when an @Entry declaration creates a new class instance for every fallback access, how unstable environment defaults can cause unnecessary SwiftUI view updates, and how to make them sta",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mqkohdwbjc2s",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-05T18:26:38.283Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreifjdjblflau7aaeidwe4b2ufxuayfxi53wd5yup2ctjp6nkfblyae",
+      "image": "/trends/bluesky-3mqkohdwbjc2s.webp"
+    },
+    {
+      "id": "hackernews-48944208",
+      "source": "hackernews",
+      "title": "Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)",
+      "url": "https://github.com/sushilk1991/velora",
+      "author": "sushilk1991",
+      "publishedAt": "2026-07-06T20:39:03.174Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "privacy-arch"
+      ],
+      "score": -79,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48944208.webp"
+    },
+    {
+      "id": "hackernews-48894351",
+      "source": "hackernews",
+      "title": "Biscotti – on-device meeting transcription for macOS",
+      "url": "https://news.ycombinator.com/item?id=48894351",
+      "author": "scosman",
+      "publishedAt": "2026-07-06T15:17:41.214Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "ios-craft",
+        "privacy-arch"
+      ],
+      "score": -79,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.02371v1",
+      "source": "arxiv",
+      "title": "VisionAId: An Offline-First Multimodal Android Assistant for People with Visual Impairment, Featuring Personalized Object Retrieval",
+      "url": "http://arxiv.org/abs/2607.02371v1",
+      "author": "Cristian-Gabriel Florea",
+      "publishedAt": "2026-07-03T15:21:27.885Z",
+      "tags": [
+        "on-device-ai",
+        "dsp-audio",
+        "privacy-arch"
+      ],
+      "score": -79,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.CV",
+      "image": "/trends/arxiv-2607.02371v1.webp"
+    },
+    {
+      "id": "arxiv-2606.25115v1",
+      "source": "arxiv",
+      "title": "Forget to Improve: On-Device LLM-Agent Continual Learning via Budget-Curated Memory",
+      "url": "http://arxiv.org/abs/2606.25115v1",
+      "author": "Beining Wu",
+      "publishedAt": "2026-07-06T16:49:56.935Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": -81,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2606.25115v1.webp"
+    },
+    {
+      "id": "hackernews-48883305",
+      "source": "hackernews",
+      "title": "Juggler – an open-source GUI coding agent, by the creator of JUCE",
+      "url": "https://github.com/juggler-ai/juggler",
+      "author": "julesrms",
+      "publishedAt": "2026-07-06T18:04:03.685Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -82,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48883305.webp"
+    },
+    {
+      "id": "arxiv-2607.03666v1",
+      "source": "arxiv",
+      "title": "TRACE-EVC: Text-Guided Relative Affective Control for Zero-Shot Emotional Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.03666v1",
+      "author": "Zihan Zhang",
+      "publishedAt": "2026-07-06T17:59:08.314Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03666v1.webp"
+    },
+    {
+      "id": "arxiv-2607.07015v1",
+      "source": "arxiv",
+      "title": "EscFOA: Enhancing Spatial Learning for Visually Impaired Learners via Generative Spatial Audio in 360-Degree Educational Environments",
+      "url": "http://arxiv.org/abs/2607.07015v1",
+      "author": "Ziyu Luo",
+      "publishedAt": "2026-07-06T07:58:44.026Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.07015v1.webp"
+    },
+    {
+      "id": "hackernews-48907681",
+      "source": "hackernews",
+      "title": "Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-05T10:21:59.700Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -84,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48907681.webp"
+    },
+    {
+      "id": "arxiv-2606.24661v1",
+      "source": "arxiv",
+      "title": "Perceptual Evaluation of Higher-Order Ambisonic Codecs on Both Synthetic Mixing and Native Recordings",
+      "url": "http://arxiv.org/abs/2606.24661v1",
+      "author": "Adrien Llave",
+      "publishedAt": "2026-07-06T01:03:09.709Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2606.24661v1.webp"
+    },
+    {
+      "id": "arxiv-2607.02633v1",
+      "source": "arxiv",
+      "title": "GRAFT: Grafted Reference Audio for Fine-grained Pronunciation in Zero-shot Text-to-Speech",
+      "url": "http://arxiv.org/abs/2607.02633v1",
+      "author": "Antonis Asonitis",
+      "publishedAt": "2026-07-06T00:35:53.453Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -87,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2607.02633v1.webp"
+    },
+    {
+      "id": "hackernews-48917468",
+      "source": "hackernews",
+      "title": "PixFinder – Free offline AI+OCR Image Search",
+      "url": "https://pixfinder.app/",
+      "author": "alexkh",
+      "publishedAt": "2026-07-06T15:00:03.161Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": -88,
+      "domain": "pixfinder.app",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48917468.webp"
+    },
+    {
+      "id": "hackernews-48925332",
+      "source": "hackernews",
+      "title": "LHIC – A local-first browser agent with 30ms latency and $0 LLM cost",
+      "url": "https://github.com/chengmatt416/LHIC",
+      "author": "pinyencheng",
+      "publishedAt": "2026-07-05T05:27:53.801Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": -89,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48925332.webp"
+    }
+  ]
+}

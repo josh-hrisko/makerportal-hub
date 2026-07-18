@@ -1,0 +1,430 @@
+{
+  "generatedAt": "2026-07-14T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-1119995174",
+      "source": "github",
+      "title": "Cashiro – Cashiro is a comprehensive financial tracking manager that Turn bank SMS and PDF Statements into a clean, searchable mon",
+      "url": "https://github.com/ritesh-kanwar/Cashiro",
+      "author": "ritesh-kanwar",
+      "publishedAt": "2026-07-14T04:47:01.135Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1119995174.webp"
+    },
+    {
+      "id": "github-1080104069",
+      "source": "github",
+      "title": "transcripted – Record meetings and dictation on your Mac. Everything becomes plain Markdown files that Claude, Codex, or any AI can sea",
+      "url": "https://github.com/r3dbars/transcripted",
+      "author": "r3dbars",
+      "publishedAt": "2026-07-13T22:04:25.241Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1080104069.webp"
+    },
+    {
+      "id": "github-1227841016",
+      "source": "github",
+      "title": "Hindsight – Local-first desktop activity tracker — see where your hours go, with on-device AI daily summaries and optional multi-dev",
+      "url": "https://github.com/Tomotsugu-dev/Hindsight",
+      "author": "Tomotsugu-dev",
+      "publishedAt": "2026-07-13T21:37:02.822Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1227841016.webp"
+    },
+    {
+      "id": "github-1173023018",
+      "source": "github",
+      "title": "Espresso – Train and run transformers directly on Apple's Neural Engine in Swift bypass coreml entirely",
+      "url": "https://github.com/christopherkarani/Espresso",
+      "author": "christopherkarani",
+      "publishedAt": "2026-07-13T08:55:02.291Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1173023018.webp"
+    },
+    {
+      "id": "github-1149307294",
+      "source": "github",
+      "title": "speech-swift – AI speech toolkit for Apple Silicon — ASR, TTS, speech-to-speech, VAD, and diarization powered by MLX and CoreML",
+      "url": "https://github.com/soniqo/speech-swift",
+      "author": "soniqo",
+      "publishedAt": "2026-07-13T01:08:19.856Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1149307294.webp"
+    },
+    {
+      "id": "github-1194966744",
+      "source": "github",
+      "title": "AIOS – Enable system-level AI agents on Android devices with on-device LLMs, secure tool control, and a conversational shell re",
+      "url": "https://github.com/khaled4123e/AIOS",
+      "author": "khaled4123e",
+      "publishedAt": "2026-07-13T12:23:44.237Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 20,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-12T13:50:49.695Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 15,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-13T02:07:02.679Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 14,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "hackernews-48922536",
+      "source": "hackernews",
+      "title": "Homestead – Build apps for you, your family, and your agents",
+      "url": "https://myhomestead.dev/",
+      "author": "rambleraptor",
+      "publishedAt": "2026-07-13T21:37:14.875Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "myhomestead.dev",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48922536.webp"
+    },
+    {
+      "id": "bluesky-3mqcexcrpuc2t",
+      "source": "bluesky",
+      "title": "Bold, italic, strikethrough, monospaced, and tappable links - SwiftUI's Text view renders Markdown with zero extra setup. www.hackingwithswift.com/quick-start/...",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mqcexcrpuc2t",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-13T21:16:37.604Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqcexcrpuc2t.webp"
+    },
+    {
+      "id": "bluesky-3mqjonibszf2g",
+      "source": "bluesky",
+      "title": "Fatbobman’s Swift Weekly #144 is now available!\nWhen Every Data Write Comes at a New Price\n\n🔭 Swift Task lifetime when an iOS device is locked\n🧷 anyAppleOS in Swift 6.4\n⚡ The Anatomy of a Reusable SwiftUI View\n\nmore...",
+      "url": "https://bsky.app/profile/fatbobman.com/post/3mqjonibszf2g",
+      "author": "fatbobman.com",
+      "publishedAt": "2026-07-13T15:11:20.857Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "weekly.fatbobman.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:v4xyqtxo3nao6ur6s6ydfqmj/bafkreiadsf2l25d2vbvlekz2aszce3soao7gtiyd5me4fbq5ab6skcczia",
+      "image": "/trends/bluesky-3mqjonibszf2g.webp"
+    },
+    {
+      "id": "bluesky-3mplspadywk2l",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-13T08:04:05.512Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreig76io2y27hudzb2mgxdfiao4aci5eoeu4yjj2tyfpzqlf3qqv6ey",
+      "image": "/trends/bluesky-3mplspadywk2l.webp"
+    },
+    {
+      "id": "bluesky-3mqkohdwbjc2s",
+      "source": "bluesky",
+      "title": "Learn why Xcode 27 shows a warning when an @Entry declaration creates a new class instance for every fallback access, how unstable environment defaults can cause unnecessary SwiftUI view updates, and how to make them sta",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mqkohdwbjc2s",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-13T00:01:26.865Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreifjdjblflau7aaeidwe4b2ufxuayfxi53wd5yup2ctjp6nkfblyae",
+      "image": "/trends/bluesky-3mqkohdwbjc2s.webp"
+    },
+    {
+      "id": "hackernews-48917468",
+      "source": "hackernews",
+      "title": "PixFinder – Free offline AI+OCR Image Search",
+      "url": "https://pixfinder.app/",
+      "author": "alexkh",
+      "publishedAt": "2026-07-14T00:02:05.468Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 12,
+      "domain": "pixfinder.app",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48917468.webp"
+    },
+    {
+      "id": "hackernews-48923291",
+      "source": "hackernews",
+      "title": "Hedos – Local models in one native Mac app (llama.cpp, MLX, diffusers)",
+      "url": "https://www.hedos.ai/",
+      "author": "theiskaa",
+      "publishedAt": "2026-07-10T05:27:59.759Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 5,
+      "domain": "hedos.ai",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48923291.webp"
+    },
+    {
+      "id": "arxiv-2607.03666v1",
+      "source": "arxiv",
+      "title": "TRACE-EVC: Text-Guided Relative Affective Control for Zero-Shot Emotional Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.03666v1",
+      "author": "Zihan Zhang",
+      "publishedAt": "2026-07-14T01:18:18.902Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03666v1.webp"
+    },
+    {
+      "id": "arxiv-2607.10183v2",
+      "source": "arxiv",
+      "title": "Automated Tensor Scheduling for Hybrid CPU-GPU LLM Inference on Consumer Devices",
+      "url": "http://arxiv.org/abs/2607.10183v2",
+      "author": "Yangyijian Liu",
+      "publishedAt": "2026-07-13T20:53:17.067Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.DC",
+      "image": "/trends/arxiv-2607.10183v2.webp"
+    },
+    {
+      "id": "arxiv-2607.02633v1",
+      "source": "arxiv",
+      "title": "GRAFT: Grafted Reference Audio for Fine-grained Pronunciation in Zero-shot Text-to-Speech",
+      "url": "http://arxiv.org/abs/2607.02633v1",
+      "author": "Antonis Asonitis",
+      "publishedAt": "2026-07-13T17:03:05.607Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2607.02633v1.webp"
+    },
+    {
+      "id": "hackernews-48907681",
+      "source": "hackernews",
+      "title": "Low-latency local LLM runner via OpenJDK Panama FFM (Java 22)",
+      "url": "https://github.com/projectargus-cc/libargus.cc",
+      "author": "KingJoker",
+      "publishedAt": "2026-07-12T07:21:15.923Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -84,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48907681.webp"
+    },
+    {
+      "id": "hackernews-48946222",
+      "source": "hackernews",
+      "title": "A sandbox for running real jailbreak techniques against local LLMs",
+      "url": "https://github.com/joshfischer1108/jailbreak-lab",
+      "author": "joshfischer1108",
+      "publishedAt": "2026-07-13T10:25:29.144Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -88,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48946222.webp"
+    },
+    {
+      "id": "hackernews-48931429",
+      "source": "hackernews",
+      "title": "Trellis2.c – Local 3D generation with Vulkan and CUDA",
+      "url": "https://github.com/Wimacs/trellis2.c",
+      "author": "wimaxs",
+      "publishedAt": "2026-07-12T20:06:06.093Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -88,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48931429.webp"
+    },
+    {
+      "id": "arxiv-2607.07015v1",
+      "source": "arxiv",
+      "title": "EscFOA: Enhancing Spatial Learning for Visually Impaired Learners via Generative Spatial Audio in 360-Degree Educational Environments",
+      "url": "http://arxiv.org/abs/2607.07015v1",
+      "author": "Ziyu Luo",
+      "publishedAt": "2026-07-10T14:54:40.219Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -88,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.07015v1.webp"
+    },
+    {
+      "id": "arxiv-2607.04983v2",
+      "source": "arxiv",
+      "title": "LLM for the development of FCM",
+      "url": "http://arxiv.org/abs/2607.04983v2",
+      "author": "Alexis Kafantaris",
+      "publishedAt": "2026-07-12T08:47:57.173Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -89,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.NE",
+      "image": "/trends/arxiv-2607.04983v2.webp"
+    },
+    {
+      "id": "arxiv-2606.31365v1",
+      "source": "arxiv",
+      "title": "Beyond Cross-Reconstruction: Probing-Based Disentanglement Evaluation for Acoustic Teleportation Codecs",
+      "url": "http://arxiv.org/abs/2606.31365v1",
+      "author": "Philipp Grundhuber",
+      "publishedAt": "2026-07-11T14:21:52.566Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -89,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2606.31365v1.webp"
+    }
+  ]
+}

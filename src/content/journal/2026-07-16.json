@@ -1,0 +1,426 @@
+{
+  "generatedAt": "2026-07-16T12:00:00.000Z",
+  "items": [
+    {
+      "id": "github-1264469707",
+      "source": "github",
+      "title": "magenta-realtime-2-iphone – Google's MRT2 → Core ML, full Apple Neural Engine execution, zero GPU. Runs locally on iPhone without burning your hand.",
+      "url": "https://github.com/mattmireles/magenta-realtime-2-iphone",
+      "author": "mattmireles",
+      "publishedAt": "2026-07-16T04:12:57.122Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1264469707.webp"
+    },
+    {
+      "id": "github-1179303509",
+      "source": "github",
+      "title": "strix-halo-guide – AMD Strix Halo / Ryzen AI Halo local LLM setup and benchmark guide for Ryzen AI MAX+ 395 and Radeon 8060S: Ollama, llama",
+      "url": "https://github.com/hogeheer499-commits/strix-halo-guide",
+      "author": "hogeheer499-commits",
+      "publishedAt": "2026-07-15T18:34:36.574Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1179303509.webp"
+    },
+    {
+      "id": "github-1016674554",
+      "source": "github",
+      "title": "kokoro-coreml – PyTorch → CoreML conversion pipeline for Kokoro TTS. Unlocks fast on-device text-to-speech on Apple Neural Engine. ",
+      "url": "https://github.com/mattmireles/kokoro-coreml",
+      "author": "mattmireles",
+      "publishedAt": "2026-07-13T22:36:41.043Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 22,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1016674554.webp"
+    },
+    {
+      "id": "github-755968402",
+      "source": "github",
+      "title": "yolo-ios-app – Ultralytics YOLO iOS App source code for running YOLO in your own iOS apps 🌟",
+      "url": "https://github.com/ultralytics/yolo-ios-app",
+      "author": "ultralytics",
+      "publishedAt": "2026-07-15T20:52:51.551Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-755968402.webp"
+    },
+    {
+      "id": "github-987300866",
+      "source": "github",
+      "title": "ollama-client – Ollama Client – Chat with Local LLMs Inside Your Browser  A lightweight, privacy‑first Chrome extension to chat with loc",
+      "url": "https://github.com/Shishir435/ollama-client",
+      "author": "Shishir435",
+      "publishedAt": "2026-07-15T16:02:11.398Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-987300866.webp"
+    },
+    {
+      "id": "github-1172773237",
+      "source": "github",
+      "title": "dictus-ios – Open-source iOS voice dictation keyboard — fully offline, private, no subscription required for core features.",
+      "url": "https://github.com/getdictus/dictus-ios",
+      "author": "getdictus",
+      "publishedAt": "2026-07-15T07:48:22.730Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "hackernews-48957761",
+      "source": "hackernews",
+      "title": "Cashzilla – a local-first finance app (Android)",
+      "url": "https://news.ycombinator.com/item?id=48957761",
+      "author": "brauhaus",
+      "publishedAt": "2026-07-16T09:52:58.809Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 15,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-48904884",
+      "source": "hackernews",
+      "title": "BYO AI free notetaking with optional screen reading for OpenClaw/hermes",
+      "url": "https://stagewhisper.io/lite",
+      "author": "piotraleksander",
+      "publishedAt": "2026-07-15T22:31:20.604Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 13,
+      "domain": "stagewhisper.io",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48904884.webp"
+    },
+    {
+      "id": "bluesky-3mplspadywk2l",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: Metal shaders give you pixel-level control over SwiftUI views, and they're more approachable than you might expect - from simple recoloring to rainbow gradients and interlacing effects, all hardware",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mplspadywk2l",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-14T23:06:06.669Z",
+      "tags": [
+        "metal-ane",
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreig76io2y27hudzb2mgxdfiao4aci5eoeu4yjj2tyfpzqlf3qqv6ey",
+      "image": "/trends/bluesky-3mplspadywk2l.webp"
+    },
+    {
+      "id": "hackernews-48908349",
+      "source": "hackernews",
+      "title": "Megaphone – On-device macOS dictation built on Apple's SpeechAnalyzer",
+      "url": "https://github.com/Kuberwastaken/megaphone",
+      "author": "kuberwastaken",
+      "publishedAt": "2026-07-13T19:06:22.979Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 13,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48908349.webp"
+    },
+    {
+      "id": "devto-4161779",
+      "source": "devto",
+      "title": "5 Painful Bugs I Hit Building an iOS EPUB Reader with SwiftUI + WKWebView",
+      "url": "https://dev.to/kevinleeeee323/5-painful-bugs-i-hit-building-an-ios-epub-reader-with-swiftui-wkwebview-319c",
+      "author": "kevinleeeee323",
+      "publishedAt": "2026-07-15T21:38:14.733Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 11,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4161779.webp"
+    },
+    {
+      "id": "arxiv-2606.24661v1",
+      "source": "arxiv",
+      "title": "Perceptual Evaluation of Higher-Order Ambisonic Codecs on Both Synthetic Mixing and Native Recordings",
+      "url": "http://arxiv.org/abs/2606.24661v1",
+      "author": "Adrien Llave",
+      "publishedAt": "2026-07-14T04:17:27.419Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 11,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2606.24661v1.webp"
+    },
+    {
+      "id": "hackernews-48918840",
+      "source": "hackernews",
+      "title": "AI-CLI – tiny C terminal assistant powered by local LLM",
+      "url": "https://github.com/vkataev/ai-cli",
+      "author": "novaRom",
+      "publishedAt": "2026-07-14T01:55:09.834Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 11,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48918840.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-13T05:12:09.728Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 11,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "bluesky-3mqpqeycnck2n",
+      "source": "bluesky",
+      "title": "New on the Kickstart blog: The ultimate indie iOS app launch checklist! A complete app launch checklist for indie iOS developers – all the key tasks from 45 days before launch to 60 days after. www.kickstart.tools/blog/t",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mqpqeycnck2n",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-15T00:47:02.477Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "kickstart.tools",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:2izaurqsrmguegexlfoc7pps/bafkreibi6t6td35jjrjonpfajhqqp63i6mtuzin6gww65tdniedfyqljpa",
+      "image": "/trends/bluesky-3mqpqeycnck2n.webp"
+    },
+    {
+      "id": "bluesky-3mqkblevz4p2m",
+      "source": "bluesky",
+      "title": "🎨 𝐶𝑢𝑠𝑡𝑜𝑚 𝑏𝑖𝑛𝑑𝑖𝑛𝑔𝑠 𝑖𝑛 𝑆𝑤𝑖𝑓𝑡𝑈𝐼: 𝑐𝑙𝑜𝑠𝑢𝑟𝑒𝑠 𝑣𝑠 𝑠𝑢𝑏𝑠𝑐𝑟𝑖𝑝𝑡𝑠 by Natalia Panferova (@natpanferova.bsky.social)\n\nWe've all used 𝐵𝑖𝑛𝑑𝑖𝑛𝑔(𝑔𝑒𝑡:𝑠𝑒𝑡:) and wondered why our views ",
+      "url": "https://bsky.app/profile/snappiosweekly.bsky.social/post/3mqkblevz4p2m",
+      "author": "snappiosweekly.bsky.social",
+      "publishedAt": "2026-07-14T12:18:58.382Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:vpewrnwx6nrpou6qmnvy6fb4/bafkreibkf2exrhug4pdwhr3iceeqx62uk2or2jxvaw2l6zb7ivxph4b63y",
+      "image": "/trends/bluesky-3mqkblevz4p2m.webp"
+    },
+    {
+      "id": "bluesky-3mqj4fupwns2n",
+      "source": "bluesky",
+      "title": "When storing custom values in properties of an @Observable, it’s recommended to make them Equatable to minimize SwiftUI view updates. I’ve just published a post looking at how @Observable handles equal assignments and wh",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqj4fupwns2n",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-14T04:10:58.101Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:ne3b5f4o4vpkgxsv7fgbcaqg/bafkreibn2qmls2hjd45badorxtnbldp2mvtzb35wlhncqxdhvpib6cvofa",
+      "image": "/trends/bluesky-3mqj4fupwns2n.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-12T00:30:06.578Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "imageUrl": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:a6pco5evspx7fxkag3omjadp/bafkreiggcezp7izljheqgmbrm4kkberfoglyib54yfmde3zvlmwdlmd2nq",
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "hackernews-48885422",
+      "source": "hackernews",
+      "title": "How do you use LLMs for private discussions?",
+      "url": "https://news.ycombinator.com/item?id=48885422",
+      "author": "emerongi",
+      "publishedAt": "2026-07-13T18:10:40.864Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 9,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.04983v2",
+      "source": "arxiv",
+      "title": "LLM for the development of FCM",
+      "url": "http://arxiv.org/abs/2607.04983v2",
+      "author": "Alexis Kafantaris",
+      "publishedAt": "2026-07-12T02:50:00.362Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 9,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.NE",
+      "image": "/trends/arxiv-2607.04983v2.webp"
+    },
+    {
+      "id": "hackernews-48897545",
+      "source": "hackernews",
+      "title": "Attention is all they want – blocking content in websites with local LLMs",
+      "url": "https://sourcediver.org/posts/260713_attention_is_all_they_want/",
+      "author": "sourcediver",
+      "publishedAt": "2026-07-11T20:53:14.782Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 6,
+      "domain": "sourcediver.org",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.03985v1",
+      "source": "arxiv",
+      "title": "NouveauVoice: Generating Novel Pseudo Speakers for Voice Anonymization",
+      "url": "http://arxiv.org/abs/2607.03985v1",
+      "author": "Meiying Melissa Chen",
+      "publishedAt": "2026-07-16T03:48:25.153Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.03985v1.webp"
+    },
+    {
+      "id": "arxiv-2607.02633v1",
+      "source": "arxiv",
+      "title": "GRAFT: Grafted Reference Audio for Fine-grained Pronunciation in Zero-shot Text-to-Speech",
+      "url": "http://arxiv.org/abs/2607.02633v1",
+      "author": "Antonis Asonitis",
+      "publishedAt": "2026-07-15T12:59:05.870Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -84,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.LG",
+      "image": "/trends/arxiv-2607.02633v1.webp"
+    },
+    {
+      "id": "arxiv-2607.07015v1",
+      "source": "arxiv",
+      "title": "EscFOA: Enhancing Spatial Learning for Visually Impaired Learners via Generative Spatial Audio in 360-Degree Educational Environments",
+      "url": "http://arxiv.org/abs/2607.07015v1",
+      "author": "Ziyu Luo",
+      "publishedAt": "2026-07-14T10:36:44.006Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -86,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.07015v1.webp"
+    }
+  ]
+}
