@@ -59,6 +59,17 @@ function parseArxivXml(xml) {
     const published = get('published');
     const authorMatch = entryXml.match(/<author>[\s\S]*?<name>(.*?)<\/name>/i);
     const author = authorMatch ? authorMatch[1].trim() : undefined;
+
+    // Extract arXiv categories: primary_category preferred, then first category term
+    let category = '';
+    const primaryMatch = entryXml.match(/primary_category[^>]*term="([^"]+)"/i);
+    if (primaryMatch) {
+      category = primaryMatch[1];
+    } else {
+      const catMatches = [...entryXml.matchAll(/<category[^>]+term="([^"]+)"/gi)];
+      if (catMatches.length > 0) category = catMatches[0][1];
+    }
+
     if (!title || !id) continue;
     entries.push({
       id,
@@ -66,6 +77,7 @@ function parseArxivXml(xml) {
       summary,
       published,
       author,
+      category,
     });
   }
   return entries;
@@ -94,6 +106,7 @@ export async function fetchArxiv() {
       text: `${e.title} ${e.summary}`,
       externalUrl: e.id,
       engagement: 5, // arXiv papers get small base engagement (artifact bonus will add)
+      category: e.category || undefined,
     }));
   } catch (err) {
     console.warn(`[arxiv] error: ${err.message}`);

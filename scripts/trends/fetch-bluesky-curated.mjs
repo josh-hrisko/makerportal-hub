@@ -73,6 +73,7 @@ export async function fetchBlueskyCurated() {
           publishedAt: post.record?.createdAt ?? post.indexedAt,
           text,
           externalUrl: extractExternalUrl(post),
+          imageUrl: extractImageUrl(post),
           engagement: post.likeCount || 0,
           curated: true, // Tag as curated so the pipeline drops strict filters
         });
@@ -87,12 +88,35 @@ export async function fetchBlueskyCurated() {
 }
 
 function extractExternalUrl(post) {
-  const embedUri = post.record?.embed?.external?.uri;
+  const embedUri = post.record?.embed?.external?.uri ?? post.embed?.external?.uri;
   if (embedUri) return embedUri;
   for (const facet of post.record?.facets ?? []) {
     for (const feature of facet.features ?? []) {
       if (feature.$type === 'app.bsky.richtext.facet#link' && feature.uri) return feature.uri;
     }
   }
+  return undefined;
+}
+
+function extractImageUrl(post) {
+  const embed = post.embed;
+  if (!embed) return undefined;
+
+  const imgFromImages = (images) => {
+    if (!images?.[0]) return undefined;
+    return images[0].fullsize || images[0].thumb;
+  };
+
+  const direct = imgFromImages(embed.images);
+  if (direct) return direct;
+
+  if (embed.external?.thumb) return embed.external.thumb;
+
+  if (embed.media) {
+    const mediaImg = imgFromImages(embed.media.images);
+    if (mediaImg) return mediaImg;
+    if (embed.media.external?.thumb) return embed.media.external.thumb;
+  }
+
   return undefined;
 }

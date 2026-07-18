@@ -98,6 +98,8 @@ export function dedupeCandidates(candidates) {
       continue;
     }
     const base = (c.engagement ?? 0) > (prev.engagement ?? 0) ? c : prev;
+    const mergedImageUrl = base.imageUrl ?? prev.imageUrl ?? c.imageUrl;
+    const mergedCategory = base.category ?? prev.category ?? c.category ?? base.arxivCategory ?? prev.arxivCategory ?? c.arxivCategory;
     byUrl.set(key, {
       ...base,
       tags: [...new Set([...(prev.tags ?? []), ...(c.tags ?? [])])],
@@ -105,6 +107,8 @@ export function dedupeCandidates(candidates) {
       externalUrl: prev.externalUrl ?? c.externalUrl,
       sources: [...new Set([...prev.sources, c.source])],
       curated: prev.curated || c.curated || false,
+      ...(mergedImageUrl ? { imageUrl: mergedImageUrl } : {}),
+      ...(mergedCategory ? { category: mergedCategory } : {}),
     });
   }
   return [...byUrl.values()];
@@ -178,12 +182,28 @@ export function selectDigest(candidates, opts = {}) {
   return picked;
 }
 
+const HN_PREFIX_RE = /^(Show|Ask)\s+HN:\s*/i;
+
+function cleanHnTitle(title) {
+  if (!title) return title;
+  return title.replace(HN_PREFIX_RE, '').trim() || title;
+}
+
 /** Strip pipeline-internal fields down to the TrendItem shape trends.ts expects. */
 export function toTrendItem(c) {
+  const rawTitle = c.title;
+  const finalTitle = (c.source === 'hackernews' || c.id?.startsWith('hackernews-') || (c.sources ?? []).includes('hackernews'))
+    ? cleanHnTitle(rawTitle)
+    : rawTitle;
+  // Preserve enriched fields that enrich-images.mjs relies on (imageUrl, category, etc.)
+  const preserved = {};
+  if (c.imageUrl) preserved.imageUrl = c.imageUrl;
+  if (c.category) preserved.category = c.category;
+  if (c.arxivCategory) preserved.category = preserved.category ?? c.arxivCategory;
   return {
     id: c.id,
     source: c.source,
-    title: c.title,
+    title: finalTitle,
     url: c.url,
     author: c.author,
     publishedAt: c.publishedAt,
@@ -191,6 +211,7 @@ export function toTrendItem(c) {
     score: c.score,
     domain: hostOf(c.externalUrl ?? c.url),
     sources: c.sources ?? [c.source],
+    ...preserved,
   };
 }
 

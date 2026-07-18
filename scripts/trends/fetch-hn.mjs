@@ -7,6 +7,12 @@ import { SEARCH_QUERIES } from './keywords.mjs';
 const ENDPOINT = 'https://hn.algolia.com/api/v1/search';
 const SINCE_DAYS = 7;
 
+const HN_PREFIX_RE = /^(Show|Ask)\s+HN:\s*/i;
+
+function cleanHnTitle(title) {
+  return title.replace(HN_PREFIX_RE, '').trim();
+}
+
 export async function fetchHackerNews() {
   const sinceUnix = Math.floor(Date.now() / 1000) - SINCE_DAYS * 24 * 60 * 60;
   const seen = new Map();
@@ -21,10 +27,11 @@ export async function fetchHackerNews() {
     const data = await res.json();
     for (const hit of data.hits ?? []) {
       if (!hit.title || seen.has(hit.objectID)) continue;
+      const cleaned = cleanHnTitle(hit.title);
       seen.set(hit.objectID, {
         id: `hackernews-${hit.objectID}`,
         source: 'hackernews',
-        title: hit.title,
+        title: cleaned || hit.title,
         url: hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`,
         author: hit.author,
         publishedAt: hit.created_at,
