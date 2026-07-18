@@ -2,8 +2,8 @@
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 
-const title = 'Loudspeaker Enclosure Designer — Sealed Box Thiele–Small Alignment | MakerPortal';
-const description = 'Design a sealed loudspeaker enclosure using Thiele–Small parameters. Compute Qtc, fc, f3, sensitivity, max SPL, and visualize the frequency response with interactive charts.';
+const title = 'Loudspeaker Enclosure Designer — Sealed & Vented Box Alignments | MakerPortal';
+const description = 'Design a sealed or vented loudspeaker enclosure using Thiele–Small parameters. Compute alignment, fc, f3, sensitivity, max SPL, and visualize the frequency response.';
 const canonical = new URL('/playground/loudspeaker-enclosure-designer', Astro.site);
 
 const breadcrumb = {
@@ -24,7 +24,7 @@ const breadcrumb = {
 
   <PlaygroundShell
     title="Loudspeaker Enclosure Designer"
-    lead="Design a sealed-box loudspeaker from Thiele–Small parameters. Dial in driver specs, choose an alignment target, and see the computed Qtc, fc, f3, sensitivity, and max SPL — with a live frequency-response plot."
+    lead="Design a sealed or vented-box loudspeaker from Thiele–Small parameters. Dial in driver specs, choose an alignment target, and see the computed response, port length, and max SPL in real time."
     pillarHint="dsp-audio"
     isGrounded={false}
   >
@@ -99,14 +99,26 @@ const breadcrumb = {
 
         <!-- Enclosure Card -->
         <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-[1.05rem] font-[650] tracking-[-0.02em]">Enclosure</h2>
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="eyebrow">Alignment presets:</span>
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-4">
+            <div class="flex items-center gap-4">
+              <h2 class="text-[1.05rem] font-[650] tracking-[-0.02em]">Enclosure</h2>
+              <div class="flex rounded-full border border-border bg-canvas p-0.5" id="enclosure-type-toggle">
+                <button type="button" class="type-btn is-active" data-type="sealed">Sealed</button>
+                <button type="button" class="type-btn" data-type="vented">Vented</button>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2" id="sealed-presets">
+              <span class="eyebrow">Alignments:</span>
               <button type="button" class="preset-btn" data-qtc="0.5">Qtc 0.5</button>
               <button type="button" class="preset-btn" data-qtc="0.577">Bessel 0.577</button>
               <button type="button" class="preset-btn !border-brand-anchor/50 !text-brand-anchor" data-qtc="0.707">Butterworth 0.707</button>
               <button type="button" class="preset-btn" data-qtc="1.0">Qtc 1.0</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 hidden" id="vented-presets">
+              <span class="eyebrow">Alignments:</span>
+              <button type="button" class="preset-btn !border-brand-anchor/50 !text-brand-anchor" data-align="qb3">QB3</button>
+              <button type="button" class="preset-btn" data-align="sbb4">SBB4</button>
+              <button type="button" class="preset-btn" data-align="sc4">SC4</button>
             </div>
           </div>
           <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,6 +144,29 @@ const breadcrumb = {
               <div class="flex items-center gap-3 mt-1">
                 <input type="range" id="ql-slider" min="5" max="200" step="0.1" value="100" class="w-full" />
                 <input type="number" id="ql-num" class="tool-input w-[5.5rem]" min="5" max="200" step="0.1" value="100" />
+              </div>
+            </div>
+            <!-- fb (Vented only) -->
+            <div class="vented-only hidden">
+              <span class="control-label">fb <span class="eyebrow">Tuning freq (Hz)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="fb-slider" min="10" max="150" step="0.1" value="35" class="w-full" />
+                <input type="number" id="fb-num" class="tool-input w-[5.5rem]" min="10" max="150" step="0.1" value="35" />
+              </div>
+            </div>
+            <!-- portD (Vented only) -->
+            <div class="vented-only hidden">
+              <span class="control-label">Port Diameter <span class="eyebrow">(cm)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="portd-slider" min="1" max="25" step="0.1" value="7.5" class="w-full" />
+                <input type="number" id="portd-num" class="tool-input w-[5.5rem]" min="1" max="25" step="0.1" value="7.5" />
+              </div>
+            </div>
+            <!-- Port Length readout -->
+            <div class="vented-only hidden">
+              <span class="control-label">Port Length <span class="eyebrow">Required</span></span>
+              <div class="flex items-center gap-3 mt-1 h-[2.35rem] rounded-[10px] border border-border bg-canvas px-[0.6rem] text-[0.85rem] text-brand-anchor font-[600]">
+                <span id="portl-display">—</span>
               </div>
             </div>
             <!-- Power -->
@@ -160,7 +195,7 @@ const breadcrumb = {
         <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7" id="results-grid">
           {[ 
             { id: 'res-qtc', label: 'Qtc', unit: '', desc: 'Total system Q' },
-            { id: 'res-fc', label: 'fc', unit: 'Hz', desc: 'System resonance' },
+            { id: 'res-fc', label: 'fc / fb', unit: 'Hz', desc: 'System tuning' },
             { id: 'res-f3', label: 'f3', unit: 'Hz', desc: '-3 dB point' },
             { id: 'res-eta', label: 'η₀', unit: '%', desc: 'Reference efficiency' },
             { id: 'res-sens', label: 'Sensitivity', unit: 'dB', desc: '@ 1W / 1m' },
@@ -179,8 +214,8 @@ const breadcrumb = {
         <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="font-semibold">SPL Frequency Response</h3>
-            <div class="flex items-center gap-2 font-mono text-[0.7rem]">
-              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm bg-[#ce445d]"></span>Sealed</span>
+            <div class="flex items-center gap-2 font-mono text-[0.7rem]" id="plot-legend">
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm bg-[#ce445d]"></span>System</span>
               <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm border border-dashed" style="border-color:#a8b9cc"></span>Free-air</span>
             </div>
           </div>
@@ -215,14 +250,12 @@ const breadcrumb = {
           </div>
         </div>
 
-        <!-- Method & limitations -->
         <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
           <p class="font-semibold text-primary-text">Method &amp; limitations</p>
-          <p class="mt-2">This designer models a <strong>sealed-box</strong> (acoustic suspension) enclosure using the classic second-order high-pass transfer function:</p>
-          <p class="mt-2 font-mono text-[0.78rem]">α = Vas / Vb &emsp; Qtc = Qts √<span style="text-decoration:overline;">1 + α</span> &emsp; fc = fs √<span style="text-decoration:overline;">1 + α</span></p>
-          <p class="mt-2 font-mono text-[0.78rem]">|H(f)| = (f/fc)² / √<span style="text-decoration:overline;">(1 − (f/fc)²)² + (f / fc·Qtc)²</span></p>
-          <p class="mt-2">Absorption and leakage Q factors (Qa, Ql) combine in parallel with the driver Q to give the effective system Qtc via:</p>
-          <p class="mt-2 font-mono text-[0.78rem]">1/Qtc_actual = 1/Qtc_ideal + 1/Qa + 1/Ql</p>
+          <p class="mt-2">This designer models a <strong>sealed-box</strong> (acoustic suspension) or <strong>vented-box</strong> (bass-reflex) enclosure using classic small-signal high-pass transfer functions.</p>
+          <p class="mt-2 font-mono text-[0.78rem]">Sealed: |H(f)| = (f/fc)² / √<span style="text-decoration:overline;">(1 − (f/fc)²)² + (f / fc·Qtc)²</span></p>
+          <p class="mt-2 font-mono text-[0.78rem]">Vented: |H(f)|² = Ω⁸ / ((Ω⁴ - BΩ² + D)² + (AΩ³ - CΩ)²)</p>
+          <p class="mt-2 text-[0.78rem]">where Ω = f/fs, h = fb/fs, α = Vas/Vb. A, B, C, D are Small's 1973 vented-box polynomial coefficients incorporating leakage losses (Ql).</p>
           <p class="mt-2">Reference efficiency η₀ uses the simplified form: η₀ = (4π²/c³) · fs³ · Vas / Qes, where Qes = 1 / (1/Qts − 1/Qms) and c = 343 m/s. Sensitivity = 112 + 10·log₁₀(η₀) dB @ 1W/1m. SPL assumes half-space (2π) radiation.</p>
           <p class="mt-4 text-[0.78rem]"><strong>Assumptions &amp; caveats:</strong> Rigid box walls, no standing waves, small-signal Thiele–Small parameters (linear). Does not model power compression, BL nonlinearity, voice-coil inductance, port turbulence, or baffle-step effects. Max SPL estimate combines Xmax excursion limit and thermal power handling. Real-world results may vary — this is a design tool, not a measurement system.</p>
         </div>
@@ -299,6 +332,25 @@ const breadcrumb = {
     border-color: var(--mp-anchor);
     background: var(--mp-elevated);
   }
+  .type-btn {
+    border-radius: 9999px;
+    padding: 0.25rem 0.85rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mp-muted);
+    transition: all 0.15s;
+    background: transparent;
+  }
+  .type-btn:hover {
+    color: var(--mp-text);
+  }
+  .type-btn.is-active {
+    background: var(--mp-elevated);
+    color: var(--mp-text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
   .metric-card {
     border-radius: 14px;
     border: 1px solid var(--mp-border);
@@ -315,11 +367,14 @@ const breadcrumb = {
 
 <script>
 import { setupHiDPI, resolveTheme, clearCanvas, drawLogFreqGrid, drawDbGrid, drawText, drawCircle } from '../../lib/chart-core.ts';
+import { portLength } from '../../lib/acoustics.ts';
 
 function initDesigner() {
   const state: Record<string, any> = {
+    type: 'sealed',
     fs: 35, Qts: 0.38, Vas: 70, Re: 6.0, Sd: 140, Xmax: 5, Qms: 5.0,
     Vb: 28.4, Qa: 100, Ql: 100, power: 10,
+    fb: 35, portD: 7.5,
   };
 
   let _syncing = false;
@@ -337,6 +392,8 @@ function initDesigner() {
     Qa: { slider: 'qa-slider', num: 'qa-num', min: 5, max: 200, step: 0.1, defaultVal: 100 },
     Ql: { slider: 'ql-slider', num: 'ql-num', min: 5, max: 200, step: 0.1, defaultVal: 100 },
     power: { slider: 'power-slider', num: 'power-num', min: 0.1, max: 1000, step: 0.1, defaultVal: 10 },
+    fb: { slider: 'fb-slider', num: 'fb-num', min: 10, max: 150, step: 0.1, defaultVal: 35 },
+    portD: { slider: 'portd-slider', num: 'portd-num', min: 1, max: 25, step: 0.1, defaultVal: 7.5 },
   };
 
   const sliderEls: Record<string, HTMLInputElement> = {};
@@ -377,20 +434,49 @@ function initDesigner() {
     const Qa = state.Qa;
     const Ql = state.Ql;
     const power = state.power;
+    const fb = state.fb;
+    const portD = state.portD;
+    const type = state.type;
 
     const alpha = Vas / Vb;
     const Qtc_ideal = Qts * Math.sqrt(1 + alpha);
     const Qtc = 1 / (1 / Qtc_ideal + 1 / Qa + 1 / Ql);
     const fc = fs * Math.sqrt(1 + alpha);
 
-    let f3: number;
-    if (Qtc > 0.5) {
-      const q2 = Qtc * Qtc;
-      const inner = (1 / q2 - 2 + Math.sqrt((2 - 1 / q2) * (2 - 1 / q2) + 4)) / 2;
-      f3 = fc * Math.sqrt(Math.max(inner, 0));
-    } else {
-      f3 = fc;
+    let f3 = fc;
+    function H(f: number): number {
+      if (type === 'sealed') {
+        const r = f / fc;
+        const r2 = r * r;
+        return r2 / Math.sqrt((1 - r2) * (1 - r2) + r2 / (Qtc * Qtc));
+      } else {
+        const h = fb / fs;
+        const D = h * h;
+        const C = h * h / Qts + h / Ql;
+        const B = h * h + 1 + alpha + h / (Ql * Qts);
+        const A = 1 / Qts + h / Ql;
+        const Om = f / fs;
+        const Om2 = Om * Om;
+        const Om3 = Om2 * Om;
+        const Om4 = Om2 * Om2;
+        const mag2 = (Om4 * Om4) / (Math.pow(Om4 - B * Om2 + D, 2) + Math.pow(A * Om3 - C * Om, 2));
+        return Math.sqrt(mag2);
+      }
     }
+
+    // Find f3 via scan
+    const targetMag = Math.pow(10, -3 / 20); // 0.707
+    let minF_scan = 10;
+    let maxF_scan = type === 'sealed' ? fc * 3 : Math.max(fc, fb) * 3;
+    let found = false;
+    for (let f = maxF_scan; f >= minF_scan; f -= 0.5) {
+      if (H(f) < targetMag) {
+        f3 = f;
+        found = true;
+        break;
+      }
+    }
+    if (!found) f3 = minF_scan;
 
     const Qes = 1 / (1 / Qts - 1 / Qms);
     const k = (4 * Math.PI * Math.PI) / (343 * 343 * 343);
@@ -405,22 +491,25 @@ function initDesigner() {
     const spl_power = sensitivity + 10 * Math.log10(power);
     const max_spl = Math.min(spl_xmax_at_fc, spl_power);
 
-    function H(f: number): number {
-      const r = f / fc;
-      const r2 = r * r;
-      return r2 / Math.sqrt((1 - r2) * (1 - r2) + r2 / (Qtc * Qtc));
-    }
-
     function H_freeair(f: number): number {
       const r = f / fs;
       const r2 = r * r;
       return r2 / Math.sqrt((1 - r2) * (1 - r2) + r2 / (Qts * Qts));
     }
 
-    return { alpha, Qtc, Qtc_ideal, fc, f3, eta, sensitivity, Vd, spl_xmax_at_fc, spl_power, max_spl, H, H_freeair, Qes };
+    const portArea = Math.PI * (portD / 200) * (portD / 200); // m^2
+    const pLen = portLength(portArea, fb, Vb * 1e-3, 343) * 100; // cm
+
+    return { alpha, Qtc, Qtc_ideal, fc, fb, f3, eta, sensitivity, Vd, spl_xmax_at_fc, spl_power, max_spl, H, H_freeair, Qes, pLen, type };
   }
 
-  function vbRec(Qtc: number) {
+  function vbRec(r: ReturnType<typeof compute>) {
+    if (r.type === 'vented') {
+      if (r.alpha > 1.5) return 'Small box — high tuning';
+      if (r.alpha < 0.5) return 'Large box — extended bass';
+      return 'Balanced vented tuning';
+    }
+    const Qtc = r.Qtc;
     if (Qtc < 0.45) return 'Overdamped — very tight, lean bass';
     if (Qtc < 0.55) return 'Transient-perfect — tightest bass';
     if (Qtc < 0.62) return 'Transient-accurate — tight, controlled';
@@ -432,18 +521,26 @@ function initDesigner() {
   }
 
   function updateResults(r: ReturnType<typeof compute>) {
-    document.getElementById('res-qtc')!.innerHTML = `${r.Qtc.toFixed(3)} <span class="text-[0.7rem] text-muted-text">${r.Qtc_ideal.toFixed(3)} ideal</span>`;
-    document.getElementById('res-fc')!.textContent = `${r.fc.toFixed(1)} Hz`;
+    if (r.type === 'sealed') {
+      document.getElementById('res-qtc')!.innerHTML = `${r.Qtc.toFixed(3)} <span class="text-[0.7rem] text-muted-text">${r.Qtc_ideal.toFixed(3)} ideal</span>`;
+      document.getElementById('res-fc')!.textContent = `${r.fc.toFixed(1)} Hz`;
+      qtcDisplay.textContent = r.Qtc.toFixed(3);
+      fcDisplay.textContent = `${r.fc.toFixed(1)} Hz`;
+    } else {
+      document.getElementById('res-qtc')!.innerHTML = `—`;
+      document.getElementById('res-fc')!.textContent = `${r.fb.toFixed(1)} Hz`;
+      qtcDisplay.textContent = `—`;
+      fcDisplay.textContent = `${r.fb.toFixed(1)} Hz`;
+      document.getElementById('portl-display')!.textContent = `${r.pLen.toFixed(1)} cm`;
+    }
+
     document.getElementById('res-f3')!.textContent = `${r.f3.toFixed(1)} Hz`;
     document.getElementById('res-eta')!.textContent = `${(r.eta * 100).toFixed(3)}%`;
     document.getElementById('res-sens')!.textContent = `${r.sensitivity.toFixed(1)} dB`;
     const maxLabel = r.max_spl === r.spl_power ? 'power' : 'Xmax';
     document.getElementById('res-maxspl')!.textContent = `${r.max_spl.toFixed(1)} dB`;
     document.getElementById('res-maxspl')!.setAttribute('title', `${r.max_spl.toFixed(1)} dB (${maxLabel}-limited)`);
-    document.getElementById('res-vbtext')!.textContent = vbRec(r.Qtc);
-
-    qtcDisplay.textContent = r.Qtc.toFixed(3);
-    fcDisplay.textContent = `${r.fc.toFixed(1)} Hz`;
+    document.getElementById('res-vbtext')!.textContent = vbRec(r);
   }
 
   function renderCanvas() {
@@ -502,8 +599,9 @@ function initDesigner() {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    drawCircle(ctx, xForF(r.fc), yForDb(r.sensitivity + 20 * Math.log10(Math.max(r.H(r.fc), 1e-6))), 4, theme.magColor, theme.text, 1.5);
-    drawText(ctx, `fc=${r.fc.toFixed(0)}Hz`, xForF(r.fc) + 7, yForDb(r.sensitivity + 20 * Math.log10(Math.max(r.H(r.fc), 1e-6))) - 6, theme.text, 10);
+    const tuningF = r.type === 'sealed' ? r.fc : r.fb;
+    drawCircle(ctx, xForF(tuningF), yForDb(r.sensitivity + 20 * Math.log10(Math.max(r.H(tuningF), 1e-6))), 4, theme.magColor, theme.text, 1.5);
+    drawText(ctx, `${r.type === 'sealed' ? 'fc' : 'fb'}=${tuningF.toFixed(0)}Hz`, xForF(tuningF) + 7, yForDb(r.sensitivity + 20 * Math.log10(Math.max(r.H(tuningF), 1e-6))) - 6, theme.text, 10);
 
     const splAtF3 = r.sensitivity + 20 * Math.log10(Math.max(r.H(r.f3), 1e-6));
     drawCircle(ctx, xForF(r.f3), yForDb(splAtF3), 4, theme.muted, theme.text, 1.5);
@@ -566,6 +664,20 @@ function initDesigner() {
 
     svg += `<circle cx="${dCx}" cy="${dCy}" r="${driverR}" fill="${driverFill}" stroke="${strokeCol}" stroke-width="1" />`;
     svg += `<circle cx="${dCx}" cy="${dCy}" r="${driverR * 0.35}" fill="none" stroke="${strokeCol}" stroke-width="0.8" />`;
+
+    // Port visual
+    if (state.type === 'vented') {
+      const portRCm = state.portD / 2;
+      const portPx = (portRCm / (edgeDm * 10)) * size;
+      const pR = clamp(portPx, 3, driverR * 0.8);
+      // Place port below the driver if it fits, else next to it
+      const pCy = dCy + driverR + pR + 4;
+      if (pCy + pR < fy + rh - 4) {
+        svg += `<circle cx="${dCx}" cy="${pCy}" r="${pR}" fill="#0a0f16" stroke="${strokeCol}" stroke-width="1" />`;
+      } else {
+        svg += `<circle cx="${dCx + driverR + pR + 4}" cy="${dCy}" r="${pR}" fill="#0a0f16" stroke="${strokeCol}" stroke-width="1" />`;
+      }
+    }
 
     const dimLabelY = fy + rh + 16;
     svg += `<line x1="${fx}" y1="${dimLabelY-6}" x2="${fx+rw}" y2="${dimLabelY-6}" stroke="${textCol}" stroke-width="1" />`;
@@ -649,12 +761,62 @@ function initDesigner() {
 
   document.querySelectorAll('.preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetQtc = parseFloat((btn as HTMLElement).dataset.qtc || '0.707');
       document.querySelectorAll('.preset-btn').forEach(b => {
         b.classList.remove('!border-brand-anchor/50', '!text-brand-anchor');
       });
       btn.classList.add('!border-brand-anchor/50', '!text-brand-anchor');
-      setVbForQtc(targetQtc);
+
+      if (state.type === 'sealed') {
+        const targetQtc = parseFloat((btn as HTMLElement).dataset.qtc || '0.707');
+        setVbForQtc(targetQtc);
+      } else {
+        const align = (btn as HTMLElement).dataset.align;
+        // Basic alignments for Vented
+        if (align === 'qb3') {
+          // Quasi-Butterworth 3 approximation
+          state.Vb = state.Vas / 3;
+          state.fb = state.fs * 1.5;
+        } else if (align === 'sbb4') {
+          // Super Boom Box 4
+          state.Vb = state.Vas;
+          state.fb = state.fs;
+        } else if (align === 'sc4') {
+          // Sub-Chebyshev 4
+          state.Vb = state.Vas * 2;
+          state.fb = state.fs * 0.8;
+        }
+        sliderEls['Vb'].value = String(state.Vb);
+        numEls['Vb'].value = state.Vb.toFixed(1);
+        sliderEls['fb'].value = String(state.fb);
+        numEls['fb'].value = state.fb.toFixed(1);
+        updateAll();
+      }
+    });
+  });
+
+  // Type Toggle
+  const typeBtns = document.querySelectorAll('.type-btn');
+  const sealedPresets = document.getElementById('sealed-presets')!;
+  const ventedPresets = document.getElementById('vented-presets')!;
+  const ventedOnlyEls = document.querySelectorAll('.vented-only');
+
+  typeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      typeBtns.forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      const newType = (btn as HTMLElement).dataset.type!;
+      state.type = newType;
+      
+      if (newType === 'sealed') {
+        sealedPresets.classList.remove('hidden');
+        ventedPresets.classList.add('hidden');
+        ventedOnlyEls.forEach(el => el.classList.add('hidden'));
+      } else {
+        sealedPresets.classList.add('hidden');
+        ventedPresets.classList.remove('hidden');
+        ventedOnlyEls.forEach(el => el.classList.remove('hidden'));
+      }
+      updateAll();
     });
   });
 

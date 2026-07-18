@@ -401,6 +401,7 @@ const breadcrumbSchema = {
 
 <script>
   import { setupHiDPI, resolveTheme, clearCanvas, drawLine, drawText, drawCircle } from '../../lib/chart-core.ts';
+  import { extractHarmonics } from '../../lib/dsp.ts';
 
   function initDriverNonlinearityLab() {
     const waveformCanvas = document.getElementById('waveform-canvas') as HTMLCanvasElement | null;
@@ -529,32 +530,19 @@ const breadcrumbSchema = {
       coneEl.setAttribute('transform', `translate(0, ${coneOffset})`);
 
       function approximateTHD(): number {
+        const p = getParams();
         const N = displacementHistory.length;
         if (N < 8) return 0;
-        const buf = new Float64Array(N);
+        const buf = new Array(N);
+        const times = new Array(N);
         for (let k = 0; k < N; k++) {
           buf[k] = displacementHistory[(historyCursor + 1 + k) % N];
+          times[k] = k * PHYSICS_DT;
         }
-        const mean = buf.reduce((a, b) => a + b, 0) / N;
-        const ac = new Float64Array(N);
-        for (let k = 0; k < N; k++) ac[k] = buf[k] - mean;
-        let fundamental = 0, h2 = 0, h3 = 0, h4 = 0;
-        const p = getParams();
-        const dt = PHYSICS_DT;
-        const omega = 2 * Math.PI * p.freq;
-        for (let k = 0; k < N; k++) {
-          const t = k * dt;
-          fundamental += ac[k] * Math.cos(omega * t);
-          h2 += ac[k] * Math.cos(2 * omega * t);
-          h3 += ac[k] * Math.cos(3 * omega * t);
-          h4 += ac[k] * Math.cos(4 * omega * t);
-        }
-        const norm = 2 / N;
-        const f1 = Math.abs(fundamental * norm);
-        const f2 = Math.abs(h2 * norm);
-        const f3 = Math.abs(h3 * norm);
-        const f4 = Math.abs(h4 * norm);
+        const mags = extractHarmonics(times, buf, p.freq, 4);
+        const f1 = mags[1];
         if (f1 < 1e-12) return 0;
+        const f2 = mags[2], f3 = mags[3], f4 = mags[4];
         const thd = Math.sqrt(f2 * f2 + f3 * f3 + f4 * f4) / f1 * 100;
         return Math.min(99.9, thd);
       }
@@ -714,25 +702,22 @@ const breadcrumbSchema = {
       const spPlotW = W_SP - spMarg.left - spMarg.right;
       const spPlotH = H_SP - spMarg.top - spMarg.bottom;
 
-      // Compute approximate Fourier amplitudes using DFT-like binning
+      // Compute approximate Fourier amplitudes using exact numerical integration
       const Nspec = displacementHistory.length;
       const P = getParams();
-      const omegaF = 2 * Math.PI * P.freq;
-      const buf = new Float64Array(Nspec);
-      for (let k = 0; k < Nspec; k++) buf[k] = displacementHistory[(historyCursor + 1 + k) % Nspec];
+      const buf = new Array(Nspec);
+      const times = new Array(Nspec);
+      for (let k = 0; k < Nspec; k++) {
+        buf[k] = displacementHistory[(historyCursor + 1 + k) % Nspec];
+        times[k] = k * PHYSICS_DT;
+      }
+      
+      const mags = extractHarmonics(times, buf, P.freq, 4);
 
       const harmonics: { label: string; freq: number; amp: number }[] = [];
       for (let h = 1; h <= 4; h++) {
         const f = P.freq * h;
-        const w = omegaF * h;
-        let re = 0, im = 0;
-        for (let k = 0; k < Nspec; k++) {
-          const t = k * PHYSICS_DT;
-          re += buf[k] * Math.cos(w * t);
-          im += buf[k] * Math.sin(w * t);
-        }
-        const amp = Math.sqrt(re * re + im * im) * (2 / Nspec);
-        harmonics.push({ label: h === 1 ? 'f₀' : `${h}·f₀`, freq: f, amp });
+        harmonics.push({ label: h === 1 ? 'f₀' : `${h}·f₀`, freq: f, amp: mags[h] });
       }
 
       const spMaxAmp = 0.0001;

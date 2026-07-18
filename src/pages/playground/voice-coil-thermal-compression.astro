@@ -85,17 +85,17 @@ const breadcrumbSchema = {
 
           <!-- Thermal parameters for custom -->
           <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3" id="thermal-params-group">
-            <label class="control-label" for="rth-num">
-              <span>Rth <span class="eyebrow">Thermal resistance (K/W)</span></span>
-              <output id="rth-readout">2.5</output>
-              <input type="range" id="rth-slider" min="0.1" max="10" step="0.05" value="2.5" />
+            <label class="control-label" for="rth-slider">
+              <span>Rth_v <span class="eyebrow">Coil-to-magnet Rth (K/W)</span></span>
+              <output id="rth-readout">1.5</output>
+              <input type="range" id="rth-slider" min="0.1" max="10" step="0.05" value="1.5" />
             </label>
-            <label class="control-label" for="cth-num">
-              <span>Cth <span class="eyebrow">Thermal capacitance (J/K)</span></span>
+            <label class="control-label" for="cth-slider">
+              <span>Cth_v <span class="eyebrow">Coil thermal cap (J/K)</span></span>
               <output id="cth-readout">15</output>
               <input type="range" id="cth-slider" min="0.5" max="50" step="0.1" value="15" />
             </label>
-            <label class="control-label" for="alpha-num">
+            <label class="control-label" for="alpha-slider">
               <span>&alpha; <span class="eyebrow">Copper TCR (1/K) &mdash; default 0.00393</span></span>
               <output id="alpha-readout">0.00393</output>
               <input type="range" id="alpha-slider" min="0.001" max="0.006" step="0.00001" value="0.00393" />
@@ -132,8 +132,8 @@ const breadcrumbSchema = {
             <p class="text-[0.6rem] text-muted-text">dB</p>
           </div>
           <div class="metric-card">
-            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Time constant</dt>
-            <dd id="res-tau" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">37.5</dd>
+            <dt class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Coil tau</dt>
+            <dd id="res-tau" class="mt-1 text-[1.05rem] font-[650] tracking-[-0.02em]">22.5</dd>
             <p class="text-[0.6rem] text-muted-text">&tau; (s)</p>
           </div>
           <div class="metric-card">
@@ -214,12 +214,12 @@ const breadcrumbSchema = {
         <!-- Method & limitations -->
         <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
           <p class="font-semibold text-primary-text">Method &amp; limitations</p>
-          <p class="mt-2">This is a <strong>lumped single-time-constant thermal model</strong> (one RC pair) of voice-coil heating under continuous drive. The thermal circuit is:</p>
-          <p class="mt-2 font-mono text-[0.78rem]">Electrical power Pe = I&sup2; &middot; Re(T)  &rarr;  heats Cth  &rarr;  flows through Rth to ambient</p>
-          <p class="mt-2 font-mono text-[0.78rem]">dT/dt = (Pe &minus; (T &minus; Tamb) / Rth) / Cth</p>
+          <p class="mt-2">This is a <strong>lumped two-time-constant thermal model</strong> (two RC pairs) of voice-coil and magnet heating under continuous drive. The thermal circuit is:</p>
+          <p class="mt-2 font-mono text-[0.78rem]">Electrical power Pe = I&sup2; &middot; Re(T) &rarr; heats Cth_v &rarr; flows through Rth_v to magnet Cth_m &rarr; flows through Rth_m to ambient</p>
+          <p class="mt-2 font-mono text-[0.78rem]">dT_v/dt = (Pe &minus; (T_v &minus; T_m) / Rth_v) / Cth_v<br/>dT_m/dt = ((T_v &minus; T_m) / Rth_v &minus; (T_m &minus; Tamb) / Rth_m) / Cth_m</p>
           <p class="mt-2">Where <strong>Re(T) = Re0 &middot; (1 + &alpha;&#8339;&#7506; &middot; (T &minus; 20&deg;C))</strong> using copper TCR &alpha; &asymp; 0.00393 K&minus;&sup1;, and the amplifier is modeled as a constant-voltage source: <strong>Vin&sup2; = P&#8345;&#8345;&#8345; &middot; Re0</strong>, giving <strong>Pe = Vin&sup2; / Re(T)</strong>.</p>
           <p class="mt-2">SPL compression follows the simplified current-drive model: <strong>SPL&#8333;&#8333;&#8343; (dB) = &minus;20 &middot; log&#8321;&#8320;(Re(T) / Re0)</strong>, reflecting reduced current and thus reduced BL &middot; I force as the coil heats.</p>
-          <p class="mt-4 text-[0.78rem]"><strong>Assumptions &amp; caveats:</strong> Real voice coils have distributed thermal paths and multiple time constants — a single RC pair is a first-order approximation. Assumes uniform coil temperature (no hot spots). Does not model: frequency-dependent heating, air convection details, radiation losses, eddy-current heating, or BL nonlinearity with temperature. Thermal parameters (Rth, Cth) are approximate and vary with driver size, magnet type, and ventilation design. Voice-coil adhesives are typically rated 200&ndash;250&deg;C — operation above that risks mechanical failure. Music program power is typically &frac14; to &frac12; of continuous rating; this model shows worst-case continuous sine-wave heating.</p>
+          <p class="mt-4 text-[0.78rem]"><strong>Assumptions &amp; caveats:</strong> Uses presets for thermal parameters to keep the UI clean, modeling the voice coil and the large magnet structure. Assumes uniform temperatures. Does not model: frequency-dependent heating, eddy-current heating, or BL nonlinearity with temperature.</p>
         </div>
 
       </div>
@@ -356,14 +356,16 @@ import { setupHiDPI, clearCanvas, drawText, drawLine, drawCircle } from '../../l
 
 interface Preset {
   label: string;
-  rth: number;
-  cth: number;
+  rth_v: number;
+  cth_v: number;
+  rth_m: number;
+  cth_m: number;
 }
 
 const PRESETS: Record<string, Preset> = {
-  standard: { label: 'Standard basket', rth: 2.5, cth: 15 },
-  vented:   { label: 'Vented pole-piece', rth: 1.2, cth: 12 },
-  ferrofluid: { label: 'Ferrofluid', rth: 0.7, cth: 10 },
+  standard: { label: 'Standard basket', rth_v: 1.5, cth_v: 15, rth_m: 1.0, cth_m: 250 },
+  vented:   { label: 'Vented pole-piece', rth_v: 0.8, cth_v: 12, rth_m: 0.4, cth_m: 250 },
+  ferrofluid: { label: 'Ferrofluid', rth_v: 0.4, cth_v: 10, rth_m: 0.3, cth_m: 250 },
 };
 
 const ALPHA_CU = 0.00393;
@@ -403,9 +405,10 @@ function coilHexColor(t: number, tamb: number): string {
 }
 
 // --- Steady-state solver ---
-// Solves T_ss from: P_input * Re0 / (Re0 * (1 + α*(T_ss - Tref))) = (T_ss - Tamb) / Rth
+// Solves T_ss from: P_input * Re0 / (Re0 * (1 + α*(T_ss - Tref))) = (T_ss - Tamb) / (Rth_v + Rth_m)
 // Iterative Newton-like solver.
-function steadyStateTemp(P_input: number, Re0: number, Tamb: number, alpha: number, Rth: number): number {
+function steadyStateTemp(P_input: number, Re0: number, Tamb: number, alpha: number, Rth_v: number, Rth_m: number): number {
+  const Rth = Rth_v + Rth_m;
   const VinSq = P_input * Re0;
   let T = Tamb + P_input * Rth; // initial guess (ignoring Re change)
   for (let i = 0; i < 60; i++) {
@@ -471,12 +474,15 @@ function initVoiceCoilThermal() {
   let Tamb = 20;
   let timeAccel = 8;
   let alpha = ALPHA_CU;
-  let Rth = PRESETS.standard.rth;
-  let Cth = PRESETS.standard.cth;
+  let Rth_v = PRESETS.standard.rth_v;
+  let Cth_v = PRESETS.standard.cth_v;
+  let Rth_m = PRESETS.standard.rth_m;
+  let Cth_m = PRESETS.standard.cth_m;
   let activePreset = 'standard';
   let isCustom = false;
 
   let T_coil = Tamb;          // current coil temperature
+  let T_mag = Tamb;           // current magnet temperature
   let simulatedTime = 0;      // accumulated simulated seconds
   let running = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let accumulator = 0;
@@ -501,8 +507,8 @@ function initVoiceCoilThermal() {
     const I = Math.sqrt(VinSq) / ReT;  // I = Vin / Re(T)
     const Pe = VinSq / ReT;
     const splComp = -20 * Math.log10(ReT / Re0);
-    const tau = Rth * Cth;
-    const Tss = steadyStateTemp(P_input, Re0, Tamb, alpha, Rth);
+    const tau = Rth_v * Cth_v;
+    const Tss = steadyStateTemp(P_input, Re0, Tamb, alpha, Rth_v, Rth_m);
     return { VinSq, ReT, I, Pe, splComp, tau, Tss };
   }
 
@@ -511,9 +517,12 @@ function initVoiceCoilThermal() {
     const ReT = Re0 * (1 + alpha * (T_coil - T_REF));
     const VinSq = P_input * Re0;
     const Pe = VinSq / ReT;
-    const heatLoss = (T_coil - Tamb) / Rth;
-    const dT = (Pe - heatLoss) / Cth * dt;
-    T_coil += dT;
+    const heatFlowVC_to_Mag = (T_coil - T_mag) / Rth_v;
+    const heatFlowMag_to_Amb = (T_mag - Tamb) / Rth_m;
+    const dT_coil = (Pe - heatFlowVC_to_Mag) / Cth_v * dt;
+    const dT_mag = (heatFlowVC_to_Mag - heatFlowMag_to_Amb) / Cth_m * dt;
+    T_coil += dT_coil;
+    T_mag += dT_mag;
     simulatedTime += dt;
     // Store data point every ~0.033 simulated seconds (~30 Hz)
     const lastP = dataBuffer[dataBuffer.length - 1];
@@ -538,8 +547,8 @@ function initVoiceCoilThermal() {
     reReadout.textContent = Re0.toFixed(1);
     tambReadout.textContent = String(Tamb);
     accelReadout.innerHTML = timeAccel + '&times;';
-    rthReadout.textContent = Rth.toFixed(2);
-    cthReadout.textContent = Cth.toFixed(1);
+    rthReadout.textContent = Rth_v.toFixed(2);
+    cthReadout.textContent = Cth_v.toFixed(1);
     alphaReadout.textContent = alpha.toFixed(5);
   }
 
@@ -548,8 +557,8 @@ function initVoiceCoilThermal() {
     reSlider.value = String(Re0);
     tambSlider.value = String(Tamb);
     accelSlider.value = String(timeAccel);
-    rthSlider.value = String(Rth);
-    cthSlider.value = String(Cth);
+    rthSlider.value = String(Rth_v);
+    cthSlider.value = String(Cth_v);
     alphaSlider.value = String(alpha);
   }
 
@@ -596,8 +605,7 @@ function initVoiceCoilThermal() {
     // Labels
     labelAmbient.textContent = 'Ambient: ' + Tamb.toFixed(0) + '\u00B0C';
     labelCoil.textContent = 'Coil: ' + T_coil.toFixed(1) + '\u00B0C';
-    const magnetT = Tamb + (T_coil - Tamb) * 0.25; // rough estimate: magnet at ~25% of gradient
-    labelMagnet.textContent = 'Magnet structure: ' + magnetT.toFixed(0) + '\u00B0C';
+    labelMagnet.textContent = 'Magnet structure: ' + T_mag.toFixed(0) + '\u00B0C';
 
     // Arrow opacity scales with temperature gradient
     const gradNorm = clamp((T_coil - Tamb) / 200, 0, 1);
@@ -820,12 +828,12 @@ function initVoiceCoilThermal() {
     const curves: Record<string, number[]> = {};
 
     // Current architecture curve
-    curves['current'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, Rth));
+    curves['current'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, Rth_v, Rth_m));
 
     if (showAllCurves) {
-      curves['standard'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.standard.rth));
-      curves['vented'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.vented.rth));
-      curves['ferrofluid'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.ferrofluid.rth));
+      curves['standard'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.standard.rth_v, PRESETS.standard.rth_m));
+      curves['vented'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.vented.rth_v, PRESETS.vented.rth_m));
+      curves['ferrofluid'] = powers.map(p => steadyStateTemp(p, Re0, Tamb, alpha, PRESETS.ferrofluid.rth_v, PRESETS.ferrofluid.rth_m));
     }
 
     const allTemps = Object.values(curves).flat();
@@ -903,7 +911,7 @@ function initVoiceCoilThermal() {
     }
 
     // Current operating point marker
-    const currentTss = steadyStateTemp(P_input, Re0, Tamb, alpha, Rth);
+    const currentTss = steadyStateTemp(P_input, Re0, Tamb, alpha, Rth_v, Rth_m);
     const opX = powerToX(P_input);
     const opY = tempToY(currentTss);
     drawCircle(ctx, opX, opY, 5, theme.cta, theme.canvas, 2);
@@ -980,8 +988,10 @@ function initVoiceCoilThermal() {
     isCustom = false;
     activePreset = key;
     const preset = PRESETS[key];
-    Rth = preset.rth;
-    Cth = preset.cth;
+    Rth_v = preset.rth_v;
+    Cth_v = preset.cth_v;
+    Rth_m = preset.rth_m;
+    Cth_m = preset.cth_m;
     updateSliders();
     updateReadouts();
     presetButtons.forEach(b => b.classList.toggle('is-active', b.dataset.preset === key));
@@ -989,6 +999,7 @@ function initVoiceCoilThermal() {
 
   function resetSimulation() {
     T_coil = Tamb;
+    T_mag = Tamb;
     simulatedTime = 0;
     accumulator = 0;
     dataBuffer = [{ t: 0, T: Tamb, spl: 0 }];
@@ -1017,6 +1028,7 @@ function initVoiceCoilThermal() {
     tambReadout.textContent = String(Tamb);
     if (!running) {
       T_coil = Math.max(T_coil, Tamb);
+      T_mag = Math.max(T_mag, Tamb);
       dataBuffer = [{ t: 0, T: Tamb, spl: 0 }];
       updateResults(); updateSVG(); renderAll();
     }
@@ -1029,8 +1041,8 @@ function initVoiceCoilThermal() {
   });
 
   rthSlider.addEventListener('input', () => {
-    Rth = parseFloat(rthSlider.value);
-    rthReadout.textContent = Rth.toFixed(2);
+    Rth_v = parseFloat(rthSlider.value);
+    rthReadout.textContent = Rth_v.toFixed(2);
     if (!isCustom) {
       setPreset('custom');
       updateSliders();
@@ -1039,8 +1051,8 @@ function initVoiceCoilThermal() {
   });
 
   cthSlider.addEventListener('input', () => {
-    Cth = parseFloat(cthSlider.value);
-    cthReadout.textContent = Cth.toFixed(1);
+    Cth_v = parseFloat(cthSlider.value);
+    cthReadout.textContent = Cth_v.toFixed(1);
     if (!isCustom) {
       setPreset('custom');
       updateSliders();

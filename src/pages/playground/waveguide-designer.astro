@@ -1,0 +1,459 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Waveguide Designer — 1D Webster Horn Profiles | MakerPortal';
+const description = 'Design acoustic horns and waveguides using the 1D Webster horn equation. Compare exponential, conical, and oblate spheroidal profiles.';
+const canonical = new URL('/playground/waveguide-designer', Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Waveguide Designer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Waveguide Designer"
+    lead="Design acoustic horns and waveguides using the 1D Webster horn equation. Explore exponential, conical, and oblate spheroidal profiles and visualize their cross-sections in real time."
+    pillarHint="dsp-audio"
+    isGrounded={false}
+  >
+    <section class="mx-auto max-w-[960px] px-4 pb-20 pt-8 sm:px-6 lg:px-8">
+      <div class="space-y-6">
+
+        <!-- Parameters Card -->
+        <div class="rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-4">
+            <h2 class="text-[1.05rem] font-[650] tracking-[-0.02em]">Horn Parameters</h2>
+            <div class="flex rounded-full border border-border bg-canvas p-0.5" id="profile-type-toggle">
+              <button type="button" class="type-btn is-active" data-type="exponential">Exponential</button>
+              <button type="button" class="type-btn" data-type="conical">Conical</button>
+              <button type="button" class="type-btn" data-type="oblate-spheroidal">Oblate Spheroidal</button>
+            </div>
+          </div>
+          <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Throat Diameter -->
+            <div>
+              <span class="control-label">Throat Dia. <span class="eyebrow">(mm)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="d0-slider" min="10" max="100" step="1" value="25.4" class="w-full" />
+                <input type="number" id="d0-num" class="tool-input w-[5.5rem]" min="10" max="100" step="0.1" value="25.4" />
+              </div>
+            </div>
+            <!-- Flare Parameter -->
+            <div id="param-container">
+              <span class="control-label" id="param-label">Flare m <span class="eyebrow">(1/m)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="param-slider" min="1" max="50" step="0.1" value="15" class="w-full" />
+                <input type="number" id="param-num" class="tool-input w-[5.5rem]" min="1" max="50" step="0.1" value="15" />
+              </div>
+            </div>
+            <!-- Length -->
+            <div>
+              <span class="control-label">Length <span class="eyebrow">(mm)</span></span>
+              <div class="flex items-center gap-3 mt-1">
+                <input type="range" id="len-slider" min="10" max="500" step="1" value="150" class="w-full" />
+                <input type="number" id="len-num" class="tool-input w-[5.5rem]" min="10" max="500" step="1" value="150" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Dashboard -->
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4" id="results-grid">
+          {[ 
+            { id: 'res-mouth-d', label: 'Mouth Dia.', unit: 'mm', desc: 'Exit dimension' },
+            { id: 'res-mouth-area', label: 'Mouth Area', unit: 'cm²', desc: 'Total exit area' },
+            { id: 'res-fc', label: 'Cutoff fc', unit: 'Hz', desc: 'Approx. low limit' },
+            { id: 'res-directivity', label: 'Directivity', unit: '°', desc: 'HF beamwidth' },
+          ].map(m => (
+            <div class="metric-card">
+              <p class="text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{m.desc}</p>
+              <p class="mt-1 text-[1.2rem] font-[650] tracking-[-0.02em]" id={m.id}>—</p>
+              <p class="text-[0.7rem] text-muted-text">{m.label} {m.unit}</p>
+            </div>
+          ))}
+        </div>
+
+        <!-- Profile Visual -->
+        <div class="rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="font-semibold">Cross-Section Profile</h3>
+            <div class="flex items-center gap-2 font-mono text-[0.7rem]">
+              <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm bg-[#ce445d]"></span>Profile</span>
+            </div>
+          </div>
+          <div class="mt-4 overflow-hidden rounded-[14px] border border-border bg-canvas relative" id="canvas-wrap">
+            <canvas id="profile-canvas" width="900" height="400" class="block h-[400px] w-full"></canvas>
+            <div id="tooltip" class="pointer-events-none absolute hidden rounded-lg border border-border bg-elevated px-2.5 py-1.5 font-mono text-[0.7rem] text-primary-text shadow-lg" style="top:0;left:0;"></div>
+          </div>
+        </div>
+
+        <!-- Method & limitations -->
+        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text">
+          <p class="font-semibold text-primary-text">Method &amp; limitations</p>
+          <p class="mt-2">This tool calculates horn profiles based on the 1D Webster horn equation, an approximation for sound propagation in ducts with varying cross-sections.</p>
+          <p class="mt-2"><strong>Exponential:</strong> S(x) = S₀·e^(mx). Provides constant acoustic impedance loading down to its cutoff frequency, fc = m·c / (4π). Above cutoff, directivity narrows as frequency increases.</p>
+          <p class="mt-2"><strong>Conical:</strong> S(x) = π·(r₀ + x·tan(θ))². Provides constant directivity but poor low-frequency loading. Cutoff is poorly defined; usually acts as an impedance transformer without a sharp cutoff.</p>
+          <p class="mt-2"><strong>Oblate Spheroidal (OS):</strong> S(x) = S₀·(1 + (x/a)²). Matches the wavefront of a flat circular piston to a spherical cap at the mouth. Excellent constant directivity and minimal higher-order modes (HOMs) compared to exponential, though with slightly less low-frequency loading.</p>
+          <p class="mt-4 text-[0.78rem]"><strong>Caveats:</strong> The Webster equation assumes planar (or spherical) wave propagation and ignores higher-order transverse modes that can occur at high frequencies or large flare angles. Accurate directivity mapping requires 3D Boundary Element Method (BEM) or Finite Element Analysis (FEA) simulations.</p>
+        </div>
+
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .tool-input {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+    color: var(--mp-text);
+  }
+  .tool-input:focus {
+    outline: none;
+    border-color: var(--mp-cta);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-cta) 20%, transparent);
+  }
+  input[type='range'] {
+    accent-color: var(--mp-cta);
+  }
+  .control-label {
+    font-size: 0.8rem;
+    font-weight: 550;
+    color: var(--mp-text);
+  }
+  .eyebrow {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    font-weight: 400;
+    margin-left: 0.3rem;
+  }
+  .type-btn {
+    border-radius: 9999px;
+    padding: 0.25rem 0.85rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mp-muted);
+    transition: all 0.15s;
+    background: transparent;
+  }
+  .type-btn:hover {
+    color: var(--mp-text);
+  }
+  .type-btn.is-active {
+    background: var(--mp-elevated);
+    color: var(--mp-text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .metric-card {
+    border-radius: 14px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-card);
+    padding: 0.9rem 1rem;
+  }
+</style>
+
+<script>
+import { setupHiDPI, resolveTheme, clearCanvas, drawText } from '../../lib/chart-core.ts';
+import { websterHornArea } from '../../lib/acoustics.ts';
+
+function initWaveguide() {
+  const state: Record<string, any> = {
+    type: 'exponential',
+    d0: 25.4, // mm
+    param: 15, // m for exponential, deg for conical/OS
+    len: 150, // mm
+  };
+
+  let _syncing = false;
+  let _rafPending = false;
+
+  const sliderEls: Record<string, HTMLInputElement> = {
+    d0: document.getElementById('d0-slider') as HTMLInputElement,
+    param: document.getElementById('param-slider') as HTMLInputElement,
+    len: document.getElementById('len-slider') as HTMLInputElement,
+  };
+  const numEls: Record<string, HTMLInputElement> = {
+    d0: document.getElementById('d0-num') as HTMLInputElement,
+    param: document.getElementById('param-num') as HTMLInputElement,
+    len: document.getElementById('len-num') as HTMLInputElement,
+  };
+
+  const canvas = document.getElementById('profile-canvas') as HTMLCanvasElement;
+  const tooltip = document.getElementById('tooltip')!;
+
+  let ctx: CanvasRenderingContext2D;
+  let cw: number;
+  let ch: number;
+
+  function initCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    cw = rect.width;
+    ch = rect.height;
+    ctx = setupHiDPI(canvas, cw, ch);
+  }
+
+  function compute() {
+    const d0_m = state.d0 * 1e-3;
+    const S0 = Math.PI * Math.pow(d0_m / 2, 2);
+    const L_m = state.len * 1e-3;
+    
+    let paramVal = state.param;
+    if (state.type === 'conical' || state.type === 'oblate-spheroidal') {
+      paramVal = paramVal * (Math.PI / 180); // convert deg to rad
+    }
+
+    const S_mouth = websterHornArea(state.type as any, S0, paramVal, L_m);
+    const d_mouth_m = 2 * Math.sqrt(S_mouth / Math.PI);
+    
+    let fc = 0;
+    let dir = 0;
+    
+    if (state.type === 'exponential') {
+      fc = (state.param * 343) / (4 * Math.PI);
+      dir = 0; // variable
+    } else if (state.type === 'conical' || state.type === 'oblate-spheroidal') {
+      fc = 0; // Not sharply defined
+      dir = state.param * 2; // Full beamwidth
+    }
+
+    return { S0, L_m, paramVal, S_mouth, d_mouth_m, fc, dir };
+  }
+
+  function updateResults(r: ReturnType<typeof compute>) {
+    document.getElementById('res-mouth-d')!.textContent = (r.d_mouth_m * 1000).toFixed(1);
+    document.getElementById('res-mouth-area')!.textContent = (r.S_mouth * 10000).toFixed(1);
+    
+    if (state.type === 'exponential') {
+      document.getElementById('res-fc')!.textContent = r.fc.toFixed(0);
+      document.getElementById('res-directivity')!.textContent = '—';
+    } else {
+      document.getElementById('res-fc')!.textContent = '—';
+      document.getElementById('res-directivity')!.textContent = r.dir.toFixed(0);
+    }
+  }
+
+  function renderCanvas() {
+    initCanvas();
+    const theme = resolveTheme();
+    clearCanvas(ctx, theme, cw, ch);
+
+    const r = compute();
+    
+    // Determine scale to fit the profile
+    const marginX = 40;
+    const marginY = 40;
+    const maxRadiusM = r.d_mouth_m / 2;
+    
+    // We want the length to fit in cw - 2*marginX, and 2*maxRadius to fit in ch - 2*marginY
+    const scaleX = (cw - 2 * marginX) / r.L_m;
+    // For visual aspect ratio, we should use the same scale if possible, buthorns can be very long or wide.
+    // Let's enforce true 1:1 aspect ratio.
+    const maxScaleY = (ch - 2 * marginY) / (maxRadiusM * 2);
+    const scale = Math.min(scaleX, maxScaleY);
+    
+    const drawW = r.L_m * scale;
+    const drawH = maxRadiusM * 2 * scale;
+    const cx = cw / 2;
+    const cy = ch / 2;
+    const startX = cx - drawW / 2;
+
+    // Draw axis
+    ctx.beginPath();
+    ctx.strokeStyle = theme.muted;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.moveTo(startX - 20, cy);
+    ctx.lineTo(startX + drawW + 20, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Sample profile
+    const steps = 200;
+    const ptsTop: [number, number][] = [];
+    const ptsBot: [number, number][] = [];
+    
+    for (let i = 0; i <= steps; i++) {
+      const x_m = (i / steps) * r.L_m;
+      const Sx = websterHornArea(state.type as any, r.S0, r.paramVal, x_m);
+      const rad_m = Math.sqrt(Sx / Math.PI);
+      
+      const px = startX + x_m * scale;
+      ptsTop.push([px, cy - rad_m * scale]);
+      ptsBot.push([px, cy + rad_m * scale]);
+    }
+
+    // Fill profile
+    ctx.beginPath();
+    ctx.moveTo(ptsTop[0][0], ptsTop[0][1]);
+    for (let i = 1; i <= steps; i++) ctx.lineTo(ptsTop[i][0], ptsTop[i][1]);
+    for (let i = steps; i >= 0; i--) ctx.lineTo(ptsBot[i][0], ptsBot[i][1]);
+    ctx.closePath();
+    ctx.fillStyle = theme.magColor + '15'; // slight opacity
+    ctx.fill();
+
+    // Outline profile
+    ctx.beginPath();
+    ctx.strokeStyle = theme.magColor;
+    ctx.lineWidth = 2.5;
+    ctx.moveTo(ptsTop[0][0], ptsTop[0][1]);
+    for (let i = 1; i <= steps; i++) ctx.lineTo(ptsTop[i][0], ptsTop[i][1]);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(ptsBot[0][0], ptsBot[0][1]);
+    for (let i = 1; i <= steps; i++) ctx.lineTo(ptsBot[i][0], ptsBot[i][1]);
+    ctx.stroke();
+
+    // Draw dimensions
+    ctx.fillStyle = theme.text;
+    ctx.font = '11px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    
+    // Length
+    const lY = cy + maxRadiusM * scale + 20;
+    ctx.beginPath();
+    ctx.strokeStyle = theme.muted;
+    ctx.lineWidth = 1;
+    ctx.moveTo(startX, lY - 5);
+    ctx.lineTo(startX, lY + 5);
+    ctx.moveTo(startX + drawW, lY - 5);
+    ctx.lineTo(startX + drawW, lY + 5);
+    ctx.moveTo(startX, lY);
+    ctx.lineTo(startX + drawW, lY);
+    ctx.stroke();
+    drawText(ctx, `${state.len.toFixed(0)} mm`, cx, lY + 14, theme.text, 11);
+    
+    // Throat Dia
+    ctx.textAlign = 'right';
+    drawText(ctx, `${state.d0.toFixed(1)}ø`, startX - 8, cy + 4, theme.text, 11);
+    
+    // Mouth Dia
+    ctx.textAlign = 'left';
+    drawText(ctx, `${(r.d_mouth_m * 1000).toFixed(1)}ø`, startX + drawW + 8, cy + 4, theme.text, 11);
+  }
+
+  function updateAll() {
+    const r = compute();
+    updateResults(r);
+    renderCanvas();
+  }
+
+  function syncFromSlider(key: string) {
+    if (_syncing) return;
+    _syncing = true;
+    const val = parseFloat(sliderEls[key].value);
+    state[key] = val;
+    numEls[key].value = val.toFixed(1);
+    _syncing = false;
+    scheduleUpdate();
+  }
+
+  function syncFromNum(key: string) {
+    if (_syncing) return;
+    _syncing = true;
+    let val = parseFloat(numEls[key].value);
+    if (isNaN(val)) val = 0;
+    state[key] = val;
+    sliderEls[key].value = String(val);
+    numEls[key].value = val.toFixed(1);
+    _syncing = false;
+    scheduleUpdate();
+  }
+
+  function scheduleUpdate() {
+    if (_rafPending) return;
+    _rafPending = true;
+    requestAnimationFrame(() => {
+      _rafPending = false;
+      updateAll();
+    });
+  }
+
+  for (const key of Object.keys(sliderEls)) {
+    sliderEls[key].addEventListener('input', () => syncFromSlider(key));
+    numEls[key].addEventListener('change', () => syncFromNum(key));
+  }
+
+  // Type Toggle
+  const typeBtns = document.querySelectorAll('.type-btn');
+  typeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      typeBtns.forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      const newType = (btn as HTMLElement).dataset.type!;
+      state.type = newType;
+      
+      const label = document.getElementById('param-label')!;
+      if (newType === 'exponential') {
+        label.innerHTML = `Flare m <span class="eyebrow">(1/m)</span>`;
+        sliderEls['param'].min = '1';
+        sliderEls['param'].max = '50';
+        if (state.param > 50 || state.param < 1) {
+          state.param = 15;
+          sliderEls['param'].value = '15';
+          numEls['param'].value = '15.0';
+        }
+      } else {
+        label.innerHTML = `Half-Angle θ <span class="eyebrow">(deg)</span>`;
+        sliderEls['param'].min = '5';
+        sliderEls['param'].max = '85';
+        if (state.param > 85 || state.param < 5) {
+          state.param = 45;
+          sliderEls['param'].value = '45';
+          numEls['param'].value = '45.0';
+        }
+      }
+      
+      updateAll();
+    });
+  });
+
+  window.addEventListener('resize', scheduleUpdate);
+
+  updateAll();
+  observeThemeChange();
+}
+
+let _themeRedraw: (() => void) | null = null;
+
+function observeThemeChange() {
+  const observer = new MutationObserver(() => {
+    _themeRedraw?.();
+  });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+
+document.addEventListener('astro:page-load', () => {
+  initWaveguide();
+  _themeRedraw = () => {
+    const state = document.getElementById('profile-canvas');
+    if (state) initWaveguide();
+  };
+});
+
+initWaveguide();
+_themeRedraw = () => initWaveguide();
+</script>

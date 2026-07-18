@@ -36,8 +36,8 @@ const breadcrumb = {
 
   <PlaygroundShell
     title="Acoustic Calculators"
-    lead="Speed of sound, wavelength, delay, SPL summation, dB/ratio conversion, RT60 (Sabine &amp; Eyring), Helmholtz resonance, and port length — eight battle-tested acoustic tools in one page."
-    pillarHint={undefined}
+    lead="Speed of sound, wavelength, delay, SPL summation, dB/ratio conversion, RT60, Helmholtz resonance, Doppler shift, Mass Law (TL), and NR Curves — essential acoustic tools in one place."
+    pillarHint="dsp-audio"
     isGrounded={false}
   >
     <section class="border-b border-border" aria-labelledby="calculators-title" id="acoustic-calc-root">
@@ -288,6 +288,77 @@ const breadcrumb = {
             </div>
           </div>
 
+          <!-- 9. Doppler Shift -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">Doppler Shift</h3>
+              <span class="eyebrow">moving source &amp; observer</span>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-4">
+              <label class="block">
+                <span class="eyebrow">Freq Hz</span>
+                <input type="number" id="ac-ds-freq" value="1000" step="1" min="1" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Source m/s</span>
+                <input type="number" id="ac-ds-vs" value="10" step="0.1" class="tool-input" title="Positive = towards observer" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Observer m/s</span>
+                <input type="number" id="ac-ds-vo" value="0" step="0.1" class="tool-input" title="Positive = towards source" />
+              </label>
+            </div>
+            <p class="text-[0.65rem] text-muted-text mt-1.5 ml-1">Positive velocity means moving <em>towards</em> each other.</p>
+            <div class="mt-4 math-card" aria-live="polite">
+              <span class="eyebrow">Shifted Frequency</span>
+              <p id="ac-ds-out" class="math-card__value">1030.0 Hz</p>
+            </div>
+          </div>
+
+          <!-- 10. Mass Law (Transmission Loss) -->
+          <div class="calc-card">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">Mass Law (STC est.)</h3>
+              <span class="eyebrow">transmission loss</span>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <label class="block">
+                <span class="eyebrow">Mass kg/m&sup2;</span>
+                <input type="number" id="ac-tl-m" value="20" step="0.1" min="0.1" class="tool-input" />
+              </label>
+              <label class="block">
+                <span class="eyebrow">Freq Hz</span>
+                <input type="number" id="ac-tl-f" value="500" step="1" min="1" class="tool-input" />
+              </label>
+            </div>
+            <div class="mt-4 math-card" aria-live="polite">
+              <span class="eyebrow">Transmission Loss (TL)</span>
+              <p id="ac-tl-out" class="math-card__value">32.8 dB</p>
+            </div>
+          </div>
+
+          <!-- 11. Noise Rating (NR) Curves -->
+          <div class="calc-card lg:col-span-2">
+            <div class="calc-card__header">
+              <h3 class="calc-card__title">NR Curve Limits</h3>
+              <span class="eyebrow">iso 1996 limits</span>
+            </div>
+            <div class="mt-4 max-w-sm">
+              <label class="block">
+                <span class="eyebrow">Target NR Level</span>
+                <input type="number" id="ac-nr-val" value="35" step="1" min="0" max="130" class="tool-input max-w-[8rem]" />
+              </label>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-9" id="ac-nr-grid">
+              {[31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000].map(f => (
+                <div class="flex flex-col rounded-lg border border-border bg-canvas p-2 text-center">
+                  <span class="text-[0.6rem] uppercase tracking-wider text-muted-text">{f >= 1000 ? `${f/1000}k` : f}</span>
+                  <p class="mt-1 text-[0.85rem] font-semibold text-text" id={`ac-nr-band-${f}`}>—</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
         <!-- Method & limitations -->
@@ -313,6 +384,14 @@ const breadcrumb = {
             <div>
               <p class="font-semibold text-[0.78rem] text-text">Helmholtz &amp; Port Length</p>
               <p>The Helmholtz formula with flanged end-correction (<code>L_eff = L + 0.85&middot;r</code>): <code>f = (c/2&pi;)·&radic;(S/(V·L_eff))</code>. The port length formula inverts this for a given tuning frequency. Both assume a single circular port, rigid walls, and an enclosure dimension much smaller than the wavelength of interest — the standard lumped-element model. Real-world results are affected by port flares, internal damping material, and driver compliance, so treat these as starting estimates for box design.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">Doppler Shift</p>
+              <p>Calculates the shifted frequency <code>f' = f · (c + v_o) / (c - v_s)</code>. Velocities are signed: positive values indicate motion <em>towards</em> the other party. Negative values indicate motion <em>away</em>.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-[0.78rem] text-text">Mass Law &amp; NR Curves</p>
+              <p>The Mass Law provides a theoretical estimate for Transmission Loss (TL) of a single homogeneous panel in a random incidence sound field: <code>TL = 20·log10(m·f) - 47.2 dB</code>. Real panels will deviate due to stiffness and coincidence dip effects. NR Curves use the standard ISO formulas <code>L_n = a_n + b_n · NR</code> to yield maximum allowed SPL limits for each octave band.</p>
             </div>
           </div>
         </div>
@@ -430,6 +509,9 @@ const breadcrumb = {
     schroederFrequency,
     helmholtzFrequency,
     portLength,
+    dopplerShift,
+    massLawTransmissionLoss,
+    noiseRatingSpl,
   } from '../../lib/acoustics.ts';
 
   function initAcousticCalculators() {
@@ -818,6 +900,69 @@ const breadcrumb = {
     }
     [plVol, plDia, plTune].forEach(el => el.addEventListener('input', updatePortLength));
 
+    // ---- Doppler Shift ----
+    const dsFreq = document.getElementById('ac-ds-freq') as HTMLInputElement;
+    const dsVs = document.getElementById('ac-ds-vs') as HTMLInputElement;
+    const dsVo = document.getElementById('ac-ds-vo') as HTMLInputElement;
+    const dsOut = document.getElementById('ac-ds-out') as HTMLElement;
+
+    function updateDoppler() {
+      const f = parseFloat(dsFreq.value);
+      const vs = parseFloat(dsVs.value);
+      const vo = parseFloat(dsVo.value);
+      if (!currentC || isNaN(f) || isNaN(vs) || isNaN(vo) || f <= 0) {
+        dsOut.textContent = '\u2014';
+        return;
+      }
+      if (currentC <= vs) {
+        dsOut.textContent = 'Supersonic source';
+        return;
+      }
+      const shifted = dopplerShift(f, vs, vo, currentC);
+      dsOut.textContent = shifted > 0 ? `${shifted.toFixed(1)} Hz` : '\u2014';
+    }
+    [dsFreq, dsVs, dsVo].forEach(el => el.addEventListener('input', updateDoppler));
+
+    // ---- Mass Law (TL) ----
+    const tlM = document.getElementById('ac-tl-m') as HTMLInputElement;
+    const tlF = document.getElementById('ac-tl-f') as HTMLInputElement;
+    const tlOut = document.getElementById('ac-tl-out') as HTMLElement;
+
+    function updateMassLaw() {
+      const m = parseFloat(tlM.value);
+      const f = parseFloat(tlF.value);
+      if (isNaN(m) || isNaN(f) || m <= 0 || f <= 0) {
+        tlOut.textContent = '\u2014';
+        return;
+      }
+      const tl = massLawTransmissionLoss(m, f);
+      tlOut.textContent = `${tl.toFixed(1)} dB`;
+    }
+    [tlM, tlF].forEach(el => el.addEventListener('input', updateMassLaw));
+
+    // ---- NR Curves ----
+    const nrVal = document.getElementById('ac-nr-val') as HTMLInputElement;
+    const nrBands = [31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000];
+
+    function updateNRCurves() {
+      const nr = parseFloat(nrVal.value);
+      if (isNaN(nr)) {
+        nrBands.forEach(f => {
+          const el = document.getElementById(`ac-nr-band-${f}`);
+          if (el) el.textContent = '\u2014';
+        });
+        return;
+      }
+      nrBands.forEach(f => {
+        const el = document.getElementById(`ac-nr-band-${f}`);
+        if (el) {
+          const limit = noiseRatingSpl(nr, f);
+          el.textContent = isFinite(limit) ? `${Math.round(limit)} dB` : '\u2014';
+        }
+      });
+    }
+    nrVal.addEventListener('input', updateNRCurves);
+
     // ---- initialise all ----
     updateSpeed();
     updateWavelengthFromFreq();
@@ -828,6 +973,9 @@ const breadcrumb = {
     updatePortLength();
     updateFromDb();
     refreshSplRowVisibility();
+    updateDoppler();
+    updateMassLaw();
+    updateNRCurves();
   }
 
   document.addEventListener('astro:page-load', initAcousticCalculators);

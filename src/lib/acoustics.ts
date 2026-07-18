@@ -163,3 +163,96 @@ export function ratioToDb(ratio: number): number {
   if (ratio <= 0) return -Infinity;
   return 20 * Math.log10(ratio);
 }
+
+/**
+ * Bessel function of the first kind J_n(x) using midpoint numerical integration.
+ * Excellent accuracy for the visualization range (x < 50).
+ */
+export function besselJ(n: number, x: number): number {
+  const steps = 60;
+  let sum = 0;
+  for (let i = 0; i < steps; i++) {
+    const tau = (i + 0.5) * (Math.PI / steps);
+    sum += Math.cos(n * tau - x * Math.sin(tau));
+  }
+  return sum / steps;
+}
+
+export function besselJ0(x: number): number {
+  return besselJ(0, x);
+}
+
+export function besselJ1(x: number): number {
+  return besselJ(1, x);
+}
+
+/** 
+ * Doppler shifted frequency.
+ * vs = source velocity (m/s), positive if moving TOWARDS observer.
+ * vo = observer velocity (m/s), positive if moving TOWARDS source.
+ */
+export function dopplerShift(f: number, vs: number, vo: number, c = 343): number {
+  return f * (c + vo) / (c - vs);
+}
+
+/**
+ * Mass Law Transmission Loss (dB) for random field incidence.
+ * m = surface mass density (kg/m²), f = frequency (Hz).
+ */
+export function massLawTransmissionLoss(m: number, f: number): number {
+  const tl = 20 * Math.log10(m * f) - 47.2;
+  return Math.max(0, tl);
+}
+
+/**
+ * Webster's horn equation area expansion.
+ * type = 'exponential' | 'conical' | 'oblate-spheroidal'
+ * S0 = throat area (m²)
+ * param = flare constant m (1/m) for exponential, half-angle (rad) for conical/oblate
+ * x = distance from throat (m)
+ */
+export function websterHornArea(type: 'exponential' | 'conical' | 'oblate-spheroidal', S0: number, param: number, x: number): number {
+  if (x <= 0) return S0;
+  switch (type) {
+    case 'exponential':
+      return S0 * Math.exp(param * x);
+    case 'conical': {
+      const r0 = Math.sqrt(S0 / Math.PI);
+      const r = r0 + x * Math.tan(param);
+      return Math.PI * r * r;
+    }
+    case 'oblate-spheroidal': {
+      const a = Math.sqrt(S0 / Math.PI) / Math.sin(param);
+      return S0 * (1 + (x * x) / (a * a));
+    }
+    default:
+      return S0;
+  }
+}
+
+/**
+ * Noise Rating (NR) curve SPL limit for a given frequency.
+ * nr = target NR curve (e.g. 30, 45)
+ * f = octave band center frequency (Hz)
+ * Returns the maximum allowed SPL (dB) for that band.
+ */
+export function noiseRatingSpl(nr: number, f: number): number {
+  let A = 0;
+  let B = 1;
+  switch (f) {
+    case 31.5: A = 55.4; B = 0.681; break;
+    case 63:   A = 35.4; B = 0.790; break;
+    case 125:  A = 22.0; B = 0.870; break;
+    case 250:  A = 12.0; B = 0.930; break;
+    case 500:  A = 4.8;  B = 0.974; break;
+    case 1000: A = 0.0;  B = 1.000; break;
+    case 2000: A = -3.5; B = 1.015; break;
+    case 4000: A = -6.1; B = 1.025; break;
+    case 8000: A = -8.0; B = 1.030; break;
+    default:
+      // If an exact standard octave isn't requested, interpolate or return NaN.
+      // We will just return NaN if it's not a standard band for simplicity.
+      return NaN;
+  }
+  return A + B * nr;
+}

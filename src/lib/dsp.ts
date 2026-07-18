@@ -226,3 +226,69 @@ export function logFreqSteps(minF: number, maxF: number, count: number): number[
 export function freqToX(f: number, minF: number, maxF: number, width: number): number {
   return (Math.log(f / minF) / Math.log(maxF / minF)) * width;
 }
+
+/**
+ * Exact numerical extraction of Fourier coefficients for a known fundamental frequency.
+ * Extracts over exactly one period (the last period in the arrays).
+ * Returns array of magnitudes [DC, Fundamental, H2, H3, ...].
+ */
+export function extractHarmonics(
+  time: number[],
+  signal: number[],
+  f0: number,
+  numHarmonics = 5
+): number[] {
+  if (time.length < 2 || time.length !== signal.length) return Array(numHarmonics + 1).fill(0);
+  
+  const T = 1 / f0;
+  const tEnd = time[time.length - 1];
+  let tStart = tEnd - T;
+  
+  if (tStart < time[0]) tStart = time[0]; // fallback
+  
+  const mags = new Float64Array(numHarmonics + 1);
+  const w0 = 2 * Math.PI * f0;
+  
+  let dcSum = 0;
+  const aSum = new Float64Array(numHarmonics + 1);
+  const bSum = new Float64Array(numHarmonics + 1);
+  
+  for (let i = 0; i < time.length - 1; i++) {
+    const t1 = time[i];
+    const t2 = time[i+1];
+    
+    if (t2 <= tStart) continue; // Before our window
+    
+    // Find intersection with [tStart, tEnd]
+    const tLeft = Math.max(t1, tStart);
+    const tRight = Math.min(t2, tEnd);
+    
+    if (tLeft >= tRight) continue;
+    
+    // Interpolate signal values
+    const fraction1 = (tLeft - t1) / (t2 - t1);
+    const sLeft = signal[i] + fraction1 * (signal[i+1] - signal[i]);
+    
+    const fraction2 = (tRight - t1) / (t2 - t1);
+    const sRight = signal[i] + fraction2 * (signal[i+1] - signal[i]);
+    
+    const dt = tRight - tLeft;
+    const tMid = (tLeft + tRight) / 2;
+    const sMid = (sLeft + sRight) / 2;
+    
+    dcSum += sMid * dt;
+    for (let n = 1; n <= numHarmonics; n++) {
+      aSum[n] += sMid * Math.cos(n * w0 * tMid) * dt;
+      bSum[n] += sMid * Math.sin(n * w0 * tMid) * dt;
+    }
+  }
+  
+  const actualT = tEnd - tStart;
+  mags[0] = dcSum / actualT;
+  for (let n = 1; n <= numHarmonics; n++) {
+    mags[n] = Math.hypot(aSum[n] * (2 / actualT), bSum[n] * (2 / actualT));
+  }
+  
+  return Array.from(mags);
+}
+

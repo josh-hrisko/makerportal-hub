@@ -8,6 +8,7 @@
     "build": "astro check && astro build && npx pagefind --site dist/client && node scripts/sync-pagefind.mjs && node scripts/strip-dev-pages.mjs",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "brand:assets": "node scripts/brand-assets/generate.mjs"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "@astrojs/check": "^0.9.6",
     "@resvg/resvg-js": "^2.6.2",
     "@types/d3-geo": "^3.1.0",
+    "@types/node": "^26.1.1",
     "@types/three": "^0.185.1",
     "pagefind": "^1.1.1"
   },
