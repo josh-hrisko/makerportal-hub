@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import Math from '../../components/Math.astro';
 
 const title = 'Audio & Acoustics Toolbox — Engineering tools for sound, DSP & loudspeakers | MakerPortal';
 const description = 'Serious engineering tools for audio, acoustics, DSP, and loudspeaker design: room modes, pole-zero filters, enclosure alignment, driver nonlinearity, thermal compression, cone breakup, and fast acoustic calculators.';
@@ -21,49 +22,49 @@ const tools = [
     slug: 'acoustic-calculators',
     title: 'Acoustic Calculators',
     tagline: 'Wavelength, SPL, RT60, delay — the numbers you reach for daily',
-    description: 'Bench-ready math: $\u03BB=c/f$, SPL sum $L=10\\log_&#123;10&#125;\\sum10^&#123;L_i/10&#125;$, RT60 Sabine $T_&#123;60&#125;=0.161V/A$ vs Eyring, critical distance, port mass $f_b$, Helmholtz, $c(T)$. No fluff — just the formulas turned into sliders.',
+    description: 'Bench-ready math: wavelength, SPL summation, RT60 Sabine vs Eyring, critical distance, port tuning, Helmholtz resonance, speed of sound vs temperature. No fluff — just formulas turned into sliders.',
     emoji: '📐',
   },
   {
     slug: 'acoustics-room-modes',
     title: 'Room Mode Analyzer',
     tagline: 'Where bass piles up and why your room lies',
-    description: 'Rectangular eigenfrequencies $f=\\frac&#123;c&#125;&#123;2&#125;\\sqrt&#123;(n_x/L_x)^2+(n_y/L_y)^2+(n_z/L_z)^2&#125;$, axial/tangential sorting, Schroeder $f_s=2000\\sqrt&#123;T_&#123;60&#125;/V&#125;$, pressure $p\\propto\\cos k_x x\\cos k_y y$. Modal density collapses below Schroeder.',
+    description: 'Rectangular eigenfrequencies, axial/tangential sorting, Schroeder frequency, pressure anti-nodes. Modal density collapses below Schroeder — you hear the room, not the speaker.',
     emoji: '🏠',
   },
   {
     slug: 'pole-zero-explorer',
     title: 'Pole-Zero Filter Explorer',
     tagline: 'Drag poles, hear the math bite',
-    description: 'Z-plane is destiny: poles inside unit circle stable. Drag pairs → $|H|$, phase, group-delay $\\tau_g=-d\\phi/d\\omega$. RBJ export, Web Audio audition. See why Q matters.',
+    description: 'Z-plane is destiny: poles inside unit circle stable. Drag pairs → magnitude, phase, group-delay. RBJ export, Web Audio audition.',
     emoji: '🎛️',
   },
   {
     slug: 'loudspeaker-enclosure-designer',
     title: 'Loudspeaker Enclosure Designer',
     tagline: 'Box as spring, port as mass — Thiele-Small alignment',
-    description: 'Compliance $\\alpha=V_&#123;as&#125;/V_b$ sets $Q_&#123;tc&#125;=Q_&#123;ts&#125;\\sqrt&#123;1+\\alpha&#125;$, $f_c=f_s\\sqrt&#123;1+\\alpha&#125;$. Butterworth 0.707, Bessel 0.577. QB3/SBB4/SC4 via Small 1973. Hoffman $\\eta_0 V_b f_3^3=const$.',
+    description: 'Compliance ratio sets Qtc and fc. Butterworth 0.707, Bessel 0.577. QB3/SBB4/SC4 via Small 1973. Hoffman Iron Law: small, deep, loud — pick two.',
     emoji: '🔊',
   },
   {
     slug: 'loudspeaker-nonlinearity-lab',
     title: 'Driver Nonlinearity Lab',
     tagline: 'Bl(x), Kms(x), Le(x) — why sine out ≠ sine in',
-    description: 'Motor: $F=Bl(x)i$, $Bl(x)=Bl_0(1-\\beta|x/X_&#123;max&#125;|)$. Spider: $K_&#123;ms&#125;(x)=K_&#123;ms0&#125;(1+\\gamma(x/X_&#123;max&#125;)^2)$. Taylor: $x^2\\to2f$, $x^3\\to3f$. Trace, bell, THD $\\sqrt&#123;V_2^2+V_3^2&#125;/V_1$. Klippel-style.',
+    description: 'Motor force, suspension stiffness, inductance modulation. Even vs odd harmonics from Taylor expansion, THD, Klippel-style visualization.',
     emoji: '⚡',
   },
   {
     slug: 'voice-coil-thermal-compression',
     title: 'Voice-Coil Thermal Compression',
     tagline: 'Power in, heat stays, SPL sags',
-    description: 'Thermal RC: coil $\\tau_&#123;vc&#125;=R_&#123;th,vc&#125;C_&#123;th,vc&#125;$, magnet $\\tau_m$. $R_e(T)=R_&#123;e0&#125;(1+\\alpha_&#123;cu&#125;\\Delta T)$, sag $10\\log_&#123;10&#125;(R_&#123;e0&#125;/R_e)$. Copper turns into limiter.',
+    description: 'Thermal RC: coil tau vs magnet tau. Resistance rises with temperature, current falls, SPL compresses. Copper turns into a limiter.',
     emoji: '🌡️',
   },
   {
     slug: 'cone-breakup',
     title: 'Cone Breakup Explorer',
     tagline: 'Piston to chaos — bending waves win',
-    description: 'Stiffness $B=Et^3/12(1-\\nu^2)$, speed $c_b=(B/\\rho h)^&#123;1/4&#125;\\sqrt&#123;\\omega&#125;$, mode $w_&#123;mn&#125;\\propto J_m(\\alpha_&#123;mn&#125;r/R)\\cos m\\theta$, $f_&#123;breakup&#125;\\propto\\sqrt&#123;E/\\rho&#125;/D$. Piston → chaos as $f/f_b$ climbs.',
+    description: 'Bending stiffness, dispersive wave speed, modal patterns with Bessel functions, breakup scales with sqrt(E/ρ)/diameter.',
     emoji: '📢',
   },
 ];
@@ -118,45 +119,49 @@ const tools = [
           <div class="rounded-[16px] border border-border bg-elevated/30 p-5">
             <p class="font-mono text-[0.62rem] uppercase tracking-[0.11em] text-muted-text">Electrical ↔ Mechanical</p>
             <p class="mt-2 text-[0.9rem] font-[600] tracking-[-0.02em] text-primary-text">Pole-Zero + Nonlinearity Lab</p>
-            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
-              Every filter is a pole-zero placement: $$H(z)=\frac&#123;\prod(1-q_k z^&#123;-1&#125;)&#125;&#123;\prod(1-p_k z^&#123;-1&#125;)&#125;$$. Drag a pair, magnitude and group-delay tilt. Then meet the motor: $Bl(x)$ droop clips force, $K_&#123;ms&#125;(x)$ cubes displacement, $Le(x)$ modulates current. Taylor $a_2x^2\to2f$, $a_3x^3\to3f$. One bench shows linear dream, the next why it fails at power.
-            </p>
+            <div class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text space-y-3">
+              <p>Every filter is a pole-zero placement: <Math math="H(z)=\frac{\prod(1-q_k z^{-1})}{\prod(1-p_k z^{-1})}" /></p>
+              <p>Drag a pair, magnitude and group-delay tilt. Then meet the motor: <Math math="Bl(x)" /> droop clips force, <Math math="K_{ms}(x)" /> cubes displacement, <Math math="Le(x)" /> modulates current. Taylor <Math math="a_2x^2 \to 2f" />, <Math math="a_3x^3 \to 3f" />. One bench shows linear dream, the next why it fails at power.</p>
+            </div>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/30 p-5">
             <p class="font-mono text-[0.62rem] uppercase tracking-[0.11em] text-muted-text">Volume ↔ Mass</p>
             <p class="mt-2 text-[0.9rem] font-[600] tracking-[-0.02em] text-primary-text">Enclosure Designer + Acoustic Calculators</p>
-            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
-              Thiele-Small: two springs, one mass. Compliance $$\alpha=\frac&#123;V_&#123;as&#125;&#125;&#123;V_b&#125;$$ sets $$Q_&#123;tc&#125;=Q_&#123;ts&#125;\sqrt&#123;1+\alpha&#125;$$ and $$f_c=f_s\sqrt&#123;1+\alpha&#125;$$. Vented adds Helmholtz $f_b$. Hoffman $$\eta_0 V_b f_3^3=const$$ → small/deep/loud pick two. Calculators give $\lambda=c/f$, Sabine $$T_&#123;60&#125;=0.161V/A$$, port $$L_p=\frac&#123;c^2S_p&#125;&#123;4\pi^2f_b^2V_b&#125;-0.732r_p$$.
-            </p>
+            <div class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text space-y-3">
+              <p>Thiele-Small: two springs, one mass. Compliance <Math math="\alpha=\frac{V_{as}}{V_b}" /> sets <Math math="Q_{tc}=Q_{ts}\sqrt{1+\alpha}" /> and <Math math="f_c=f_s\sqrt{1+\alpha}" />. Vented adds Helmholtz <Math math="f_b" />.</p>
+              <p>Hoffman <Math math="\eta_0 V_b f_3^3 = const" /> → small / deep / loud — pick two. Calculators give <Math math="\lambda=c/f" />, Sabine <Math math="T_{60}=0.161V/A" />, port <Math math="L_p=\frac{c^2S_p}{4\pi^2f_b^2V_b}-0.732r_p" />.</p>
+            </div>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/30 p-5">
             <p class="font-mono text-[0.62rem] uppercase tracking-[0.11em] text-muted-text">Piston ↔ Breakup</p>
             <p class="mt-2 text-[0.9rem] font-[600] tracking-[-0.02em] text-primary-text">Cone Breakup Explorer + Waveguide Designer</p>
-            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
-              Low $ka$ → piston. Bending stiffness $$B=\frac&#123;Et^3&#125;&#123;12(1-\nu^2)&#125;$$ sets $$c_b=\left(\frac&#123;B&#125;&#123;\rho h&#125;\right)^&#123;1/4&#125;\sqrt&#123;\omega&#125;$$. Modes $$w_&#123;mn&#125;\propto J_m(\alpha_&#123;mn&#125;r/R)\cos m\theta$$. Breakup $$f_&#123;breakup&#125;\propto\frac&#123;\sqrt&#123;E/\rho&#125;&#125;&#123;D&#125;$$. Waveguide mouth $ka$ must hold pattern: OSWG $$S=S_0(1+(x/a)^2)$$ CD, exponential $$S=S_0e^&#123;mx&#125;$$ beams.
-            </p>
+            <div class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text space-y-3">
+              <p>Low <Math math="ka" /> → piston. Bending stiffness <Math math="B=\frac{Et^3}{12(1-\nu^2)}" /> sets <Math math="c_b=\left(\frac{B}{\rho h}\right)^{1/4}\sqrt{\omega}" />.</p>
+              <p>Modes <Math math="w_{mn}\propto J_m(\alpha_{mn}r/R)\cos m\theta" />. Breakup <Math math="f_{breakup}\propto\frac{\sqrt{E/\rho}}{D}" />. Waveguide mouth <Math math="ka" /> must hold pattern: OSWG <Math math="S=S_0(1+(x/a)^2)" /> CD, exponential <Math math="S=S_0e^{mx}" /> beams.</p>
+            </div>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/30 p-5">
             <p class="font-mono text-[0.62rem] uppercase tracking-[0.11em] text-muted-text">Energy storage</p>
             <p class="mt-2 text-[0.9rem] font-[600] tracking-[-0.02em] text-primary-text">Room Modes + Thermal Compression</p>
-            <p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">
-              Room $$f_&#123;modes&#125;=\frac&#123;c&#125;&#123;2&#125;\sqrt&#123;(n_x/L_x)^2+(n_y/L_y)^2+(n_z/L_z)^2&#125;$$. Below Schroeder $$f_s=2000\sqrt&#123;T_&#123;60&#125;/V&#125;$$ modes isolated — you hear room. Thermal: $$R_e(T)=R_&#123;e0&#125;(1+\alpha_&#123;cu&#125;\Delta T)$$, drop $$10\log_&#123;10&#125;(R_&#123;e0&#125;/R_e)$$. Heat is final compressor.
-            </p>
+            <div class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text space-y-3">
+              <p>Room <Math math="f_{modes}=\frac{c}{2}\sqrt{(n_x/L_x)^2+(n_y/L_y)^2+(n_z/L_z)^2}" />. Below Schroeder <Math math="f_s=2000\sqrt{T_{60}/V}" /> modes isolated — you hear room.</p>
+              <p>Thermal: <Math math="R_e(T)=R_{e0}(1+\alpha_{cu}\Delta T)" />, drop <Math math="10\log_{10}(R_{e0}/R_e)" />. Heat is final compressor.</p>
+            </div>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/50 p-5 md:col-span-2">
             <p class="font-mono text-[0.62rem] uppercase tracking-[0.11em] text-muted-text">How to use — 3 rules</p>
             <div class="mt-3 grid gap-4 sm:grid-cols-3 text-[0.82rem] leading-[1.6] text-muted-text">
               <div>
                 <p class="font-semibold text-primary-text">1. Start frozen.</p>
-                <p class="mt-1">Each tool opens at a known-good state. Watch 5 seconds. See default $f_b$, $Q_&#123;tc&#125;$, coherence, $Bl(x)$ bell.</p>
+                <p class="mt-1">Each tool opens at a known-good state. Watch 5 seconds. See default <Math math="f_b" />, <Math math="Q_{tc}" />, coherence, <Math math="Bl(x)" /> bell.</p>
               </div>
               <div>
                 <p class="font-semibold text-primary-text">2. One knob, one effect.</p>
-                <p class="mt-1">Move $D$ and $f_&#123;breakup&#125;\propto1/D$. Change $V_b$ and $\alpha$ shifts $f_c$. Add $\beta$ and 2nd harmonic rises. Causal chain is lesson.</p>
+                <p class="mt-1">Move <Math math="D" /> and <Math math="f_{breakup}\propto1/D" />. Change <Math math="V_b" /> and <Math math="\alpha" /> shifts <Math math="f_c" />. Add <Math math="\beta" /> and 2nd harmonic rises. Causal chain is lesson.</p>
               </div>
               <div>
                 <p class="font-semibold text-primary-text">3. Read the bottom.</p>
-                <p class="mt-1">Every tool has 4–5 frontier notes: hook, intuition, math with escaped LaTeX, playbook, honesty. Honesty tells where model stops — no FEA, no BEM, no Klippel rig. That boundary is part of instrument.</p>
+                <p class="mt-1">Every tool has 4–5 frontier notes: hook, intuition, math, playbook, honesty. Honesty tells where model stops — no FEA, no BEM, no Klippel rig. That boundary is part of instrument.</p>
               </div>
             </div>
           </div>

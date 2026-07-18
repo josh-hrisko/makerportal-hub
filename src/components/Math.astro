@@ -1,0 +1,63 @@
+---
+import katex from 'katex';
+
+interface Props {
+  math: string;
+  display?: boolean;
+  class?: string;
+}
+
+const { math, display = false, class: className = '' } = Astro.props;
+
+// Decode HTML entities that may have been left from previous escaping pass
+function decodeEntities(str: string): string {
+  return str
+    .replace(/&#123;/g, '{')
+    .replace(/&#125;/g, '}')
+    .replace(/&#38;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+let clean = decodeEntities(math)
+  // Fix double-escaped backslashes from JS strings
+  .replace(/\\\\/g, '\\')
+  // Normalize \lt \gt to < > for server render (katex understands both but < > is more robust)
+  .replace(/\\lt/g, '<')
+  .replace(/\\gt/g, '>');
+
+let html = '';
+try {
+  html = katex.renderToString(clean, {
+    displayMode: display,
+    throwOnError: false,
+    strict: false,
+    trust: true,
+  });
+} catch {
+  // Fallback: raw math in code style so it's not invisible
+  html = `<code class="katex-error">${clean}</code>`;
+}
+---
+
+<span class:list={['katex-wrapper', display ? 'katex-display' : 'katex-inline', className]} set:html={html} />
+<style>
+  .katex-display {
+    display: block;
+    margin: 0.6em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .katex-inline {
+    display: inline;
+  }
+  .katex-error {
+    color: var(--mp-cta);
+    background: color-mix(in srgb, var(--mp-cta) 12%, transparent);
+    padding: 0.1em 0.3em;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+</style>
