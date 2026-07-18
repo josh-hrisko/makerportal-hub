@@ -147,7 +147,7 @@ export const playground: PlaygroundEntry[] = [
     tagline: 'Watch a grid warp under a complex function',
     description: 'A grid on the complex plane, warped live under f(z), with a homotopy slider morphing between the two.',
     isGrounded: false,
-    status: 'planned',
+    status: 'live',
   },
 ];
 

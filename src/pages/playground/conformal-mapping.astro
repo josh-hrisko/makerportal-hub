@@ -1,0 +1,493 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+
+const title = 'Conformal Mapping Explorer — Watch a Grid Warp Under f(z) | MakerPortal';
+const description =
+  'A grid on the complex plane, warped live under f(z) — pick a preset (z², 1/z, exp(z), a Möbius transform...) or type your own expression, and scrub a homotopy slider to morph between the flat grid and its image.';
+const canonical = new URL('/playground/conformal-mapping', Astro.site);
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Conformal Mapping Explorer', item: canonical.toString() },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Conformal Mapping Explorer"
+    lead="A rectangular grid on the complex plane, warped live under f(z). Pick a preset or type your own expression in z, then drag the homotopy slider to morph continuously between the flat grid and its image."
+  >
+    <section class="border-b border-border" aria-labelledby="explorer-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 id="explorer-title" class="sr-only">Grid warp explorer</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">f(z)</h3>
+            <label class="mt-3 block">
+              <span class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">Preset</span>
+              <select id="preset" class="tool-input">
+                <option value="z">Identity — z</option>
+                <option value="z^2" selected>Square — z²</option>
+                <option value="z^3">Cube — z³</option>
+                <option value="1/z">Reciprocal — 1/z</option>
+                <option value="exp(z)">Exponential — exp(z)</option>
+                <option value="sin(z)">Sine — sin(z)</option>
+                <option value="(z-1)/(z+1)">Möbius — (z−1)/(z+1)</option>
+                <option value="z+1/z">Joukowski — z + 1/z</option>
+                <option value="custom">Custom…</option>
+              </select>
+            </label>
+            <label class="mt-3 block">
+              <span class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">Expression (in z)</span>
+              <input id="expr-input" type="text" class="tool-input font-mono" value="z^2" />
+            </label>
+            <p id="expr-error" class="mt-2 hidden text-[0.75rem] leading-[1.5] text-red-600"></p>
+            <p class="mt-2 text-[0.7rem] leading-[1.5] text-muted-text/80">
+              Supported: <code>+ - * / ^</code>, parentheses, <code>i</code>, <code>pi</code>, <code>e</code>, and <code>sin cos tan exp log sqrt conj abs</code> of <code>z</code>. Parsed by a small hand-written evaluator — no <code>eval</code>.
+            </p>
+
+            <div class="mt-6 border-t border-border pt-5">
+              <label class="block">
+                <span class="flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">
+                  <span>Homotopy t</span><span id="t-value">0.00</span>
+                </span>
+                <input id="t-slider" type="range" min="0" max="1" step="0.01" value="0" class="mt-1 w-full" />
+              </label>
+              <p class="mt-1 text-[0.7rem] text-muted-text/80">t=0 is the flat grid, t=1 is the full image of f(z). p(t,z) = (1−t)·z + t·f(z).</p>
+              <div class="mt-3 flex gap-2">
+                <button type="button" id="animate-toggle" class="pill-btn">▶ Animate</button>
+                <button type="button" id="reset-btn" class="pill-btn">Reset</button>
+              </div>
+            </div>
+
+            <div class="mt-6 border-t border-border pt-5">
+              <label class="block">
+                <span class="flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">
+                  <span>Domain radius</span><span id="radius-value">2.5</span>
+                </span>
+                <input id="radius-slider" type="range" min="1" max="5" step="0.1" value="2.5" class="mt-1 w-full" />
+              </label>
+              <label class="mt-3 block">
+                <span class="flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">
+                  <span>Grid lines</span><span id="density-value">17</span>
+                </span>
+                <input id="density-slider" type="range" min="7" max="33" step="2" value="17" class="mt-1 w-full" />
+              </label>
+            </div>
+          </div>
+
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Complex plane</p>
+              <p id="pole-note" class="hidden font-mono text-[0.65rem] text-amber-600">gaps = points mapped outside the view (poles/blow-up), not rendering bugs</p>
+            </div>
+            <canvas id="conformal-canvas" width="760" height="760" aria-label="Grid on the complex plane, warped live under the chosen function"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="explainer-title">
+      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="explainer-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">What "conformal" actually means</h2>
+        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
+          A map <code class="text-primary-cta">f(z)</code> is conformal at a point where it's angle-preserving: two curves that cross at some angle in the original grid still cross at that same angle in the warped image, even though lengths and areas distort. That's why the horizontal and vertical gridlines above still meet at right angles almost everywhere in the image — the exceptions are <em>critical points</em>, where <code class="text-primary-cta">f′(z) = 0</code> (for <code class="text-primary-cta">z²</code>, that's the origin, which is exactly where the right-angle grid collapses into a cusp).
+        </p>
+        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
+          The slider doesn't animate a physical process — it's a straight linear interpolation between two static maps, evaluated fresh at every position:
+        </p>
+        <div class="mt-6 rounded-[16px] border border-border bg-elevated/40 p-5 font-mono text-[0.85rem] leading-[1.6] text-muted-text">
+          <p class="mb-1 font-semibold text-primary-text">Homotopy</p>
+          <p>p(t, z) = (1 − t)·z + t·f(z), &nbsp; t ∈ [0, 1]</p>
+        </div>
+        <p class="mt-4 max-w-2xl text-[0.85rem] leading-[1.6] text-muted-text/80">
+          Gridlines that vanish or jump off-canvas aren't a bug — <code class="text-primary-cta">1/z</code> genuinely blows up near the origin, and any line passing close to a pole gets clipped rather than drawn as a corrupted streak across the whole canvas. That's the actual behavior of the function, made visible instead of hidden.
+        </p>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .tool-input {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+    color: var(--mp-text);
+  }
+  .tool-input:focus {
+    outline: none;
+    border-color: var(--mp-cta);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-cta) 20%, transparent);
+  }
+  .pill-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.4rem 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .pill-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .pill-btn.is-active {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+    background: color-mix(in srgb, var(--mp-cta) 12%, var(--mp-elevated));
+  }
+  #conformal-canvas {
+    margin-top: 0.75rem;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    background: var(--mp-canvas);
+    border-radius: 10px;
+    border: 1px solid var(--mp-border);
+  }
+  input[type='range'] {
+    accent-color: var(--mp-cta);
+  }
+</style>
+
+<script>
+// @ts-nocheck
+function initConformalMapping() {
+  const canvasEl = document.getElementById('conformal-canvas');
+  if (!canvasEl || canvasEl.dataset.init) return;
+  canvasEl.dataset.init = 'true';
+  const ctx = canvasEl.getContext('2d');
+
+  const presetEl = document.getElementById('preset');
+  const exprEl = document.getElementById('expr-input');
+  const errorEl = document.getElementById('expr-error');
+  const tSlider = document.getElementById('t-slider');
+  const tValue = document.getElementById('t-value');
+  const radiusSlider = document.getElementById('radius-slider');
+  const radiusValue = document.getElementById('radius-value');
+  const densitySlider = document.getElementById('density-slider');
+  const densityValue = document.getElementById('density-value');
+  const animateBtn = document.getElementById('animate-toggle');
+  const resetBtn = document.getElementById('reset-btn');
+  const poleNote = document.getElementById('pole-note');
+
+  // ---- Complex arithmetic (plain {re, im} objects) ----
+  const cAdd = (a, b) => ({ re: a.re + b.re, im: a.im + b.im });
+  const cSub = (a, b) => ({ re: a.re - b.re, im: a.im - b.im });
+  const cMul = (a, b) => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re });
+  const cDiv = (a, b) => {
+    const d = b.re * b.re + b.im * b.im;
+    return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
+  };
+  const cNeg = (a) => ({ re: -a.re, im: -a.im });
+  const cConj = (a) => ({ re: a.re, im: -a.im });
+  const cAbsVal = (a) => Math.hypot(a.re, a.im);
+  const cArg = (a) => Math.atan2(a.im, a.re);
+  const cExp = (a) => { const r = Math.exp(a.re); return { re: r * Math.cos(a.im), im: r * Math.sin(a.im) }; };
+  const cLog = (a) => ({ re: Math.log(cAbsVal(a)), im: cArg(a) });
+  const cSin = (a) => ({ re: Math.sin(a.re) * Math.cosh(a.im), im: Math.cos(a.re) * Math.sinh(a.im) });
+  const cCos = (a) => ({ re: Math.cos(a.re) * Math.cosh(a.im), im: -Math.sin(a.re) * Math.sinh(a.im) });
+  const cSqrt = (a) => { const r = Math.sqrt(cAbsVal(a)), th = cArg(a) / 2; return { re: r * Math.cos(th), im: r * Math.sin(th) }; };
+  const cPow = (a, b) => {
+    if (a.re === 0 && a.im === 0) return { re: 0, im: 0 };
+    return cExp(cMul(b, cLog(a)));
+  };
+
+  // ---- Safe recursive-descent parser (no eval / new Function anywhere) ----
+  function tokenize(src) {
+    const tokens = [];
+    let i = 0;
+    while (i < src.length) {
+      const c = src[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if (/[0-9.]/.test(c)) {
+        let j = i;
+        while (j < src.length && /[0-9.]/.test(src[j])) j++;
+        tokens.push({ type: 'num', value: parseFloat(src.slice(i, j)) });
+        i = j;
+        continue;
+      }
+      if (/[a-zA-Z]/.test(c)) {
+        let j = i;
+        while (j < src.length && /[a-zA-Z]/.test(src[j])) j++;
+        tokens.push({ type: 'ident', value: src.slice(i, j) });
+        i = j;
+        continue;
+      }
+      if ('+-*/^(),'.includes(c)) { tokens.push({ type: c }); i++; continue; }
+      throw new Error(`Unexpected character "${c}"`);
+    }
+    tokens.push({ type: 'eof' });
+    return tokens;
+  }
+
+  const FUNCS = { sin: cSin, cos: cCos, tan: (z) => cDiv(cSin(z), cCos(z)), exp: cExp, log: cLog, sqrt: cSqrt, conj: cConj, abs: (z) => ({ re: cAbsVal(z), im: 0 }) };
+  const CONSTS = { i: { re: 0, im: 1 }, pi: { re: Math.PI, im: 0 }, e: { re: Math.E, im: 0 } };
+
+  function parseExpression(src) {
+    const tokens = tokenize(src);
+    let pos = 0;
+    const peek = () => tokens[pos];
+    const advance = () => tokens[pos++];
+    function expect(type) {
+      if (peek().type !== type) throw new Error(`Expected "${type}", got "${peek().type}"`);
+      return advance();
+    }
+
+    // Precedence, loosest to tightest: + - < * / < unary - < ^ (right-assoc, exponent may itself be unary)
+    // i.e. -z^2 parses as -(z^2), and z^-2 parses as z^(-2) - matches Python/most calculators, not left-to-right token order.
+    function parseExpr() {
+      let node = parseTerm();
+      while (peek().type === '+' || peek().type === '-') {
+        const op = advance().type;
+        const rhs = parseTerm();
+        node = { type: op === '+' ? 'add' : 'sub', left: node, right: rhs };
+      }
+      return node;
+    }
+    function parseTerm() {
+      let node = parseUnary();
+      while (peek().type === '*' || peek().type === '/') {
+        const op = advance().type;
+        const rhs = parseUnary();
+        node = { type: op === '*' ? 'mul' : 'div', left: node, right: rhs };
+      }
+      return node;
+    }
+    function parseUnary() {
+      if (peek().type === '-') { advance(); return { type: 'neg', arg: parseUnary() }; }
+      if (peek().type === '+') { advance(); return parseUnary(); }
+      return parsePow();
+    }
+    function parsePow() {
+      const base = parsePrimary();
+      if (peek().type === '^') {
+        advance();
+        const exp = parseUnary(); // right-associative, and allows a unary-negative exponent
+        return { type: 'pow', left: base, right: exp };
+      }
+      return base;
+    }
+    function parsePrimary() {
+      const tok = peek();
+      if (tok.type === 'num') { advance(); return { type: 'num', value: tok.value }; }
+      if (tok.type === '(') { advance(); const inner = parseExpr(); expect(')'); return inner; }
+      if (tok.type === 'ident') {
+        advance();
+        const name = tok.value.toLowerCase();
+        if (peek().type === '(') {
+          advance();
+          const arg = parseExpr();
+          expect(')');
+          if (!FUNCS[name]) throw new Error(`Unknown function "${name}"`);
+          return { type: 'call', name, arg };
+        }
+        if (name === 'z') return { type: 'z' };
+        if (CONSTS[name]) return { type: 'const', value: CONSTS[name] };
+        throw new Error(`Unknown identifier "${name}"`);
+      }
+      throw new Error(`Unexpected token "${tok.type}"`);
+    }
+
+    const ast = parseExpr();
+    expect('eof');
+    return ast;
+  }
+
+  function evalNode(node, z) {
+    switch (node.type) {
+      case 'num': return { re: node.value, im: 0 };
+      case 'const': return node.value;
+      case 'z': return z;
+      case 'add': return cAdd(evalNode(node.left, z), evalNode(node.right, z));
+      case 'sub': return cSub(evalNode(node.left, z), evalNode(node.right, z));
+      case 'mul': return cMul(evalNode(node.left, z), evalNode(node.right, z));
+      case 'div': return cDiv(evalNode(node.left, z), evalNode(node.right, z));
+      case 'pow': return cPow(evalNode(node.left, z), evalNode(node.right, z));
+      case 'neg': return cNeg(evalNode(node.arg, z));
+      case 'call': return FUNCS[node.name](evalNode(node.arg, z));
+      default: throw new Error(`Bad node type "${node.type}"`);
+    }
+  }
+
+  // ---- State ----
+  let ast = null;
+  let t = 0;
+  let radius = 2.5;
+  let density = 17;
+  let animating = false;
+  let animFrameId = null;
+  let destroyed = false;
+
+  function compile(src) {
+    try {
+      ast = parseExpression(src);
+      errorEl.classList.add('hidden');
+      errorEl.textContent = '';
+      return true;
+    } catch (err) {
+      ast = null;
+      errorEl.textContent = err instanceof Error ? err.message : 'Could not parse expression.';
+      errorEl.classList.remove('hidden');
+      return false;
+    }
+  }
+
+  function draw() {
+    if (!ast) return;
+    const w = canvasEl.width, h = canvasEl.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const viewR = 3.2; // fixed view window in the complex plane, in units
+    const scale = Math.min(w, h) / (2 * viewR);
+    const cx = w / 2, cy = h / 2;
+    const toScreen = (z) => ({ x: cx + z.re * scale, y: cy - z.im * scale });
+
+    // axes
+    ctx.strokeStyle = 'rgba(120,120,120,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+    ctx.stroke();
+
+    const samples = 90;
+    const clampMag = viewR * 2.4; // gap out lines whose mapped point leaves this radius
+    let sawGap = false;
+
+    function mapPoint(z) {
+      const fz = evalNode(ast, z);
+      if (!Number.isFinite(fz.re) || !Number.isFinite(fz.im)) return null;
+      const p = { re: (1 - t) * z.re + t * fz.re, im: (1 - t) * z.im + t * fz.im };
+      if (Math.hypot(p.re, p.im) > clampMag) return null;
+      return p;
+    }
+
+    function drawFamily(count, hueBase) {
+      for (let k = 0; k < count; k++) {
+        const frac = count === 1 ? 0.5 : k / (count - 1);
+        const fixed = -radius + frac * 2 * radius;
+        const hue = hueBase + frac * 40;
+        ctx.strokeStyle = `hsla(${hue}, 65%, 50%, 0.75)`;
+        ctx.lineWidth = Math.abs(fixed) < 1e-6 ? 2 : 1.1;
+        ctx.beginPath();
+        let penDown = false;
+        for (let s = 0; s <= samples; s++) {
+          const v = -radius + (s / samples) * 2 * radius;
+          const z = hueBase === 210 ? { re: v, im: fixed } : { re: fixed, im: v };
+          const p = mapPoint(z);
+          if (!p) { penDown = false; sawGap = true; continue; }
+          const scr = toScreen(p);
+          if (!penDown) { ctx.moveTo(scr.x, scr.y); penDown = true; }
+          else ctx.lineTo(scr.x, scr.y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    drawFamily(density, 210); // horizontal lines (fixed im), blue family
+    drawFamily(density, 15);  // vertical lines (fixed re), orange/red family
+
+    poleNote.classList.toggle('hidden', !sawGap);
+  }
+
+  function recompute() {
+    draw();
+  }
+
+  presetEl.addEventListener('change', () => {
+    if (presetEl.value === 'custom') { exprEl.focus(); return; }
+    exprEl.value = presetEl.value;
+    if (compile(exprEl.value)) recompute();
+  });
+  exprEl.addEventListener('input', () => {
+    presetEl.value = 'custom';
+    if (compile(exprEl.value)) recompute();
+  });
+
+  tSlider.addEventListener('input', () => {
+    t = parseFloat(tSlider.value);
+    tValue.textContent = t.toFixed(2);
+    recompute();
+  });
+  radiusSlider.addEventListener('input', () => {
+    radius = parseFloat(radiusSlider.value);
+    radiusValue.textContent = radius.toFixed(1);
+    recompute();
+  });
+  densitySlider.addEventListener('input', () => {
+    density = parseInt(densitySlider.value, 10);
+    densityValue.textContent = String(density);
+    recompute();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    t = 0; tSlider.value = '0'; tValue.textContent = '0.00';
+    setAnimating(false);
+    recompute();
+  });
+
+  function setAnimating(next) {
+    animating = next;
+    animateBtn.textContent = animating ? '⏸ Pause' : '▶ Animate';
+    animateBtn.classList.toggle('is-active', animating);
+    if (animating) {
+      let dir = 1;
+      const step = () => {
+        if (destroyed || !animating) return;
+        t += dir * 0.006;
+        if (t >= 1) { t = 1; dir = -1; }
+        if (t <= 0) { t = 0; dir = 1; }
+        tSlider.value = String(t);
+        tValue.textContent = t.toFixed(2);
+        draw();
+        animFrameId = requestAnimationFrame(step);
+      };
+      animFrameId = requestAnimationFrame(step);
+    } else if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = null;
+    }
+  }
+
+  animateBtn.addEventListener('click', () => setAnimating(!animating));
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  compile(exprEl.value);
+  radius = parseFloat(radiusSlider.value);
+  density = parseInt(densitySlider.value, 10);
+  draw();
+  if (!reduceMotion) {
+    // start paused by default regardless of motion preference - user opts in via the Animate button
+  }
+
+  document.addEventListener('astro:before-swap', () => {
+    destroyed = true;
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+  }, { once: true });
+}
+
+document.addEventListener('astro:page-load', initConformalMapping);
+initConformalMapping();
+</script>
