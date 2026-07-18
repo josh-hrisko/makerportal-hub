@@ -1,0 +1,23 @@
+---
+import { getCollection } from 'astro:content';
+
+const journals = await getCollection('journal');
+// Sort journal entries descending by date/id
+const sorted = journals.sort((a, b) => b.id.localeCompare(a.id));
+const latestDate = sorted[0]?.id ?? '';
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <meta http-equiv="refresh" content={`0;url=/journal/${latestDate}`} />
+    <link rel="canonical" href={`/journal/${latestDate}`} />
+    <script is:inline define:vars={{ latestDate }}>
+      window.location.replace(`/journal/${latestDate}`);
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to the latest report: <a href={`/journal/${latestDate}`}>{latestDate}</a>...</p>
+  </body>
+</html>

@@ -238,6 +238,82 @@ const newCounts = new Map<string, number>();
     </div>
   </section>
 
+  {/* Explainer Section: Pillars, Gating, and Scoring */}
+  <section class="border-t border-border bg-elevated/10 py-16 sm:py-20" aria-labelledby="explainer-title">
+    <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
+      <h2 id="explainer-title" class="sr-only">How Signals Journal Works</h2>
+      
+      <div class="grid gap-12 lg:grid-cols-2">
+        {/* Left Column: Pillars */}
+        <div id="pillars" class="scroll-mt-24">
+          <div class="flex items-center gap-2">
+            <span class="size-2 rounded-full bg-primary-cta"></span>
+            <h3 class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Topic Pillars</h3>
+          </div>
+          <p class="mt-3 text-[0.9rem] leading-[1.65] text-muted-text">
+            Our automated scanner searches developer networks (Hacker News, Dev.to, GitHub, arXiv, Lobste.rs, and curated Bluesky voices) specifically matching the core pillars of our software engineering studio:
+          </p>
+          <ul class="mt-6 space-y-4">
+            {Object.entries(pillarMeta).map(([key, meta]) => (
+              <li class="flex gap-3">
+                <span class="mt-1.5 size-2 shrink-0 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>
+                <div>
+                  <h4 class="text-[0.88rem] font-bold text-primary-text">{meta.label}</h4>
+                  <p class="mt-0.5 text-[0.82rem] leading-[1.5] text-muted-text">
+                    {key === 'on-device-ai' && 'Hardware-accelerated local models, CoreML execution, and edge inference optimizations.'}
+                    {key === 'metal-ane' && 'Apple Silicon GPU shaders, Metal Performance Shaders, and Neural Engine compilation.'}
+                    {key === 'local-llm' && 'Compact language models, GGUF quantization, llama.cpp stacks, and local-first LLM interfaces.'}
+                    {key === 'dsp-audio' && 'Real-time audio processing, spatial sound fields, voice conversion algorithms, and digital filters.'}
+                    {key === 'ios-craft' && 'Swift concurrency, SwiftUI rendering performance, memory safety, and native app store packaging.'}
+                    {key === 'privacy-arch' && 'Privacy-preserving architecture, local-first syncing, and secure zero-telemetry software design.'}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Right Column: Scoring & Schedule */}
+        <div class="space-y-12">
+          <div id="scoring" class="scroll-mt-24">
+            <div class="flex items-center gap-2">
+              <span class="size-2 rounded-full bg-primary-cta"></span>
+              <h3 class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Scoring & Gating Formula</h3>
+            </div>
+            <p class="mt-3 text-[0.9rem] leading-[1.65] text-muted-text">
+              Candidates are filtered through strict substance and relevance checks before receiving a consolidated score. The ranking weight calculation is completely transparent:
+            </p>
+            <div class="mt-6 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
+              <div class="font-mono text-[0.78rem] text-primary-cta leading-[1.6]">
+                Score = (Keyword Hits &times; 3)<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (Is Primary Artifact? ? +3 : 0)<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (Cross-Source Corroboration &times; 3)<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Log-Damped Engagement (capped at +4)<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Recency Bonus (+8 to -3)<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Recently Seen Penalty (-100)
+              </div>
+              <div class="mt-4 border-t border-border pt-4 space-y-2 text-[0.8rem] leading-[1.5] text-muted-text">
+                <p><strong>Primary Artifacts:</strong> Links to <code class="font-mono text-[0.72rem] bg-canvas px-1 rounded">arxiv.org</code>, <code class="font-mono text-[0.72rem] bg-canvas px-1 rounded">github.com</code>, and <code class="font-mono text-[0.72rem] bg-canvas px-1 rounded">developer.apple.com</code> get a +3 boost.</p>
+                <p><strong>Recency Bonus:</strong> Fresh items (&lt;24h old) receive up to +8. Stale items (&gt;10d old) get penalized by -3.</p>
+                <p><strong>Recently Seen:</strong> To ensure high-signal diversity, items matching URLs featured in the last 3 days get penalized by -100 to prioritize fresh findings.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="schedule" class="scroll-mt-24">
+            <div class="flex items-center gap-2">
+              <span class="size-2 rounded-full bg-primary-cta"></span>
+              <h3 class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Auto-Publish Schedule</h3>
+            </div>
+            <p class="mt-3 text-[0.9rem] leading-[1.65] text-muted-text">
+              The ingestion pipeline runs as a daily automated GitHub Action at <strong class="font-semibold text-primary-text">14:00 UTC</strong>. If the gating algorithm flags zero high-relevance items, the day is skipped to prevent low-signal spam. All historical daily reports are archived statically with permanent URLs.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <style>
     .line-clamp-2 {
       display: -webkit-box;

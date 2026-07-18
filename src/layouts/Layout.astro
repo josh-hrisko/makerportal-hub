@@ -53,9 +53,15 @@ const isActiveExact = (href: string) => {
 };
 
 // Ownership: first claimant wins. Primary hrefs claimed first so they beat cross-links.
-// This ensures /advertise (which appears in Journal, Shop, About) is owned by only ONE primary (Journal first),
-// and /blog is owned by Journal, etc.
-const routeOwner = new Map<string, string>();
+// Pre-populated with manual mappings for shared or standalone sub-routes to ensure tab active state is deterministic.
+const routeOwner = new Map<string, string>([
+  ['/advertise', 'shop'],
+  ['/llms', 'resources'],
+  ['/playground', 'resources'],
+  ['/contact', 'studio'],
+  ['/press', 'studio'],
+  ['/team', 'studio'],
+]);
 for (const item of primaryNav) {
   const c = normalizeHref(item.href);
   if (c && !routeOwner.has(c)) routeOwner.set(c, item.id);

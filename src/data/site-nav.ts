@@ -169,16 +169,15 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Archive',
         links: [
           { label: 'All scans', href: '/journal', description: 'Chronological backlog' },
-          { label: 'Latest signals', href: '/resources#gear', description: 'Trending gear picks' },
-          { label: 'Agent map', href: '/llms', description: 'Human + AI index' },
+          { label: 'Latest report', href: '/journal/latest', description: 'Trending scan results' },
         ],
       },
       {
         title: 'How it works',
         links: [
-          { label: 'Scoring', href: '/journal', description: 'Gating & ranking' },
-          { label: 'Pillars', href: '/resources#gear', description: '6 topic pillars' },
-          { label: 'Daily 14:00 UTC', href: '/journal', description: 'Auto-published' },
+          { label: 'Topic pillars', href: '/journal#pillars', description: '6 core focus areas' },
+          { label: 'Scoring formula', href: '/journal#scoring', description: 'Gating & ranking logic' },
+          { label: 'Daily schedule', href: '/journal#schedule', description: 'Auto-published 14:00 UTC' },
         ],
       },
     ],
@@ -205,7 +204,6 @@ export const primaryNav: PrimaryNavItem[] = [
       {
         title: 'Partners',
         links: [
-          { label: 'Affiliate picks', href: '/resources#gear', description: 'Gear we recommend' },
           { label: 'Advertise', href: '/advertise', description: 'Sponsor the hub' },
         ],
       },
