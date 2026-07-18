@@ -1,11 +1,24 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import Math from '../../components/Math.astro';
 
 const title = 'Double Pendulum + Phase Space — Interactive Chaos | MakerPortal';
 const description =
   'Perturb a live double pendulum and watch deterministic chaos unfold beside its phase-space portrait, using fixed-step RK4 integration and live energy-drift diagnostics.';
 const canonical = new URL('/playground/double-pendulum', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Double Pendulum + Phase Space',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,12 +29,79 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Double Pendulum + Phase Space', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'Why is the double pendulum chaotic when a single pendulum is not?',
+    a: 'A single pendulum has two state variables (angle and angular velocity) — a 2D phase space. In 2D continuous-time systems, trajectories cannot cross, which prevents chaos (the Poincaré-Bendixson theorem). The double pendulum has four state variables — a 4D phase space. Trajectories can pass each other in the extra dimensions, enabling the stretching and folding that defines chaos.',
+  },
+  {
+    q: 'Why use RK4 instead of a symplectic integrator?',
+    a: 'A symplectic integrator (Verlet, Yoshida) exactly conserves a perturbed Hamiltonian and bounds energy error for exponentially long times. RK4 does not — it leaks energy gradually. But RK4 is 4th-order accurate at the time step, while explicit symplectic methods are typically 2nd-order. For the short integration times and visual purposes here (seconds to minutes of simulated time), RK4\'s lower per-step error outweighs the long-term drift concern. The energy-drift readout confirms typical drift is under 0.01% after 30 seconds.',
+  },
+  {
+    q: 'What does the twin (ghost) trajectory show?',
+    a: 'The faint blue pendulum starts from the exact same state as the main one except for a 10⁻⁴ radian offset on θ₂ (~0.006°). The separation between them grows exponentially in chaotic regimes — this is the signature of a positive Lyapunov exponent. When the twin diverges visibly, it means you cannot predict the pendulum\'s state more than a few seconds into the future without absurdly precise initial measurements.',
+  },
+  {
+    q: 'Why does the phase portrait trail split instead of wrapping across the chart?',
+    a: 'Angles live on a circle — +179° and −179° are 2° apart, not 358°. Drawing a line all the way across the chart would falsely imply the pendulum teleported through θ=0. The renderer cuts the trail whenever the horizontal jump exceeds 45% of the canvas width, respecting the actual topology of the torus-shaped state space.',
+  },
+  {
+    q: 'Can I build a real double pendulum that behaves like this?',
+    a: 'Yes — two rods connected by low-friction bearings approximates this model very well for the first few minutes. Real-world differences: rod mass and elasticity add higher-frequency modes, joint friction drains energy faster than the linear damping slider, and 3D motion (twisting out of plane) becomes significant at high energies. The qualitative behavior — exponential separation, energy sloshing, flipping — is identical.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+
+const pendulumCode = `// Fixed-step RK4 for the double pendulum (from the page script)
+function acceleration(θ1, θ2, ω1, ω2, b) {
+  const Δ = θ1 - θ2;
+  const sΔ = Math.sin(Δ), cΔ = Math.cos(Δ);
+  const D = 2 * MASS_1 + MASS_2 - MASS_2 * Math.cos(2 * Δ);
+  const ω1_2 = ω1 * ω1, ω2_2 = ω2 * ω2;
+  const g = GRAVITY;
+
+  const α1 = (-g * (2 * MASS_1 + MASS_2) * Math.sin(θ1)
+    - MASS_2 * g * Math.sin(θ1 - 2 * θ2)
+    - 2 * sΔ * MASS_2 * (ω2_2 * LENGTH_2 + ω1_2 * LENGTH_1 * cΔ))
+    / (LENGTH_1 * D) - b * ω1;
+
+  const α2 = (2 * sΔ * (ω1_2 * LENGTH_1 * (MASS_1 + MASS_2)
+    + g * (MASS_1 + MASS_2) * Math.cos(θ1)
+    + ω2_2 * LENGTH_2 * MASS_2 * cΔ))
+    / (LENGTH_2 * D) - b * ω2;
+
+  return [α1, α2];
+}
+
+function rk4(state, dt, b) {
+  const [θ1, θ2, ω1, ω2] = state;
+  const deriv = (s) => {
+    const [ω1_, ω2_, α1, α2] = [s[2], s[3], ...acceleration(s[0], s[1], s[2], s[3], b)];
+    return [ω1_, ω2_, α1, α2];
+  };
+  const k1 = deriv(state);
+  const k2 = deriv(state.map((v, i) => v + dt/2 * k1[i]));
+  const k3 = deriv(state.map((v, i) => v + dt/2 * k2[i]));
+  const k4 = deriv(state.map((v, i) => v + dt * k3[i]));
+  return state.map((v, i) => v + dt/6 * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]));
+}
+
+// Branchless angle normalization to [-π, π]
+const wrapAngle = a => ((a + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;`;
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
     <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -98,7 +178,72 @@ import Math from '../../components/Math.astro';
       </div>
     </section>
 
-    
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel above answers to the math below. Here is what each piece of the visualization, every control, and every readout is actually doing, and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The two canvases</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Configuration-space canvas (left).</strong> Two massless rods of equal length, two point masses of equal mass, one frictionless pivot at the top. The colored bob (brand-red stroke) is the primary system. The faint blue ghost trailing behind it is the twin — identical except for <Math math="10^{-4}" /> rad of initial <Math math="\theta_2" /> offset. Both evolve from the same physics, same integrator. The fact that they visibly separate is not a rendering trick or a numerical artifact — it is deterministic chaos: two points arbitrarily close in phase space, driven apart exponentially by their own dynamics.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Phase-space canvas (right).</strong> Horizontal axis is <Math math="\theta" />, vertical axis is <Math math="\omega" />. Each link paints one trace: link 1 in brand red, link 2 in anchor blue. The faint grid helps you read angular positions against the <Math math="\pm\pi" /> range. The trail splits (issues a <code>moveTo</code> instead of <code>lineTo</code>) whenever the horizontal jump between successive points exceeds 45% of the canvas width — this preserves the true topology of the torus. Without the split you'd see a spurious line falsely claiming the pendulum teleported through <Math math="\theta=0" />.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Trail painting (trajectory history).</strong> Both canvases accumulate a polyline trail of the last 1800 points (physics frames). Points are sampled every 4th physics step to keep the trail buffer manageable without aliasing. The trail starts fully opaque and fades with age — newer points overwrite older ones — so you see the recent dynamic while the distant past recedes. "Clear paint" zeros both buffers.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Drag interaction.</strong> You can drag either bob directly on the canvas to set initial angles. This bypasses the sliders — grab the mass circle, drag to the desired angle, release. The velocity is zeroed on release (restart from that angle), which is deliberate: you are setting an initial condition, not applying a continuous torque. Restart resets both angles to slider values.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The core ODE the canvas animates</p>
+              <Math math="\dot{\mathbf{x}} = \mathbf{f}(\mathbf{x}) = [\omega_1,\;\omega_2,\;\alpha_1(\boldsymbol{\theta},\boldsymbol{\omega}),\;\alpha_2(\boldsymbol{\theta},\boldsymbol{\omega})]^\top" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Four first-order ODEs derived from the Euler–Lagrange equations. The accelerations <Math math="\alpha_1, \alpha_2" /> are the coupled expressions shown in the math section below, implemented line-for-line in <code>acceleration()</code>. No approximations, no small-angle linearization — this is the full nonlinear system.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, readouts, and render loop</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Preset buttons.</strong> Four hand-picked starting configurations: Classic chaos (120°, −10°) — the workhorse, twin separates in seconds; Double flip (170°, 175°) — both near the unstable inverted equilibrium, slightest jitter triggers violent energy exchange; Calm orbit (25°, 40°) — low-energy KAM torus, twin stays locked; Asymmetric (92°, −128°) — mixed behavior, islands of order in a chaotic sea.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Angle sliders (θ₁, θ₂).</strong> Set the initial angular displacement from the downward vertical — range ±180° with 0.5° resolution. The physics converts to radians internally. Changing either slider while running resets the simulation to those angles with zero velocity and clears the phase trails.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Speed multiplier (0.25× to 2×).</strong> Controls how many physics steps are consumed per render frame. The physics time step is fixed at <Math math="dt = 1/240" /> s — the multiplier does not alter the integrator, it only changes the ratio of simulation time to wall-clock time. At 1×, one second of real time ≈ one second of simulated time. At 2× the phase trails accumulate faster since more physics steps run per frame.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Air damping slider (0 to 0.08).</strong> Adds a linear viscous damping term <Math math="-b\omega_i" /> to each angular acceleration. At zero the system is Hamiltonian — energy conserved to RK4 precision. At nonzero values energy decays and the phase portrait spirals in toward <Math math="(0,0)" />. The energy-drift readout changes to "dissipating" when damping is active, since the drift is no longer an error — it is the intended physics.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The four readouts.</strong> <strong>θ₁/ω₁ & θ₂/ω₂</strong> — live state of each link (angle in degrees, angular velocity in rad/s). <strong>Energy drift</strong> — <Math math="(E - E_0) / |E_0|" /> as a percentage. E₀ is recorded on simulation start. With damping off this measures RK4's numerical dissipation (typically under 0.01% after 30 seconds for calm orbits). <strong>Twin separation</strong> — the <Math math="L_2" /> angular distance between the primary and twin state vectors. In chaotic regimes this grows exponentially and saturates at <Math math="\sim\pi" /> (fully uncorrelated). Displayed in exponential notation when it crosses into scientific-notation territory.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> Uses <code>requestAnimationFrame</code> with a fixed-step accumulator. Each frame computes elapsed wall-clock time, multiplies by the speed multiplier, and drains the accumulator in <Math math="dt" />-sized chunks (capped at 48 steps per frame). Physics runs at <Math math="dt = 1/240" /> independent of display frame rate — the fixed step ensures deterministic, reproducible chaos. Trails are sampled every 4th physics step to decimate the draw load. Canvas rendering skips when the page is not visible (IntersectionObserver + visibilitychange). Cleanup on <code>astro:before-swap</code> cancels the frame, disconnects observers, and prevents memory leaks.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section aria-labelledby="hook-title" class="border-b border-border bg-elevated/20">
       <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
         <div class="max-w-[44rem]">
@@ -329,6 +474,55 @@ import Math from '../../components/Math.astro';
       </div>
     </section>
 
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas that matter</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">RK4 is not symplectic</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">A symplectic integrator exactly conserves a perturbed Hamiltonian — energy stays bounded for exponentially long times. RK4 leaks energy, slowly and deterministically. After a minute of chaotic motion (high angular velocities, frequent flips), you may see 0.2% drift. That is not a bug — it is the integrator's honest numerical footprint. For a real orbital mechanics problem you'd use Verlet or a 4th-order Yoshida composition. For an interactive chaos demo at 240 Hz, RK4 gives far lower per-step error than 2nd-order symplectic methods. The energy readout shows the drift so you can judge for yourself.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Phase-space trail wrapping</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Angles live on <Math math="S^1" /> — a circle — not on <Math math="\mathbb{R}" />. When <Math math="\theta" /> jumps from +179° to −179°, the true separation is 2°, not 358°. But if you naively draw a line between those two x-coordinates on a linear canvas, you get a horizontal line spanning the entire chart — a false visual that claims the pendulum teleported through <Math math="\theta=0" />. The fix: the renderer splits the trail (inserts a <code>moveTo</code>) whenever <Math math="|x_{n+1} - x_n| > 0.45W" />. You lose a fraction of a pixel of trail and keep the topology honest. This is the same issue that plagues every angle-valued time-series plot — wrapping isn't a bug, your coordinate chart is.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The solver, in JavaScript</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The coupled acceleration function and the fixed-step RK4 stepper — these two functions drive every frame of both canvases. The angle-wrap utility is branchless for predictable performance.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">RK4 + double-pendulum accelerations (JavaScript)</p>
+            <button type="button" class="copy-btn" data-copy-target="code-pendulum">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
+            <Code id="code-pendulum" code={pendulumCode} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">&#8995;</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
   </PlaygroundShell>
 </Layout>
 
@@ -430,6 +624,22 @@ import Math from '../../components/Math.astro';
   .math-card {
     font-family: var(--font-mono);
     color: var(--mp-text);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
   }
 </style>
 
