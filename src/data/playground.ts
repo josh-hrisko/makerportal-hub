@@ -33,76 +33,8 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: false,
     status: 'live',
   },
-  {
-    slug: 'acoustic-calculators',
-    title: 'Acoustic Calculators',
-    tagline: 'Wavelength, SPL, RT60 — fast engineering math in one place',
-    description:
-      'Quick-access acoustic calculators: wavelength/frequency, delay/distance, SPL summation, dB conversion, RT60 (Sabine/Eyring), critical distance, port length, Helmholtz resonance, speed of sound by temperature. Robust, copyable, keyboard-accessible.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
-  {
-    slug: 'acoustics-room-modes',
-    title: 'Room Mode Analyzer',
-    tagline: 'Axial, tangential, and oblique modal calculator',
-    description:
-      'Rectangular-room modal calculator with axial/tangential/oblique classification, frequency table, mode-density view, Schroeder frequency estimate, and 2D pressure-map slices at listening positions — with practical treatment caveats.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
-  {
-    slug: 'pole-zero-explorer',
-    title: 'Pole-Zero Filter Explorer',
-    tagline: 'Drag poles and zeros on the z-plane, hear the filter',
-    description:
-      'Interactive z-plane with draggable conjugate pole/zero pairs, unit circle reference, log-frequency magnitude and phase response, group delay, filter presets, RBJ biquad coefficient export, and Web Audio audition with safe gain handling.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
-  {
-    slug: 'loudspeaker-enclosure-designer',
-    title: 'Loudspeaker Enclosure Designer',
-    tagline: 'Sealed-box Thiele–Small alignment with transfer-function SPL',
-    description:
-      'Sealed enclosure designer: fs, Qts, Vas, Re, Vb inputs with Qtc/fc calculation, correctly scaled SPL transfer function, Vb sizing for common alignments (0.5, 0.577, 0.707, 1.0), and excursion estimates with documented model scope.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
-  {
-    slug: 'loudspeaker-nonlinearity-lab',
-    title: 'Driver Nonlinearity Lab',
-    tagline: 'Bl(x), Kms(x), excursion, and harmonic distortion',
-    description:
-      'Visualize Bl(x), Kms(x), Le(x) nonlinearity effects: force factor falloff, suspension stiffening, excursion asymmetry, harmonic distortion, and waveform clipping. Explicit lumped-parameter educational model with clear caveats.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
-  {
-    slug: 'voice-coil-thermal-compression',
-    title: 'Voice-Coil Thermal Compression',
-    tagline: 'Thermal RC model — heat, resistance, and SPL sag',
-    description:
-      'Thermal resistance/capacitance model of voice-coil heating: temperature, Re(T), current, electrical power, and resulting SPL compression. Cooling presets with editable thermal parameters and safe power-limit guidance.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
-  {
-    slug: 'cone-breakup',
-    title: 'Cone Breakup Explorer',
-    tagline: 'When a piston stops being a piston',
-    description:
-      'Illustrative modal-shape explorer showing the transition from rigid-piston motion to cone breakup. Material presets use cited approximate density/modulus values. Clearly distinguishes piston range, breakup onset, and resonance regions.',
-    pillarHint: 'dsp-audio',
-    isGrounded: false,
-    status: 'live',
-  },
+  // Individual acoustic toolbox tools are listed on the toolbox landing page
+  // (/playground/multiphysics-dsp-lab), not as top-level playground cards.
   {
     slug: 'quaternion-euler-converter',
     title: 'Quaternion ↔ Euler Converter',
