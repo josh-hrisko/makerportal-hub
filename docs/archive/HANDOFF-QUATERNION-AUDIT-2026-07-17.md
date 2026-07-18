@@ -1,6 +1,6 @@
-# Handoff prompt — next LLM session (2026-07-17)
+# Handoff prompt — quaternion-euler-converter critical audit (2026-07-17)
 
-Copy everything below the line into a new agent session.
+**Status: executed the same day it was written**, via commits `a8b4a4c` (bug fixes, prose rewrite, engagement features, gear reorder) and `5a185ac` (further prose/voice rewrite, bidirectional panel sync fix). Archived here 2026-07-17 rather than left in `docs/` as a live "next session" prompt — it was sitting un-cleaned-up for a day after completion and could have caused a future session to redo already-shipped work. Kept for the record below.
 
 ---
 
