@@ -29,3 +29,5 @@ It also makes the experience more immediate. No upload, no round trip, no depend
 Biquadia is technical by design, but technical does not have to mean hostile. The interface exposes serious concepts—spectra, filters, spatial processing, dynamics—through a system meant to reward exploration.
 
 The larger experiment is whether expert capability and a welcoming surface can occupy the same product. Biquadia is our current answer.
+
+Want to see the frequency-domain math behind that spectral view without opening the app? The [Fourier epicycles playground](/playground/fourier-epicycles) runs the same discrete Fourier decomposition on a 2D drawing instead of an audio signal — draw a shape, watch it resolve into the same rotating-circle frequency components. And for the DSP core itself, the [biquad filter designer](/playground/biquad-filter-designer) reproduces the exact Direct-Form-II-Transposed filter Biquadia ships, with a live Web Audio preview.
