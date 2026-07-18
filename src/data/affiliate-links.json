@@ -171,9 +171,9 @@
     "id": "mpu9250-imu",
     "label": "MPU9250 9-DoF IMU",
     "asin": "B0BXDL3524",
-    "note": "Accelerometer/gyro/magnetometer breakout used in BLExAR's magnetometer-calibration build. Its onboard DMP outputs attitude as a quaternion directly, the same shape of data as CMHeadphoneMotionManager's attitude.quaternion.",
+    "note": "Accelerometer/gyro/magnetometer breakout used in BLExAR's magnetometer-calibration build. Its onboard magnetometer is a 3-axis Hall-effect sensor — the same physics the field-line tracer models. The DMP also outputs attitude as a quaternion directly, the same shape CMHeadphoneMotionManager uses.",
     "category": "Sensor",
-    "relatedTo": ["blexar", "quaternion-euler-converter"]
+    "relatedTo": ["blexar", "quaternion-euler-converter", "magnetic-field-tracer"]
   },
   {
     "id": "ina226-current-sensor",
@@ -235,9 +235,9 @@
     "id": "hall-effect-flow-meter",
     "label": "3/4\" Hall Effect Flow Meter",
     "asin": "B07RF49TZH",
-    "note": "Flow sensor used in BLExAR's water-metering build.",
+    "note": "Flow sensor used in BLExAR's water-metering build. Uses a Hall-effect magnetic sensor — the same Biot–Savart field the tracer models.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": ["blexar", "magnetic-field-tracer"]
   },
   {
     "id": "lipo-battery-600mah",

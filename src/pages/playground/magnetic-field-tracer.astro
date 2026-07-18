@@ -1,11 +1,33 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('magnetic-field-tracer'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => b.id.localeCompare(a.id));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
 const title = 'Magnetic Field Line Tracer — Biot–Savart + RK4 for Loops, Helmholtz Coils & Solenoids | MakerPortal';
 const description =
   'Trace magnetic field lines through space from current loops and wires using the Biot–Savart law and a 4th-order Runge–Kutta integrator. Explore Helmholtz pairs, magnetic bottles, solenoids, and dipoles in a live cross-section, with the field magnitude read out under your cursor.';
 const canonical = new URL('/playground/magnetic-field-tracer', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Magnetic Field Line Tracer',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -20,19 +42,23 @@ const breadcrumbSchema = {
 const faqs = [
   {
     q: 'What is the Biot–Savart law?',
-    a: 'It gives the magnetic field produced by a steady current: each little length of current dl contributes a field dB proportional to I·dl × r̂ / r². Summing (integrating) over the whole circuit gives the total field at any point. Here every loop is broken into straight chords and every chord uses the exact finite-wire field, so the sum converges to the smooth loop.',
+    a: 'It gives the magnetic field produced by a steady current: each infinitesimal length of current dl contributes a field dB proportional to I·dl × r̂ / r². Integrating over the whole circuit gives the total field at any point. Here every loop is broken into straight chords and each chord uses the exact finite-wire closed form, so the sum converges to the smooth loop as chord count grows.',
   },
   {
     q: 'Why use Runge–Kutta to draw field lines?',
-    a: 'A field line is a curve everywhere tangent to B — mathematically, dr/ds = B̂(r). That is an ordinary differential equation, and 4th-order Runge–Kutta integrates it accurately with far fewer steps than a naive Euler march, so the lines stay smooth and closed rather than spiralling off from accumulated error.',
+    a: 'A field line is a curve everywhere tangent to B — mathematically, dr/ds = B̂(r). That is an ordinary differential equation. 4th-order RK4 integrates it with global truncation error O(h⁴), whereas naive Euler accumulates O(h) error per step and spirals field lines away from their true paths. The step size here is 5 mm per integration step, with up to 1100 steps per half-line, so the accumulated geometric error is well below one pixel.',
   },
   {
     q: 'What is a magnetic bottle?',
     a: 'Two coaxial coils carrying opposite currents (an anti-Helmholtz pair) create a field that is weak in the middle and strong at both ends. Charged particles spiralling along the lines get reflected at the high-field "mirrors" and bounce back and forth — the confinement principle behind magnetic-mirror fusion devices and the Van Allen radiation belts.',
   },
   {
+    q: 'What does the Helmholtz spacing s = R do?',
+    a: 'When two coaxial loops carrying the same current are spaced exactly one radius apart (s = R), the first and second spatial derivatives of B vanish at the midpoint. The result is a region of remarkably uniform magnetic field — the flattest possible for two coaxial coils. The on-axis midpoint field is B = (4/5)^(3/2) · μ₀ I / R.',
+  },
+  {
     q: 'What does this model leave out?',
-    a: 'It is pure DC magnetostatics: steady currents, filamentary (zero-thickness) wires, no magnetic materials (µ = µ0 everywhere), and no induced or eddy currents. Loops are approximated by straight chords. It is exact for the idealised currents shown and is a faithful way to build intuition, but it is not a finite-element electromagnetic solver.',
+    a: 'Pure DC magnetostatics: steady currents, filamentary (zero-thickness) wires, no magnetic materials (µ = µ₀ everywhere), no induced or eddy currents, no time variation. Loops are approximated by straight chords. It is exact for the idealised filamentary currents shown, but it is not a finite-element electromagnetic solver. Real-world effects like skin depth, wire thickness, and permeable cores are absent.',
   },
 ];
 
@@ -41,22 +67,77 @@ const faqSchema = {
   '@type': 'FAQPage',
   mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
 };
+
+const solverCode = `// Finite-segment Biot–Savart (src/lib/emfields.ts)
+export function segmentField(seg: Segment, p: Vec3): Vec3 {
+  const eVec = sub(seg.b, seg.a);
+  const len = norm3(eVec);
+  if (len < 1e-15) return [0, 0, 0];
+  const e: Vec3 = scale(eVec, 1 / len);
+
+  const aToP = sub(p, seg.a);
+  const along = dot(aToP, e);
+  const perp = sub(aToP, scale(e, along));
+  let d = norm3(perp);
+  if (d < 1e-9) return [0, 0, 0]; // on wire axis
+
+  const nHat: Vec3 = scale(perp, 1 / d);
+  const bToP = sub(p, seg.b);
+  const ra = norm3(aToP);
+  const rb = norm3(bToP);
+  const cos1 = dot(aToP, e) / ra;
+  const cos2 = dot(bToP, e) / rb;
+
+  const mag = (MU0 * seg.current) / (4 * Math.PI * d) * (cos1 - cos2);
+  return scale(cross(e, nHat), mag);
+}
+
+// RK4 field-line tracer — dr/ds = B̂(r)
+export function traceFieldLine(
+  cs: CompiledSegments, start: Vec3, opts: TraceOptions
+): FieldLine {
+  const h = opts.reverse ? -opts.step : opts.step;
+  let p = start, k1 = null;
+
+  for (let i = 0; i < opts.maxSteps; i++) {
+    if (!k1) { const [d, ] = dir(p); if (!d) break; k1 = d; }
+    const [k2, ] = dir(add(p, scale(k1, h/2)));
+    if (!k2) break;
+    const [k3, ] = dir(add(p, scale(k2, h/2)));
+    if (!k3) break;
+    const [k4, ] = dir(add(p, scale(k3, h)));
+    if (!k4) break;
+    p = add(p, scale([
+      k1[0]+2*k2[0]+2*k3[0]+k4[0],
+      k1[1]+2*k2[1]+2*k3[1]+k4[1],
+      k1[2]+2*k2[2]+2*k3[2]+k4[2]
+    ], h/6));
+    points.push(p);
+    const [nextK1, ] = dir(p);
+    k1 = nextK1;
+    if (Math.abs(p[0]) > bound || Math.abs(p[2]) > bound) break;
+  }
+}`;
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
     title="Magnetic Field Line Tracer"
-    lead="Every field line here is marched through 3D space by a 4th-order Runge–Kutta integrator following the Biot–Savart field of real current loops and wires. Switch between a single loop, a Helmholtz pair, a magnetic bottle, and a solenoid and watch the geometry of the field reorganize — the uniform core of a Helmholtz coil, the pinched mirrors of a bottle, the confined interior of a solenoid."
+    lead="Every field line here is marched through 3D space by a 4th-order Runge–Kutta integrator following the exact Biot–Savart field of real current loops and wires. Switch between a single loop, a Helmholtz pair, a magnetic bottle, a solenoid, an antiparallel wire pair, and a bar-magnet dipole and watch the geometry of the field reorganize — the uniform core of a Helmholtz coil, the pinched mirrors of a bottle, the confined interior of a solenoid, the circulating wrapping of parallel wires."
   >
-    <section class="border-b border-border" aria-labelledby="tracer-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
-        <h2 id="tracer-title" class="sr-only">Field tracer</h2>
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+    <section class="border-b border-border" aria-labelledby="preview-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="preview-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Live field-line tracer</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">
+          The canvas is a <strong class="text-primary-text">meridional cross-section</strong> through the symmetry axis of the current distribution: horizontal axis is <Math math="x" /> (radial distance from the coil axis), vertical axis is <Math math="z" /> (axial distance along the symmetry line). For coaxial configurations the magnetic field has zero out-of-plane <Math math="y" />-component in this plane, so every traced line stays exactly in-plane — no projection artifacts.
+        </p>
+        <div class="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
           <div class="rounded-[16px] border border-border bg-card-bg p-4">
             <h3 class="font-semibold text-[0.95rem]">Configuration</h3>
             <div class="mt-3 grid grid-cols-2 gap-2">
@@ -92,7 +173,7 @@ const faqSchema = {
                 <div><span class="live-lab">|B|</span><br><span id="cur-B" class="live-val">— µT</span></div>
                 <div><span class="live-lab">direction</span><br><span id="cur-dir" class="live-val">—</span></div>
               </div>
-              <p class="mt-2 font-mono text-[0.6rem] text-muted-text/70">⊙ current out of page · ⊗ into page</p>
+              <p class="mt-2 font-mono text-[0.6rem] text-muted-text/70">&odot; current out of page &middot; &otimes; into page</p>
             </div>
           </div>
 
@@ -109,25 +190,326 @@ const faqSchema = {
       </div>
     </section>
 
-    <section aria-labelledby="method-title">
-      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
-        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          Each current loop is discretized into straight chords; the field of every chord uses the exact finite-wire form of Biot–Savart, B = µ0 I/(4π d)·(cosθ1 − cosθ2)·(ê × n̂), and all contributions superpose. Field lines satisfy dr/ds = B̂(r), integrated with classical RK4 at constant arclength (the field is renormalized at every stage, since field lines follow B's direction but not its magnitude). The view is the x–z meridional plane; for the coaxial configurations the field has no out-of-plane component there, so the traced lines stay exactly in the plane.
-        </p>
-        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-semibold text-primary-text">What is exact</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">The Biot–Savart superposition is exact for filamentary currents, verified against the analytic on-axis loop field µ0·I·R²/(2·(R²+z²)^1.5) and the Helmholtz center value (4/5)^1.5·µ0·I/R.</p>
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel above answers to the math below. Here is what each piece of the visualization and every control is actually doing, and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The field-line canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The coordinate geometry.</strong> The canvas shows the <Math math="x" />–<Math math="z" /> plane through the symmetry axis of the current distribution. <Math math="x" /> (horizontal) is the radial distance from the axis; <Math math="z" /> (vertical) is the axial coordinate. For coaxial loop configurations the field <Math math="\mathbf{B}(x,0,z)" /> has zero <Math math="y" />-component by azimuthal symmetry, so field lines traced in this plane stay in this plane — no projection artifacts, no 3D ambiguity.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The vertical dashed axis.</strong> The dashed line at <Math math="x=0" /> is the symmetry axis — it passes through the centers of all coaxial loops. On this axis the field is purely vertical. The heatmap and field-line color encodes <Math math="|\mathbf{B}|" /> on a logarithmic scale from the anchor blue (weak field) to the brand red (strong field). The color map is anchored at the 92nd-percentile field strength to avoid a single hotspot washing out the entire dynamic range.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The current glyphs.</strong> Each wire piercing the cross-section plane is marked by a circle: a filled dot <strong>&odot;</strong> for current coming out of the page (toward you, +y), and a crossed circle <strong>&otimes;</strong> for current going into the page. The right-hand rule ties the glyph to the field circulation: with current out of the page at <Math math="+x" /> on the axis, the field lines wrap counterclockwise.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Flow-direction dashes.</strong> A dashed stroke overlay animates along the traced field lines to show direction. The dash offset advances by 0.6 px per frame at 60 fps, giving a gentle 6-second loop cycle. The animation is driven by <code>requestAnimationFrame</code> only when the flow toggle is on and the page is visible — idle when hidden or toggled off. The reduces-motion OS preference pauses the animation entirely.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The heatmap.</strong> The <Math math="|\mathbf{B}|" /> magnitude is evaluated on a grid (down to 5 px cells, auto-coarsened to 8 or 12 if the initial pass exceeds 8 ms) using <code>compiledFieldAt</code> — the same zero-allocation Struct-of-Arrays evaluator the field lines use. The heatmap is computed once per scene rebuild (not per frame) and cached to an offscreen canvas. Switching it off skips both evaluation and blit.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">What every traced line satisfies — dr/ds = B̂(r)</p>
+              <Math math="\frac{d\mathbf{r}}{ds} = \hat{\mathbf{B}}(\mathbf{r}) = \frac{\mathbf{B}(\mathbf{r})}{|\mathbf{B}(\mathbf{r})|}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">A field line is a curve whose tangent vector at every point is parallel to <Math math="\mathbf{B}" />. The RK4 integrator steps along the unit field direction at constant arclength <Math math="ds = 5\ \text{mm}" />, using 4 field evaluations per step. The arclength is fixed so lines in weak-field regions don't take huge leaps — field magnitude is encoded by line density and color, not step size.</p>
+            </div>
           </div>
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-semibold text-primary-text">What it ignores</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">DC magnetostatics only — no time variation, no induced/eddy currents, no magnetic materials (µ = µ0), and zero-thickness wires. Loops are polygonal approximations to circles.</p>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, readouts, and render loop</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Preset buttons.</strong> Six configurations: single loop (a pure dipole), Helmholtz pair (two coplanar loops at <Math math="s=R" /> spacing for uniform field), magnetic bottle (anti-Helmholtz: opposite currents create the mirror geometry), solenoid (3–12 turns creating a confined interior), two antiparallel wires (circulating field around each), and a dipole pair (coaxial loops at variable separation, approximating a bar magnet).</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Current slider (10–400 A).</strong> Scales the field magnitude linearly. <Math math="\mathbf{B} \propto I" /> in DC magnetostatics — doubling the current doubles every field value everywhere. The loop radius is fixed at <Math math="R = 0.1\ \text{m}" />, so the on-axis dipole field at the loop center is <Math math="B = \mu_0 I / (2R)" />.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Geometry slider.</strong> Separation between loops in units of the loop radius <Math math="R" />. At <Math math="s/R = 1.0" />, two coaxial same-current loops form the Helmholtz condition — second derivative of <Math math="B_z" /> vanishes on axis, producing the flattest possible central field. For the solenoid preset this slider controls the number of turns instead of separation.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Field-line count (6–24).</strong> Seeds are placed along the <Math math="x" />-axis at equally spaced radial distances from the loop center, half in each direction. Each seed is traced both forward and backward along <Math math="\pm\hat{\mathbf{B}}" />, then joined into a single polyline. Lines with fewer than 4 points are discarded — these are seeds that land inside a loop or too close to a wire axis.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Cursor readout.</strong> Moving the mouse over the canvas evaluates <code>compiledFieldAt</code> at the mapped physical coordinate and reports <Math math="|\mathbf{B}|" /> in <Math math="\mu\text{T}" /> (or <Math math="\text{mT}" /> above 1000 µT) and the field direction angle relative to the horizontal. This is the same solver used by the field lines and heatmap — a single source of truth.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> There is no idle <code>requestAnimationFrame</code> spin. The scene rebuilds (segment compilation, field-line tracing, heatmap, cached layer draw) only on parameter change. The flow-direction dashes run an independent rAF loop that pauses when the canvas is offscreen (IntersectionObserver) or the page is hidden (visibilitychange). State changes issue a single <code>draw()</code> call — no wasted frames while you read.</p>
+              </li>
+            </ol>
           </div>
         </div>
-        <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
-          The solver lives in <code class="text-primary-cta">src/lib/emfields.ts</code> (finite-segment Biot–Savart, loop builder, RK4 field-line tracer), unit-tested against the on-axis loop and Helmholtz formulas and the circular field lines of a long straight wire.
-        </p>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="math-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math and physics, in full</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">From the Biot–Savart law through the finite-segment closed form to the RK4 integration — every equation this tracer evaluates, with the discretization choices and error bounds made explicit.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The Biot–Savart law, finite-segment form</h3>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              In DC magnetostatics a steady current <Math math="I" /> flowing through a wire produces a magnetic field at observation point <Math math="\mathbf{P}" />. The differential form sums contributions from each infinitesimal length <Math math="d\mathbf{l}" />:
+            </p>
+            <div class="mt-4 math-card">
+              <p class="math-label">Differential Biot–Savart</p>
+              <Math math="d\mathbf{B} = \frac{\mu_0 I}{4\pi} \frac{d\mathbf{l} \times \hat{\mathbf{r}}}{r^2}" display class="mt-2" />
+            </div>
+            <p class="mt-4 text-[0.92rem] leading-[1.7] text-muted-text">
+              Integrating <Math math="d\mathbf{B}" /> around a closed loop gives the total field. For a straight wire segment from <Math math="A" /> to <Math math="B" /> the integral has a closed form. Let <Math math="d" /> be the perpendicular distance from the wire line to <Math math="\mathbf{P}" />, <Math math="\hat{\mathbf{e}}" /> the unit vector along the wire (current direction), <Math math="\hat{\mathbf{n}}" /> the unit vector from the wire line to <Math math="\mathbf{P}" />, and <Math math="\theta_1, \theta_2" /> the angles the wire endpoints subtend:
+            </p>
+            <div class="mt-4 math-card">
+              <p class="math-label">Finite-segment closed form</p>
+              <Math math="\mathbf{B} = \frac{\mu_0 I}{4\pi d} (\cos\theta_1 - \cos\theta_2) (\hat{\mathbf{e}} \times \hat{\mathbf{n}})" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Implemented as <code>segmentField()</code> in <code>src/lib/emfields.ts</code>. The denominator <Math math="d" /> is clamped at <Math math="10^{-9}\ \text{m}" /> to avoid the wire-axis singularity. In the limit <Math math="\ell \to \infty" /> with <Math math="\cos\theta_1 \to 1, \cos\theta_2 \to -1" /> this recovers the familiar infinite-wire result <Math math="\mathbf{B} = \mu_0 I / (2\pi d)" />.</p>
+            </div>
+            <p class="mt-4 text-[0.92rem] leading-[1.7] text-muted-text">
+              A circular loop is approximated by <Math math="n_{\text{seg}} = 96" /> straight chords. The chord approximation error scales as <Math math="\mathcal{O}(1/n_{\text{seg}}^2)" /> for the field at distances comparable to the loop radius — 96 segments gives sub-pixel accuracy at the canvas scale. The total field at any point is the superposition (simple vector sum) of every segment's contribution.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Field-line integration: RK4</h3>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              A magnetic field line satisfies the first-order ODE:
+            </p>
+            <div class="mt-4 math-card">
+              <Math math="\frac{d\mathbf{r}}{ds} = \hat{\mathbf{B}}(\mathbf{r})" display class="mt-2" />
+              <p class="mt-2 text-[0.74rem] leading-[1.55] text-muted-text">The field is renormalized at every step. A field line follows <Math math="\mathbf{B}" />'s direction but not its magnitude — the magnitude encodes the local field strength, not the geometry of the line. Integrating the raw <Math math="\mathbf{B}" /> (unnormalized) would take giant steps in strong-field regions and tiny ones in weak regions, not a reflection of the actual curve geometry.</p>
+            </div>
+            <p class="mt-4 text-[0.92rem] leading-[1.7] text-muted-text">
+              We integrate with classical 4th-order Runge–Kutta at fixed arclength step <Math math="h = 0.005\ \text{m}" />:
+            </p>
+            <div class="mt-4 math-card">
+              <p class="math-label">Classical RK4 weights</p>
+              <Math math="\begin{aligned} \mathbf{k}_1 &= h\,\hat{\mathbf{B}}(\mathbf{r}_n) \\ \mathbf{k}_2 &= h\,\hat{\mathbf{B}}(\mathbf{r}_n + \tfrac{1}{2}\mathbf{k}_1) \\ \mathbf{k}_3 &= h\,\hat{\mathbf{B}}(\mathbf{r}_n + \tfrac{1}{2}\mathbf{k}_2) \\ \mathbf{k}_4 &= h\,\hat{\mathbf{B}}(\mathbf{r}_n + \mathbf{k}_3) \\ \mathbf{r}_{n+1} &= \mathbf{r}_n + \tfrac{1}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4) \end{aligned}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Global truncation error is <Math math="\mathcal{O}(h^4)" />. At 5 mm step size over a typical half-line of 500 steps (2.5 m physical arclength), the accumulated geometric error is under 0.1 mm — well below one canvas pixel (~0.9 mm physical). Each step evaluates <code>compiledFieldAt</code> 4 times (once per stage).</p>
+            </div>
+            <p class="mt-4 text-[0.92rem] leading-[1.7] text-muted-text">
+              Each seed is traced in both forward (<Math math="+\hat{\mathbf{B}}" />) and reverse (<Math math="-\hat{\mathbf{B}}" />) directions. Traces stop when <Math math="|\mathbf{B}|" /> drops below <Math math="\mu_0 \times 10^{-4}\ \text{T}" /> (fade-out in weak field), after 1100 steps (divergence guard), or when the line leaves the bounding box <Math math="|x|,|z| > 0.34\ \text{m}" /> — all well beyond the canvas viewport.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-14">
+          <h3 class="text-[1.15rem] font-[650] text-primary-text">Key configurations: when the math locks in</h3>
+          <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div class="math-card">
+              <p class="math-label">Helmholtz condition: s = R</p>
+              <Math math="\left.\frac{\partial B_z}{\partial z}\right|_{z=0} = 0,\quad \left.\frac{\partial^2 B_z}{\partial z^2}\right|_{z=0} = 0" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Two coaxial loops spaced by exactly their radius cancel both first and second axial derivatives at the midpoint. The central field is <Math math="B = \left(\frac{4}{5}\right)^{3/2} \frac{\mu_0 I}{R}" />. The heatmap confirms this — the central region is uniformly tinted, no gradient visible.</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">On-axis loop field (verification formula)</p>
+              <Math math="B_z(z) = \frac{\mu_0 I R^2}{2(R^2 + z^2)^{3/2}}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This analytic formula is used as a unit-test oracle for <code>fieldAt</code> in <code>emfields.ts</code>. The chord-discretized field is verified to converge to this formula as <Math math="n_{\text{seg}} \to \infty" />.</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">Magnetic bottle: anti-Helmholtz</p>
+              <Math math="B_z(z) \propto z \quad\text{near } z=0" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Opposite currents create a field that vanishes linearly at the midpoint and grows at both ends. The field-line geometry shows this as a pinch — lines converge at the strong-field ends and diverge in the weak center. Charged particles gyrate around the lines and reflect where the field strengthens (the magnetic mirror effect).</p>
+            </div>
+            <div class="math-card">
+              <p class="math-label">Long solenoid: ideal interior</p>
+              <Math math="B_{\text{interior}} \approx \mu_0 n I" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">For a solenoid with <Math math="n" /> turns per meter and length <Math math="\ell \gg R" />, the interior field is nearly uniform and axial, with fringing at the ends. The tracer's solenoid preset stacks 3–12 loops along the axis — the interior field lines run parallel and evenly spaced, visually confirming the uniform-flux approximation.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-14 overflow-x-auto">
+          <h3 class="text-[1.15rem] font-[650] text-primary-text">Numerical method comparison</h3>
+          <table class="mt-5 w-full min-w-[560px] border-collapse text-[0.85rem]">
+            <thead>
+              <tr class="border-b border-border text-left font-mono text-[0.65rem] uppercase tracking-[0.1em] text-muted-text">
+                <th class="py-2 pr-4">Method</th>
+                <th class="py-2 pr-4">Order</th>
+                <th class="py-2 pr-4">Evaluations / step</th>
+                <th class="py-2">Error / step</th>
+              </tr>
+            </thead>
+            <tbody class="text-muted-text">
+              <tr class="border-b border-border">
+                <td class="py-3 pr-4 font-semibold text-primary-text">Euler (naive)</td>
+                <td class="py-3 pr-4">1st</td>
+                <td class="py-3 pr-4">1</td>
+                <td class="py-3"><Math math="\mathcal{O}(h^2)" /></td>
+              </tr>
+              <tr class="border-b border-border">
+                <td class="py-3 pr-4 font-semibold text-primary-text">Midpoint (RK2)</td>
+                <td class="py-3 pr-4">2nd</td>
+                <td class="py-3 pr-4">2</td>
+                <td class="py-3"><Math math="\mathcal{O}(h^3)" /></td>
+              </tr>
+              <tr>
+                <td class="py-3 pr-4 font-semibold text-primary-text">Classical RK4 (used here)</td>
+                <td class="py-3 pr-4">4th</td>
+                <td class="py-3 pr-4">4</td>
+                <td class="py-3"><Math math="\mathcal{O}(h^5)" /> local, <Math math="\mathcal{O}(h^4)" /> global</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="mt-4 text-[0.8rem] text-muted-text">RK4 over Euler is not a tweak — it's the difference between a closed-loop field line and one that spirals into the canvas border after 200 steps. The 4x field evaluation cost per step is paid once per scene rebuild, not per frame, so it never blocks user interaction.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Three real-world traps</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Chord discretization error</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">A 96-chord polygon approximating a circle has a perimeter that's 99.97% of the exact circumference. But the field inside the loop — within a few chord-lengths of the wire — is more sensitive. At grid points very close to a chord, the finite-segment formula sees a straight wire, not a curved one. The error is <Math math="\lesssim 0.1\%" /> at one chord-length from the loop and vanishes rapidly with distance. If you need interior-field precision for a real coil design, use a higher segment count or a true elliptic-integral formula — this tracer prioritizes visual fidelity over engineering-grade precision.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Wire-axis singularity</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The Biot–Savart formula blows up as <Math math="1/d" /> when <Math math="d \to 0" /> (on the wire axis). The solver clamps the perpendicular distance at <Math math="10^{-9}\ \text{m}" />, returning <Math math="\mathbf{0}" /> for points closer than that. A real wire has finite radius — the field inside a cylindrical conductor grows linearly with <Math math="r" /> from zero on the axis, not singular. This tracer treats wires as infinitely thin filaments, so the field near a glyph is capped, not physically accurate.</p>
+          </div>
+        </div>
+        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Seed placement bias</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Field-line seeds are placed on the <Math math="x" />-axis only — no off-axis seeds, no adaptive density based on local <Math math="|\mathbf{B}|" />. This means lines in regions far from the axis (e.g., the return field of a solenoid) are sparser than they should be for true flux-area encoding. A production field-line tracer would seed adaptively — more seeds where <Math math="|\mathbf{B}|" /> is high — but this adds complexity to collision detection (lines shouldn't cross) that we chose to defer.</p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.85rem] text-muted-text">The solver lives in <code class="text-primary-cta">src/lib/emfields.ts</code> — unit-tested against the on-axis loop formula, the Helmholtz center value, and the circular field lines of a long straight wire.</p>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The solver, in TypeScript</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The finite-segment Biot–Savart evaluator and RK4 field-line tracer — the two functions that drive every pixel on this page. If you're porting this to C/C++ for an <a href={gearById['mpu9250-imu']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">embedded magnetometer</a> calibration tool, the logic ports directly.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Biot–Savart + RK4 tracer (TypeScript)</p>
+            <button type="button" class="copy-btn" data-copy-target="code-solver">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
+            <Code id="code-solver" code={solverCode} lang="typescript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Magnetostatics hardware · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Magnetic-field sensing
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">&#8995;</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   </PlaygroundShell>
@@ -144,6 +526,49 @@ const faqSchema = {
   .live-lab { font-family: var(--font-mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mp-muted); }
   .live-val { font-weight: 700; color: var(--mp-text); font-size: 0.94rem; }
   input[type='range'] { accent-color: var(--mp-cta); }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 
 <script>
@@ -154,7 +579,7 @@ function initFieldTracer() {
   const canvas = document.getElementById('field-canvas');
   if (!canvas || canvas.dataset.init) return;
   canvas.dataset.init = 'true';
-  const ctx = canvas.getContext('2d', { alpha: false }); // optimization
+  const ctx = canvas.getContext('2d', { alpha: false });
 
   let heatCanvas = document.createElement('canvas');
   heatCanvas.width = canvas.width; heatCanvas.height = canvas.height;
@@ -176,13 +601,13 @@ function initFieldTracer() {
   }
   readColors();
 
-  const R = 0.1;          // loop radius (m)
-  const VIEW = 0.34;      // half-extent of view (m)
+  const R = 0.1;
+  const VIEW = 0.34;
   const nSeg = 96;
 
   let preset = 'single';
   let current = 100;
-  let geom = 1.0;         // separation in units of R, or aspect for solenoid
+  let geom = 1.0;
   let nSeeds = 14;
   let showHeat = true;
   let showFlow = true;
@@ -190,13 +615,12 @@ function initFieldTracer() {
   let segments = [];
   let compiledSegments = null;
   let heatmapCell = 5;
-  let glyphs = [];        // current cross-section markers {x, z, into}
-  let lines = [];         // traced polylines: {pts:[[x,z]...], b:[...]}
+  let glyphs = [];
+  let lines = [];
   let bMax = 1;
   let dashPhase = 0;
-  let rafId = null;
+  let flowRafId = null;
   let destroyed = false;
-  let isVisible = true;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const el = {
@@ -207,13 +631,12 @@ function initFieldTracer() {
     sceneNote: document.getElementById('scene-note'),
   };
 
-  // ---- scene construction ----
   function buildScene() {
     segments = []; glyphs = [];
     const zAxis = [0, 0, 1];
     const addLoop = (zc, cur) => {
       segments.push(...buildLoop([0, 0, zc], R, zAxis, cur, nSeg));
-      glyphs.push({ x: R, z: zc, into: cur > 0 });   // +x wire: current +y (out) for +circulation
+      glyphs.push({ x: R, z: zc, into: cur > 0 });
       glyphs.push({ x: -R, z: zc, into: cur < 0 });
     };
     const seeds = [];
@@ -242,7 +665,6 @@ function initFieldTracer() {
       addLoop(-sep / 2, current); addLoop(sep / 2, -current);
       el.geomLabel.textContent = 'Coil separation';
       el.sceneNote.textContent = 'anti-Helmholtz "magnetic bottle" · field pinches at both ends';
-      // seed near each coil to show the mirror pinch
       eqSeeds(-sep / 2, 0.2 * R, 1.8 * R, Math.ceil(nSeeds / 2));
       eqSeeds(-sep / 2, 0.2 * R, 1.8 * R, Math.floor(nSeeds / 2), -1);
     } else if (preset === 'solenoid') {
@@ -255,11 +677,10 @@ function initFieldTracer() {
       el.geomLabel.textContent = 'Turns (aspect)';
       el.geomOut.textContent = `${turns} turns`;
       el.sceneNote.textContent = `solenoid · ${turns} turns · confined interior field`;
-      eqSeeds(0, 0.12 * R, 0.85 * R, Math.ceil(nSeeds / 2));       // interior axial lines
-      eqSeeds(0, 1.25 * R, 2.6 * R, Math.floor(nSeeds / 2));       // exterior return
+      eqSeeds(0, 0.12 * R, 0.85 * R, Math.ceil(nSeeds / 2));
+      eqSeeds(0, 1.25 * R, 2.6 * R, Math.floor(nSeeds / 2));
     } else if (preset === 'antiparallel') {
       const d = geom * R;
-      // wires along y at x = ±d, z = 0, opposite currents
       const Lw = 4;
       segments.push(buildWire([d, -Lw, 0], [d, Lw, 0], current));
       segments.push(buildWire([-d, -Lw, 0], [-d, Lw, 0], -current));
@@ -267,14 +688,12 @@ function initFieldTracer() {
       glyphs.push({ x: -d, z: 0, into: true });
       el.geomLabel.textContent = 'Wire separation';
       el.sceneNote.textContent = 'two anti-parallel wires · field encircles each';
-      // seed small rings around each wire crossing
       const rings = Math.max(3, Math.floor(nSeeds / 4));
       for (const cx of [d, -d]) for (let k = 0; k < rings; k++) {
         const rr = 0.25 * R + k * 0.4 * R;
         seeds.push([cx + rr, 0, 0]);
       }
     } else if (preset === 'dipole') {
-      // two coaxial loops, same current, variable separation — a stubby bar magnet
       const sep = geom * R;
       segments = []; glyphs = [];
       addLoop(-sep / 2, current); addLoop(sep / 2, current);
@@ -310,17 +729,14 @@ function initFieldTracer() {
   }
 
   function computeBMax() {
-    // reference field for color scaling: near-axis magnitude
     bMax = 1e-9;
     for (const ln of lines) for (const v of ln.b) if (v < 1e30) bMax = Math.max(bMax, v);
-    // Use a robust percentile-ish cap to avoid a single hotspot washing out
     const all = [];
     for (const ln of lines) for (const v of ln.b) all.push(v);
     all.sort((a, b) => a - b);
     if (all.length) bMax = all[Math.floor(all.length * 0.92)] || bMax;
   }
 
-  // ---- coordinate mapping ----
   function mapX(x) { return (canvas.width / 2) + (x / VIEW) * (canvas.width / 2 - 20); }
   function mapZ(z) { return (canvas.height / 2) - (z / VIEW) * (canvas.height / 2 - 20); }
   function invX(px) { return ((px - canvas.width / 2) / (canvas.width / 2 - 20)) * VIEW; }
@@ -365,7 +781,6 @@ function initFieldTracer() {
     const W = lineCanvas.width, H = lineCanvas.height;
     lineCtx.clearRect(0, 0, W, H);
     
-    // symmetry axis
     lineCtx.strokeStyle = colors.border; lineCtx.lineWidth = 1; lineCtx.globalAlpha = 0.6;
     lineCtx.beginPath(); lineCtx.moveTo(mapX(0), 0); lineCtx.lineTo(mapX(0), H); lineCtx.stroke();
     lineCtx.globalAlpha = 1;
@@ -404,7 +819,6 @@ function initFieldTracer() {
     if (showHeat) ctx.drawImage(heatCanvas, 0, 0);
     ctx.drawImage(lineCanvas, 0, 0);
 
-    // marching-flow dashes to show direction
     if (showFlow) {
       ctx.strokeStyle = colors.text; ctx.globalAlpha = 0.28; ctx.lineWidth = 1.6;
       ctx.setLineDash([2, 16]); ctx.lineDashOffset = -dashPhase;
@@ -417,7 +831,6 @@ function initFieldTracer() {
       ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1;
     }
 
-    // current glyphs
     for (const gl of glyphs) {
       const cx = mapX(gl.x), cy = mapZ(gl.z), rr = 7;
       ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2);
@@ -433,23 +846,42 @@ function initFieldTracer() {
     }
   }
 
-  function loop() {
-    if (destroyed) return;
-    if (isVisible && showFlow && !reduceMotion) { dashPhase = (dashPhase + 0.6) % 18; draw(); }
-    rafId = requestAnimationFrame(loop);
+  let isVisible = true;
+
+  function startFlowLoop() {
+    if (destroyed || !showFlow || reduceMotion) return;
+    if (flowRafId) return;
+    function tick() {
+      if (destroyed || !showFlow || !isVisible || document.hidden) { flowRafId = null; return; }
+      dashPhase = (dashPhase + 0.6) % 18; draw();
+      flowRafId = requestAnimationFrame(tick);
+    }
+    flowRafId = requestAnimationFrame(tick);
+  }
+
+  function stopFlowLoop() {
+    if (flowRafId) { cancelAnimationFrame(flowRafId); flowRafId = null; }
+  }
+
+  function updateFlowState() {
+    if (showFlow && isVisible && !document.hidden && !reduceMotion) {
+      startFlowLoop();
+    } else {
+      stopFlowLoop();
+    }
   }
 
   const io = new IntersectionObserver((entries) => {
     isVisible = entries[0].isIntersecting && !document.hidden;
+    updateFlowState();
   });
   io.observe(canvas);
 
   function handleVisibilityChange() {
-    isVisible = !document.hidden;
+    updateFlowState();
   }
   document.addEventListener('visibilitychange', handleVisibilityChange);
 
-  // ---- interactions ----
   canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     const px = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -483,13 +915,13 @@ function initFieldTracer() {
   const heatBtn = document.getElementById('heat-btn');
   heatBtn.addEventListener('click', () => { showHeat = !showHeat; heatBtn.classList.toggle('is-active', showHeat); draw(); });
   const flowBtn = document.getElementById('flow-btn');
-  flowBtn.addEventListener('click', () => { showFlow = !showFlow; flowBtn.classList.toggle('is-active', showFlow); draw(); });
+  flowBtn.addEventListener('click', () => { showFlow = !showFlow; flowBtn.classList.toggle('is-active', showFlow); updateFlowState(); if (!showFlow) draw(); });
 
   const themeObserver = new MutationObserver(() => { readColors(); rebuildCachedLayers(); draw(); });
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   document.addEventListener('astro:before-swap', () => { 
     destroyed = true; 
-    if (rafId) cancelAnimationFrame(rafId); 
+    stopFlowLoop();
     themeObserver.disconnect(); 
     io.disconnect();
     document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -497,7 +929,7 @@ function initFieldTracer() {
 
   buildScene();
   draw();
-  rafId = requestAnimationFrame(loop);
+  updateFlowState();
 }
 
 document.addEventListener('astro:page-load', initFieldTracer);
