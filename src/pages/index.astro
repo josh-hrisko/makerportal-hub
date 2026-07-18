@@ -96,7 +96,92 @@ const faqSchema = {
     { '@type': 'Question', name: 'Why on-device AI instead of cloud?', acceptedAnswer: { '@type': 'Answer', text: 'On-device inference via Apple Neural Engine delivers 4-8ms latency vs 200-800ms cloud roundtrip, zero data leaves your device, and works offline. We use CoreML FP16 quantized models, Metal Performance Shaders, and vector embedding indexes that live entirely on iPhone/iPad.' } },
     { '@type': 'Question', name: 'What makes MakerPortal different from other iOS studios?', acceptedAnswer: { '@type': 'Answer', text: 'Small surface area, zero telemetry, Apple Silicon native from day one. No committees, no cloud dependencies, one deliberate release at a time. Built in San Francisco with craft over clutter.' } },
     { '@type': 'Question', name: 'Which apps are currently available?', acceptedAnswer: { '@type': 'Answer', text: apps.map(a => `${a.title}: ${a.tagline}`).join('; ') } },
+    { '@type': 'Question', name: 'What playground tools are live?', acceptedAnswer: { '@type': 'Answer', text: 'We have 18 live tools including Fourier Epicycles, Double Pendulum, Ray-Matrix Optics Bench, Chladni Cymatics, Quantum Tunneling, and a live tracking Earth globe. They are browser-native and require no installation.' } },
+    { '@type': 'Question', name: 'How are trending signals scored?', acceptedAnswer: { '@type': 'Answer', text: 'Our daily scan pipeline filters technical signals in the studio\'s orbit. Signals are score-weighted based on keyword frequency, developer artifacts, corroboration across sources, and recency, automatically deduping duplicate URLs.' } }
   ]
+};
+
+const playgroundSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': 'https://www.makerportal.ai/#playground',
+  name: 'MakerPortal Interactive Physics & Math Playground',
+  description: 'Interactive mathematical and physical simulations running in-browser with real-time SVG/canvas rendering.',
+  url: 'https://www.makerportal.ai/playground',
+  isPartOf: { '@id': 'https://www.makerportal.ai/#website' },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: playgroundPicks.length,
+    itemListElement: playgroundPicks.map((tool, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'WebApplication',
+        name: tool.title,
+        description: tool.tagline,
+        url: `https://www.makerportal.ai/playground/${tool.slug}`,
+        applicationCategory: 'EducationalApplication',
+        browserRequirements: 'Requires HTML5 Canvas and JavaScript.'
+      }
+    }))
+  }
+};
+
+const trendingSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': 'https://www.makerportal.ai/#trending',
+  name: 'MakerPortal Trending Technical Signals',
+  description: 'Daily analyzed and score-weighted technical signals in the studio\'s orbit.',
+  url: 'https://www.makerportal.ai/journal',
+  isPartOf: { '@id': 'https://www.makerportal.ai/#website' },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: topSignals.length,
+    itemListElement: topSignals.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'CreativeWork',
+        name: item.title,
+        url: item.url,
+        datePublished: item.publishedAt,
+        author: { '@type': 'Organization', name: 'MakerPortal' }
+      }
+    }))
+  }
+};
+
+const gearSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': 'https://www.makerportal.ai/#gear-picks',
+  name: 'MakerPortal Studio Gear & Hardware Picks',
+  description: 'Hardware, audio interfaces, microphones, and reference books curated and used by MakerPortal studio.',
+  url: 'https://www.makerportal.ai/resources#gear',
+  isPartOf: { '@id': 'https://www.makerportal.ai/#website' },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: gearPicks.length,
+    itemListElement: gearPicks.map((gear, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Product',
+        name: gear.title,
+        description: gear.note || gear.title,
+        image: gear.image,
+        category: gear.category,
+        offers: gear.price ? {
+          '@type': 'Offer',
+          price: gear.price.replace('$', ''),
+          priceCurrency: gear.currency || 'USD',
+          url: gear.url,
+          seller: { '@type': 'Organization', name: 'Amazon' }
+        } : undefined
+      }
+    }))
+  }
 };
 
 const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fallbackPillar);
@@ -106,6 +191,9 @@ const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fa
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(directorySchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(playgroundSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(trendingSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(gearSchema)}></script>
     <link rel="preload" as="image" href={apps[0].iconSet.w128.src} imagesrcset={`${apps[0].iconSet.w64.src} 64w, ${apps[0].iconSet.w128.src} 128w`} />
   </Fragment>
 
@@ -274,30 +362,45 @@ const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fa
           </div>
         </div>
 
-        <div class="carousel-wrap mt-5 -mx-5 sm:mx-0">
-          <div class="carousel-track" aria-label="Remaining applications" role="list">
-            {remainingApps.map((app) => {
-              const dotLight = app.iconDot?.light ?? '#4A5D6F';
-              return (
-                <article role="listitem" class="snap-card app-mini surface-card group relative flex w-[280px] flex-col rounded-[22px] border bg-card-bg p-5 sm:w-[300px]">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="relative grid size-11 place-items-center rounded-[12px] bg-canvas ring-1 ring-border shadow-sm">
-                      <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={36} height={36} densities={[1,2]} loading="lazy" decoding="async" class="size-7 rounded-[8px] object-contain" />
+        <div class="carousel-container relative group/carousel mt-5">
+          <!-- Progress bar -->
+          <div class="carousel-progress-bar-container absolute top-[-6px] left-0 w-full h-[2px] bg-border/20 z-20 pointer-events-none opacity-0 group-hover/carousel:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
+            <div class="carousel-progress-bar h-full bg-primary-cta w-0"></div>
+          </div>
+          
+          <!-- Desktop navigation buttons -->
+          <button class="carousel-btn carousel-btn-prev absolute left-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Previous items">
+            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <button class="carousel-btn carousel-btn-next absolute right-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Next items">
+            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+
+          <div class="carousel-wrap -mx-5 sm:mx-0">
+            <div class="carousel-track" aria-label="Remaining applications" role="list">
+              {remainingApps.map((app, index) => {
+                const dotLight = app.iconDot?.light ?? '#4A5D6F';
+                return (
+                  <article role="listitem" class="snap-card app-mini surface-card group relative flex w-[280px] flex-col rounded-[22px] border bg-card-bg p-5 sm:w-[300px] carousel-stagger" style={`--stagger-index: ${index}`}>
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="relative grid size-11 place-items-center rounded-[12px] bg-canvas ring-1 ring-border shadow-sm">
+                        <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={36} height={36} densities={[1,2]} loading="lazy" decoding="async" class="size-7 rounded-[8px] object-contain" />
+                      </div>
+                      <span class="inline-flex items-center gap-1 rounded-full bg-elevated px-2 py-1 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                        <span class="size-1 rounded-full" style={`background:${dotLight}`} aria-hidden="true"></span>{app.category}
+                      </span>
                     </div>
-                    <span class="inline-flex items-center gap-1 rounded-full bg-elevated px-2 py-1 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
-                      <span class="size-1 rounded-full" style={`background:${dotLight}`} aria-hidden="true"></span>{app.category}
-                    </span>
-                  </div>
-                  <h4 class="mt-4 text-[1.05rem] font-semibold leading-tight tracking-[-0.01em] text-primary-text">{app.title}</h4>
-                  <p class="mt-1 line-clamp-2 text-[0.8rem] leading-[1.55] text-muted-text">{app.tagline}</p>
-                  <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
-                    <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{app.platform}</span>
-                    <a href={app.url} class="inline-flex items-center gap-1 text-[0.78rem] font-medium text-brand-anchor transition-colors group-hover:text-primary-text">Open <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
-                  </div>
-                  <div aria-hidden="true" class="pointer-events-none absolute inset-x-5 bottom-0 h-px origin-left scale-x-0 bg-gradient-to-r from-brand-anchor/0 via-brand-anchor/50 to-brand-anchor/0 opacity-0 transition-all duration-500 group-hover:scale-x-100 group-hover:opacity-100"></div>
-                </article>
-              );
-            })}
+                    <h4 class="mt-4 text-[1.05rem] font-semibold leading-tight tracking-[-0.01em] text-primary-text">{app.title}</h4>
+                    <p class="mt-1 line-clamp-2 text-[0.8rem] leading-[1.55] text-muted-text">{app.tagline}</p>
+                    <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                      <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{app.platform}</span>
+                      <a href={app.url} class="inline-flex items-center gap-1 text-[0.78rem] font-medium text-brand-anchor transition-colors group-hover:text-primary-text">Open <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
+                    </div>
+                    <div aria-hidden="true" class="pointer-events-none absolute inset-x-5 bottom-0 h-px origin-left scale-x-0 bg-gradient-to-r from-brand-anchor/0 via-brand-anchor/50 to-brand-anchor/0 opacity-0 transition-all duration-500 group-hover:scale-x-100 group-hover:opacity-100"></div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -324,31 +427,46 @@ const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fa
         <a href="/playground" class="group hidden sm:inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-border bg-card-bg px-4 text-[0.875rem] font-medium text-brand-anchor transition-all hover:border-brand-anchor/30 hover:bg-brand-anchor/10">All playground tools <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
       </div>
 
-      <div class="carousel-wrap mt-10 -mx-5 sm:mx-0">
-        <div class="carousel-track" aria-label="Playground tools" role="list">
-          {playgroundPicks.map((tool) => {
-            const meta = pillarOf(tool.pillarHint);
-            return (
-              <a href={`/playground/${tool.slug}`} role="listitem" class="snap-card hub-card surface-card group relative flex w-[84vw] max-w-[340px] flex-col overflow-hidden rounded-[24px] border bg-card-bg sm:w-[340px]">
-                <div aria-hidden="true" class="absolute inset-x-0 top-0 h-[3px]" style={`background: linear-gradient(90deg, ${meta.color}, transparent); opacity:0.9;`}></div>
-                <div class="p-6">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="inline-flex items-center gap-1.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">
-                      <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>{meta.label}
-                    </span>
-                    <span class="rounded-full border border-border bg-canvas px-2 py-0.5 font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-text">{tool.isGrounded ? 'Grounded' : 'Toy'}</span>
+      <div class="carousel-container relative group/carousel mt-10">
+        <!-- Progress bar -->
+        <div class="carousel-progress-bar-container absolute top-[-6px] left-0 w-full h-[2px] bg-border/20 z-20 pointer-events-none opacity-0 group-hover/carousel:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
+          <div class="carousel-progress-bar h-full bg-primary-cta w-0"></div>
+        </div>
+        
+        <!-- Desktop navigation buttons -->
+        <button class="carousel-btn carousel-btn-prev absolute left-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Previous items">
+          <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button class="carousel-btn carousel-btn-next absolute right-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Next items">
+          <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="carousel-wrap -mx-5 sm:mx-0">
+          <div class="carousel-track" aria-label="Playground tools" role="list">
+            {playgroundPicks.map((tool, index) => {
+              const meta = pillarOf(tool.pillarHint);
+              return (
+                <a href={`/playground/${tool.slug}`} role="listitem" class="snap-card hub-card surface-card group relative flex w-[84vw] max-w-[340px] flex-col overflow-hidden rounded-[24px] border bg-card-bg sm:w-[340px] carousel-stagger" style={`--stagger-index: ${index}`}>
+                  <div aria-hidden="true" class="absolute inset-x-0 top-0 h-[3px]" style={`background: linear-gradient(90deg, ${meta.color}, transparent); opacity:0.9;`}></div>
+                  <div class="p-6">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="inline-flex items-center gap-1.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">
+                        <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>{meta.label}
+                      </span>
+                      <span class="rounded-full border border-border bg-canvas px-2 py-0.5 font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-text">{tool.isGrounded ? 'Grounded' : 'Toy'}</span>
+                    </div>
+                    <h3 class="mt-4 text-[1.2rem] font-semibold leading-[1.15] tracking-[-0.02em] text-primary-text group-hover:text-primary-cta transition-colors">{tool.title}</h3>
+                    <p class="mt-2 line-clamp-2 text-[0.86rem] leading-[1.6] text-muted-text">{tool.tagline}</p>
+                    <p class="mt-3 line-clamp-2 text-[0.8rem] leading-[1.55] text-muted-text/80">{tool.description}</p>
+                    <div class="mt-5 flex items-center justify-between border-t border-border pt-4">
+                      <span class="text-[0.8rem] font-semibold text-primary-text group-hover:text-primary-cta">Try it <span aria-hidden="true" class="ml-1 transition-transform group-hover:translate-x-0.5">→</span></span>
+                      {tool.relatedApp && <span class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">↳ {tool.relatedApp}</span>}
+                    </div>
                   </div>
-                  <h3 class="mt-4 text-[1.2rem] font-semibold leading-[1.15] tracking-[-0.02em] text-primary-text group-hover:text-primary-cta transition-colors">{tool.title}</h3>
-                  <p class="mt-2 line-clamp-2 text-[0.86rem] leading-[1.6] text-muted-text">{tool.tagline}</p>
-                  <p class="mt-3 line-clamp-2 text-[0.8rem] leading-[1.55] text-muted-text/80">{tool.description}</p>
-                  <div class="mt-5 flex items-center justify-between border-t border-border pt-4">
-                    <span class="text-[0.8rem] font-semibold text-primary-text group-hover:text-primary-cta">Try it <span aria-hidden="true" class="ml-1 transition-transform group-hover:translate-x-0.5">→</span></span>
-                    {tool.relatedApp && <span class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">↳ {tool.relatedApp}</span>}
-                  </div>
-                </div>
-              </a>
-            );
-          })}
+                </a>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -379,39 +497,54 @@ const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fa
       </div>
 
       {topSignals.length > 0 ? (
-        <div class="carousel-wrap mt-8 -mx-5 sm:mx-0">
-          <div class="carousel-track" aria-label="Trending signals" role="list">
-            {topSignals.map((item) => {
-              const primTag = item.tags[0];
-              const meta = pillarOf(primTag);
-              const srcLabel = sourceLabels[item.source] ?? item.source;
-              return (
-                <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[84vw] max-w-[360px] flex-col rounded-[20px] border bg-card-bg p-5 sm:w-[360px]">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas px-2.5 py-1 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
-                      <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>{meta.label}
-                    </span>
-                    <span class="flex items-center gap-1.5 font-mono text-[0.6rem] text-muted-text">
-                      <span class="rounded bg-elevated px-1.5 py-0.5">{srcLabel}</span>
-                      <span class="font-bold text-primary-text">{item.score}</span>
-                    </span>
-                  </div>
-                  <h3 class="mt-4 line-clamp-3 text-[0.95rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text group-hover:text-primary-cta transition-colors">
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor rounded">
-                      {item.title}
-                    </a>
-                  </h3>
-                  <div class="mt-3 flex flex-wrap items-center gap-2 font-mono text-[0.58rem] text-muted-text">
-                    {item.domain && <span class="rounded-full bg-elevated border border-border px-2 py-0.5">{item.domain}</span>}
-                    {item.sources && item.sources.length > 1 && <span class="text-[0.55rem]">{item.sources.length}× corroborated</span>}
-                  </div>
-                  <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
-                    <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{new Date(item.publishedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[0.78rem] font-medium text-brand-anchor hover:text-primary-text">Source <span aria-hidden="true">↗</span></a>
-                  </div>
-                </article>
-              );
-            })}
+        <div class="carousel-container relative group/carousel mt-8">
+          <!-- Progress bar -->
+          <div class="carousel-progress-bar-container absolute top-[-6px] left-0 w-full h-[2px] bg-border/20 z-20 pointer-events-none opacity-0 group-hover/carousel:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
+            <div class="carousel-progress-bar h-full bg-primary-cta w-0"></div>
+          </div>
+          
+          <!-- Desktop navigation buttons -->
+          <button class="carousel-btn carousel-btn-prev absolute left-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Previous items">
+            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <button class="carousel-btn carousel-btn-next absolute right-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Next items">
+            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+
+          <div class="carousel-wrap -mx-5 sm:mx-0">
+            <div class="carousel-track" aria-label="Trending signals" role="list">
+              {topSignals.map((item, index) => {
+                const primTag = item.tags[0];
+                const meta = pillarOf(primTag);
+                const srcLabel = sourceLabels[item.source] ?? item.source;
+                return (
+                  <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[84vw] max-w-[360px] flex-col rounded-[20px] border bg-card-bg p-5 sm:w-[360px] carousel-stagger" style={`--stagger-index: ${index}`}>
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas px-2.5 py-1 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                        <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>{meta.label}
+                      </span>
+                      <span class="flex items-center gap-1.5 font-mono text-[0.6rem] text-muted-text">
+                        <span class="rounded bg-elevated px-1.5 py-0.5">{srcLabel}</span>
+                        <span class="font-bold text-primary-text">{item.score}</span>
+                      </span>
+                    </div>
+                    <h3 class="mt-4 line-clamp-3 text-[0.95rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text group-hover:text-primary-cta transition-colors">
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor rounded">
+                        {item.title}
+                      </a>
+                    </h3>
+                    <div class="mt-3 flex flex-wrap items-center gap-2 font-mono text-[0.58rem] text-muted-text">
+                      {item.domain && <span class="rounded-full bg-elevated border border-border px-2 py-0.5">{item.domain}</span>}
+                      {item.sources && item.sources.length > 1 && <span class="text-[0.55rem]">{item.sources.length}× corroborated</span>}
+                    </div>
+                    <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                      <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{new Date(item.publishedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[0.78rem] font-medium text-brand-anchor hover:text-primary-text">Source <span aria-hidden="true">↗</span></a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : (
@@ -465,36 +598,51 @@ const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fa
         <a href="/resources#gear" class="group hidden sm:inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-border bg-card-bg px-4 text-[0.875rem] font-medium text-brand-anchor transition-all hover:border-brand-anchor/30 hover:bg-brand-anchor/10">All gear <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
       </div>
 
-      <div class="carousel-wrap mt-10 -mx-5 sm:mx-0">
-        <div class="carousel-track" aria-label="Gear picks" role="list">
-          {gearPicks.map((gear) => (
-            <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[220px] flex-col overflow-hidden rounded-[20px] border bg-card-bg sm:w-[250px]">
-              <div class="relative aspect-square w-full overflow-hidden bg-canvas">
-                {gear.image ? (
-                  <img src={gear.image} alt={gear.title} width={250} height={250} loading="lazy" decoding="async" class="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.03]" />
-                ) : (
-                  <div class="grid h-full w-full place-items-center bg-elevated text-muted-text/50">
-                    <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em]">No image</span>
+      <div class="carousel-container relative group/carousel mt-10">
+        <!-- Progress bar -->
+        <div class="carousel-progress-bar-container absolute top-[-6px] left-0 w-full h-[2px] bg-border/20 z-20 pointer-events-none opacity-0 group-hover/carousel:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
+          <div class="carousel-progress-bar h-full bg-primary-cta w-0"></div>
+        </div>
+        
+        <!-- Desktop navigation buttons -->
+        <button class="carousel-btn carousel-btn-prev absolute left-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Previous items">
+          <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button class="carousel-btn carousel-btn-next absolute right-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Next items">
+          <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="carousel-wrap -mx-5 sm:mx-0">
+          <div class="carousel-track" aria-label="Gear picks" role="list">
+            {gearPicks.map((gear, index) => (
+              <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[220px] flex-col overflow-hidden rounded-[20px] border bg-card-bg sm:w-[250px] carousel-stagger" style={`--stagger-index: ${index}`}>
+                <div class="relative aspect-square w-full overflow-hidden bg-canvas shimmer-placeholder">
+                  {gear.image ? (
+                    <img src={gear.image} alt={gear.title} width={250} height={250} loading="lazy" decoding="async" onload="this.parentElement.classList.remove('shimmer-placeholder')" class="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.03]" />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center bg-elevated text-muted-text/50">
+                      <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em]">No image</span>
+                    </div>
+                  )}
+                  <div class="absolute left-3 top-3 flex gap-1.5">
+                    <span class="rounded-full bg-card-bg/90 backdrop-blur border border-border px-2 py-1 font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-text">{gear.category}</span>
                   </div>
-                )}
-                <div class="absolute left-3 top-3 flex gap-1.5">
-                  <span class="rounded-full bg-card-bg/90 backdrop-blur border border-border px-2 py-1 font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-text">{gear.category}</span>
                 </div>
-              </div>
-              <div class="flex flex-1 flex-col p-4">
-                <h3 class="line-clamp-2 text-[0.88rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text">{gear.title}</h3>
-                <p class="mt-2 line-clamp-2 text-[0.76rem] leading-[1.5] text-muted-text/80">{gear.note}</p>
-                <div class="mt-auto pt-4">
-                  <div class="flex items-center justify-between">
-                    {gear.price ? (
-                      <span class="text-[0.9rem] font-bold tracking-tight text-primary-text">{gear.price} <span class="font-mono text-[0.6rem] font-normal text-muted-text">{gear.currency}</span></span>
-                    ) : <span class="text-[0.75rem] text-muted-text">Amazon</span>}
-                    <a href={gear.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-1 rounded-full bg-primary-text px-3 py-1.5 text-[0.72rem] font-semibold text-canvas transition-opacity hover:opacity-90">View <span aria-hidden="true" class="hidden sm:inline">→</span></a>
+                <div class="flex flex-1 flex-col p-4">
+                  <h3 class="line-clamp-2 text-[0.88rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text">{gear.title}</h3>
+                  <p class="mt-2 line-clamp-2 text-[0.76rem] leading-[1.5] text-muted-text/80">{gear.note}</p>
+                  <div class="mt-auto pt-4">
+                    <div class="flex items-center justify-between">
+                      {gear.price ? (
+                        <span class="text-[0.9rem] font-bold tracking-tight text-primary-text">{gear.price} <span class="font-mono text-[0.6rem] font-normal text-muted-text">{gear.currency}</span></span>
+                      ) : <span class="text-[0.75rem] text-muted-text">Amazon</span>}
+                      <a href={gear.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-1 rounded-full bg-primary-text px-3 py-1.5 text-[0.72rem] font-semibold text-canvas transition-opacity hover:opacity-90">View <span aria-hidden="true" class="hidden sm:inline">→</span></a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -633,4 +781,179 @@ const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fa
       </div>
     </div>
   </section>
+
+  <script is:inline data-astro-rerun>
+    (() => {
+      const initCarousels = () => {
+        const containers = document.querySelectorAll('.carousel-container');
+        const activeKeydownListeners = [];
+
+        containers.forEach((container) => {
+          const track = container.querySelector('.carousel-track');
+          const prevBtn = container.querySelector('.carousel-btn-prev');
+          const nextBtn = container.querySelector('.carousel-btn-next');
+          const progressBar = container.querySelector('.carousel-progress-bar');
+          const wrap = container.querySelector('.carousel-wrap');
+
+          if (!track) return;
+
+          // 1. Scroll State Updates (Progress Bar + Fade Classes + Disabled States)
+          const updateScrollState = () => {
+            const scrollLeft = track.scrollLeft;
+            const scrollWidth = track.scrollWidth;
+            const clientWidth = track.clientWidth;
+            const maxScroll = scrollWidth - clientWidth;
+            const canScroll = maxScroll > 2;
+
+            if (progressBar) {
+              progressBar.parentElement.style.display = canScroll ? '' : 'none';
+              const pct = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
+              progressBar.style.width = `${pct}%`;
+            }
+
+            if (wrap) {
+              wrap.classList.toggle('at-start', scrollLeft <= 2);
+              wrap.classList.toggle('at-end', scrollLeft >= maxScroll - 2);
+            }
+
+            if (prevBtn) {
+              prevBtn.style.display = canScroll ? '' : 'none';
+              prevBtn.disabled = scrollLeft <= 2;
+              prevBtn.classList.toggle('opacity-50', scrollLeft <= 2);
+            }
+            if (nextBtn) {
+              nextBtn.style.display = canScroll ? '' : 'none';
+              nextBtn.disabled = scrollLeft >= maxScroll - 2;
+              nextBtn.classList.toggle('opacity-50', scrollLeft >= maxScroll - 2);
+            }
+          };
+
+          // Attach scroll listeners
+          track.addEventListener('scroll', updateScrollState, { passive: true });
+          updateScrollState();
+
+          // Also update on window load and via ResizeObserver to ensure calculations adapt to remote images/font heights
+          window.addEventListener('load', updateScrollState, { once: true });
+          if (window.ResizeObserver) {
+            const ro = new ResizeObserver(updateScrollState);
+            ro.observe(track);
+          }
+
+          // 2. Navigation Button Clicks
+          if (prevBtn && nextBtn) {
+            const scrollAmount = () => track.clientWidth * 0.75;
+            prevBtn.addEventListener('click', () => {
+              track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+            });
+            nextBtn.addEventListener('click', () => {
+              track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+            });
+          }
+
+          // 3. Hover/Focus-based Keyboard Navigation
+          let isHovered = false;
+          container.addEventListener('mouseenter', () => { isHovered = true; });
+          container.addEventListener('mouseleave', () => { isHovered = false; });
+
+          // Make container focusable for accessibility and keyboard focus cues
+          container.setAttribute('tabindex', '0');
+          container.setAttribute('aria-roledescription', 'carousel');
+
+          const handleKeyDown = (e) => {
+            const isFocused = container.contains(document.activeElement);
+            if ((isHovered || isFocused) && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+              // Prevent standard page scroll when interacting with the carousel
+              e.preventDefault();
+              const dir = e.key === 'ArrowRight' ? 1 : -1;
+              const card = track.querySelector('.snap-card');
+              const amount = card ? card.clientWidth + 16 : 280;
+              track.scrollBy({ left: dir * amount, behavior: 'smooth' });
+            }
+          };
+
+          window.addEventListener('keydown', handleKeyDown);
+          activeKeydownListeners.push(handleKeyDown);
+
+          // 4. Mouse Drag-to-Scroll with Inertial Momentum
+          let isDown = false;
+          let startX = 0;
+          let scrollLeftStart = 0;
+          let velocity = 0;
+          let lastTime = 0;
+          let lastX = 0;
+          let rafId = null;
+
+          track.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'touch') return; // Bypass for touch pointers (native swipe is superior)
+            isDown = true;
+            track.classList.add('active');
+            track.style.scrollSnapType = 'none'; // Temporarily disable snapping during drag
+            startX = e.pageX - track.offsetLeft;
+            scrollLeftStart = track.scrollLeft;
+            lastTime = Date.now();
+            lastX = e.pageX;
+            velocity = 0;
+            if (rafId) cancelAnimationFrame(rafId);
+          });
+
+          const handlePointerUp = () => {
+            if (!isDown) return;
+            isDown = false;
+            track.classList.remove('active');
+            track.style.scrollSnapType = ''; // Re-enable snapping
+
+            // Apply inertia momentum
+            const timeDiff = Date.now() - lastTime;
+            if (timeDiff < 100 && Math.abs(velocity) > 0.5) {
+              let momentum = velocity * 12; // Inertia coefficient
+              const step = () => {
+                if (Math.abs(momentum) < 0.25) {
+                  updateScrollState();
+                  return;
+                }
+                track.scrollLeft += momentum;
+                momentum *= 0.92; // Friction decay
+                rafId = requestAnimationFrame(step);
+              };
+              rafId = requestAnimationFrame(step);
+            } else {
+              updateScrollState();
+            }
+          };
+
+          track.addEventListener('pointerleave', handlePointerUp);
+          track.addEventListener('pointerup', handlePointerUp);
+
+          track.addEventListener('pointermove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - track.offsetLeft;
+            const walk = (x - startX) * 1.35; // Sensitivity scale
+            track.scrollLeft = scrollLeftStart - walk;
+
+            const now = Date.now();
+            const dt = now - lastTime;
+            if (dt > 0) {
+              velocity = (lastX - e.pageX) / dt;
+              lastTime = now;
+              lastX = e.pageX;
+            }
+          });
+        });
+
+        // Clean up window-level listeners on View Transitions navigation to prevent leaks
+        document.addEventListener('astro:before-swap', () => {
+          activeKeydownListeners.forEach((listener) => {
+            window.removeEventListener('keydown', listener);
+          });
+        }, { once: true });
+      };
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('load', initCarousels, { once: true });
+      } else {
+        initCarousels();
+      }
+    })();
+  </script>
 </Layout>

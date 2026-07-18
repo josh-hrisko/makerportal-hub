@@ -866,12 +866,23 @@
   contain-intrinsic-size: auto 700px;
 }
 
-/* ── Landing overhaul: snap-scroll carousels (no JS) ── */
+/* ── Landing overhaul: snap-scroll carousels ── */
+.carousel-container {
+  position: relative;
+  outline: none;
+}
+/* Softer, atmospheric focus ring around the carousel container when navigated by keyboard */
+.carousel-container:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--mp-border-strong), 0 0 0 4px var(--mp-focus-ring);
+  border-radius: 24px;
+}
 .carousel-wrap {
   position: relative;
   /* fade edges via mask – progressive enhancement */
   mask-image: linear-gradient(to right, transparent 0, black 4%, black 92%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0, black 4%, black 92%, transparent 100%);
+  transition: mask-image 0.25s ease, -webkit-mask-image 0.25s ease;
 }
 @supports not (mask-image: linear-gradient(black, white)) {
   .carousel-wrap {
@@ -888,6 +899,7 @@
   width: 4rem;
   pointer-events: none;
   z-index: 2;
+  transition: opacity 0.25s ease;
 }
 .carousel-wrap::before {
   left: 0;
@@ -897,6 +909,26 @@
   right: 0;
   background: linear-gradient(to left, var(--mp-canvas), transparent);
 }
+/* Dynamic fade removal at endpoints */
+.carousel-wrap.at-start {
+  mask-image: linear-gradient(to right, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 92%, transparent 100%);
+}
+.carousel-wrap.at-start::before {
+  opacity: 0;
+}
+.carousel-wrap.at-end {
+  mask-image: linear-gradient(to right, transparent 0%, black 8%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%);
+}
+.carousel-wrap.at-end::after {
+  opacity: 0;
+}
+.carousel-wrap.at-start.at-end {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
 .carousel-track {
   display: flex;
   gap: 1rem;
@@ -908,9 +940,14 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   overscroll-behavior-x: contain;
+  cursor: grab;
 }
 .carousel-track::-webkit-scrollbar {
   display: none;
+}
+.carousel-track.active {
+  cursor: grabbing;
+  user-select: none;
 }
 .snap-card {
   scroll-snap-align: start;
@@ -937,7 +974,58 @@
   box-shadow: 0 16px 36px -14px rgba(0,0,0,0.16), var(--mp-shadow-card-hover);
 }
 
-/* Shimmer for image placeholders */
+/* Premium Desktop Arrow Controls */
+.carousel-btn {
+  background-color: color-mix(in srgb, var(--mp-card) 90%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--mp-shadow-card);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  transform: translateY(-50%) scale(0.9);
+}
+.carousel-container:hover .carousel-btn,
+.carousel-container:focus-within .carousel-btn {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+.carousel-btn:hover {
+  border-color: var(--mp-border-strong);
+  background-color: var(--mp-card);
+  transform: translateY(-50%) scale(1.12);
+}
+.carousel-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+.carousel-btn:disabled {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Progress bar style */
+.carousel-progress-bar {
+  transition: width 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Shimmer placeholder */
+.shimmer-placeholder {
+  position: relative;
+  background: linear-gradient(90deg, var(--mp-elevated) 25%, color-mix(in srgb, var(--mp-muted) 10%, var(--mp-elevated)) 50%, var(--mp-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+/* Scroll-driven entrance stagger */
+@supports (animation-timeline: view()) {
+  .carousel-stagger {
+    animation: explainer-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 4% cover 22%;
+    animation-delay: calc(var(--stagger-index, 0) * 55ms);
+  }
+}
+
+/* Shimmer animation keyframes */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

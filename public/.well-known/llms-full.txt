@@ -1,0 +1,445 @@
+# Human-friendly view → https://www.makerportal.ai/llms — raw below for LLMs, RAG, agentic browsers
+# This is the detailed directory of all apps, tools, notes, and resources of MakerPortal.
+
+# MakerPortal — Full Studio Directory & Technical Specifications
+
+# Human-friendly view → https://www.makerportal.ai/llms — raw below for LLMs, RAG, agentic browsers
+# If you landed here as a human, the styled page explains everything. Bots: continue below (valid Markdown).
+
+# MakerPortal — Independent AI & iOS Software Studio
+
+> On-device first where possible, transparent where cloud is needed. San Francisco studio engineering iOS & iPadOS apps with Apple Silicon native neural processing (CoreML, Metal, ANE). Privacy posture per-app transparent.
+
+MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](https://makersportal.com)) is an independent software studio established in 2023 in San Francisco, CA. Focus: focused utility, productivity, developer tools, audio, game, dashboard, and lifestyle applications — on-device first where possible (CoreML, Metal, ANE, ONNX, llama.cpp), transparent hybrid cloud for agentic DSP (AuraLinter backend with SSE, audio staged temporarily).
+
+**Core principles:** On-device first where possible, transparent hybrid for agentic, no committee software, useful on day one, craft over clutter, one deliberate release at a time.
+
+
+
+## Site map (hub) — empire IA
+
+Primary nav (≤7): Apps · Notes · Learn · Shop · Watch · Studio · Contact
+
+- [Home](https://www.makerportal.ai): Studio hub
+- [Apps](https://www.makerportal.ai/apps): Catalog — 11 live (5 on *.makerportal.ai + 6 legacy bridge on makersportal.com/apps migrating)
+- [Field notes / blog](https://www.makerportal.ai/blog): Articles & craft
+- [Learn / resources](https://www.makerportal.ai/resources): Topic hubs, tools, affiliate-ready guides
+- [Shop](https://www.makerportal.ai/shop): Digital goods, code packs, archives
+- [Watch](https://www.makerportal.ai/watch): Video / YouTube surface
+
+---
+
+## Detailed Application Profiles — 11 Live Titles
+
+Detailed specifications of our iOS application matrix:
+
+### AuraLinter — Agentic DSP Orchestrator
+- **URL:** https:
+    icon: auralinter128,
+    iconSet: { w64: auralinter64, w128: auralinter128, w256: auralinter256 },
+    date:
+- **Category:** Developer Tool
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** Yes
+- **Tech Stack:** LangGraph, ProductionRAG, clang++Verified, FastAPI+SSE, On-deviceCapture
+- **Description:** Agentic DSP Orchestrator: record high-fidelity audio, run multi-agent LangGraph DSP generation loops, query Production RAG over DSP textbooks, compiler-verified C++ kernels via clang++, SSE streaming — iOS 17+
+
+
+### Biquadia — Local Neural DSP & Sound Laboratory
+- **URL:** https:
+    icon: biquadia128,
+    iconSet: { w64: biquadia64, w128: biquadia128, w256: biquadia256 },
+    date:
+- **Category:** Utility
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** Yes
+- **Tech Stack:** CoreML, NeuralEngine(ANE), MetalShaders, NativeSwift
+- **Description:** Professional real-time digital signal processing, spatial audio rendering, and on-device neural enhancement models running privately on Apple Silicon.
+
+
+### Thumb-Dash — AI-powered speed-texting battleground
+- **URL:** https:
+    icon: thumbdash128,
+    iconSet: { w64: thumbdash64, w128: thumbdash128, w256: thumbdash256 },
+    date:
+- **Category:** Game
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** No
+- **Tech Stack:** SmolLM2-360M, llama.cpp, Metalon-device
+- **Description:** AI-powered speed-texting battleground: local LLM pipeline SmolLM2-360M-Instruct, precision mach-time keystroke tracking, Levenshtein scoring — entirely through llama.cpp + Metal on-device. No cloud reads your input.
+
+
+### nymic — Real-time identity-shifting vocal engine
+- **URL:** https:
+    icon: nymic128,
+    iconSet: { w64: nymic64, w128: nymic128, w256: nymic256 },
+    date:
+- **Category:** Audio
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** No
+- **Tech Stack:** kNN-VC, ONNXRuntime, HiFiGAN
+- **Description:** Real-time identity-shifting vocal engine: kNN-VC neural pipeline, WavLM-Large feature extraction, cosine nearest-neighbor matching, HiFiGAN vocoding via ONNX Runtime on-device. Custom voice banks in under a minute.
+
+
+### Notiary — Markdown space with a local semantic brain
+- **URL:** https:
+    icon: notiary128,
+    iconSet: { w64: notiary64, w128: notiary128, w256: notiary256 },
+    date:
+- **Category:** Productivity
+- **Platform:** iOS + Web App
+- **Featured:** No
+- **Tech Stack:** SemanticIndexing, VectorEmbeddings, OfflineCoreML
+- **Description:** A distraction-free markdown note-taking workspace equipped with local vector embeddings and semantic search that indexes your thoughts entirely offline.
+
+
+### akous — Generative audio engine for ANE
+- **URL:** https:
+    icon: akous128,
+    iconSet: { w64: akous64, w128: akous128, w256: akous256 },
+    date:
+- **Category:** Audio
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** No
+- **Tech Stack:** DiffusionTransformer, ANEOptimized, BinauralAudio
+- **Description:** Professional-grade generative audio engine: Diffusion Transformer optimized for Apple Neural Engine, binaural focus-scapes, meditation frequencies, neural noise — all private prompt-to-soundscape on-device.
+
+
+### PopCloset — Intelligent wardrobe indexing & capsule design
+- **URL:** https:
+    icon: popcloset128,
+    iconSet: { w64: popcloset64, w128: popcloset128, w256: popcloset256 },
+    date:
+- **Category:** Lifestyle
+- **Platform:** iOS + Web App
+- **Featured:** No
+- **Tech Stack:** ComputerVision, LocalClassifiers, CoreMLVision
+- **Description:** Visual wardrobe tracking powered by on-device computer vision to auto-categorize apparel, extract color palettes, and build capsules.
+
+
+### itria — On-device LLM with Metal acceleration
+- **URL:** https:
+    icon: itria128,
+    iconSet: { w64: itria64, w128: itria128, w256: itria256 },
+    date:
+- **Category:** Productivity
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** No
+- **Tech Stack:** llama.cpp, MetalGPU, OfflineLLM
+- **Description:** State-of-the-art on-device AI: Metal GPU + llama.cpp, local language models offline, zero data to cloud — debug code, brainstorm prose, solve problems on flights, all privately on iPhone + iPad.
+
+
+### GridVerse — AI word game — Spell Bound + Lexify + Crossword Dash
+- **URL:** https:
+    icon: gridverse128,
+    iconSet: { w64: gridverse64, w128: gridverse128, w256: gridverse256 },
+    date:
+- **Category:** Game
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** No
+- **Tech Stack:** AIWordGen, LexifyEngine, OfflinePuzzles
+- **Description:** AI-powered word game: Spell Bound, Lexify, Crossword Dash — endless vocabulary puzzles, brain training, AI-generated crosswords for all skill levels, 100% on-device.
+
+
+### MotionLink — Headphone Motion API + Spatial Audio
+- **URL:** https:
+    icon: motionlink128,
+    iconSet: { w64: motionlink64, w128: motionlink128, w256: motionlink256 },
+    date:
+- **Category:** Developer Tool
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** No
+- **Tech Stack:** HeadphoneMotion, SpatialAudio, CoreMotion
+- **Description:** Leverage Headphone Motion API (iOS 16) for real-time AirPods Pro head tracking: Spatial Audio prototyping, head-controlled interfaces, researcher data capture — direct low-latency sensor access on-device.
+
+
+### BLExAR — BLE Arduino control — HM-10, nRF52, CSV export
+- **URL:** https:
+    icon: blexar128,
+    iconSet: { w64: blexar64, w128: blexar128, w256: blexar256 },
+    date:
+- **Category:** Utility
+- **Platform:** iOS (iPhone + iPad)
+- **Featured:** No
+- **Tech Stack:** BLEControl, ArduinoBridge, CSVLogging
+- **Description:** Bluetooth Low Energy Arduino control: real-time pin control, live data plotting, raw serial terminal, CSV export — HM-10/CC254x/nRF52 modules, iPhone to hardware with zero cloud dependency.
+
+
+---
+
+## Detailed Interactive Playground Tools — 18 Live Tools
+
+Detailed specifications of mathematical and physical simulations available inside our sandbox:
+
+### Quaternion ↔ Euler Converter
+- **Slug / Route:** /playground/quaternion-euler-converter
+- **Tagline:** The exact head-orientation math running inside MotionLink
+- **Pillar Hint:** ios-craft
+- **Is Grounded:** Yes (maps to shipped product)
+- **Related Application:** MotionLink
+- **Description:** Convert between quaternion attitude and yaw/pitch/roll both directions, with a live orientation preview — the same round-trip-verified formulas (and the gimbal-lock clamp fix) from the CMHeadphoneMotionManager field note.
+
+
+### Draw → Fourier Epicycles
+- **Slug / Route:** /playground/fourier-epicycles
+- **Tagline:** Any shape, decomposed into spinning circles
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** Draw anything. It gets decomposed into rotating circles (a discrete Fourier series) that trace your exact path — the same frequency-domain math behind spectral analysis, applied to a 2D drawing instead of an audio signal.
+
+
+### Live Earth
+- **Slug / Route:** /playground/globe
+- **Tagline:** Real coastlines, real weather, real ISS orbit
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** A rotating globe with three real-data modes: an astronomically accurate day/night terminator, real current weather across 16 cities (refreshed on a schedule), and the ISS tracked live via real orbital mechanics computed client-side from its actual TLE elements.
+
+
+### Audio & Acoustics Toolbox
+- **Slug / Route:** /playground/multiphysics-dsp-lab
+- **Tagline:** Seven serious engineering tools for audio, acoustics, DSP, and loudspeaker design
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** An audio engineering toolbox with room mode analysis, pole-zero filter exploration, loudspeaker enclosure design, nonlinear driver dynamics, thermal compression modeling, cone breakup visualization, and a suite of fast acoustic calculators — built for makers, students, audiophiles, and loudspeaker designers.
+
+
+### Double Pendulum + Phase Space
+- **Slug / Route:** /playground/double-pendulum
+- **Tagline:** Chaotic motion, painted as pure geometry
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** A double pendulum you can perturb, with a live phase-space plot painting the chaos as geometry alongside it.
+
+
+### Biquad Filter Designer
+- **Slug / Route:** /playground/biquad-filter-designer
+- **Tagline:** Hear a cascade, not just see a curve
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** Yes (maps to shipped product)
+- **Related Application:** Biquadia
+- **Description:** A multi-stage biquad chain with a live Web Audio preview on real audio, plus the Direct Form II Transposed code running in Biquadia’s DSP core.
+
+
+### Head-Tracked Stereo Pan
+- **Slug / Route:** /playground/head-tracked-stereo-pan
+- **Tagline:** Rotate a virtual head, hear the pan move
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** Yes (maps to shipped product)
+- **Related Application:** MotionLink
+- **Description:** Combines the quaternion converter’s yaw output with a live StereoPannerNode demo — spatial audio and head tracking in one shareable toy.
+
+
+### CoreML Model Size & Quantization Calculator
+- **Slug / Route:** /playground/coreml-model-size-calculator
+- **Tagline:** Exact on-device footprint math, no throughput guesswork
+- **Pillar Hint:** on-device-ai
+- **Is Grounded:** Yes (maps to shipped product)
+- **Related Application:** Notiary
+- **Description:** Deterministic byte-size math across fp32/fp16/int8/int4 quantization — no fabricated latency numbers, just the arithmetic behind an on-device model’s real footprint.
+
+
+### BLE GATT / CSV Frame Visualizer
+- **Slug / Route:** /playground/ble-gatt-visualizer
+- **Tagline:** How raw serial bytes become a CSV row
+- **Pillar Hint:** ios-craft
+- **Is Grounded:** Yes (maps to shipped product)
+- **Related Application:** BLExAR
+- **Description:** An interactive look at the HM-10/nRF52 UART bridge structure BLExAR talks to — services, characteristics, and the byte-level framing behind CSV export.
+
+
+### Agentic DSP Pipeline Step-Through
+- **Slug / Route:** /playground/agentic-dsp-pipeline
+- **Tagline:** Record → retrieve → generate → verify → iterate
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** Yes (maps to shipped product)
+- **Related Application:** AuraLinter
+- **Description:** A clickable walk through AuraLinter’s real multi-agent loop: RAG retrieval over DSP textbooks, LangGraph codegen, and clang++ verification of the generated C++ kernel.
+
+
+### Chladni Cymatics
+- **Slug / Route:** /playground/chladni-cymatics
+- **Tagline:** Sound made visible — standing wave sand patterns
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** Thousands of sand grains flee the vibrating regions of a driven plate and settle along its nodal lines. Sweep the frequency through real modal resonances, drag the driver anywhere on the plate, and watch classic Chladni figures assemble live.
+
+
+### N-Body Orbital Choreography
+- **Slug / Route:** /playground/n-body-choreography
+- **Tagline:** Gravity, three bodies, and a stable dance
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** Three equal masses chasing each other around the proven figure-eight orbit, integrated with a 4th-order symplectic scheme — plus Lagrange’s unstable triangle, hierarchical systems, and a nudge button that races your perturbed system against an unperturbed ghost.
+
+
+### Conformal Mapping Explorer
+- **Slug / Route:** /playground/conformal-mapping
+- **Tagline:** Watch a grid warp under a complex function
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** A grid on the complex plane, warped live under f(z), with a homotopy slider morphing between the two.
+
+
+### Lattice Boltzmann Wind Tunnel
+- **Slug / Route:** /playground/lattice-boltzmann-tunnel
+- **Tagline:** A Von Kármán vortex street, computed live
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** A real-time 2D wind tunnel running a D2Q9 lattice Boltzmann solver. Place a cylinder, plate, or airfoil in the stream, turn up the Reynolds number until the wake sheds a Von Kármán vortex street, and colour the flow by vorticity, speed, or pressure — or paint your own obstacles on the canvas.
+
+
+### Ray-Matrix Optics Bench
+- **Slug / Route:** /playground/optics-bench
+- **Tagline:** Paraxial rays through lenses, mirrors, and cavities
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** Build an optical system from lenses, mirrors, and gaps and trace a fan of paraxial rays straight through it with 2×2 ABCD matrices. Read the system matrix and effective focal length, image an object, and test two-mirror laser resonators against the g₁·g₂ stability criterion.
+
+
+### Quantum Tunneling Simulator
+- **Slug / Route:** /playground/quantum-tunneling
+- **Tagline:** Watch a wave packet leak through a wall
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** Launch a Gaussian wave packet at a potential barrier and watch it split, reflect, and tunnel through in real time. Solves the 1D time-dependent Schrödinger equation with the unitary Crank–Nicolson method, with live transmission and reflection probabilities checked against the exact barrier formula.
+
+
+### Magnetic Field Line Tracer
+- **Slug / Route:** /playground/magnetic-field-tracer
+- **Tagline:** Biot–Savart field lines, marched by RK4
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** Trace magnetic field lines through space from current loops and wires using the Biot–Savart law and a 4th-order Runge–Kutta integrator. Explore Helmholtz pairs, magnetic bottles, solenoids, and dipoles in a live cross-section with the field magnitude read out under your cursor.
+
+
+### Relativistic Starship Journey
+- **Slug / Route:** /playground/relativistic-spaceflight
+- **Tagline:** 1g to the stars, drawn on a Minkowski diagram
+- **Pillar Hint:** General
+- **Is Grounded:** No (exploratory toy)
+- **Related Application:** None
+- **Description:** Fly a starship at constant proper acceleration and watch special relativity unfold: ship time versus Earth time, Lorentz contraction, the relativistic Doppler shift of the cosmic microwave background, and a live Minkowski spacetime diagram of the hyperbolic worldline. Flip-and-burn trips to real destinations, computed exactly.
+
+
+---
+
+## Trending Technical Signals — Latest Scan
+
+Daily scored technical scan items (Date: 2026-07-18):
+
+### 1. Show HN: Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)
+- **Score:** 18
+- **URL:** https://github.com/sushilk1991/velora
+- **Domain:** github.com
+- **Primary Source:** hackernews
+- **Tags:** on-device-ai, local-llm, privacy-arch
+- **Corroborated Sources:** hackernews
+
+
+### 2. "The SwiftUI Way" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: 
+nilcoalescing.com/blog/TheSwif..
+- **Score:** 17
+- **URL:** https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f
+- **Domain:** nilcoalescing.com
+- **Primary Source:** bluesky
+- **Tags:** ios-craft
+- **Corroborated Sources:** bluesky
+
+
+### 3. Prompt submitted to cloud even when using local LLM by default
+- **Score:** 12
+- **URL:** https://github.com/anomalyco/opencode/issues/15854
+- **Domain:** github.com
+- **Primary Source:** hackernews
+- **Tags:** local-llm
+- **Corroborated Sources:** hackernews
+
+
+### 4. Show HN: A sandbox for running real jailbreak techniques against local LLMs
+- **Score:** 12
+- **URL:** https://github.com/joshfischer1108/jailbreak-lab
+- **Domain:** github.com
+- **Primary Source:** hackernews
+- **Tags:** local-llm
+- **Corroborated Sources:** hackernews
+
+
+### 5. Experiments with On-device AI — What building on Gemini Nano actually teaches you
+- **Score:** 12
+- **URL:** https://dev.to/mohanvenkatakrishnan/experiments-with-on-device-ai-what-building-on-gemini-nano-actually-teaches-you-5deo
+- **Domain:** dev.to
+- **Primary Source:** devto
+- **Tags:** on-device-ai
+- **Corroborated Sources:** devto
+
+
+---
+
+## Studio Curated Gear Specifications
+
+curated developer hardware and equipment specifications:
+
+### Apple AirPods Pro 3 Wireless Earbuds, Active Noise Cancellation, Live Translation, Heart Rate Sensing, Hearing Aid Feature, Bluetooth Headphones, Spatial Audio, High-Fidelity Sound, USB-C Charging
+- **URL:** https://www.amazon.com/dp/B0FQFB8FMG?tag=engineersport-20&linkCode=ogi&th=1&psc=1
+- **Category:** Wearable
+- **Curated Price:** $199.99 USD
+- **Curated Notes:** MotionLink's head-tracking feature depends on the Headphone Motion API, which requires AirPods Pro.
+
+
+### Behringer UMC1820 Audiophile 18x20 USB Audio/MIDI Interface with Midas Mic Preamplifiers and ADAT I/O | For Recording Microphones and Instruments
+- **URL:** https://www.amazon.com/dp/B01EXI8Y9S?tag=engineersport-20&linkCode=ogi&th=1&psc=1
+- **Category:** Audio interface
+- **Curated Price:** $229.00 USD
+- **Curated Notes:** Audio interface used building Biquadia — 8-preamp USB I/O for real-time DSP testing.
+
+
+### Shure MV7+ Podcast Dynamic Microphone with Stand – OBS Certified, Enhanced Audio, LED Panel, USB-C & XLR Outputs, Auto Level Mode, Digital Pop Filter – for Podcasting, Streaming, and Recording, Black
+- **URL:** https://www.amazon.com/dp/B0CTJ8BSWN?tag=engineersport-20&linkCode=ogi&th=1&psc=1
+- **Category:** Microphone
+- **Curated Price:** $319.00 USD
+- **Curated Notes:** USB/XLR hybrid mic used building and testing nymic.
+
+
+### Audio-Technica ATH-M50X Professional Studio Monitor Headphones, Black, Professional Grade, Critically Acclaimed, with Detachable Cable
+- **URL:** https://www.amazon.com/dp/B00HVLUR86?tag=engineersport-20&linkCode=ogi&th=1&psc=1
+- **Category:** Headphones
+- **Curated Price:** $159.00 USD
+- **Curated Notes:** Reference monitoring headphones used for akous's binaural audio testing.
+
+
+### Deep Learning (Adaptive Computation and Machine Learning series)
+- **URL:** https://www.amazon.com/dp/0262035618?tag=engineersport-20&linkCode=ogi&th=1&psc=1
+- **Category:** Book
+- **Curated Price:** $61.00 USD
+- **Curated Notes:** Foundational deep-learning textbook referenced while building itria.
+
+
+### SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25
+- **URL:** https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1
+- **Category:** Storage
+- **Curated Price:** $251.38 USD
+- **Curated Notes:** Portable SSD used for studio project storage and backups.
+
+
+---
+
+## Technical Stack & Architectural Stance
+
+- **Swift & SwiftUI**: 100% declarative UI where appropriate, native view controllers where layout control demands micro-second rendering.
+- **Metal Performance Shaders**: Direct GPU pipeline access for matrix multiplication, real-time spatial calculations, and custom visual physics solvers.
+- **ANE Acceleration**: Apple Neural Engine cores leveraged directly via CoreML FP16 formats to avoid thermal throttling and save battery.
+- **Zero Telemetry Stance**: Absolute privacy posture. No third-party SDKs, no segment, no Firebase. All logs remain local on device.
+
+Last updated: 2026-07-18 — compiled automatically at build time.
