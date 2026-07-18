@@ -1,7 +1,8 @@
 /**
- * Playground registry — interactive tools and math/physics toys.
+ * Playground registry — frontier research instruments and computational laboratories.
  * Some are grounded in real shipped apps (isGrounded: true), while others
- * are built for shareability and visual payoff.
+ * are independent research-grade instruments — numerically rigorous, with full
+ * method, equations, and limitations disclosed.
  */
 
 export type PlaygroundStatus = 'live' | 'planned';
@@ -92,7 +93,7 @@ export const playground: PlaygroundEntry[] = [
     title: 'Head-Tracked Stereo Pan',
     tagline: 'Rotate a virtual head, hear the pan move',
     description:
-      'Combines the quaternion converter’s yaw output with a live StereoPannerNode demo — spatial audio and head tracking in one shareable toy.',
+      'Combines the quaternion converter’s yaw output with a live StereoPannerNode demo — spatial audio and head tracking in one shareable research instrument, same math as MotionLink.',
     pillarHint: 'dsp-audio',
     isGrounded: true,
     relatedApp: 'MotionLink',

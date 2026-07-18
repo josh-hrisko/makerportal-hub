@@ -142,7 +142,7 @@ export const primaryNav: PrimaryNavItem[] = [
         title: 'Resources',
         links: [
           { label: 'Resource hub', href: '/resources', description: 'Guides & downloads' },
-          { label: 'Playground', href: '/playground', description: 'Interactive tools & toys' },
+          { label: 'Playground', href: '/playground', description: 'Frontier research instruments' },
           { label: 'Agent map', href: '/llms', description: 'Human + AI index (llms.txt)' },
         ],
       },

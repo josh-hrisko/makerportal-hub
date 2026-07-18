@@ -168,7 +168,7 @@ ${parsedApps.map(app => `- [${app.featured ? '*' : ''}${app.title} — ${app.tag
 
 Browser-native mathematical and physical simulations: [makerportal.ai/playground](https://www.makerportal.ai/playground).
 
-${parsedPlayground.map(tool => `- [${tool.title}](${tool.slug.startsWith('http') ? tool.slug : `https://www.makerportal.ai/playground/${tool.slug}`}): ${tool.tagline} (${tool.isGrounded ? 'Grounded in shipped app' : 'Exploratory toy'})${tool.relatedApp ? ` ↳ Related to ${tool.relatedApp}` : ''}`).join('\n')}
+${parsedPlayground.map(tool => `- [${tool.title}](${tool.slug.startsWith('http') ? tool.slug : `https://www.makerportal.ai/playground/${tool.slug}`}): ${tool.tagline} (${tool.isGrounded ? 'Grounded in shipped app' : 'Independent research instrument'})${tool.relatedApp ? ` ↳ Related to ${tool.relatedApp}` : ''}`).join('\n')}
 
 ## Trending Signals
 
@@ -243,7 +243,7 @@ ${parsedPlayground.map(tool => `### ${tool.title}
 - **Slug / Route:** ${tool.slug.startsWith('http') ? tool.slug : `/playground/${tool.slug}`}
 - **Tagline:** ${tool.tagline}
 - **Pillar Hint:** ${tool.pillarHint || 'General'}
-- **Is Grounded:** ${tool.isGrounded ? 'Yes (maps to shipped product)' : 'No (exploratory toy)'}
+- **Is Grounded:** ${tool.isGrounded ? 'Yes (maps to shipped product)' : 'No (independent research instrument)'}
 - **Related Application:** ${tool.relatedApp || 'None'}
 - **Description:** ${tool.description}
 `).join('\n\n')}

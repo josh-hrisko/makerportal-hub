@@ -4,15 +4,15 @@ import HubShell from '../../components/HubShell.astro';
 import { playground } from '../../data/playground';
 import { pillarMeta, fallbackPillar } from '../../data/trends';
 
-const title = 'Playground — math & physics toys | MakerPortal';
+const title = 'Playground — frontier physics & math instruments | MakerPortal';
 const description =
-  'Shareable interactive math and physics toys — double pendulums, Fourier epicycles, cymatics, orbital mechanics. Built for fun, not claimed as MakerPortal shipped code.';
+  'Research-grade interactive physics and math instruments — double pendulums, Fourier epicycles, cymatics, orbital mechanics. Each solver is numerically honest, with method and limitations stated — built for PhD-level intuition, not as claimed shipped product code.';
 
 const pillarOf = (hint?: string) => (hint ? pillarMeta[hint] ?? fallbackPillar : null);
 ---
 
 <Layout title={title} description={description}>
-  <HubShell kicker="Learn · Playground" title="Math, engineering, and physics—made tangible." lead="Interactive tools and visual experiments with instant feedback. Grounded tools name the shipped app behind their math; exploratory toys carry a clear honesty note." status="Playground">
+  <HubShell kicker="Learn · Playground" title="Frontier instruments, live in your browser." lead="Research-grade simulations and computational instruments with instant visual feedback. App-grounded instruments cite the shipped system they come from; independent research instruments disclose full method, equations, and limitations." status="Playground">
     <Fragment slot="hero-actions">
       <div class="mt-8 flex flex-wrap gap-3">
         <a href="/playground/quaternion-euler-converter" class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Try an app-grounded tool</a>
