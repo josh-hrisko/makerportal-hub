@@ -717,6 +717,78 @@
   }
 }
 
+/* ── Signals Journal explainer micro-animations ── */
+@keyframes pillar-dot-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 currentColor; }
+  50% { transform: scale(1.35); box-shadow: 0 0 0 6px transparent; }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes signal-bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes explainer-slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer components {
+  /* Pillar indicator dot — hover pulse */
+  .pillar-dot {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  }
+  .pillar-item:hover .pillar-dot {
+    animation: pillar-dot-pulse 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Scoring formula card — hover lift */
+  .explainer-card {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.3s ease,
+                box-shadow 0.3s ease;
+  }
+  .explainer-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--mp-cta) 30%, var(--mp-border));
+    box-shadow: 0 12px 32px -8px color-mix(in srgb, var(--mp-cta) 8%, transparent),
+                var(--mp-shadow-card-hover);
+  }
+
+  /* Signal bars in archive — grow from bottom on scroll */
+  .signal-bar {
+    transform-origin: bottom;
+  }
+
+  /* Archive card accent glow on hover */
+  .archive-card {
+    transition: border-color 0.3s ease, box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Scroll-driven stagger for explainer items (progressive enhancement) */
+@supports (animation-timeline: view()) {
+  .explainer-stagger {
+    animation: explainer-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 25%;
+  }
+  .explainer-stagger:nth-child(2) { animation-delay: 60ms; }
+  .explainer-stagger:nth-child(3) { animation-delay: 120ms; }
+  .explainer-stagger:nth-child(4) { animation-delay: 180ms; }
+  .explainer-stagger:nth-child(5) { animation-delay: 240ms; }
+  .explainer-stagger:nth-child(6) { animation-delay: 300ms; }
+
+  .signal-bar-animate {
+    animation: signal-bar-grow 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 30%;
+  }
+  .signal-bar-animate:nth-child(2) { animation-delay: 40ms; }
+  .signal-bar-animate:nth-child(3) { animation-delay: 80ms; }
+  .signal-bar-animate:nth-child(4) { animation-delay: 120ms; }
+  .signal-bar-animate:nth-child(5) { animation-delay: 160ms; }
+}
+
 @supports (animation-timeline: view()) {
   .animate-on-scroll {
     animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -788,9 +860,87 @@
 }
 
 /* Efficiency — content-visibility for below-fold heavy sections (gear 50 items, tools, shop products, apps grid, playground) */
-#tools, #gear, #products, #trending, #apps, #playground {
+#tools, #gear, #products, #trending, #apps, #playground,
+#apps-showcase, #playground-showcase, #trending-strip, #gear-picks {
   content-visibility: auto;
   contain-intrinsic-size: auto 700px;
+}
+
+/* ── Landing overhaul: snap-scroll carousels (no JS) ── */
+.carousel-wrap {
+  position: relative;
+  /* fade edges via mask – progressive enhancement */
+  mask-image: linear-gradient(to right, transparent 0, black 4%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 4%, black 92%, transparent 100%);
+}
+@supports not (mask-image: linear-gradient(black, white)) {
+  .carousel-wrap {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+.carousel-wrap::before,
+.carousel-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4rem;
+  pointer-events: none;
+  z-index: 2;
+}
+.carousel-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--mp-canvas), transparent);
+}
+.carousel-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--mp-canvas), transparent);
+}
+.carousel-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 1.25rem;
+  padding: 0.25rem 1.25rem 0.75rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+.snap-card {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+/* Mini-app compact card */
+.app-mini {
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, box-shadow 0.3s;
+}
+.app-mini:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--mp-anchor) 28%, var(--mp-border));
+  box-shadow: 0 12px 28px -10px rgba(0,0,0,0.14), var(--mp-shadow-card);
+}
+
+/* Playground / gear / signals cards – shared hover lift */
+.hub-card {
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, box-shadow 0.35s;
+}
+.hub-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--mp-cta) 22%, var(--mp-border));
+  box-shadow: 0 16px 36px -14px rgba(0,0,0,0.16), var(--mp-shadow-card-hover);
+}
+
+/* Shimmer for image placeholders */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Thrilling — details open anim with interpolate-size (no JS) */

@@ -5,12 +5,53 @@ import AppCard from '../components/AppCard.astro';
 import Layout from '../layouts/Layout.astro';
 import { apps } from '../data/apps';
 import BrandLogo from '../components/BrandLogo.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../data/affiliate-links';
+import { playground } from '../data/playground';
+import { pillarMeta, sourceLabels, fallbackPillar } from '../data/trends';
+import type { TrendItem } from '../data/trends';
 
 const pageTitle = 'MakerPortal — iOS Studio | On-Device AI & Agentic DSP';
 const pageDescription = 'San Francisco studio engineering iOS & iPadOS apps — on-device ML where possible, transparent hybrid for agentic DSP (AuraLinter). CoreML, Metal, ANE, LangGraph, no dark patterns.';
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3);
+
+// --- Apps showcase: 4 featured + 7 compact (Option C Hybrid) ---
+const featuredTitles = ['AuraLinter', 'Biquadia', 'Thumb-Dash', 'Notiary'];
+const featuredApps = featuredTitles
+  .map((t) => apps.find((a) => a.title === t))
+  .filter(Boolean) as typeof apps;
+const remainingApps = apps.filter((a) => !featuredTitles.includes(a.title));
+
+// --- Playground showcase: 6 high-impact tools ---
+const playgroundSlugs = ['fourier-epicycles', 'double-pendulum', 'optics-bench', 'chladni-cymatics', 'quantum-tunneling', 'globe'];
+const playgroundPicks = playgroundSlugs
+  .map((slug) => playground.find((p) => p.slug === slug))
+  .filter((p) => p && p.status === 'live') as typeof playground;
+
+// --- Gear picks: 6 high-interest affiliate items ---
+const gearIds = ['airpods-pro-3', 'behringer-umc1820', 'shure-mv7', 'ath-m50x', 'book-deep-learning', 'sandisk-extreme-ssd-1tb'];
+const gearPicks = gearIds
+  .map((id) => {
+    const link = affiliateLinks.find((l) => l.id === id);
+    return link ? resolveAffiliateLink(link) : null;
+  })
+  .filter(Boolean) as ReturnType<typeof resolveAffiliateLink>[];
+
+// --- Trending signals: latest journal entry top 5 ---
+let latestJournalDate: string | null = null;
+let topSignals: TrendItem[] = [];
+try {
+  const journals = await getCollection('journal');
+  const sorted = journals.sort((a, b) => b.id.localeCompare(a.id));
+  if (sorted.length > 0) {
+    latestJournalDate = sorted[0].id;
+    const items = sorted[0].data.items as TrendItem[];
+    topSignals = [...items].sort((a, b) => b.score - a.score).slice(0, 5);
+  }
+} catch {
+  // no journal yet – leave empty
+}
 
 const directorySchema = {
   '@context': 'https://schema.org',
@@ -57,6 +98,8 @@ const faqSchema = {
     { '@type': 'Question', name: 'Which apps are currently available?', acceptedAnswer: { '@type': 'Answer', text: apps.map(a => `${a.title}: ${a.tagline}`).join('; ') } },
   ]
 };
+
+const pillarOf = (tag?: string) => (tag ? pillarMeta[tag] ?? fallbackPillar : fallbackPillar);
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
@@ -66,24 +109,13 @@ const faqSchema = {
     <link rel="preload" as="image" href={apps[0].iconSet.w128.src} imagesrcset={`${apps[0].iconSet.w64.src} 64w, ${apps[0].iconSet.w128.src} 128w`} />
   </Fragment>
 
-  <!-- Hero – Frontier 2026: Spatial depth + text reveal + view transitions.
-       Light mode: border-token, elevated from-token (not hardcoded #1A232E),
-       hero ink = primary-text which flips dark↔light. Primary CTA button uses
-       primary-text / canvas so it stays visible on both card and canvas. -->
+  <!-- Hero -->
   <section class="hero-grid relative isolate overflow-hidden border-b border-border bg-gradient-to-b from-elevated/40 to-canvas" aria-labelledby="hero-title">
-    <!-- CLS fix: top offset uses vh (viewport-relative) instead of % (parent-relative) so web-font swap reflow of the
-         hero heading cannot change this element's computed position — eliminates the 0.667 CLS regression. -->
-    <!-- Soft auras via radial-gradient only (no filter:blur) — huge CSS blurs
-         on ATF are a major iOS Safari paint cost and LCP render-delay driver. -->
     <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-20 bg-[radial-gradient(56rem_40rem_at_48%_-10vh,color-mix(in_srgb,var(--mp-cta)_9%,transparent),transparent_60%),radial-gradient(38rem_28rem_at_32%_12vh,color-mix(in_srgb,var(--mp-anchor)_10%,transparent),transparent_55%)]"></div>
     <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(120%_70%_at_50%_0%,color-mix(in_srgb,var(--mp-text)_3%,transparent),transparent_60%)]"></div>
     
     <div class="mx-auto grid min-h-[calc(100svh-5rem)] max-w-[88rem] items-center gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-10 lg:py-24">
       <div class="relative z-10 max-w-[46rem] hero-fade-scroll">
-        <!-- Kickers removed per handoff -->
-
-        <!-- No opacity-from-0 hero animation: LCP text must paint immediately.
-             Underline still draws; motion-sensitive users get reduced-motion CSS. -->
         <h1 id="hero-title" class="text-balance text-[clamp(3.2rem,7.5vw,7.2rem)] font-[700] leading-[0.88] tracking-[-0.07em] text-primary-text">
           <span class="block">Software with</span>
           <span class="block">a point of <span class="relative inline-block text-primary-cta">view<span aria-hidden="true" class="absolute inset-x-0 bottom-[0.03em] h-[2px] origin-left scale-x-0 animate-[underline-draw_0.6s_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards] bg-gradient-to-r from-primary-cta/0 via-primary-cta to-primary-cta/0"></span></span>.</span>
@@ -106,7 +138,6 @@ const faqSchema = {
           </span>
         </div>
 
-        <!-- Micro-trust row – frontier social proof (cap 6 icons to avoid crowding with 11 live) -->
         <div class="mt-10 flex flex-wrap items-center gap-4 border-t border-border pt-6 text-[0.8rem] text-muted-text">
           <div class="flex -space-x-2">
             {apps.slice(0,6).map((app) => (
@@ -122,15 +153,11 @@ const faqSchema = {
         </div>
       </div>
 
-      <!-- Orbit Visual – fixed CLS via contain + fixed size, optimized images.
-           Light mode: orbit lines use border-border (visible on paper), center node bg-card-bg,
-           orbit apps bg-card-bg with border-border + shadow token so they lift off canvas. -->
       <div class="relative mx-auto w-full max-w-[32rem] lg:mr-0 lg:max-w-[36rem]" role="group" aria-label={`${apps.length} applications in orbit — featured`}>
         <div class="orbit-stage relative mx-auto aspect-square w-full max-w-[min(100%,36rem)] overflow-visible">
           <div aria-hidden="true" class="orbit-line orbit-line-1 absolute inset-[9%] rounded-full border border-border"></div>
           <div aria-hidden="true" class="orbit-line orbit-line-2 absolute inset-[24%] rounded-full border border-dashed border-border"></div>
           
-          <!-- Center node – card surface, brand border, no lens flare (glow removed 2026-07-13). Previously had blue 0 0 40px rgba glow that competed with App Grid. -->
           <div class="absolute inset-[35%] grid place-items-center rounded-full border border-border bg-card-bg shadow-sm">
             <div class="absolute inset-px rounded-full bg-gradient-to-b from-[color-mix(in_srgb,var(--mp-text)_6%,transparent)] to-transparent pointer-events-none"></div>
             <div class="relative text-center">
@@ -141,8 +168,7 @@ const faqSchema = {
             </div>
           </div>
 
-          <!-- Orbit apps – limited to 4 featured to keep CSS positions valid; all 11 live in grid below -->
-          {apps.filter((a) => a.featured || ['AuraLinter','Biquadia','Thumb-Dash','Notiary'].includes(a.title)).slice(0,4).map((app, index) => (
+          {featuredApps.slice(0,4).map((app, index) => (
             <a href={app.url} class={`orbit-app orbit-app-${index + 1} absolute grid size-[4.25rem] place-items-center rounded-[16px] border border-border bg-card-bg shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-[transform,border-color,box-shadow] duration-500 hover:scale-110 hover:border-brand-anchor/40 hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)] focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor sm:size-[4.75rem]`} aria-label={`Open ${app.title} — ${app.tagline}`}>
               <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={52} height={52} densities={[1,2]} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" class="size-[2.85rem] rounded-[12px] object-contain transition-transform duration-500 hover:rotate-[-3deg]" />
             </a>
@@ -168,7 +194,6 @@ const faqSchema = {
               }
               const selected = allApps.slice(0, 4);
               const orbitEls = document.querySelectorAll('.orbit-app');
-              // Batch DOM writes in one rAF to avoid forced reflow chain
               requestAnimationFrame(() => {
                 orbitEls.forEach((el, idx) => {
                   if (selected[idx]) {
@@ -188,7 +213,6 @@ const faqSchema = {
               console.error('Orbit randomizer failed', e);
             }
           };
-          // Defer randomization until after LCP – not critical for first paint
           if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 2000 });
           else window.addEventListener('load', run, { once: true });
         })();
@@ -196,7 +220,7 @@ const faqSchema = {
     </div>
   </section>
 
-  <!-- Ticker – theme-aware elevated surface + canvas gradient fade -->
+  <!-- Ticker -->
   <div class="relative overflow-hidden border-y border-border bg-elevated py-3.5">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,var(--mp-canvas)_0%,transparent_8%,transparent_92%,var(--mp-canvas)_100%)] z-10"></div>
     <p class="sr-only">Studio principles: on-device first, no committee software, useful on day one, craft over clutter, and one release at a time.</p>
@@ -213,27 +237,69 @@ const faqSchema = {
     </div>
   </div>
 
-  <!-- Apps Grid – semantic tokens, light visible borders + elevated meta -->
-  <section id="apps" aria-labelledby="apps-title" class="scroll-mt-[5.5rem] border-b border-border">
-    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
+  <!-- Apps Showcase — Option C Hybrid: 4 featured + compact carousel for rest -->
+  <section id="apps-showcase" aria-labelledby="apps-title" class="scroll-mt-[5.5rem] border-b border-border">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
       <div class="grid gap-6 border-b border-border pb-10 md:grid-cols-[1.1fr_0.9fr] md:items-end">
         <div>
           <p class="section-kicker">Application matrix / {String(apps.length).padStart(2, '0')} live • On-device first • Hybrid where needed</p>
           <h2 id="apps-title" class="mt-4 max-w-3xl text-balance text-[clamp(2.4rem,5vw,3.75rem)] font-[650] leading-[0.92] tracking-[-0.05em] text-primary-text">Different problems.<br /><span class="text-muted-text">The same craft-first intelligence.</span></h2>
         </div>
         <div class="max-w-xl md:justify-self-end md:text-right">
-          <p class="text-[0.95rem] leading-[1.7] text-muted-text">Most apps run natively on-device. AuraLinter uses transparent cloud for agentic DSP where needed — audio uploads with clear retention, SSE streaming, compiler-verified kernels. The studio is the connective craft.</p>
+          <p class="text-[0.95rem] leading-[1.7] text-muted-text">Compact showcase — 4 featured titles in full detail, the rest as high-velocity mini cards you can scrub through. Most run on-device; AuraLinter uses transparent cloud for agentic DSP.</p>
           <div class="mt-4 flex flex-wrap gap-1.5 md:justify-end">
             <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.66rem] font-medium uppercase tracking-[0.1em] text-muted-text">iOS 17+ • iPadOS 17+</span>
             <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.66rem] font-medium uppercase tracking-[0.1em] text-muted-text">Swift • Metal • CoreML</span>
+            <span class="rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.66rem] font-medium uppercase tracking-[0.1em] text-muted-text">Reduced scroll • {featuredApps.length}+{remainingApps.length}</span>
           </div>
         </div>
       </div>
 
+      <!-- 4 featured full AppCards -->
       <div class="mt-8 grid items-stretch gap-5 sm:gap-6 lg:gap-7 md:grid-cols-2">
-        {apps.map((app) => (
+        {featuredApps.map((app) => (
           <AppCard {...app} class="md:col-span-1" />
         ))}
+      </div>
+
+      <!-- Remaining 7 as compact horizontal carousel -->
+      <div class="mt-10">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h3 class="font-mono text-[0.7rem] font-bold uppercase tracking-[0.16em] text-muted-text">Rest of the matrix — {remainingApps.length} more • compact</h3>
+            <p class="mt-1 text-[0.85rem] text-muted-text">Scrub → minimal chrome, icon + title + tagline. Open any to dive deeper.</p>
+          </div>
+          <div class="hidden sm:flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-text/60">
+            <span class="h-px w-8 bg-border"></span> Drag / swipe to explore
+          </div>
+        </div>
+
+        <div class="carousel-wrap mt-5 -mx-5 sm:mx-0">
+          <div class="carousel-track" aria-label="Remaining applications" role="list">
+            {remainingApps.map((app) => {
+              const dotLight = app.iconDot?.light ?? '#4A5D6F';
+              return (
+                <article role="listitem" class="snap-card app-mini surface-card group relative flex w-[280px] flex-col rounded-[22px] border bg-card-bg p-5 sm:w-[300px]">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="relative grid size-11 place-items-center rounded-[12px] bg-canvas ring-1 ring-border shadow-sm">
+                      <Image src={app.iconSet.w64} alt={`${app.title} icon`} width={36} height={36} densities={[1,2]} loading="lazy" decoding="async" class="size-7 rounded-[8px] object-contain" />
+                    </div>
+                    <span class="inline-flex items-center gap-1 rounded-full bg-elevated px-2 py-1 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                      <span class="size-1 rounded-full" style={`background:${dotLight}`} aria-hidden="true"></span>{app.category}
+                    </span>
+                  </div>
+                  <h4 class="mt-4 text-[1.05rem] font-semibold leading-tight tracking-[-0.01em] text-primary-text">{app.title}</h4>
+                  <p class="mt-1 line-clamp-2 text-[0.8rem] leading-[1.55] text-muted-text">{app.tagline}</p>
+                  <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                    <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{app.platform}</span>
+                    <a href={app.url} class="inline-flex items-center gap-1 text-[0.78rem] font-medium text-brand-anchor transition-colors group-hover:text-primary-text">Open <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
+                  </div>
+                  <div aria-hidden="true" class="pointer-events-none absolute inset-x-5 bottom-0 h-px origin-left scale-x-0 bg-gradient-to-r from-brand-anchor/0 via-brand-anchor/50 to-brand-anchor/0 opacity-0 transition-all duration-500 group-hover:scale-x-100 group-hover:opacity-100"></div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div class="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-border bg-elevated/60 px-5 py-4">
@@ -246,7 +312,228 @@ const faqSchema = {
     </div>
   </section>
 
-  <!-- Technical Dashboard – tokenized, light gets card surfaces -->
+  <!-- Playground Showcase Carousel -->
+  <section id="playground-showcase" aria-labelledby="playground-title" class="border-b border-border bg-elevated/20">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="section-kicker">Playground • Interactive • 18 tools live</p>
+          <h2 id="playground-title" class="mt-3 max-w-3xl text-balance text-[clamp(2rem,4.5vw,3.25rem)] font-[650] leading-[0.92] tracking-[-0.05em] text-primary-text">Interactive playground<br /><span class="text-muted-text">— built for curiosity.</span></h2>
+          <p class="mt-4 max-w-2xl text-[0.95rem] leading-[1.7] text-muted-text">Shareable math & physics toys with live canvases — Fourier epicycles, double pendulums, optics benches, quantum tunneling, and a live Earth with real weather and ISS tracking. Built for fun, grounded where it maps to shipped apps.</p>
+        </div>
+        <a href="/playground" class="group hidden sm:inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-border bg-card-bg px-4 text-[0.875rem] font-medium text-brand-anchor transition-all hover:border-brand-anchor/30 hover:bg-brand-anchor/10">All playground tools <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
+      </div>
+
+      <div class="carousel-wrap mt-10 -mx-5 sm:mx-0">
+        <div class="carousel-track" aria-label="Playground tools" role="list">
+          {playgroundPicks.map((tool) => {
+            const meta = pillarOf(tool.pillarHint);
+            return (
+              <a href={`/playground/${tool.slug}`} role="listitem" class="snap-card hub-card surface-card group relative flex w-[84vw] max-w-[340px] flex-col overflow-hidden rounded-[24px] border bg-card-bg sm:w-[340px]">
+                <div aria-hidden="true" class="absolute inset-x-0 top-0 h-[3px]" style={`background: linear-gradient(90deg, ${meta.color}, transparent); opacity:0.9;`}></div>
+                <div class="p-6">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="inline-flex items-center gap-1.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">
+                      <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>{meta.label}
+                    </span>
+                    <span class="rounded-full border border-border bg-canvas px-2 py-0.5 font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-text">{tool.isGrounded ? 'Grounded' : 'Toy'}</span>
+                  </div>
+                  <h3 class="mt-4 text-[1.2rem] font-semibold leading-[1.15] tracking-[-0.02em] text-primary-text group-hover:text-primary-cta transition-colors">{tool.title}</h3>
+                  <p class="mt-2 line-clamp-2 text-[0.86rem] leading-[1.6] text-muted-text">{tool.tagline}</p>
+                  <p class="mt-3 line-clamp-2 text-[0.8rem] leading-[1.55] text-muted-text/80">{tool.description}</p>
+                  <div class="mt-5 flex items-center justify-between border-t border-border pt-4">
+                    <span class="text-[0.8rem] font-semibold text-primary-text group-hover:text-primary-cta">Try it <span aria-hidden="true" class="ml-1 transition-transform group-hover:translate-x-0.5">→</span></span>
+                    {tool.relatedApp && <span class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">↳ {tool.relatedApp}</span>}
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3 font-mono text-[0.64rem] uppercase tracking-[0.14em] text-muted-text/70">
+          <span class="inline-flex items-center gap-1.5"><span class="size-1 rounded-full bg-emerald-500"></span>Live canvas • no build step</span>
+          <span class="hidden sm:inline h-3 w-px bg-border"></span>
+          <span class="hidden sm:inline">18 tools • grounded + exploratory</span>
+        </div>
+        <a href="/playground" class="sm:hidden inline-flex text-[0.8rem] font-medium text-brand-anchor hover:text-primary-text">Explore all tools →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trending Signals Strip -->
+  <section id="trending-strip" aria-labelledby="trending-title" class="border-b border-border">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="section-kicker">Signals Journal • Daily · {latestJournalDate ?? 'Live'}</p>
+          <h2 id="trending-title" class="mt-3 text-[clamp(1.8rem,4vw,2.6rem)] font-[650] tracking-[-0.04em] text-primary-text">Trending in the studio's orbit.</h2>
+          <p class="mt-3 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">Top scored items from the latest daily scan — on-device AI, Metal/ANE, local LLMs, DSP, iOS craft, privacy architecture. Score-weighted, source-corroborated, URL-deduped.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          {latestJournalDate && <span class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">{latestJournalDate} • {topSignals.length} signals</span>}
+          <a href="/journal" class="group inline-flex min-h-9 items-center gap-1 rounded-full border border-border bg-elevated px-4 text-[0.8rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Archive →</a>
+        </div>
+      </div>
+
+      {topSignals.length > 0 ? (
+        <div class="carousel-wrap mt-8 -mx-5 sm:mx-0">
+          <div class="carousel-track" aria-label="Trending signals" role="list">
+            {topSignals.map((item) => {
+              const primTag = item.tags[0];
+              const meta = pillarOf(primTag);
+              const srcLabel = sourceLabels[item.source] ?? item.source;
+              return (
+                <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[84vw] max-w-[360px] flex-col rounded-[20px] border bg-card-bg p-5 sm:w-[360px]">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas px-2.5 py-1 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                      <span class="size-1.5 rounded-full" style={`background:${meta.color}`} aria-hidden="true"></span>{meta.label}
+                    </span>
+                    <span class="flex items-center gap-1.5 font-mono text-[0.6rem] text-muted-text">
+                      <span class="rounded bg-elevated px-1.5 py-0.5">{srcLabel}</span>
+                      <span class="font-bold text-primary-text">{item.score}</span>
+                    </span>
+                  </div>
+                  <h3 class="mt-4 line-clamp-3 text-[0.95rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text group-hover:text-primary-cta transition-colors">
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor rounded">
+                      {item.title}
+                    </a>
+                  </h3>
+                  <div class="mt-3 flex flex-wrap items-center gap-2 font-mono text-[0.58rem] text-muted-text">
+                    {item.domain && <span class="rounded-full bg-elevated border border-border px-2 py-0.5">{item.domain}</span>}
+                    {item.sources && item.sources.length > 1 && <span class="text-[0.55rem]">{item.sources.length}× corroborated</span>}
+                  </div>
+                  <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                    <span class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">{new Date(item.publishedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[0.78rem] font-medium text-brand-anchor hover:text-primary-text">Source <span aria-hidden="true">↗</span></a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div class="mt-8 rounded-[20px] border border-dashed border-border bg-elevated/30 p-8 text-center">
+          <p class="text-[0.9rem] text-muted-text">No journal entries yet — daily scan pipeline warms up at 14:00 UTC. Visit <a href="/journal" class="text-brand-anchor hover:text-primary-text underline">/journal</a> for archive.</p>
+        </div>
+      )}
+
+      <div class="mt-6 flex flex-wrap items-center gap-3 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text/70">
+        <span class="inline-flex items-center gap-1.5"><span class="size-1 rounded-full bg-primary-cta"></span>Scored: keyword×3 + artifact + corroboration + recency</span>
+        <span class="hidden sm:inline h-3 w-px bg-border"></span>
+        <a href="/journal#scoring" class="hover:text-primary-text underline decoration-border underline-offset-4">Scoring formula</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blog — Thinking in public (MOVED UP) -->
+  <section aria-labelledby="notes-title" class="border-b border-border">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="section-kicker">Field notes • Building in public • on-device AI journal</p>
+          <h2 id="notes-title" class="mt-4 text-[clamp(2rem,4vw,2.75rem)] font-[650] tracking-[-0.05em] text-primary-text">Thinking in public.</h2>
+          <p class="mt-3 max-w-xl text-[0.95rem] leading-[1.6] text-muted-text">Short notes from inside the build — CoreML experiments, SwiftUI edge cases, Metal shader tricks, and the tiny decisions that make studio software feel fast.</p>
+        </div>
+        <a href="/blog" class="group inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-border bg-elevated px-4 text-[0.875rem] font-medium text-brand-anchor transition-all hover:border-brand-anchor/30 hover:bg-brand-anchor/10">All field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
+      </div>
+
+      <div class="mt-10 grid divide-y divide-border border-y border-border md:grid-cols-3 md:divide-x md:divide-y-0">
+        {posts.map((post, index) => (
+          <article class="group relative flex flex-col py-7 md:px-7 md:first:pl-0 md:last:pr-0">
+            <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Note {String(index + 1).padStart(2, '0')} • {post.data.readingTime} • {post.data.publishedAt.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</p>
+            <h3 class="mt-6 line-clamp-3 text-[1.35rem] font-semibold leading-[1.15] tracking-[-0.02em] text-primary-text transition-colors group-hover:text-primary-cta">{post.data.title}</h3>
+            <p class="mt-3 line-clamp-3 text-[0.9rem] leading-[1.6] text-muted-text">{post.data.description}</p>
+            <a href={`/blog/${post.id}`} aria-label={`Read: ${post.data.title}`} class="mt-auto inline-flex min-h-10 items-center pt-6 text-[0.875rem] font-semibold text-primary-text before:absolute before:inset-0 hover:text-primary-cta focus-visible:outline-none">Read note <span aria-hidden="true" class="ml-1.5 transition-transform group-hover:translate-x-1">→</span></a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Gear Picks Carousel -->
+  <section id="gear-picks" aria-labelledby="gear-title" class="border-b border-border bg-elevated/30">
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="section-kicker">Studio gear • Affiliate picks • What we actually use</p>
+          <h2 id="gear-title" class="mt-3 max-w-3xl text-balance text-[clamp(2rem,4.5vw,2.9rem)] font-[650] leading-[0.95] tracking-[-0.05em] text-primary-text">Studio gear picks.</h2>
+          <p class="mt-3 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">Hardware we run when building Biquadia, nymic, MotionLink — audio interfaces, mics, headphones, reference books, storage. Curated links use Amazon Associate tag <code class="font-mono text-[0.75rem] bg-card-bg border border-border px-1.5 py-0.5 rounded">engineersport-20</code>. Disclosure at <a href="/privacy#affiliates" class="text-brand-anchor hover:text-primary-text underline decoration-border underline-offset-4">/privacy#affiliates</a>.</p>
+        </div>
+        <a href="/resources#gear" class="group hidden sm:inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-border bg-card-bg px-4 text-[0.875rem] font-medium text-brand-anchor transition-all hover:border-brand-anchor/30 hover:bg-brand-anchor/10">All gear <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
+      </div>
+
+      <div class="carousel-wrap mt-10 -mx-5 sm:mx-0">
+        <div class="carousel-track" aria-label="Gear picks" role="list">
+          {gearPicks.map((gear) => (
+            <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[220px] flex-col overflow-hidden rounded-[20px] border bg-card-bg sm:w-[250px]">
+              <div class="relative aspect-square w-full overflow-hidden bg-canvas">
+                {gear.image ? (
+                  <img src={gear.image} alt={gear.title} width={250} height={250} loading="lazy" decoding="async" class="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.03]" />
+                ) : (
+                  <div class="grid h-full w-full place-items-center bg-elevated text-muted-text/50">
+                    <span class="font-mono text-[0.6rem] uppercase tracking-[0.14em]">No image</span>
+                  </div>
+                )}
+                <div class="absolute left-3 top-3 flex gap-1.5">
+                  <span class="rounded-full bg-card-bg/90 backdrop-blur border border-border px-2 py-1 font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-text">{gear.category}</span>
+                </div>
+              </div>
+              <div class="flex flex-1 flex-col p-4">
+                <h3 class="line-clamp-2 text-[0.88rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text">{gear.title}</h3>
+                <p class="mt-2 line-clamp-2 text-[0.76rem] leading-[1.5] text-muted-text/80">{gear.note}</p>
+                <div class="mt-auto pt-4">
+                  <div class="flex items-center justify-between">
+                    {gear.price ? (
+                      <span class="text-[0.9rem] font-bold tracking-tight text-primary-text">{gear.price} <span class="font-mono text-[0.6rem] font-normal text-muted-text">{gear.currency}</span></span>
+                    ) : <span class="text-[0.75rem] text-muted-text">Amazon</span>}
+                    <a href={gear.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-1 rounded-full bg-primary-text px-3 py-1.5 text-[0.72rem] font-semibold text-canvas transition-opacity hover:opacity-90">View <span aria-hidden="true" class="hidden sm:inline">→</span></a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-border bg-card-bg px-5 py-3">
+        <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Affiliate disclosure: purchases may earn commission • <a href="/privacy#affiliates" class="text-brand-anchor hover:text-primary-text underline">privacy#affiliates</a> • Tag <code class="font-mono bg-elevated px-1 rounded">engineersport-20</code></p>
+        <a href="/shop" class="text-[0.8rem] font-medium text-muted-text hover:text-primary-text">Shop archive →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Operating Principles — MOVED DOWN -->
+  <section aria-labelledby="operating-title" class="relative overflow-hidden border-b border-border bg-canvas/40">
+    <div aria-hidden="true" class="absolute -right-32 top-1/2 hidden size-[28rem] -translate-y-1/2 rounded-full border border-border lg:block"></div>
+    <div class="mx-auto grid max-w-[88rem] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:px-10">
+      <div class="lg:sticky lg:top-28 lg:self-start">
+        <p class="section-kicker">Operating system • Studio ethos</p>
+        <h2 id="operating-title" class="mt-4 text-balance text-[clamp(2rem,4vw,2.8rem)] font-[650] leading-[0.95] tracking-[-0.05em] text-primary-text">A studio built for momentum, not meetings.</h2>
+        <p class="mt-5 max-w-md text-[0.95rem] leading-[1.7] text-muted-text">Small surface area. Direct feedback from real hands. Enough rigor to last, enough speed to stay alive. Craft over clutter.</p>
+        <div class="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-elevated px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">
+          <span class="size-1 rounded-full bg-muted-text/60"></span> est. 2023 • San Francisco
+        </div>
+      </div>
+
+      <ol class="divide-y divide-border border-y border-border" role="list">
+        {[
+          { n:'01', k:'NOTICE', title:'Start with friction.', desc:'Find the repeated annoyance, the expert workflow, or the tiny moment everyone else decided was too small to deserve software. Thats where leverage lives.', c:'text-primary-cta' },
+          { n:'02', k:'REDUCE', title:'Cut until the idea becomes obvious.', desc:'The best version is rarely the biggest. It is the one whose purpose survives every subtraction. Ship half the features, twice the craft.', c:'text-brand-anchor' },
+          { n:'03', k:'SHIP', title:'Put it in real hands.', desc:'A shipped product teaches more than a perfect prototype. Release, listen, refine, repeat. Telemetry is conversation, not surveillance.', c:'text-muted-text' },
+        ].map((step) => (
+          <li class="group grid gap-4 py-7 sm:grid-cols-[5.5rem_1fr] sm:py-8">
+            <span class:list={['font-mono text-[0.72rem] font-bold tracking-[0.12em]', step.c]}>{step.n} / {step.k}</span>
+            <div><h3 class="text-[1.35rem] font-semibold tracking-[-0.02em] text-primary-text transition-colors">{step.title}</h3><p class="mt-2 max-w-[38rem] text-[0.95rem] leading-[1.7] text-muted-text">{step.desc}</p></div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Technical Dashboard — MOVED DOWN -->
   <section class="relative border-b border-border bg-elevated/40" aria-labelledby="tech-title">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_70%_40%,color-mix(in_srgb,var(--mp-anchor)_6%,transparent),transparent_60%)]"></div>
     <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
@@ -315,60 +602,7 @@ const faqSchema = {
     </div>
   </section>
 
-  <!-- Operating Principles – tokenized -->
-  <section aria-labelledby="operating-title" class="relative overflow-hidden border-b border-border bg-canvas/40">
-    <div aria-hidden="true" class="absolute -right-32 top-1/2 hidden size-[28rem] -translate-y-1/2 rounded-full border border-border lg:block"></div>
-    <div class="mx-auto grid max-w-[88rem] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:px-10">
-      <div class="lg:sticky lg:top-28 lg:self-start">
-        <p class="section-kicker">Operating system • Studio ethos</p>
-        <h2 id="operating-title" class="mt-4 text-balance text-[clamp(2rem,4vw,2.8rem)] font-[650] leading-[0.95] tracking-[-0.05em] text-primary-text">A studio built for momentum, not meetings.</h2>
-        <p class="mt-5 max-w-md text-[0.95rem] leading-[1.7] text-muted-text">Small surface area. Direct feedback from real hands. Enough rigor to last, enough speed to stay alive. Craft over clutter.</p>
-        <div class="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-elevated px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-text">
-          <span class="size-1 rounded-full bg-muted-text/60"></span> est. 2023 • San Francisco
-        </div>
-      </div>
-
-      <ol class="divide-y divide-border border-y border-border" role="list">
-        {[
-          { n:'01', k:'NOTICE', title:'Start with friction.', desc:'Find the repeated annoyance, the expert workflow, or the tiny moment everyone else decided was too small to deserve software. Thats where leverage lives.', c:'text-primary-cta' },
-          { n:'02', k:'REDUCE', title:'Cut until the idea becomes obvious.', desc:'The best version is rarely the biggest. It is the one whose purpose survives every subtraction. Ship half the features, twice the craft.', c:'text-brand-anchor' },
-          { n:'03', k:'SHIP', title:'Put it in real hands.', desc:'A shipped product teaches more than a perfect prototype. Release, listen, refine, repeat. Telemetry is conversation, not surveillance.', c:'text-muted-text' },
-        ].map((step) => (
-          <li class="group grid gap-4 py-7 sm:grid-cols-[5.5rem_1fr] sm:py-8">
-            <span class:list={['font-mono text-[0.72rem] font-bold tracking-[0.12em]', step.c]}>{step.n} / {step.k}</span>
-            <div><h3 class="text-[1.35rem] font-semibold tracking-[-0.02em] text-primary-text transition-colors">{step.title}</h3><p class="mt-2 max-w-[38rem] text-[0.95rem] leading-[1.7] text-muted-text">{step.desc}</p></div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
-
-  <!-- Blog – semantic tokens -->
-  <section aria-labelledby="notes-title" class="border-b border-border">
-    <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p class="section-kicker">Field notes • Building in public • on-device AI journal</p>
-          <h2 id="notes-title" class="mt-4 text-[clamp(2rem,4vw,2.75rem)] font-[650] tracking-[-0.05em] text-primary-text">Thinking in public.</h2>
-          <p class="mt-3 max-w-xl text-[0.95rem] leading-[1.6] text-muted-text">Short notes from inside the build — CoreML experiments, SwiftUI edge cases, Metal shader tricks, and the tiny decisions that make studio software feel fast.</p>
-        </div>
-        <a href="/blog" class="group inline-flex min-h-10 w-fit items-center gap-1.5 rounded-full border border-border bg-elevated px-4 text-[0.875rem] font-medium text-brand-anchor transition-all hover:border-brand-anchor/30 hover:bg-brand-anchor/10">All field notes <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span></a>
-      </div>
-
-      <div class="mt-10 grid divide-y divide-border border-y border-border md:grid-cols-3 md:divide-x md:divide-y-0">
-        {posts.map((post, index) => (
-          <article class="group relative flex flex-col py-7 md:px-7 md:first:pl-0 md:last:pr-0">
-            <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Note {String(index + 1).padStart(2, '0')} • {post.data.readingTime} • {post.data.publishedAt.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</p>
-            <h3 class="mt-6 line-clamp-3 text-[1.35rem] font-semibold leading-[1.15] tracking-[-0.02em] text-primary-text transition-colors group-hover:text-primary-cta">{post.data.title}</h3>
-            <p class="mt-3 line-clamp-3 text-[0.9rem] leading-[1.6] text-muted-text">{post.data.description}</p>
-            <a href={`/blog/${post.id}`} aria-label={`Read: ${post.data.title}`} class="mt-auto inline-flex min-h-10 items-center pt-6 text-[0.875rem] font-semibold text-primary-text before:absolute before:inset-0 hover:text-primary-cta focus-visible:outline-none">Read note <span aria-hidden="true" class="ml-1.5 transition-transform group-hover:translate-x-1">→</span></a>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- Closing CTA – tokenized, light card distinct -->
+  <!-- Closing CTA -->
   <section aria-labelledby="closing-title" class="relative isolate overflow-hidden">
     <div aria-hidden="true" class="absolute inset-0 -z-10 bg-[radial-gradient(90%_70%_at_50%_120%,color-mix(in_srgb,var(--mp-cta)_12%,transparent),transparent_60%),radial-gradient(60%_50%_at_20%_30%,color-mix(in_srgb,var(--mp-anchor)_8%,transparent),transparent_60%)]"></div>
     <div class="mx-auto max-w-[88rem] px-5 py-20 sm:px-8 sm:py-28 lg:px-10">
