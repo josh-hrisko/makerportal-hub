@@ -45,6 +45,10 @@ export const socials: NavLink[] = [
   { label: 'GitHub', href: 'https://github.com/makerportal', external: true },
   { label: 'X / Twitter', href: 'https://x.com/maker_portal', external: true },
   { label: 'YouTube', href: 'https://www.youtube.com/@MakerPortal', external: true },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/makerportal', external: true },
+  { label: 'Instagram', href: 'https://www.instagram.com/makerportal/', external: true },
+  { label: 'Reddit', href: 'https://www.reddit.com/user/Makerportal/', external: true },
+  { label: 'Facebook', href: 'https://www.facebook.com/makerportal/', external: true },
   // Ecosystem cluster — same-tab per D-009, not blank
   { label: 'Studio journal', href: 'https://makersportal.com', external: false },
   { label: 'RSS', href: '/rss.xml' },

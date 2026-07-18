@@ -120,7 +120,7 @@ const footerLinkClass = (href: string) =>
  * Only github/x/youtube get target=_blank.
  */
 const isTrulyExternal = (href: string) =>
-  href.includes('github.com') || href.includes('x.com/') || href.includes('youtube.com') || href.includes('youtu.be');
+  href.includes('github.com') || href.includes('x.com/') || href.includes('youtube.com') || href.includes('youtu.be') || href.includes('linkedin.com') || href.includes('facebook.com') || href.includes('reddit.com') || href.includes('instagram.com');
 
 const linkAttrs = (href: string, external?: boolean) => {
   if (!external) return { href };
