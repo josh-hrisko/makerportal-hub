@@ -1,0 +1,618 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import GearCarousel from '../../components/GearCarousel.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import KitBuilder from '../../components/KitBuilder.astro';
+import ExportGate from '../../components/ExportGate.astro';
+import Math from '../../components/Math.astro';
+import SimSponsorChip from '../../components/SimSponsorChip.astro';
+import { affiliateLinks, resolveAffiliateLink, MODAL_REFERRAL_URL, buildSaasPartnerUrl } from '../../data/affiliate-links';
+import { kitForSimulator } from '../../data/kits';
+
+const gear = affiliateLinks
+  .filter((l) => l.relatedTo?.includes('modal-gpu-benchmarker'))
+  .map(resolveAffiliateLink)
+  .slice(0, 6);
+const kit = kitForSimulator('modal-gpu-benchmarker');
+const modal = buildSaasPartnerUrl(MODAL_REFERRAL_URL, 'https://modal.com/');
+
+const title = 'Client vs Serverless GPU Benchmarker — measured, never estimated | MakerPortal';
+const description =
+  'Run real WebGPU compute workloads shaped like Whisper-tiny inference on your own device, then race them against a serverless GPU endpoint you deploy on Modal with the provided script. Every chart bar is measured on your hardware or your endpoint.';
+const canonical = new URL('/playground/modal-gpu-benchmarker', Astro.site);
+
+const softwareSchema = { '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Client vs Serverless GPU Benchmarker', url: canonical.toString(), applicationCategory: 'DeveloperApplication', operatingSystem: 'Any (browser-based, WebGPU)', description, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } };
+const breadcrumbSchema = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+  { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+  { '@type': 'ListItem', position: 3, name: 'GPU Benchmarker', item: canonical.toString() },
+] };
+
+const faqs = [
+  {
+    q: 'Where do the numbers on the chart come from?',
+    a: 'Two places only: (1) WebGPU compute passes executed on your device right now, timed around queue.onSubmittedWorkDone() and verified against a CPU reference before being reported; (2) JSON returned by a Modal endpoint that you deployed yourself with the script on this page, plus the wall-clock round-trip your browser measured. There is no third source. If you have not run a benchmark, the chart is empty — this page never shows invented performance data.',
+  },
+  {
+    q: 'Why matrix multiplies instead of running actual Whisper in the browser?',
+    a: 'Transformer inference time is dominated by GEMMs. The workloads here use Whisper-tiny’s real encoder dimensions (d_model 384, MLP 1536, 1500 mel frames), so the measured sustained GFLOPS is representative of the compute your device could bring to that model — without downloading 40 MB of weights or an ONNX runtime. The Math section shows the exact FLOP arithmetic that connects the two, and labels the derived per-pass time as a compute-bound lower bound.',
+  },
+  {
+    q: 'Is there a shared Modal API key I can use?',
+    a: 'No. Shipping a shared key in a static site would expose it to abuse within hours. The trade we chose: a complete, copy-paste Modal script you can deploy on the free tier in about three minutes, and the page benchmarks your endpoint. Your endpoint URL and optional auth token stay in localStorage — this site has no backend and never sees them.',
+  },
+  {
+    q: 'What is the naive-kernel caveat on the WebGPU number?',
+    a: 'The WGSL kernel is a straightforward tiled matmul — one output element per thread, no subgroup ops or shared-memory tiling beyond the workgroup. Optimized kernels (e.g. wonnx, TVM, or hand-tuned WGSL) commonly run 2–5× faster on the same hardware. So treat the on-device number as a floor for your GPU, not its ceiling. The serverless side reports torch.matmul on cuBLAS, which is near-optimal — an intentionally asymmetric but honestly-labeled comparison.',
+  },
+  {
+    q: 'How would I score transcription accuracy (WER)?',
+    a: 'Word Error Rate = (substitutions + deletions + insertions) / reference words, via Levenshtein alignment on normalized text. The Modal script includes an optional Whisper-large-v3 endpoint; run the same audio through a local whisper-tiny and the endpoint, then score both against a reference transcript. We do not display WER here because this page has no ground-truth transcript to score against — the formula is in the Math section.',
+  },
+];
+const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+
+const modalPy = `# modal_bench.py — deploy: pip install modal && modal deploy modal_bench.py
+# Free tier works. Prints your endpoint URL on deploy.
+import time
+import modal
+
+app = modal.App("mp-gpu-bench")
+image = modal.Image.debian_slim().pip_install("torch", "numpy", "fastapi[standard]")
+
+@app.function(image=image, gpu="A10G", timeout=120)
+@modal.fastapi_endpoint(method="POST")
+def bench(req: dict):
+    import torch
+    size = int(req.get("size", 2048))
+    iters = int(req.get("iters", 20))
+    dev = torch.device("cuda")
+    a = torch.randn(size, size, device=dev)
+    b = torch.randn(size, size, device=dev)
+    torch.cuda.synchronize()
+    t0 = time.perf_counter()          # warm-up excluded from timing
+    for _ in range(3):
+        (a @ b)
+    torch.cuda.synchronize()
+    t0 = time.perf_counter()
+    for _ in range(iters):
+        c = a @ b
+    torch.cuda.synchronize()
+    dt = time.perf_counter() - t0
+    flops = 2 * size**3 * iters
+    return {
+        "gpu": torch.cuda.get_device_name(0),
+        "vram_gb": round(torch.cuda.get_device_properties(0).total_memory / 1e9, 1),
+        "size": size, "iters": iters,
+        "seconds": round(dt, 4),
+        "tflops": round(flops / dt / 1e12, 2),
+        "checksum": float(c[0, 0]),   # proves the multiply actually ran
+    }
+
+@app.function(image=image, gpu="A10G")
+@modal.fastapi_endpoint(method="GET")
+def health():
+    return {"ok": True, "t": time.time()}
+
+# Optional: real Whisper-large-v3 transcription endpoint (adds ~3 GB image):
+#   image2 = image.pip_install("openai-whisper")
+#   @app.function(image=image2, gpu="A10G", timeout=300)
+#   @modal.fastapi_endpoint(method="POST")
+#   def transcribe(req: dict):
+#       import base64, tempfile, whisper
+#       model = whisper.load_model("large-v3")
+#       with tempfile.NamedTemporaryFile(suffix=".wav") as f:
+#           f.write(base64.b64decode(req["wav_b64"])); f.flush()
+#           t0 = time.perf_counter()
+#           out = model.transcribe(f.name)
+#       return {"text": out["text"], "seconds": time.perf_counter() - t0}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+  <PlaygroundShell
+    title="Client vs Serverless GPU Benchmarker"
+    lead="Your GPU versus a cloud GPU — measured, never estimated. Run Whisper-tiny-shaped compute workloads on your own device through WebGPU, deploy the provided script to Modal, and race the two. Every bar on the chart comes from a run you executed."
+    pillarHint="on-device-ai"
+  >
+    <!-- 1 · SIMULATOR -->
+    <section class="border-b border-border" aria-labelledby="bench-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <h2 id="bench-title" class="sr-only">GPU benchmark</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <!-- Client side -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-[0.95rem]">Your device — WebGPU</h3>
+              <span id="webgpu-badge" class="rounded-full border border-border bg-elevated px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted-text">checking…</span>
+            </div>
+            <p class="mt-1 font-mono text-[0.65rem] text-muted-text" id="adapter-info">—</p>
+            <label class="control-label mt-3"><span>Workload (Whisper-tiny dims)</span>
+              <select id="cl-work" class="rounded-[8px] border border-border bg-canvas px-2 py-1 font-mono text-[0.68rem]">
+                <option value="attn">Attention proj 1500×384 · 384×384</option>
+                <option value="mlp">MLP 1500×384 · 384×1536</option>
+                <option value="big">Square 1024×1024 · 1024×1024</option>
+              </select>
+            </label>
+            <label class="control-label"><span>Iterations</span><output id="out-iters">20</output><input id="sl-iters" type="range" min="5" max="60" step="5" value="20" /></label>
+            <button id="btn-client-bench" class="mt-3 rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas hover:opacity-90 disabled:opacity-40" disabled>Run on this device</button>
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.7rem] leading-[1.5] space-y-1">
+              <div class="flex justify-between"><span>Status</span><span id="cl-status">idle</span></div>
+              <div class="flex justify-between"><span>Wall time</span><span id="cl-time">—</span></div>
+              <div class="flex justify-between"><span>Sustained</span><span id="cl-gflops">—</span></div>
+              <div class="flex justify-between"><span>CPU cross-check</span><span id="cl-verify">—</span></div>
+              <div class="flex justify-between"><span>Whisper-tiny encoder pass ≥</span><span id="cl-derived">—</span></div>
+            </div>
+            <p class="mt-2 text-[0.68rem] leading-[1.5] text-muted-text">Naive tiled WGSL kernel — treat this as your GPU's <em>floor</em>, not ceiling. Derived encoder time is a compute-bound lower bound from the FLOP arithmetic in the Math section.</p>
+          </div>
+
+          <!-- Server side -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Serverless GPU — your Modal endpoint</h3>
+            <p class="mt-1 text-[0.75rem] leading-[1.5] text-muted-text">Deploy the script in the Code section (~3 min, free tier), paste the printed <code>bench</code> URL. URL + token live in your localStorage only.</p>
+            <label class="mt-3 block">
+              <span class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Endpoint URL</span>
+              <input id="modal-url" type="url" placeholder="https://you--mp-gpu-bench-bench.modal.run" class="mt-1 w-full rounded-[10px] border border-border bg-canvas px-3 py-2 font-mono text-[0.72rem]" />
+            </label>
+            <label class="mt-2 block">
+              <span class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Bearer token (optional, if you added auth)</span>
+              <input id="modal-token" type="password" autocomplete="off" class="mt-1 w-full rounded-[10px] border border-border bg-canvas px-3 py-2 font-mono text-[0.72rem]" />
+            </label>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button id="btn-cold" class="pill-btn">Ping (cold start)</button>
+              <button id="btn-remote-bench" class="rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas hover:opacity-90">Run on Modal</button>
+            </div>
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.7rem] leading-[1.5] space-y-1">
+              <div class="flex justify-between"><span>Status</span><span id="rm-status">no endpoint</span></div>
+              <div class="flex justify-between"><span>GPU (reported)</span><span id="rm-gpu">—</span></div>
+              <div class="flex justify-between"><span>VRAM (reported)</span><span id="rm-vram">—</span></div>
+              <div class="flex justify-between"><span>Round trip</span><span id="rm-rtt">—</span></div>
+              <div class="flex justify-between"><span>GPU compute (reported)</span><span id="rm-compute">—</span></div>
+              <div class="flex justify-between"><span>Sustained (reported)</span><span id="rm-tflops">—</span></div>
+            </div>
+            <div class="mt-3">
+              <SimSponsorChip />
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 rounded-[16px] border border-border bg-card-bg p-4">
+          <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Measured results — empty until you run something</p>
+          <canvas id="chart-canvas" width="1100" height="260" class="mt-3 block w-full rounded-[10px] border border-border bg-canvas"></canvas>
+          <p class="mt-2 text-[0.68rem] text-muted-text">Left group: sustained compute (GFLOPS, log scale). Right group: end-to-end latency for one benchmark call (ms). Client bars are your device; server bars are your endpoint's self-reported GPU timing plus your measured network round trip.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · ANATOMY -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy: what actually gets measured</h2>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.1rem] font-[650] text-primary-text">On-device path</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Adapter request.</strong> <code>navigator.gpu.requestAdapter()</code> → device. The badge shows vendor/architecture from <code>adapter.info</code> where the browser exposes it.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Buffers + WGSL dispatch.</strong> A and B matrices fill with deterministic pseudo-random values, upload to storage buffers, and an 8×8-workgroup kernel computes C = A·B. Timing wraps <code>queue.onSubmittedWorkDone()</code>, so it includes real submission + execution, not just JS time.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Correctness gate.</strong> Four output elements are recomputed on the CPU and compared within 0.5% relative tolerance. If the check fails, the run is discarded and reported as failed — a wrong fast kernel is worthless.</p></li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="text-[1.1rem] font-[650] text-primary-text">Serverless path</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Cold start ping.</strong> First GET after idle spins up a container — the round trip you measure <em>is</em> the cold start experience. Ping again immediately to see the warm number; the difference is Modal's scale-from-zero cost.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Benchmark POST.</strong> Your endpoint runs <code>torch.matmul</code> on cuBLAS with explicit <code>cuda.synchronize()</code> fencing and returns GPU name, VRAM, seconds, and TFLOPS. The browser adds its own measured round trip. Two clocks, both real, clearly separated in the readout.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The tradeoff you're staring at.</strong> Client: zero network, zero cost, limited VRAM and thermals. Serverless: 24 GB VRAM and cuBLAS throughput, but you pay the round trip (and cold starts) every time the pool scales from zero. This is exactly the decision AuraLinter's verification backend faces — batch codegen checks tolerate cold starts; interactive lint passes don't.</p></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · GEAR -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Local inference stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Edge GPUs · accelerators
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <GearCarousel gear={gear} />
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- 4 · KIT BUILDER -->
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Reproduce the client-vs-serverless tradeoff on physical hardware before committing to a cloud GPU bill.</p>
+          <div class="mt-10">
+            <KitBuilder kit={kit} />
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- 5 · MATH -->
+    <section class="border-b border-border" aria-labelledby="math-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The arithmetic, in full</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">GEMM FLOPs</p>
+            <Math math="F = 2\,M\,K\,N \cdot \text{iters},\qquad \text{GFLOPS} = F / (10^9\, t)" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Each output element needs K multiplies + K adds. The attention workload (M=1500, K=N=384) is 0.44 GFLOP per pass; the MLP workload 1.77 GFLOP. t is measured wall time around onSubmittedWorkDone.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Whisper-tiny encoder lower bound</p>
+            <Math math="F_{enc} \approx L\,(8\,S\,d^2 + 4\,S^2 d),\quad t_{min} = F_{enc}/\text{GFLOPS}" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">L=4 layers, S=1500 frames, d=384: QKV/out projections + MLP ≈ 8Sd², attention scores ≈ 4S²d → ≈ 21 GFLOP per 30 s window. Dividing by your measured sustained rate gives a compute-bound floor — memory stalls only make it slower, so it is honestly a ≥ bound.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Word Error Rate</p>
+            <Math math="\text{WER} = \frac{S + D + I}{N_{ref}}" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Substitutions, deletions, insertions from Levenshtein alignment over normalized words. Not charted here — this page has no ground-truth transcript, and we do not invent one. Score your own audio via the optional transcribe endpoint.</p>
+          </div>
+        </div>
+        <div class="mt-6 rounded-[16px] border border-border bg-elevated/40 p-5">
+          <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Offload decision inequality</p>
+          <Math math="t_{remote} = t_{rtt} + t_{queue} + F/R_{cloud} \;\lessgtr\; t_{local} = F/R_{device}" display />
+          <p class="mt-2 max-w-3xl text-[0.78rem] leading-[1.6] text-muted-text">Offloading wins when the cloud's throughput advantage outweighs round trip + queueing. With your two measured rates R and your measured RTT, the crossover workload size F* = t_rtt · R_device · R_cloud / (R_cloud − R_device) tells you how big a job must be before the network pays for itself. The export below computes F* from your actual runs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · CODE -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Deploy the serverless side — complete Modal script</h2>
+        <p class="mt-3 max-w-2xl text-[0.92rem] text-muted-text"><code>modal deploy modal_bench.py</code> prints two URLs; paste the <code>bench</code> one above. Free-tier credits cover this comfortably. The commented block adds a real Whisper-large-v3 transcription endpoint. <a href={modal.url} target="_blank" rel={modal.rel} class="text-brand-anchor">Create a Modal account ↗</a></p>
+        <div class="mt-5 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
+          <Code code={modalPy} lang="python" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Aha toast -->
+    <div id="gb-aha-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Verified run · Aha moment</p>
+      <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text" id="gb-aha-text">Benchmark verified against CPU reference.</p>
+      <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">Ship the heavy half of this pipeline serverless — the script below deploys in ~3 minutes.</p>
+      <div class="mt-3 flex gap-2">
+        <a id="gb-aha-cta" href={modal.url} target="_blank" rel={modal.rel} class="pointer-events-auto inline-flex items-center justify-center rounded-full bg-primary-text px-4 py-2 text-[0.82rem] font-semibold text-canvas hover:opacity-90">Deploy on Modal ↗</a>
+        <button id="gb-aha-dismiss" type="button" class="pointer-events-auto rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text hover:text-primary-text">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- 7 · EXPORT GATE -->
+    <ExportGate
+      simulator="modal-gpu-benchmarker"
+      fileName="gpu-benchmark-report.json"
+      mimeType="application/json"
+      title="Export your benchmark report"
+      description="Everything you measured this session — device GFLOPS with verification status, endpoint timings, RTT, and the computed offload crossover F* — as JSON for your infra decision doc."
+      fileExtension="json"
+    />
+
+    <!-- FAQ -->
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted)}
+  .pill-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
+  .control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+  .control-label input[type=range]{grid-column:1/-1;accent-color:var(--mp-cta)}
+</style>
+
+<script>
+// @ts-nocheck
+function initGpuBench(){
+  const chartC=document.getElementById('chart-canvas');
+  if(!chartC || chartC.dataset.init) return; chartC.dataset.init='true';
+  const cCtx=chartC.getContext('2d');
+  const dpr=Math.min(devicePixelRatio||1,2);
+  {const W=chartC.width,H=chartC.height;chartC.width=W*dpr;chartC.height=H*dpr;chartC.style.width='100%';cCtx.scale(dpr,dpr);chartC._w=W;chartC._h=H;}
+
+  const $=id=>document.getElementById(id);
+  const badge=$('webgpu-badge'), adapterInfo=$('adapter-info');
+  const clStatus=$('cl-status'), clTime=$('cl-time'), clGflops=$('cl-gflops'), clVerify=$('cl-verify'), clDerived=$('cl-derived');
+  const rmStatus=$('rm-status'), rmGpu=$('rm-gpu'), rmVram=$('rm-vram'), rmRtt=$('rm-rtt'), rmCompute=$('rm-compute'), rmTflops=$('rm-tflops');
+  const urlInput=$('modal-url'), tokenInput=$('modal-token');
+  const SIM='modal-gpu-benchmarker';
+
+  try{ urlInput.value=localStorage.getItem('mp_modal_url')||''; tokenInput.value=localStorage.getItem('mp_modal_token')||''; }catch{}
+  urlInput.addEventListener('change',()=>{try{localStorage.setItem('mp_modal_url',urlInput.value.trim());}catch{}});
+  tokenInput.addEventListener('change',()=>{try{localStorage.setItem('mp_modal_token',tokenInput.value.trim());}catch{}});
+
+  // measured-state — everything starts null; chart only draws non-null
+  const R={clientGflops:null, clientMs:null, clientWork:null, verified:null,
+           remoteTflops:null, remoteComputeMs:null, remoteRttMs:null, remoteGpu:null, remoteVram:null,
+           coldMs:null, warmMs:null};
+
+  // ---------- WebGPU ----------
+  let device=null;
+  async function initGpu(){
+    if(!('gpu' in navigator)){ badge.textContent='not supported'; badge.classList.add('text-red-500'); adapterInfo.textContent='WebGPU unavailable in this browser — the serverless column still works.'; return; }
+    try{
+      const adapter=await navigator.gpu.requestAdapter();
+      if(!adapter){ badge.textContent='no adapter'; return; }
+      device=await adapter.requestDevice();
+      badge.textContent='WebGPU ready'; badge.classList.add('text-emerald-600');
+      const info=adapter.info||{};
+      adapterInfo.textContent=[info.vendor,info.architecture,info.device].filter(Boolean).join(' · ')||'adapter details not exposed by this browser';
+      $('btn-client-bench').disabled=false;
+    }catch(e){ badge.textContent='init failed'; adapterInfo.textContent=String(e); }
+  }
+  initGpu();
+
+  const WGSL=`
+struct Dims { M:u32, K:u32, N:u32, pad:u32 };
+@group(0) @binding(0) var<storage, read> A : array<f32>;
+@group(0) @binding(1) var<storage, read> B : array<f32>;
+@group(0) @binding(2) var<storage, read_write> C : array<f32>;
+@group(0) @binding(3) var<uniform> dims : Dims;
+@compute @workgroup_size(8,8)
+fn main(@builtin(global_invocation_id) gid : vec3<u32>) {
+  let r = gid.y; let c = gid.x;
+  if (r >= dims.M || c >= dims.N) { return; }
+  var acc : f32 = 0.0;
+  for (var k : u32 = 0u; k < dims.K; k = k + 1u) {
+    acc = acc + A[r * dims.K + k] * B[k * dims.N + c];
+  }
+  C[r * dims.N + c] = acc;
+}`;
+
+  function prng(seed){ let s=seed>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return (s/4294967296)*2-1; }; }
+
+  async function runClientBench(){
+    if(!device) return;
+    const btn=$('btn-client-bench'); btn.disabled=true;
+    const work=$('cl-work').value;
+    const [M,K,N]= work==='attn'?[1500,384,384] : work==='mlp'?[1500,384,1536] : [1024,1024,1024];
+    const iters=parseInt($('sl-iters').value,10);
+    clStatus.textContent='building buffers…';
+    try{
+      const rA=prng(42), rB=prng(1337);
+      const A=new Float32Array(M*K); for(let i=0;i<A.length;i++)A[i]=rA()*0.1;
+      const B=new Float32Array(K*N); for(let i=0;i<B.length;i++)B[i]=rB()*0.1;
+      const mk=(arr,usage)=>{const b=device.createBuffer({size:arr.byteLength,usage});device.queue.writeBuffer(b,0,arr);return b;};
+      const bufA=mk(A,GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST);
+      const bufB=mk(B,GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST);
+      const bufC=device.createBuffer({size:M*N*4,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC});
+      const bufD=mk(new Uint32Array([M,K,N,0]),GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST);
+      const mod=device.createShaderModule({code:WGSL});
+      const pipe=device.createComputePipeline({layout:'auto',compute:{module:mod,entryPoint:'main'}});
+      const bind=device.createBindGroup({layout:pipe.getBindGroupLayout(0),entries:[
+        {binding:0,resource:{buffer:bufA}},{binding:1,resource:{buffer:bufB}},
+        {binding:2,resource:{buffer:bufC}},{binding:3,resource:{buffer:bufD}}]});
+      // warm-up
+      let enc=device.createCommandEncoder(); let pass=enc.beginComputePass();
+      pass.setPipeline(pipe); pass.setBindGroup(0,bind);
+      pass.dispatchWorkgroups(Math.ceil(N/8),Math.ceil(M/8)); pass.end();
+      device.queue.submit([enc.finish()]);
+      await device.queue.onSubmittedWorkDone();
+      clStatus.textContent=`running ${iters} iters…`;
+      const t0=performance.now();
+      enc=device.createCommandEncoder();
+      for(let i=0;i<iters;i++){
+        const p=enc.beginComputePass();
+        p.setPipeline(pipe); p.setBindGroup(0,bind);
+        p.dispatchWorkgroups(Math.ceil(N/8),Math.ceil(M/8)); p.end();
+      }
+      device.queue.submit([enc.finish()]);
+      await device.queue.onSubmittedWorkDone();
+      const dt=(performance.now()-t0)/1000;
+      // read back a few elements and verify on CPU
+      const read=device.createBuffer({size:4*4,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
+      enc=device.createCommandEncoder(); enc.copyBufferToBuffer(bufC,0,read,0,16);
+      device.queue.submit([enc.finish()]);
+      await read.mapAsync(GPUMapMode.READ);
+      const got=new Float32Array(read.getMappedRange().slice(0));
+      read.unmap();
+      let ok=true;
+      for(let j=0;j<4;j++){
+        let ref=0; for(let k=0;k<K;k++) ref+=A[k]*B[k*N+j]; // row 0, col j
+        const rel=Math.abs(got[j]-ref)/Math.max(1e-6,Math.abs(ref));
+        if(rel>0.005){ ok=false; break; }
+      }
+      [bufA,bufB,bufC,bufD,read].forEach(b=>{try{b.destroy();}catch{}});
+      if(!ok){
+        clStatus.textContent='FAILED verification — run discarded';
+        clVerify.textContent='✗ mismatch'; clVerify.className='text-red-500';
+        R.clientGflops=null; R.verified=false; drawChart(); btn.disabled=false; return;
+      }
+      const gflops=2*M*K*N*iters/dt/1e9;
+      R.clientGflops=gflops; R.clientMs=dt*1000; R.clientWork=`${M}x${K}·${K}x${N}`; R.verified=true;
+      clStatus.textContent='done';
+      clTime.textContent=(dt*1000).toFixed(0)+' ms / '+iters+' iters';
+      clGflops.textContent=gflops.toFixed(1)+' GFLOPS';
+      clVerify.textContent='✓ within 0.5%'; clVerify.className='text-emerald-600';
+      // whisper-tiny encoder lower bound: L(8Sd^2 + 4S^2 d), L=4,S=1500,d=384
+      const F=4*(8*1500*384*384 + 4*1500*1500*384);
+      clDerived.textContent=(F/(gflops*1e9)*1000).toFixed(0)+' ms (compute floor)';
+      showAha(`Your GPU sustained ${gflops.toFixed(0)} GFLOPS — verified against CPU reference.`,'client_bench');
+      drawChart();
+    }catch(e){ clStatus.textContent='error: '+e.message; }
+    btn.disabled=false;
+  }
+  $('btn-client-bench').addEventListener('click',runClientBench);
+
+  // ---------- Modal endpoint ----------
+  function endpointBase(){
+    const u=(urlInput.value||'').trim();
+    if(!u || !/^https:\/\//.test(u)){ rmStatus.textContent='paste a valid https endpoint'; return null; }
+    return u.replace(/\/+$/,'');
+  }
+  function authHeaders(){
+    const h={'Content-Type':'application/json'};
+    const t=(tokenInput.value||'').trim();
+    if(t) h['Authorization']='Bearer '+t;
+    return h;
+  }
+  $('btn-cold').addEventListener('click',async()=>{
+    const base=endpointBase(); if(!base) return;
+    const healthUrl=base.replace('-bench','-health');
+    rmStatus.textContent='pinging…';
+    const t0=performance.now();
+    try{
+      const res=await fetch(healthUrl,{headers:authHeaders()});
+      const ms=performance.now()-t0;
+      if(!res.ok){ rmStatus.textContent=`ping ${res.status}`; return; }
+      if(R.coldMs==null){ R.coldMs=ms; rmStatus.textContent='cold ping ok — ping again for warm'; }
+      else { R.warmMs=ms; rmStatus.textContent=`warm ping ok (cold ${R.coldMs.toFixed(0)} ms → warm ${ms.toFixed(0)} ms)`; }
+      rmRtt.textContent=ms.toFixed(0)+' ms';
+      drawChart();
+    }catch{ rmStatus.textContent='ping failed (URL/CORS/network)'; }
+  });
+  $('btn-remote-bench').addEventListener('click',async()=>{
+    const base=endpointBase(); if(!base) return;
+    rmStatus.textContent='running on Modal…';
+    const t0=performance.now();
+    try{
+      const res=await fetch(base,{method:'POST',headers:authHeaders(),body:JSON.stringify({size:2048,iters:20})});
+      const rtt=performance.now()-t0;
+      if(!res.ok){ rmStatus.textContent=`bench ${res.status}`; return; }
+      const d=await res.json();
+      R.remoteTflops=d.tflops; R.remoteComputeMs=d.seconds*1000; R.remoteRttMs=rtt;
+      R.remoteGpu=d.gpu; R.remoteVram=d.vram_gb;
+      rmStatus.textContent='done';
+      rmGpu.textContent=d.gpu||'—';
+      rmVram.textContent=d.vram_gb? d.vram_gb+' GB':'—';
+      rmRtt.textContent=rtt.toFixed(0)+' ms';
+      rmCompute.textContent=(d.seconds*1000).toFixed(0)+' ms / '+d.iters+' iters';
+      rmTflops.textContent=d.tflops+' TFLOPS';
+      showAha(`${d.gpu||'Cloud GPU'} reported ${d.tflops} TFLOPS — your round trip was ${rtt.toFixed(0)} ms.`,'remote_bench');
+      drawChart();
+    }catch{ rmStatus.textContent='bench failed (URL/CORS/network)'; }
+  });
+
+  // ---------- chart (measured values only) ----------
+  function drawChart(){
+    const W=chartC._w,H=chartC._h;
+    const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    const bg=css('--mp-canvas')||'#0d1117', txt=css('--mp-muted')||'#889';
+    cCtx.fillStyle=bg; cCtx.fillRect(0,0,W,H);
+    cCtx.font='11px ui-monospace'; cCtx.fillStyle=txt;
+    const bars=[];
+    if(R.clientGflops!=null) bars.push({g:'compute',label:'Your device (naive WGSL)',v:R.clientGflops,unit:'GFLOPS',color:'#3C888F'});
+    if(R.remoteTflops!=null) bars.push({g:'compute',label:(R.remoteGpu||'Modal')+' (cuBLAS)',v:R.remoteTflops*1000,unit:'GFLOPS',color:'#4C6492'});
+    if(R.clientMs!=null) bars.push({g:'latency',label:'Device bench wall',v:R.clientMs,unit:'ms',color:'#3C888F'});
+    if(R.remoteComputeMs!=null) bars.push({g:'latency',label:'Modal GPU compute',v:R.remoteComputeMs,unit:'ms',color:'#4C6492'});
+    if(R.remoteRttMs!=null) bars.push({g:'latency',label:'Network round trip',v:R.remoteRttMs,unit:'ms',color:'#C16223'});
+    if(R.coldMs!=null && R.warmMs!=null) bars.push({g:'latency',label:'Cold − warm start Δ',v:Math.max(0,R.coldMs-R.warmMs),unit:'ms',color:'#631FCB'});
+    if(!bars.length){
+      cCtx.textAlign='center';
+      cCtx.fillText('No measurements yet — run the device benchmark and/or your Modal endpoint. Nothing here is pre-filled.',W/2,H/2);
+      cCtx.textAlign='left';
+      return;
+    }
+    const groups=['compute','latency'];
+    const half=W/2;
+    groups.forEach((g,gi)=>{
+      const gb=bars.filter(b=>b.g===g);
+      const x0=gi*half+40, gw=half-80;
+      cCtx.fillStyle=txt; cCtx.fillText(g==='compute'?'Sustained compute (log GFLOPS)':'Latency (log ms)',x0,18);
+      if(!gb.length) return;
+      const maxV=Math.max(...gb.map(b=>b.v)), minV=Math.min(...gb.map(b=>b.v));
+      const lmax=Math.log10(maxV*1.3), lmin=Math.min(Math.log10(Math.max(0.1,minV))-0.3,lmax-1);
+      const bw=Math.min(64,gw/gb.length*0.6);
+      gb.forEach((b,i)=>{
+        const x=x0+i*(gw/gb.length)+((gw/gb.length)-bw)/2;
+        const frac=(Math.log10(b.v)-lmin)/(lmax-lmin);
+        const bh=Math.max(3,frac*(H-70));
+        cCtx.fillStyle=b.color; cCtx.fillRect(x,H-30-bh,bw,bh);
+        cCtx.fillStyle=txt; cCtx.save(); cCtx.translate(x+bw/2,H-34-bh); cCtx.textAlign='center';
+        cCtx.fillText(b.v>=1000?(b.v/1000).toFixed(1)+'k':b.v.toFixed(b.v<10?1:0),0,-2);
+        cCtx.restore();
+        cCtx.fillStyle=txt; cCtx.save(); cCtx.translate(x+bw/2,H-18); cCtx.textAlign='center';
+        cCtx.font='9px ui-monospace';
+        const words=b.label.split(' ');
+        cCtx.fillText(words.slice(0,2).join(' '),0,0);
+        if(words.length>2) cCtx.fillText(words.slice(2).join(' '),0,10);
+        cCtx.restore(); cCtx.font='11px ui-monospace';
+      });
+    });
+  }
+  drawChart();
+
+  // ---------- aha ----------
+  let ahaShown=false;
+  function showAha(text,metric){
+    try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_moment',sim:SIM,metric}})); }catch{}
+    if(ahaShown) return; ahaShown=true;
+    $('gb-aha-text').textContent=text;
+    $('gb-aha-toast').classList.remove('hidden');
+  }
+  $('gb-aha-cta').addEventListener('click',()=>{
+    try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_cta_click',sim:SIM,partner:'modal'}})); }catch{}
+  });
+  $('gb-aha-dismiss').addEventListener('click',()=>$('gb-aha-toast').classList.add('hidden'));
+
+  // ---------- export ----------
+  try{
+    const reg=()=>{
+      if(window.MPExportGate){
+        window.MPExportGate.register(SIM,()=>{
+          let crossover=null;
+          if(R.clientGflops && R.remoteTflops && R.remoteRttMs){
+            const Rd=R.clientGflops*1e9, Rc=R.remoteTflops*1e12;
+            if(Rc>Rd) crossover=(R.remoteRttMs/1000)*Rd*Rc/(Rc-Rd); // FLOPs where offload breaks even
+          }
+          return JSON.stringify({
+            generated:new Date().toISOString(),
+            note:'All values measured this session on the user device / user-deployed endpoint. Null = not run.',
+            device:{adapter:adapterInfo.textContent,workload:R.clientWork,gflops:R.clientGflops,wallMs:R.clientMs,cpuVerified:R.verified},
+            modalEndpoint:{gpu:R.remoteGpu,vramGb:R.remoteVram,tflopsReported:R.remoteTflops,gpuComputeMs:R.remoteComputeMs,roundTripMs:R.remoteRttMs,coldPingMs:R.coldMs,warmPingMs:R.warmMs},
+            offloadCrossoverFlops:crossover,
+            offloadCrossoverNote:crossover?'Jobs above this FLOP count finish sooner on the remote GPU despite the round trip.':'Run both sides to compute the crossover.'
+          },null,2);
+        });
+      }
+    };
+    reg();
+    document.addEventListener('astro:page-load',reg);
+  }catch{}
+}
+document.addEventListener('astro:page-load', initGpuBench);
+initGpuBench();
+</script>
