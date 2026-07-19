@@ -1,18 +1,18 @@
 ---
 ---
-<nav 
-  id="playground-side-nav" 
-  class="fixed right-5 top-1/2 z-40 hidden -translate-y-1/2 flex-col items-end gap-3 rounded-[20px] border border-border bg-card-bg/40 p-3.5 backdrop-blur-[10px] shadow-[0_12px_32px_-12px_rgba(0,0,0,0.12)] transition-all duration-300 ease-out hover:w-56 w-[46px] overflow-hidden group/sidenav hover:bg-card-bg/85 hover:border-border-strong lg:flex" 
+<nav
+  id="playground-side-nav"
+  class="fixed right-4 top-1/2 z-40 hidden w-[46px] -translate-y-1/2 flex-col items-end gap-3 overflow-hidden rounded-[20px] border border-border bg-card-bg/60 p-3.5 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.12)] backdrop-blur-[14px] transition-all duration-300 ease-out hover:w-56 hover:bg-card-bg/90 focus-within:w-56 focus-within:bg-card-bg/90 group/sidenav 2xl:flex"
   aria-label="Table of contents"
 >
   <div class="flex w-full items-center justify-end border-b border-border/40 pb-2 text-[0.62rem] font-bold uppercase tracking-[0.14em] text-muted-text/80 whitespace-nowrap min-h-6">
-    <span class="opacity-0 group-hover/sidenav:opacity-100 transition-opacity duration-200 mr-auto">On this page</span>
+    <span class="opacity-0 group-hover/sidenav:opacity-100 group-focus-within/sidenav:opacity-100 transition-opacity duration-200 mr-auto">On this page</span>
     <svg class="size-4 text-muted-text/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   </div>
-  
-  <div id="side-nav-track" class="flex flex-col gap-1 w-full items-end" role="list">
+
+  <div id="side-nav-track" class="flex max-h-[70vh] flex-col gap-1 w-full items-end overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
     <!-- Dynamically populated -->
   </div>
 </nav>
@@ -36,7 +36,7 @@
     transition: opacity 0.25s ease, transform 0.25s ease, color 0.2s ease;
     font-size: 0.74rem;
     font-weight: 500;
-    color: var(--mp-muted-text, #6b7280);
+    color: var(--mp-muted, #6b7280);
     text-align: right;
     white-space: nowrap;
     overflow: hidden;
@@ -44,7 +44,8 @@
     padding-right: 0.75rem;
     pointer-events: none;
   }
-  #playground-side-nav:hover .side-nav-label {
+  #playground-side-nav:hover .side-nav-label,
+  #playground-side-nav:focus-within .side-nav-label {
     opacity: 1;
     transform: translateX(0);
     pointer-events: auto;
@@ -53,21 +54,29 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 9999px;
-    border: 1px solid var(--mp-border, #e5e7eb);
+    border: 1px solid var(--mp-border-strong, #9ca3af);
     background-color: var(--mp-elevated, #f3f4f6);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     flex-shrink: 0;
   }
-  
+
   /* Hover effects */
   .side-nav-link:hover .side-nav-label {
     color: var(--mp-text, #111827);
   }
   .side-nav-link:hover .side-nav-dot {
-    border-color: var(--mp-border-strong, #9ca3af);
+    border-color: var(--mp-text, #111827);
     transform: scale(1.15);
   }
-  
+  /* Keyboard focus parity with hover */
+  .side-nav-link:focus-visible .side-nav-label {
+    color: var(--mp-text, #111827);
+  }
+  .side-nav-link:focus-visible .side-nav-dot {
+    border-color: var(--mp-text, #111827);
+    transform: scale(1.15);
+  }
+
   /* Active states */
   .side-nav-link.is-active .side-nav-label {
     color: var(--mp-text, #111827);
@@ -79,17 +88,62 @@
     box-shadow: 0 0 8px color-mix(in srgb, var(--mp-cta) 60%, transparent);
     transform: scale(1.2);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .side-nav-link,
+    .side-nav-label,
+    .side-nav-dot {
+      transition: none;
+    }
+  }
 </style>
 
 <script is:inline data-astro-rerun>
   (() => {
-    const initSideNav = () => {
+    // ClientRouter swaps DOM but keeps the same `window`/`document`, so hooks
+    // registered by a previous page's execution must be torn down first —
+    // otherwise scroll listeners and observers accumulate across navigations.
+    const REGISTRY_KEY = '__mpPlaygroundSideNavTeardown__';
+    if (window[REGISTRY_KEY]) {
+      try { window[REGISTRY_KEY](); } catch (_) {}
+      window[REGISTRY_KEY] = null;
+    }
+
+    let teardownInstance = null;
+
+    // Build a clean plain-text label from a heading: strips duplicated KaTeX
+    // MathML (which would double the visible glyphs in textContent), TeX
+    // delimiters/tokens, and decorative arrows that degrade in small labels.
+    const cleanLabel = (heading) => {
+      const explicit = heading.getAttribute('data-nav-label');
+      if (explicit && explicit.trim()) return explicit.trim();
+
+      const clone = heading.cloneNode(true);
+      clone.querySelectorAll('.katex-mathml, annotation, .sr-only').forEach((n) => n.remove());
+
+      return (clone.textContent || '')
+        .replace(/\$\$?|\\\(|\\\)|\\\[|\\\]/g, '')   // TeX inline/display delimiters
+        .replace(/[\^_]\{([^}]*)\}/g, '$1')           // ^{2} / _{0} tokens -> 2 / 0
+        .replace(/[←-⇿➔➘-➾⬅-⬍]/g, '')  // arrows: U+2190–21FF, U+2794, U+2798–27BE, U+2B05–2B0D
+        .replace(/~/g, ' ')                           // TeX non-breaking space
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+
+    const init = () => {
+      // Idempotent: re-init always starts from a clean slate.
+      if (teardownInstance) {
+        teardownInstance();
+        teardownInstance = null;
+      }
+
       const navContainer = document.getElementById('playground-side-nav');
       const track = document.getElementById('side-nav-track');
       if (!navContainer || !track) return;
 
-      // 1. Query candidate headings on page
-      const headings = Array.from(document.querySelectorAll('h2[id]')).filter(h => {
+      // Scope to main content so site chrome can never leak into the TOC.
+      const scope = document.getElementById('main-content') || document;
+      const headings = Array.from(scope.querySelectorAll('h2[id]')).filter((h) => {
         if (h.classList.contains('sr-only')) return false;
         if (h.closest('header') || h.closest('footer')) return false;
         return true;
@@ -101,86 +155,120 @@
         return;
       }
 
-      // Ensure clean state
       track.innerHTML = '';
       navContainer.style.display = '';
 
-      // 2. Generate side nav links
-      const links = headings.map(heading => {
+      const removers = [];
+      const on = (target, type, fn, opts) => {
+        target.addEventListener(type, fn, opts);
+        removers.push(() => target.removeEventListener(type, fn, opts));
+      };
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const HEADER_OFFSET = 80;
+
+      let activeLink = null;
+      const setActive = (link) => {
+        if (link === activeLink) return;
+        if (activeLink) {
+          activeLink.classList.remove('is-active');
+          activeLink.removeAttribute('aria-current');
+        }
+        if (link) {
+          link.classList.add('is-active');
+          link.setAttribute('aria-current', 'location');
+        }
+        activeLink = link;
+      };
+
+      // Generate side nav links
+      const items = headings.map((heading) => {
         const link = document.createElement('a');
         link.className = 'side-nav-link';
-        link.setAttribute('role', 'listitem');
         link.setAttribute('href', `#${heading.id}`);
-        
+
+        const labelText = cleanLabel(heading) || heading.id;
+
         const label = document.createElement('span');
         label.className = 'side-nav-label';
-        label.textContent = heading.textContent.replace(/[\u2192\u2190]/g, '').trim(); // Remove arrow symbols if present
+        label.textContent = labelText;
 
         const dot = document.createElement('span');
         dot.className = 'side-nav-dot';
 
         link.appendChild(label);
         link.appendChild(dot);
+        link.title = labelText; // full text tooltip when ellipsized
         track.appendChild(link);
 
-        // Click interaction with offset scroll
-        link.addEventListener('click', (e) => {
+        on(link, 'click', (e) => {
           e.preventDefault();
-          const headerOffset = 80;
-          const elementPosition = heading.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-          
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-          
-          // Fallback hash update
-          if (history.pushState) {
-            history.pushState(null, null, `#${heading.id}`);
-          } else {
-            location.hash = `#${heading.id}`;
-          }
+          setActive(link);
+          const top = heading.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+          window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'instant' : 'smooth' });
+          history.pushState(null, '', `#${heading.id}`);
         });
 
         return { heading, link };
       });
 
-      // 3. Track scrolling with IntersectionObserver
-      let activeItem = null;
-      const observerOptions = {
-        root: null,
-        rootMargin: '-10% 0px -75% 0px', // Matches upper mid-viewport scanline
-        threshold: 0
-      };
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const matched = links.find(item => item.heading === entry.target);
-            if (matched) {
-              if (activeItem) activeItem.link.classList.remove('is-active');
-              matched.link.classList.add('is-active');
-              activeItem = matched;
-            }
-          }
-        });
-      }, observerOptions);
-
-      headings.forEach(h => observer.observe(h));
-
-      // Handle edge case where scroll is at very top
-      const handleScrollTop = () => {
-        if (window.scrollY < 120 && links.length > 0) {
-          if (activeItem) activeItem.link.classList.remove('is-active');
-          links[0].link.classList.add('is-active');
-          activeItem = links[0];
+      // Deterministic scroll spy (rAF-throttled): the active section is the
+      // last heading above the scanline — exactly one active item by
+      // construction, no stuck states on band boundaries, and fast sweeps
+      // always settle on the correct section. Bottom clamp guarantees the
+      // final section activates even when the page can't scroll it to the
+      // scanline.
+      let ticking = false;
+      const computeActive = () => {
+        ticking = false;
+        if (!navContainer.getClientRects().length) return; // hidden (breakpoint / few headings)
+        const scanline = Math.max(96, window.innerHeight * 0.3);
+        let current = items[0];
+        for (const item of items) {
+          if (item.heading.getBoundingClientRect().top <= scanline) current = item;
+          else break;
         }
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8) {
+          current = items[items.length - 1];
+        }
+        setActive(current.link);
       };
-      window.addEventListener('scroll', handleScrollTop, { passive: true });
-      handleScrollTop();
+      const requestCompute = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(computeActive);
+      };
+
+      on(window, 'scroll', requestCompute, { passive: true });
+      on(window, 'resize', requestCompute, { passive: true });
+      computeActive();
+
+      teardownInstance = () => {
+        removers.forEach((off) => off());
+        removers.length = 0;
+        setActive(null);
+      };
     };
 
-    initSideNav();
+    const onPageLoad = () => init();
+    const onBeforeSwap = () => {
+      if (teardownInstance) {
+        teardownInstance();
+        teardownInstance = null;
+      }
+    };
+
+    // Persistent hooks live on the shared document; they are removed by the
+    // registry teardown when the next page's script re-executes.
+    document.addEventListener('astro:page-load', onPageLoad);
+    document.addEventListener('astro:before-swap', onBeforeSwap);
+
+    window[REGISTRY_KEY] = () => {
+      document.removeEventListener('astro:page-load', onPageLoad);
+      document.removeEventListener('astro:before-swap', onBeforeSwap);
+      onBeforeSwap();
+    };
+
+    init();
   })();
 </script>
