@@ -48,7 +48,9 @@
     "note": "RFID reader + tag kit used in BLExAR's Arduino RFID build.",
     "category": "RFID",
     "relatedTo": [
-      "blexar"
+      "blexar",
+      "ble-gatt-visualizer",
+      "quaternion-euler-converter"
     ]
   },
   {
@@ -168,7 +170,9 @@
     "note": "Individually-addressable LEDs used in BLExAR's Pico LED ring build.",
     "category": "LED",
     "relatedTo": [
-      "blexar"
+      "blexar",
+      "quaternion-euler-converter",
+      "ble-gatt-visualizer"
     ]
   },
   {
@@ -655,5 +659,1007 @@
     "asin": "B0DM8QJRN6",
     "note": "Studio desk dock used across all app development work.",
     "category": "Accessory"
+  },
+  {
+    "id": "bno055-9dof-imu-adafruit",
+    "label": "Adafruit BNO055 9-DOF Absolute Orientation IMU",
+    "asin": "B017PEIGIG",
+    "note": "Bosch BNO055 with on-chip sensor fusion outputting a unit quaternion directly — the exact quaternion this converter round-trips into yaw/pitch/roll, same data CMHeadphoneMotionManager delivers.",
+    "category": "Sensor",
+    "relatedTo": [
+      "quaternion-euler-converter",
+      "head-tracked-stereo-pan",
+      "biquad-filter-designer",
+      "pole-zero-explorer"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "3d-math-primer-graphics-game-dev",
+    "label": "3D Math Primer for Graphics and Game Development (2nd)",
+    "asin": "1568817231",
+    "note": "Chapters 8-10 derive quaternion multiplication, Euler-angle gimbal lock, and the conversion matrix this playground verifies live — the same math driving MotionLink's head-pose.",
+    "category": "Book",
+    "relatedTo": [
+      "quaternion-euler-converter"
+    ]
+  },
+  {
+    "id": "precision-gyroscope-metal-spinner",
+    "label": "Precision Metal Gyroscope Spinner",
+    "asin": "B0G6Y9VTPT",
+    "note": "Spinning rotor demonstrating angular momentum conservation and precession — the physical intuition behind why quaternions avoid gimbal lock where Euler angles fail.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "quaternion-euler-converter"
+    ]
+  },
+  {
+    "id": "nonlinear-dynamics-chaos-strogatz",
+    "label": "Nonlinear Dynamics and Chaos (Strogatz, 3rd)",
+    "asin": "0367026503",
+    "note": "Chapter 6 explicitly integrates the double pendulum Lagrangian — Lyapunov exponent, phase-space Poincaré section, and the sensitivity that this simulator paints as geometry.",
+    "category": "Book",
+    "relatedTo": [
+      "double-pendulum",
+      "n-body-choreography"
+    ]
+  },
+  {
+    "id": "chaos-making-new-science-gleick",
+    "label": "Chaos: Making a New Science (Gleick)",
+    "asin": "0143113453",
+    "note": "Narrative history of Lorenz, Feigenbaum, and the butterfly effect — the same deterministic chaos this double pendulum exhibits when you nudge its Lyapunov divergence slider.",
+    "category": "Book",
+    "relatedTo": [
+      "double-pendulum"
+    ]
+  },
+  {
+    "id": "chaos-pendulum-kinetic-sculpture",
+    "label": "Kinetic Chaos Pendulum Desk Sculpture",
+    "asin": "B0H1S45YLM",
+    "note": "Double oloid chaos pendulum whose aperiodic motion never repeats — a physical embodiment of the Lagrangian symplectic integration this page runs at 4th order.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "double-pendulum"
+    ]
+  },
+  {
+    "id": "classical-mechanics-goldstein",
+    "label": "Classical Mechanics (Goldstein, 3rd)",
+    "asin": "0201657029",
+    "note": "Canonical derivation of the double-pendulum equations of motion via Euler-Lagrange — exactly the T-V Lagrangian this simulator integrates symplectically.",
+    "category": "Book",
+    "relatedTo": [
+      "double-pendulum",
+      "n-body-choreography"
+    ]
+  },
+  {
+    "id": "visual-complex-analysis-needham-25th",
+    "label": "Visual Complex Analysis (Needham, 25th Anniversary)",
+    "asin": "0192868926",
+    "note": "Entire premise is epicycles-as-complex-exponentials — e^{iwt} spinning phasors whose sum is a discrete Fourier series, same DFT this playground draws with.",
+    "category": "Book",
+    "relatedTo": [
+      "fourier-epicycles",
+      "conformal-mapping"
+    ]
+  },
+  {
+    "id": "signals-systems-oppenheim",
+    "label": "Signals and Systems (Oppenheim, 2nd)",
+    "asin": "0138147574",
+    "note": "Defines the DTFT, DFT, and complex Fourier coefficients c_k this visualizer computes — chapters 3-5 derive the exact reconstruction formula tracing your doodle.",
+    "category": "Book",
+    "relatedTo": [
+      "fourier-epicycles",
+      "biquad-filter-designer",
+      "pole-zero-explorer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "understanding-dsp-lyons",
+    "label": "Understanding Digital Signal Processing (Lyons, 3rd)",
+    "asin": "0137027419",
+    "note": "Chapter on DFT and windowing explains spectral leakage and Gibbs phenomenon visible as overshoot when you draw sharp corners in the epicycles tracer.",
+    "category": "Book",
+    "relatedTo": [
+      "fourier-epicycles",
+      "biquad-filter-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "oscilloscope-function-generator-kit",
+    "label": "Oscilloscope + Function Generator Kit (2-channel)",
+    "asin": "B0GJ3W7C8V",
+    "note": "Feed a square wave into your scope and see its Fourier epicycles live — same harmonic decomposition (odd k only) this page animates as rotating vectors.",
+    "category": "Kit",
+    "relatedTo": [
+      "fourier-epicycles",
+      "biquad-filter-designer"
+    ]
+  },
+  {
+    "id": "griffiths-electrodynamics-4th",
+    "label": "Introduction to Electrodynamics (Griffiths, 4th)",
+    "asin": "1108420419",
+    "note": "Chapter 5 derives Biot-Savart law and Helmholtz coil field — the exact integral this tracer evaluates with RK4 field-line marching.",
+    "category": "Book",
+    "relatedTo": [
+      "magnetic-field-tracer"
+    ]
+  },
+  {
+    "id": "magnetic-field-viewing-film-4x4",
+    "label": "Magnetic Field Viewing Film 4x4 inch",
+    "asin": "B0BCFM83XB",
+    "note": "Green film renders flux lines from Biot-Savart superposition visible — lay it over a current loop and see the same dipole field this simulator traces via Runge-Kutta.",
+    "category": "Tool",
+    "relatedTo": [
+      "magnetic-field-tracer",
+      "acoustics-room-modes",
+      "acoustic-calculators"
+    ]
+  },
+  {
+    "id": "magnetic-viewing-film-cms-4x6",
+    "label": "CMS Magnetics Green Magnetic Viewing Film 4x6",
+    "asin": "B000UV6ZPS",
+    "note": "Shows Helmholtz pair uniformity and solenoid fringe fields in real life — directly comparable to the B_z magnitude readout under your cursor.",
+    "category": "Tool",
+    "relatedTo": [
+      "magnetic-field-tracer"
+    ]
+  },
+  {
+    "id": "gaussmeter-teslameter-hall-effect",
+    "label": "Gauss Meter Teslameter (Hall-Effect)",
+    "asin": "B0F8HJ71Q1",
+    "note": "Measures B-field magnitude around loops/solenoids — hand-verify the Biot-Savart μ0/4π scaling this tracer computes before field-line integration.",
+    "category": "Sensor",
+    "relatedTo": [
+      "magnetic-field-tracer",
+      "acoustics-room-modes",
+      "acoustic-calculators",
+      "loudspeaker-enclosure-designer"
+    ]
+  },
+  {
+    "id": "lattice-boltzmann-principles-practice-kruger",
+    "label": "The Lattice Boltzmann Method: Principles and Practice (Krüger)",
+    "asin": "3319446479",
+    "note": "Defines the D2Q9 equilibrium distribution f_i^eq = w_i ρ [1 + c_i·u/cs² ...] and BGK collision operator this tunnel implements live for Von Kármán shedding.",
+    "category": "Book",
+    "relatedTo": [
+      "lattice-boltzmann-tunnel"
+    ]
+  },
+  {
+    "id": "fluid-mechanics-batchelor",
+    "label": "An Introduction to Fluid Dynamics (Batchelor)",
+    "asin": "0521663962",
+    "note": "Derives Navier-Stokes and Reynolds number Re = UL/ν — crank Re past ~50 in this LBM tunnel and watch the von Kármán vortex street Batchelor describes appear.",
+    "category": "Book",
+    "relatedTo": [
+      "lattice-boltzmann-tunnel"
+    ]
+  },
+  {
+    "id": "eisco-optical-bench-40pc",
+    "label": "Eisco Complete Optical Bench Set (40pc)",
+    "asin": "B00CMR9078",
+    "note": "Actually a wind-tunnel-friendly flow-viz partner — pair with smoke tube to see boundary-layer separation and wake shedding your D2Q9 simulation traces numerically.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "lattice-boltzmann-tunnel",
+      "optics-bench"
+    ]
+  },
+  {
+    "id": "desktop-wind-tunnel-smoke",
+    "label": "Desktop Wind Tunnel Kit + Flow Visualization Smoke",
+    "asin": "B0FQVB7T2G",
+    "note": "Physical counterpart to this D2Q9 LBM solver — place cylinder or airfoil in the stream and compare real vortex shedding Strouhal frequency to the simulation's vorticity field.",
+    "category": "Kit",
+    "relatedTo": [
+      "lattice-boltzmann-tunnel"
+    ]
+  },
+  {
+    "id": "hecht-optics-5th",
+    "label": "Optics (Hecht, 5th Edition)",
+    "asin": "0133977226",
+    "note": "Chapter 6 derives the 2×2 ABCD matrix for lenses/mirrors — the exact paraxial ray transfer this bench composes to build system matrix and effective focal length.",
+    "category": "Book",
+    "relatedTo": [
+      "optics-bench"
+    ]
+  },
+  {
+    "id": "hecht-optics-global-edition",
+    "label": "Optics Global Edition (Hecht)",
+    "asin": "1292096934",
+    "note": "Covers g1·g2 resonator stability criterion |g1 g2| ≤ 1 — toggle the two-mirror cavity in this bench and watch stable/unstable regions match Hecht's diagram.",
+    "category": "Book",
+    "relatedTo": [
+      "optics-bench"
+    ]
+  },
+  {
+    "id": "physics-optics-experiment-kit-lens",
+    "label": "Physics Optics Experiment Kit (Convex/Concave Lens Set)",
+    "asin": "B0CW64YL6D",
+    "note": "Handheld concave/convex lenses and ray box — build the same ABCD cascade (lens-gap-mirror) physically and verify the numerical ray fan traced here.",
+    "category": "Kit",
+    "relatedTo": [
+      "optics-bench",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "voice-coil-thermal-compression",
+      "magnetic-field-tracer"
+    ]
+  },
+  {
+    "id": "optical-bench-rail-lens-set",
+    "label": "Optical Bench Rail with Lens and Mirror Set",
+    "asin": "B0CKNN2B78",
+    "note": "1-meter rail with carriers for lenses/mirrors — recreate the resonator stability test g1·g2 and image formation this simulator ray-traces via ABCD multiplication.",
+    "category": "Kit",
+    "relatedTo": [
+      "optics-bench"
+    ]
+  },
+  {
+    "id": "griffiths-quantum-mechanics-3rd",
+    "label": "Introduction to Quantum Mechanics (Griffiths, 3rd)",
+    "asin": "1107189632",
+    "note": "Chapters 2-3 cover time-independent Schrödinger equation, rectangular barrier, and exact transmission T = [1 + V0² sinh²(kL)/4E(V0-E)]⁻¹ that this Crank-Nicolson run checks live.",
+    "category": "Book",
+    "relatedTo": [
+      "quantum-tunneling"
+    ]
+  },
+  {
+    "id": "shankar-principles-quantum-mechanics",
+    "label": "Principles of Quantum Mechanics (Shankar, 2nd)",
+    "asin": "0306447908",
+    "note": "Derives unitary evolution and Crank-Nicolson as Cayley form (I - iHΔt/2)/(I + iHΔt/2) preserving norm — the method this simulator uses for wave-packet tunneling.",
+    "category": "Book",
+    "relatedTo": [
+      "quantum-tunneling"
+    ]
+  },
+  {
+    "id": "sakurai-modern-quantum-mechanics",
+    "label": "Modern Quantum Mechanics (Sakurai, 2nd)",
+    "asin": "1108422411",
+    "note": "Chapter 2 solves barrier penetration via WKB and exact matching — launch a Gaussian packet in this page and compare measured T/R against Sakurai's analytic formula.",
+    "category": "Book",
+    "relatedTo": [
+      "quantum-tunneling"
+    ]
+  },
+  {
+    "id": "double-slit-quantum-eraser-kit",
+    "label": "Double-Slit Quantum Eraser Experiment Kit",
+    "asin": "B0CD2KKFQ8",
+    "note": "Physical demonstration of matter-wave interference underlying Schrödinger's equation — same wave-particle duality that makes tunneling through a classically forbidden barrier possible.",
+    "category": "Kit",
+    "relatedTo": [
+      "quantum-tunneling",
+      "chladni-cymatics",
+      "biquad-filter-designer",
+      "pole-zero-explorer"
+    ]
+  },
+  {
+    "id": "complex-analysis-ahlfors",
+    "label": "Complex Analysis (Ahlfors, 3rd)",
+    "asin": "0070006571",
+    "note": "Defines analytic functions, Cauchy-Riemann ∂u/∂x = ∂v/∂y, and conformal property — drag f(z)=z² and watch CR fail/preserve angles live as Ahlfors proves.",
+    "category": "Book",
+    "relatedTo": [
+      "conformal-mapping",
+      "fourier-epicycles"
+    ]
+  },
+  {
+    "id": "complex-variables-churchill-brown",
+    "label": "Complex Variables and Applications (Churchill & Brown, 9th)",
+    "asin": "0073383171",
+    "note": "Chapter on mapping w = e^z, log z, Joukowski transform — the same homotopy slider f(z,t) this explorer interpolates between identity and complex map.",
+    "category": "Book",
+    "relatedTo": [
+      "conformal-mapping"
+    ]
+  },
+  {
+    "id": "visual-differential-geometry-needham",
+    "label": "Visual Differential Geometry and Forms (Needham)",
+    "asin": "0691203709",
+    "note": "Sequel to Visual Complex Analysis — explains how conformal warp preserves infinitesimal circles, which you see as grid squares stay square under holomorphic f(z).",
+    "category": "Book",
+    "relatedTo": [
+      "conformal-mapping",
+      "fourier-epicycles",
+      "globe"
+    ]
+  },
+  {
+    "id": "standing-wave-demo-kit-gsc",
+    "label": "GSC Standing Wave Demonstration Kit",
+    "asin": "B0BJMHCL6P",
+    "note": "Driver + square plate kit — sweep frequency and see nodal lines accumulate sand along Chladni figures exactly as this modal eigensolver's Laplacian eigenmodes predict.",
+    "category": "Kit",
+    "relatedTo": [
+      "chladni-cymatics"
+    ]
+  },
+  {
+    "id": "chladni-plate-metal-square-3b",
+    "label": "3B Scientific Metal Square Chladni Plate 7 inch",
+    "asin": "B005LY3NZY",
+    "note": "Precision steel plate for cymatics — dust with fine sand and drive at computed eigenfrequency to realize the Bessel-function nodal patterns this simulator solves.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "chladni-cymatics"
+    ]
+  },
+  {
+    "id": "chladni-vibration-generator-pro",
+    "label": "Ernst Chladni Professional Vibration Generator (30Hz-20kHz)",
+    "asin": "B0FWX6LDSD",
+    "note": "30W driver sweeping through plate resonances — matches the eigenvalue sweep in this Chladni lab where sand flees antinodes to settle on nodal lines.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "chladni-cymatics",
+      "acoustic-calculators"
+    ]
+  },
+  {
+    "id": "eulers-disk",
+    "label": "Toysmith Euler Disk",
+    "asin": "B000239E6Q",
+    "note": "Spinning disk's decreasing contact and rising audible frequency demonstrate modal energy concentration — same standing-wave energy argument explaining why Chladni sand avoids vibrating regions.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "chladni-cymatics",
+      "double-pendulum"
+    ]
+  },
+  {
+    "id": "master-handbook-acoustics-everest",
+    "label": "Master Handbook of Acoustics (Everest & Pohlmann, 7th)",
+    "asin": "1260473597",
+    "note": "Bible of RT60, Sabine, and absorption coefficients — the exact formulas these acoustic calculators implement for reverb, room modes, and critical distance.",
+    "category": "Book",
+    "relatedTo": [
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "waveguide-designer"
+    ]
+  },
+  {
+    "id": "umik1-measurement-mic-minidsp",
+    "label": "miniDSP UMIK-1 USB Measurement Microphone",
+    "asin": "B00N4Q25R8",
+    "note": "Calibrated USB mic with individual cal file — measure your room's RT60 and modal peaks to validate the room-mode eigenfrequencies this calculator predicts.",
+    "category": "Microphone",
+    "relatedTo": [
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "dayton-emm6-measurement-mic",
+    "label": "Dayton Audio EMM-6 Measurement Microphone",
+    "asin": "B002KI8X40",
+    "note": "Omni condenser with cal file — pair with REW to measure SPL, RT60, and comb filtering the acoustic calculator suite computes via image-source method.",
+    "category": "Microphone",
+    "relatedTo": [
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "cone-breakup",
+      "waveguide-designer"
+    ]
+  },
+  {
+    "id": "behringer-ecm8000-measurement-mic",
+    "label": "Behringer ECM8000 Measurement Microphone",
+    "asin": "B000HT4RSA",
+    "note": "Reference omni for acoustic measurement — captures the same pressure field these fast calculators approximate with ray-tracing and modal sums.",
+    "category": "Microphone",
+    "relatedTo": [
+      "acoustic-calculators",
+      "acoustics-room-modes"
+    ]
+  },
+  {
+    "id": "loudspeaker-design-cookbook-dickason",
+    "label": "Loudspeaker Design Cookbook (Dickason, 7th)",
+    "asin": "1882580478",
+    "note": "Breakup modes, cone edge termination, and waveguide directivity index — chapters 7-9 explain the cone-breakup visualization and waveguide polar math this lab implements.",
+    "category": "Book",
+    "relatedTo": [
+      "cone-breakup",
+      "waveguide-designer",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "testing-loudspeakers-dappolito",
+    "label": "Testing Loudspeakers (D'Appolito)",
+    "asin": "1882580176",
+    "note": "Step-by-step measurement of Thiele-Small, K_ms(x), Le(x) — same nonlinearities the loudspeaker nonlinearity lab models with displacement-dependent Bl(x) and stiffness.",
+    "category": "Book",
+    "relatedTo": [
+      "loudspeaker-nonlinearity-lab",
+      "loudspeaker-enclosure-designer",
+      "voice-coil-thermal-compression",
+      "cone-breakup"
+    ]
+  },
+  {
+    "id": "dayton-umm6-usb-measurement-mic",
+    "label": "Dayton Audio UMM-6 USB Measurement Microphone",
+    "asin": "B00HE8OS9A",
+    "note": "USB cal mic for nearfield SPL and cone-breakup waterfall — capture the CSD breakup modes this simulator predicts via modal superposition.",
+    "category": "Microphone",
+    "relatedTo": [
+      "cone-breakup",
+      "waveguide-designer",
+      "acoustic-calculators",
+      "biquad-filter-designer",
+      "loudspeaker-enclosure-designer"
+    ]
+  },
+  {
+    "id": "ferrofluid-display-bottle-voicecoil",
+    "label": "Ferrofluid Display Bottle with Neodymium Magnets",
+    "asin": "B0BG3GCD47",
+    "note": "Ferrofluid spikes under magnetic field emulate ferrofluid cooling in voice-coil gaps — the same thermal-magnetic mechanism reducing thermal compression via enhanced heat transfer.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "voice-coil-thermal-compression",
+      "magnetic-field-tracer"
+    ]
+  },
+  {
+    "id": "ferrofluid-2oz-kit-cms-magnetics",
+    "label": "CMS Magnetics Ferrofluid 2oz Science Kit",
+    "asin": "B008H40LG4",
+    "note": "Lab-grade ferrofluid showing thermomagnetic convection — pour near a voice-coil mock-up and see why vendors add ferrofluid to lower R_th and Ti rise.",
+    "category": "Kit",
+    "relatedTo": [
+      "voice-coil-thermal-compression"
+    ]
+  },
+  {
+    "id": "flir-thermal-camera-ir-thermometer",
+    "label": "FLIR Thermal Camera iPhone Attachment",
+    "asin": "B0FT7YG22V",
+    "note": "IR camera imaging voice-coil heating ΔT = P * R_th — directly visualize the copper TCR and thermal compression curve this lab simulates.",
+    "category": "Sensor",
+    "relatedTo": [
+      "voice-coil-thermal-compression"
+    ]
+  },
+  {
+    "id": "k-type-thermocouple-meter",
+    "label": "K-Type Thermocouple Thermometer (Dual Channel)",
+    "asin": "B07M6Q1P9D",
+    "note": "Probe voice-coil former temperature and log T_vc(t) — compare measured τ_thermal rise against this lab's first-order thermal RC model with ferrofluid cooling.",
+    "category": "Tool",
+    "relatedTo": [
+      "voice-coil-thermal-compression",
+      "loudspeaker-nonlinearity-lab"
+    ]
+  },
+  {
+    "id": "heat-transfer-cengel-textbook",
+    "label": "Heat and Mass Transfer (Cengel, 6th)",
+    "asin": "0073398128",
+    "note": "Derives conduction, convection, R_th = L/kA, and thermal time constant — the exact lumped thermal network this voice-coil compression simulator integrates.",
+    "category": "Book",
+    "relatedTo": [
+      "voice-coil-thermal-compression"
+    ]
+  },
+  {
+    "id": "dsp-primer-proakis-manolakis",
+    "label": "Digital Signal Processing (Proakis & Manolakis, 5th)",
+    "asin": "0133354857",
+    "note": "Chapter on biquad Direct Form II transposed and pole-zero placement — move poles in pole-zero explorer and hear Q/ω0 map to ring frequency as Proakis derives.",
+    "category": "Book",
+    "relatedTo": [
+      "biquad-filter-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "teensy-4-audio-shield-dsp",
+    "label": "Teensy 4.0 + Audio Shield (DSP Dev Kit)",
+    "asin": "B0CP786N56",
+    "note": "600 MHz M7 with SGTL5000 codec — flash the DF2T biquad cascade from Biquadia's DSP core and hear the same filter your design exports here.",
+    "category": "Microcontroller",
+    "relatedTo": [
+      "biquad-filter-designer",
+      "agentic-dsp-pipeline",
+      "cone-breakup"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "dafx-digital-audio-effects-zolzer",
+    "label": "DAFX: Digital Audio Effects (Zölzer, 2nd)",
+    "asin": "0470665998",
+    "note": "Biquad-based effects: peaking, shelving, allpass for phaser — agentic pipeline's RAG over DAFX generates the same C++ kernel clang++ verifies here.",
+    "category": "Book",
+    "relatedTo": [
+      "agentic-dsp-pipeline",
+      "biquad-filter-designer",
+      "pole-zero-explorer"
+    ]
+  },
+  {
+    "id": "scientist-engineer-dsp-smith",
+    "label": "The Scientist and Engineer's Guide to DSP (Smith)",
+    "asin": "0916552011",
+    "note": "Intuitive pole-zero explanation — why a pole near unit circle rings, zero near kills — the exact intuition this pole-zero explorer makes tangible with drag-to-listen.",
+    "category": "Book",
+    "relatedTo": [
+      "pole-zero-explorer",
+      "biquad-filter-designer",
+      "fourier-epicycles",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "orrery-solar-system-mechanical-model",
+    "label": "Orrery Mechanical Solar System Model (Brass)",
+    "asin": "B08MTLPZXM",
+    "note": "Brass gears showing Keplerian ellipses and Lagrange points — same Newtonian gravity μ/r² this N-body choreography integrates with symplectic Yoshida 4th order.",
+    "category": "Model",
+    "relatedTo": [
+      "n-body-choreography",
+      "globe"
+    ]
+  },
+  {
+    "id": "orbital-mechanics-curtis",
+    "label": "Orbital Mechanics for Engineering Students (Curtis, 4th)",
+    "asin": "0128189130",
+    "note": "Derives n-body equations, figure-eight choreography existence proof, and symplectic energy conservation — exactly the trajectory this page verifies stays bounded for 500 periods.",
+    "category": "Book",
+    "relatedTo": [
+      "n-body-choreography",
+      "globe"
+    ]
+  },
+  {
+    "id": "newtons-cradle-balance-balls",
+    "label": "Newton's Cradle Balance Balls (Large, 7-ball)",
+    "asin": "B07Y5S5YWR",
+    "note": "Conservation of momentum/energy demo — the same conservation your symplectic integrator preserves while Newtonian gravity chaotically exchanges momentum among three equal masses.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "n-body-choreography",
+      "double-pendulum"
+    ]
+  },
+  {
+    "id": "gravitational-nbody-aarseth",
+    "label": "Gravitational N-Body Simulations (Aarseth)",
+    "asin": "0521121531",
+    "note": "Direct N-body with Hermite integration — compares to this page's symplectic scheme showing why 4th-order composition keeps figure-eight orbit stable vs Euler blow-up.",
+    "category": "Book",
+    "relatedTo": [
+      "n-body-choreography"
+    ]
+  },
+  {
+    "id": "spacetime-physics-taylor-wheeler-2nd",
+    "label": "Spacetime Physics (Taylor & Wheeler, 2nd)",
+    "asin": "0716723271",
+    "note": "Defines hyperbolic worldline x = c²/a (cosh aτ/c -1), proper time, and Minkowski diagram — the exact equations this starship journey plots as you flip-and-burn to Proxima.",
+    "category": "Book",
+    "relatedTo": [
+      "relativistic-spaceflight"
+    ]
+  },
+  {
+    "id": "lego-apollo-saturn-v-92176",
+    "label": "LEGO Apollo Saturn V 92176",
+    "asin": "B07F7W2V6R",
+    "note": "1:110 Saturn V with 1969 Apollo stages — build it while your virtual ship undergoes Lorentz contraction and relativistic Doppler shift of CMB to visible blue.",
+    "category": "Model",
+    "relatedTo": [
+      "relativistic-spaceflight",
+      "globe"
+    ]
+  },
+  {
+    "id": "model-rocket-kit-estes-alpha",
+    "label": "Estes Alpha III Model Rocket Kit",
+    "asin": "B0006NA1DI",
+    "note": "Real rocket with 1g thrust-to-weight teaching proper acceleration — contrast with this page's constant 1g proper-acceleration hyperbolic motion where coordinate acceleration → 0 near c.",
+    "category": "Kit",
+    "relatedTo": [
+      "relativistic-spaceflight"
+    ]
+  },
+  {
+    "id": "relativity-special-general-einstein",
+    "label": "Relativity: The Special and General Theory (Einstein)",
+    "asin": "048641714X",
+    "note": "Einstein's own derivation of Lorentz transformation and Minkowski spacetime — the same γ = 1/√(1-β²) this page computes to show ship time vs Earth time twin paradox.",
+    "category": "Book",
+    "relatedTo": [
+      "relativistic-spaceflight"
+    ]
+  },
+  {
+    "id": "satellite-orbits-montenbruck-gill",
+    "label": "Satellite Orbits: Models, Methods and Applications (Montenbruck)",
+    "asin": "354067280X",
+    "note": "SGP4 and TLE propagation — this globe computes ISS position client-side from real TLE elements using the same Kepler + J2 math Montenbruck derives.",
+    "category": "Book",
+    "relatedTo": [
+      "globe",
+      "n-body-choreography",
+      "relativistic-spaceflight"
+    ]
+  },
+  {
+    "id": "iss-model-metal-earth-3d",
+    "label": "Metal Earth ISS 3D Metal Model Kit",
+    "asin": "B07PBD4P2L",
+    "note": "Steel ISS model — track the real ISS live on this globe's TLE orbit, then hold the model while it passes over your city at 7.66 km/s orbital velocity.",
+    "category": "Model",
+    "relatedTo": [
+      "globe"
+    ]
+  },
+  {
+    "id": "desktop-globe-illuminated-12inch",
+    "label": "Illuminated Desktop World Globe (12 inch)",
+    "asin": "B09WDM4LBX",
+    "note": "Backlit globe with constellation overlay — compare its static terminator to this page's dynamically computed solar declination and real-time weather overlay across 16 cities.",
+    "category": "Model",
+    "relatedTo": [
+      "globe"
+    ]
+  },
+  {
+    "id": "nrf52840-dk-eval-board-nordic",
+    "label": "nRF52840 DK Eval Board (Nordic PCA10056)",
+    "asin": "B0FCVM4DQZ",
+    "note": "Official nRF52840 dev kit with BLE 5 and Thread — flash a GATT server and watch this explorer parse your advertised services/characteristics live.",
+    "category": "Microcontroller",
+    "relatedTo": [
+      "ble-gatt-visualizer"
+    ]
+  },
+  {
+    "id": "arduino-nano-33-ble-rev2-nrf52840",
+    "label": "Arduino Nano 33 BLE Rev2 (nRF52840)",
+    "asin": "B0CNTVW44H",
+    "note": "nRF52840 board running ArduinoBLE — same chipset family as XIAO nRF52840 in BLExAR builds, exposing GATT structure this page visualizes as byte-level CSV frames.",
+    "category": "Microcontroller",
+    "relatedTo": [
+      "ble-gatt-visualizer",
+      "quaternion-euler-converter"
+    ]
+  },
+  {
+    "id": "bluetooth-low-energy-developers-handbook-heydon",
+    "label": "Bluetooth Low Energy: The Developer's Handbook (Heydon)",
+    "asin": "013288836X",
+    "note": "GATT, ATT, L2CAP, and UUID breakdown — chapter 4 maps exactly to the service/characteristic tree this visualizer renders for HM-10 UART bridge.",
+    "category": "Book",
+    "relatedTo": [
+      "ble-gatt-visualizer"
+    ]
+  },
+  {
+    "id": "ble-sniffer-usb-dongle-nrf52840",
+    "label": "nRF52840 USB Dongle BLE Sniffer (PCA10059)",
+    "asin": "B0F2J95GDR",
+    "note": "Wireshark BLE sniffer capturing over-the-air GATT transactions — see raw ATT Read/Write that become the CSV bytes this explorer frames.",
+    "category": "Tool",
+    "relatedTo": [
+      "ble-gatt-visualizer",
+      "quaternion-euler-converter"
+    ]
+  },
+  {
+    "id": "binaural-microphone-3dio-fs",
+    "label": "3Dio Free Space Binaural Microphone",
+    "asin": "B0FR957Y7K",
+    "note": "Dummy-head binaural mic capturing HRTF — spatial cues this head-tracked stereo panner approximates via ITD/ILD and quaternion yaw driving StereoPannerNode.",
+    "category": "Microphone",
+    "relatedTo": [
+      "head-tracked-stereo-pan",
+      "acoustic-calculators"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "roland-cs10em-binaural-mic",
+    "label": "Roland CS-10EM Binaural Microphones",
+    "asin": "B0CN493YHF",
+    "note": "In-ear binaural mics for personal HRTF — record your own pinna response then compare panning when you rotate the virtual head using gyroscope yaw.",
+    "category": "Microphone",
+    "relatedTo": [
+      "head-tracked-stereo-pan"
+    ]
+  },
+  {
+    "id": "spatial-audio-roginska-geluso-book",
+    "label": "Immersive Sound: The Art and Science of Binaural and Multi-Channel Audio (Roginska/Geluso)",
+    "asin": "1138900005",
+    "note": "Derives HRTF, ITD = d/c sinθ, and head-tracking compensation — the exact panning law this playground interpolates as you drag yaw.",
+    "category": "Book",
+    "relatedTo": [
+      "head-tracked-stereo-pan",
+      "acoustic-calculators",
+      "acoustics-room-modes"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "bno055-bosch-head-tracker-sensor",
+    "label": "BNO055 Head Tracker IMU (Wired USB)",
+    "asin": "B0G4VH17L9",
+    "note": "9-axis sensor streaming quaternion yaw for spatial audio — plug its fused heading into this stereo panner's yaw input and hear source stay world-locked as you turn.",
+    "category": "Sensor",
+    "relatedTo": [
+      "head-tracked-stereo-pan",
+      "quaternion-euler-converter"
+    ]
+  },
+  {
+    "id": "tinyml-wizard-book-warden",
+    "label": "TinyML (Warden & Situnayake)",
+    "asin": "1492052043",
+    "note": "Quantization-aware training fp32→int8 and model footprint math — same byte-size arithmetic bytes = params * bits/8 this calculator does for CoreML fp16/int4.",
+    "category": "Book",
+    "relatedTo": [
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "jetson-nano-dev-kit-nvidia-4gb",
+    "label": "NVIDIA Jetson Nano Developer Kit (4GB)",
+    "asin": "B084DSDDLT",
+    "note": "Edge GPU where int8 quantized models from this calculator actually run — compare theoretical size saving vs measured latency drop on Jetson vs iPhone Neural Engine.",
+    "category": "SBC",
+    "relatedTo": [
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "coral-usb-accelerator-edge-tpu",
+    "label": "Coral USB Accelerator (Edge TPU)",
+    "asin": "B07J65M2W8",
+    "note": "USB Edge TPU for int8 quantized nets — run the same quantized CoreML model sized here and see why int8 cuts RAM bandwidth but needs per-channel scales.",
+    "category": "Accelerator",
+    "relatedTo": [
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "efficient-deep-learning-textbook-menghani",
+    "label": "Efficient Deep Learning (Menghani)",
+    "asin": "1098111295",
+    "note": "Covers fp16, int8, int4 quantization schemes and Huffman overhead — formulas this calculator implements to compute exact on-device footprint without throughput guesswork.",
+    "category": "Book",
+    "relatedTo": [
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "jetson-orin-nano-super-dev-kit",
+    "label": "NVIDIA Jetson Orin Nano Super Developer Kit",
+    "asin": "B0BZJTQ5YP",
+    "note": "67 TOPS edge AI dev kit — benchmark int4 quantized models sized here and validate that CoreML quantized size math predicts actual flash/RAM usage on device.",
+    "category": "SBC",
+    "relatedTo": [
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "physics-musical-instruments-fletcher-rossing",
+    "label": "The Physics of Musical Instruments (Fletcher & Rossing, 2nd)",
+    "asin": "0387983740",
+    "note": "Modal analysis of plates and strings with Bessel functions — root of Chladni plate eigenmodes and waveguide modal cutoff fc = c/2a this toolbox computes.",
+    "category": "Book",
+    "relatedTo": [
+      "chladni-cymatics",
+      "waveguide-designer",
+      "cone-breakup",
+      "acoustics-room-modes"
+    ]
+  },
+  {
+    "id": "acoustic-foam-panels-24pack-pyramid",
+    "label": "Acoustic Foam Panels 24-pack Pyramid 2 inch",
+    "asin": "B0CFQSH4DN",
+    "note": "Pyramid foam taming room modes at f = n c / 2L — measure RT60 drop and compare to acoustic-calculator predictions for absorption coefficient vs frequency.",
+    "category": "Tool",
+    "relatedTo": [
+      "acoustics-room-modes",
+      "acoustic-calculators",
+      "waveguide-designer"
+    ]
+  },
+  {
+    "id": "acoustic-foam-50pack-wedge-1inch",
+    "label": "Acoustic Foam Panels 50-pack Wedge 1 inch",
+    "asin": "B0832DPMYR",
+    "note": "1-inch wedge for mid-high absorption — use with room-mode calculator's Sabine RT60 equation to predict reverberation time reduction.",
+    "category": "Tool",
+    "relatedTo": [
+      "acoustics-room-modes",
+      "acoustic-calculators"
+    ]
+  },
+  {
+    "id": "acoustic-foam-24pack-2inch-charcoal",
+    "label": "Acoustic Foam 24-pack 2 inch Charcoal",
+    "asin": "B0GQ9TK7MN",
+    "note": "Dense foam damping axial modes — place at pressure antinodes displayed in room-mode visualizer's 3D pressure field.",
+    "category": "Tool",
+    "relatedTo": [
+      "acoustics-room-modes",
+      "cone-breakup"
+    ]
+  },
+  {
+    "id": "dayton-emm6-omnidirectional-new",
+    "label": "Dayton Audio EMM-6 Omnidirectional Measurement Mic (New)",
+    "asin": "B0D7YDWYL2",
+    "note": "Latest EMM-6 variant with calibration file — measure waveguide polar response and cone-breakup waterfall to validate directivity index this lab computes.",
+    "category": "Microphone",
+    "relatedTo": [
+      "waveguide-designer",
+      "cone-breakup",
+      "acoustics-room-modes"
+    ]
+  },
+  {
+    "id": "dayton-umm6-usb-legacy",
+    "label": "Dayton Audio UMM-6 USB Measurement Microphone (Legacy)",
+    "asin": "B00ADR2E68",
+    "note": "Legacy USB measurement mic for REW — capture on-axis SPL and compare to enclosure designer frequency response with baffle diffraction.",
+    "category": "Microphone",
+    "relatedTo": [
+      "loudspeaker-enclosure-designer",
+      "acoustic-calculators",
+      "cone-breakup"
+    ]
+  },
+  {
+    "id": "dayton-imm6c-usbc-measurement-mic",
+    "label": "Dayton Audio iMM-6C USB-C Measurement Mic",
+    "asin": "B0CMV914QV",
+    "note": "USB-C calibrated mic for iPhone/iPad — take to listening room and verify room-mode eigenfrequencies against calculator's mode list up to 300Hz.",
+    "category": "Microphone",
+    "relatedTo": [
+      "acoustics-room-modes",
+      "acoustic-calculators",
+      "biquad-filter-designer"
+    ]
+  },
+  {
+    "id": "jetson-nano-16gb-emmc-dev-kit",
+    "label": "Jetson Nano Developer Kit 16GB eMMC",
+    "asin": "B09Y94MGRZ",
+    "note": "eMMC variant for TinyML deployment — flash int8 quantized CoreML model sized by this calculator and measure flash vs RAM footprint tradeoff.",
+    "category": "SBC",
+    "relatedTo": [
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "nrf52840-micro-dev-dongle-geeekpi",
+    "label": "GeeekPi nRF52840 Micro Dev Kit USB Dongle",
+    "asin": "B07MJ12XLG",
+    "note": "nRF52840 dongle acting as BLE sniffer — captures ATT MTU and GATT notifications that become CSV rows this BLE visualizer frames.",
+    "category": "Microcontroller",
+    "relatedTo": [
+      "ble-gatt-visualizer"
+    ]
+  },
+  {
+    "id": "fundamentals-photonics-saleh-teich",
+    "label": "Fundamentals of Photonics (Saleh & Teich, 3rd)",
+    "asin": "1118778440",
+    "note": "Derives Gaussian beam resonator stability and ABCD law for laser cavities — test the g1·g2 ≤1 condition this bench evaluates for two-mirror resonators.",
+    "category": "Book",
+    "relatedTo": [
+      "optics-bench"
+    ]
+  },
+  {
+    "id": "principles-optics-born-wolf",
+    "label": "Principles of Optics (Born & Wolf, 7th)",
+    "asin": "1108471309",
+    "note": "Rigorous electromagnetic theory of ABCD and Fresnel diffraction — compare paraxial ray fan this bench traces to Born's exact wavefront aberrations.",
+    "category": "Book",
+    "relatedTo": [
+      "optics-bench"
+    ]
+  },
+  {
+    "id": "turbulent-flows-pope",
+    "label": "Turbulent Flows (Pope)",
+    "asin": "0521598869",
+    "note": "Kolmogorov energy cascade and vortex stretching — crank Reynolds number in LBM tunnel past transition and see Pope's -5/3 law emerge in vorticity power spectrum.",
+    "category": "Book",
+    "relatedTo": [
+      "lattice-boltzmann-tunnel"
+    ]
+  },
+  {
+    "id": "fluid-mechanics-frank-white-8th",
+    "label": "Fluid Mechanics (Frank White, 8th)",
+    "asin": "0073398276",
+    "note": "Boundary layer separation and drag coefficient Cd vs Re — place cylinder in LBM tunnel and validate wake Strouhal against White's drag crisis curve.",
+    "category": "Book",
+    "relatedTo": [
+      "lattice-boltzmann-tunnel"
+    ]
   }
 ]
