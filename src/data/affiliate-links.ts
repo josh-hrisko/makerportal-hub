@@ -42,6 +42,34 @@ export const PCBWAY_SHARED_PROJECTS: Record<string, string> = {
 export const JLCPCB_REFERRAL_CODE: string = ''; // coupon / referral param — owner to fill
 export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exists
 
+/**
+ * SaaS / GPU-cloud partners (docs/SAAS-GPU-MONETIZATION.md).
+ * Same integrity rule as PCB fab: no fake IDs shipped. Empty string = link
+ * renders as a clean informational link (rel="noopener noreferrer", no
+ * "sponsored"); once the real partner URL lands, pages flip to
+ * rel="sponsored noopener noreferrer" automatically via buildSaasPartnerUrl.
+ *
+ * - ElevenLabs: PartnerStack, 22% recurring 12 mo (commission to us, NOT a
+ *   user-facing discount — never phrase it as "22% off" in UI copy).
+ * - Modal / Fly.io: no public affiliate program — permanently informational;
+ *   monetized via DevRel credit-grant pitches instead.
+ */
+export const ELEVENLABS_PARTNER_URL: string = ''; // PartnerStack link — owner to fill on approval
+export const MODAL_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
+export const FLY_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
+
+export function buildSaasPartnerUrl(
+  partnerUrl: string,
+  fallbackUrl: string
+): { url: string; isAffiliate: boolean; rel: string } {
+  const isAffiliate = Boolean(partnerUrl);
+  return {
+    url: partnerUrl || fallbackUrl,
+    isAffiliate,
+    rel: isAffiliate ? 'sponsored noopener noreferrer' : 'noopener noreferrer',
+  };
+}
+
 export type AffiliateMerchant =
   | 'amazon'
   | 'sparkfun'

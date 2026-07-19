@@ -190,7 +190,8 @@
       "cone-breakup",
       "waveguide-designer",
       "pole-zero-explorer",
-      "agentic-dsp-pipeline"
+      "agentic-dsp-pipeline",
+      "elevenlabs-dsp-sandbox"
     ],
     "pillars": [
       "dsp-audio"
@@ -225,7 +226,8 @@
       "loudspeaker-enclosure-designer",
       "loudspeaker-nonlinearity-lab",
       "cone-breakup",
-      "waveguide-designer"
+      "waveguide-designer",
+      "elevenlabs-dsp-sandbox"
     ],
     "pillars": [
       "dsp-audio"
@@ -271,7 +273,8 @@
       "cone-breakup",
       "waveguide-designer",
       "pole-zero-explorer",
-      "agentic-dsp-pipeline"
+      "agentic-dsp-pipeline",
+      "elevenlabs-dsp-sandbox"
     ],
     "pillars": [
       "dsp-audio"
@@ -337,7 +340,8 @@
     "relatedTo": [
       "itria",
       "coreml-model-size-calculator",
-      "webgpu-pinn-studio"
+      "webgpu-pinn-studio",
+      "modal-gpu-benchmarker"
     ],
     "pillars": [
       "on-device-ai"
@@ -448,7 +452,8 @@
     "note": "USB Edge TPU for int8 quantized nets — run the same quantized CoreML model sized here and see why int8 cuts RAM bandwidth but needs per-channel scales.",
     "category": "Accelerator",
     "relatedTo": [
-      "coreml-model-size-calculator"
+      "coreml-model-size-calculator",
+      "modal-gpu-benchmarker"
     ],
     "pillars": [
       "on-device-ai"
@@ -461,7 +466,8 @@
     "note": "CUDA/GPU parallel programming text for WebGPU PINN and edge GPU workloads.",
     "category": "Book",
     "relatedTo": [
-      "webgpu-pinn-studio"
+      "webgpu-pinn-studio",
+      "modal-gpu-benchmarker"
     ],
     "pillars": [
       "on-device-ai",
@@ -997,7 +1003,8 @@
     "relatedTo": [
       "coreml-model-size-calculator",
       "webgpu-pinn-studio",
-      "slam-odometry-arena"
+      "slam-odometry-arena",
+      "modal-gpu-benchmarker"
     ],
     "pillars": [
       "on-device-ai"
@@ -1423,7 +1430,8 @@
     "note": "4GB Pi 4 kit with case/fan — the compute base for BLExAR's LiDAR, thermal, GPS, and audio-array builds.",
     "category": "SBC",
     "relatedTo": [
-      "blexar"
+      "blexar",
+      "fly-edge-db-lab"
     ]
   },
   {
@@ -1488,7 +1496,8 @@
       "cone-breakup",
       "waveguide-designer",
       "pole-zero-explorer",
-      "agentic-dsp-pipeline"
+      "agentic-dsp-pipeline",
+      "elevenlabs-dsp-sandbox"
     ],
     "pillars": [
       "dsp-audio"
@@ -1524,7 +1533,8 @@
     "note": "Storage card used in BLExAR's solar-panel data-logging build.",
     "category": "Storage",
     "relatedTo": [
-      "blexar"
+      "blexar",
+      "fly-edge-db-lab"
     ]
   },
   {
@@ -1532,7 +1542,11 @@
     "label": "SanDisk Extreme Portable SSD (1TB)",
     "asin": "B0GMWYYRQL",
     "note": "Portable SSD used for studio project storage and backups.",
-    "category": "Storage"
+    "category": "Storage",
+    "relatedTo": [
+      "modal-gpu-benchmarker",
+      "fly-edge-db-lab"
+    ]
   },
   {
     "id": "satellite-orbits-montenbruck-gill",
@@ -1730,7 +1744,8 @@
     "image": "https://www.sparkfun.com/media/catalog/product/cache/6b78ac9ed927a3c2db42a3c84dab4ce5/2/3/23550-Raspberry-Pi-5-4G-feature.jpg",
     "relatedTo": [
       "rtos-scheduler",
-      "blexar"
+      "blexar",
+      "fly-edge-db-lab"
     ]
   },
   {
@@ -1749,7 +1764,9 @@
       "slam-odometry-arena",
       "rtos-scheduler",
       "webgpu-pinn-studio",
-      "blexar"
+      "blexar",
+      "modal-gpu-benchmarker",
+      "fly-edge-db-lab"
     ],
     "pillars": [
       "ios-craft",
@@ -1872,7 +1889,8 @@
       "cone-breakup",
       "waveguide-designer",
       "pole-zero-explorer",
-      "agentic-dsp-pipeline"
+      "agentic-dsp-pipeline",
+      "elevenlabs-dsp-sandbox"
     ],
     "pillars": [
       "dsp-audio"
@@ -1970,7 +1988,8 @@
       "loudspeaker-enclosure-designer",
       "loudspeaker-nonlinearity-lab",
       "cone-breakup",
-      "waveguide-designer"
+      "waveguide-designer",
+      "elevenlabs-dsp-sandbox"
     ],
     "pillars": [
       "dsp-audio"
@@ -2194,7 +2213,10 @@
     "label": "USB-C Docking Station Dual DisplayPort 8-in-1 Hub",
     "asin": "B0DM8QJRN6",
     "note": "Studio desk dock used across all app development work.",
-    "category": "Accessory"
+    "category": "Accessory",
+    "relatedTo": [
+      "fly-edge-db-lab"
+    ]
   },
   {
     "id": "vibration-motor",

@@ -298,6 +298,36 @@ export const playground: PlaygroundEntry[] = [
     status: 'live',
   },
   {
+    slug: 'elevenlabs-dsp-sandbox',
+    title: 'Voice Synthesis DSP Sandbox',
+    tagline: 'Text-to-speech through a live Web Audio DSP rack',
+    description:
+      'Synthesize a voice — a built-in formant demo voice, your microphone, or your own ElevenLabs API key — and push it through a real Web Audio DSP chain: bandpass filtering, feedback echo, RT60-controlled convolution reverb, and pitch resampling, with a live waveform + spectrogram analyzer and gated clean-WAV export.',
+    pillarHint: 'dsp-audio',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'modal-gpu-benchmarker',
+    title: 'Client vs Serverless GPU Benchmarker',
+    tagline: 'Your GPU vs a cloud GPU, measured — never estimated',
+    description:
+      'Run real WebGPU compute workloads shaped like Whisper-tiny inference on your own device, then race them against a serverless GPU endpoint you deploy on Modal with the provided script. Every number on the chart is measured on your hardware or your endpoint — nothing is fabricated.',
+    pillarHint: 'on-device-ai',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'fly-edge-db-lab',
+    title: 'Edge DB Sync Lab',
+    tagline: 'Place replicas on a world map, watch reads beat writes',
+    description:
+      'A multi-region SQLite/LiteFS replication simulator: place a primary and read replicas at real Fly.io regions on a world map, click anywhere to fire client transactions, and watch read queries return from the nearest replica while writes forward to the primary — with speed-of-light-in-fiber latency math disclosed in full.',
+    pillarHint: 'privacy-arch',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
     slug: 'rf-microwave-bench',
     title: 'RF & Microwave Circuit Bench',
     tagline: 'S-parameters live on a Smith Chart, hum to pure tone at 50Ω',

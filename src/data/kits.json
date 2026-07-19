@@ -138,5 +138,46 @@
       { "linkId": "book-hands-on-ml", "qty": 1, "optional": true },
       { "linkId": "cuda-programming-kirk-hwu-book", "qty": 1, "optional": true }
     ]
+  },
+  {
+    "id": "voice-synth-workstation",
+    "simulator": "elevenlabs-dsp-sandbox",
+    "title": "Voice synthesis workstation",
+    "blurb": "USB/XLR broadcast mic + closed-back monitors + multichannel interface — record reference takes, monitor DSP chains without room bleed, and route synthesized voice through outboard gear.",
+    "merchant": "amazon",
+    "items": [
+      { "linkId": "shure-mv7", "qty": 1 },
+      { "linkId": "ath-m50x", "qty": 1 },
+      { "linkId": "behringer-umc1820", "qty": 1 },
+      { "linkId": "blue-yeti-nano", "qty": 1, "optional": true },
+      { "linkId": "sony-mdr-7506", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "modal-edge-bench-stack",
+    "simulator": "modal-gpu-benchmarker",
+    "title": "Local vs cloud inference bench",
+    "blurb": "Jetson Orin Nano for local GPU inference + Pi 5 as an offload gateway — reproduce the client-vs-serverless tradeoff on real hardware before you commit to a cloud GPU bill.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "jetson-orin-nano-super-dev-kit", "qty": 1 },
+      { "linkId": "sf-raspberry-pi-5-8gb", "qty": 1 },
+      { "linkId": "coral-usb-accelerator-edge-tpu", "qty": 1, "optional": true },
+      { "linkId": "sandisk-extreme-ssd-1tb", "qty": 1, "optional": true },
+      { "linkId": "book-designing-ml-systems", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "fly-edge-lab-stack",
+    "simulator": "fly-edge-db-lab",
+    "title": "Home edge-replica lab",
+    "blurb": "Two Pis + fast external SSD = a physical two-region LiteFS/SQLite replication lab on your LAN — measure real read-local vs write-forward latency before renting cloud regions.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "sf-raspberry-pi-5-8gb", "qty": 1 },
+      { "linkId": "sandisk-extreme-ssd-1tb", "qty": 1 },
+      { "linkId": "raspberry-pi-4-4gb-kit", "qty": 1, "optional": true },
+      { "linkId": "sandisk-16gb-microsd", "qty": 2, "optional": true }
+    ]
   }
 ]

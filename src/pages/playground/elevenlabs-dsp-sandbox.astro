@@ -1,0 +1,762 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import GearCarousel from '../../components/GearCarousel.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import KitBuilder from '../../components/KitBuilder.astro';
+import ExportGate from '../../components/ExportGate.astro';
+import Math from '../../components/Math.astro';
+import SimSponsorChip from '../../components/SimSponsorChip.astro';
+import { affiliateLinks, resolveAffiliateLink, ELEVENLABS_PARTNER_URL, buildSaasPartnerUrl } from '../../data/affiliate-links';
+import { kitForSimulator } from '../../data/kits';
+
+const gear = affiliateLinks
+  .filter((l) => l.relatedTo?.includes('elevenlabs-dsp-sandbox'))
+  .map(resolveAffiliateLink)
+  .slice(0, 6);
+const kit = kitForSimulator('elevenlabs-dsp-sandbox');
+const eleven = buildSaasPartnerUrl(ELEVENLABS_PARTNER_URL, 'https://elevenlabs.io/');
+
+const title = 'Voice Synthesis DSP Sandbox — TTS through a live Web Audio rack | MakerPortal';
+const description =
+  'Synthesize a voice (built-in formant demo, your mic, or your own ElevenLabs API key) and push it through a real Web Audio DSP chain: bandpass, feedback echo, RT60 convolution reverb, pitch resampling — with live waveform + spectrogram and gated clean-WAV export.';
+const canonical = new URL('/playground/elevenlabs-dsp-sandbox', Astro.site);
+
+const softwareSchema = { '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Voice Synthesis DSP Sandbox', url: canonical.toString(), applicationCategory: 'MultimediaApplication', operatingSystem: 'Any (browser-based)', description, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } };
+const breadcrumbSchema = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+  { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+  { '@type': 'ListItem', position: 3, name: 'Voice Synthesis DSP Sandbox', item: canonical.toString() },
+] };
+
+const faqs = [
+  {
+    q: 'Does this page call ElevenLabs without my permission?',
+    a: 'No. By default the sandbox uses a built-in client-side formant demo voice (clearly labeled — it is a toy synthesizer, not ElevenLabs output) or your microphone. Only if you paste your own ElevenLabs API key does the browser call api.elevenlabs.io directly. The key is stored in your localStorage only (mp_elevenlabs_key), never sent to MakerPortal — this site has no tracking backend.',
+  },
+  {
+    q: 'How is the reverb generated from RT60?',
+    a: 'The ConvolverNode impulse response is procedurally generated: white noise shaped by an exponential decay envelope e^(−6.91·t/RT60), so the energy falls exactly 60 dB over the RT60 you set. Moving the slider regenerates the IR. This is the standard Schroeder-style synthetic room tail — statistically like a real room decay, without early-reflection geometry.',
+  },
+  {
+    q: 'Why is pitch shift disabled in microphone mode?',
+    a: 'The pitch control uses AudioBufferSourceNode.playbackRate — resampling the decoded buffer by 2^(semitones/12). A live MediaStreamSource has no playbackRate; true real-time pitch shifting needs a granular or phase-vocoder AudioWorklet, which changes latency and quality tradeoffs. Rather than fake it, the control disables and says so.',
+  },
+  {
+    q: 'What exactly does the latency readout measure?',
+    a: 'Two real numbers from your browser: AudioContext.baseLatency (the render-quantum buffering of the audio graph) and outputLatency (estimated hardware output delay), plus — only after you run a synthesis with your own API key — the measured wall-clock time-to-first-byte and total fetch time of the actual ElevenLabs request. Nothing is estimated or invented; fields show “—” until measured.',
+  },
+  {
+    q: 'How does streaming TTS map onto Web Audio in production?',
+    a: 'ElevenLabs’ WebSocket endpoint sends base64 PCM chunks. You decode each chunk into a Float32 AudioBuffer, and schedule buffers back-to-back with AudioBufferSourceNode.start(t) where t advances by chunk duration — keeping a small lead (~2 chunk durations) over context.currentTime to absorb network jitter. The Code section below is a complete TypeScript implementation of that scheduler.',
+  },
+];
+const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+
+const streamTS = `// ElevenLabs WebSocket streaming -> Web Audio scheduling (TypeScript)
+// PCM route: request pcm_44100 and schedule raw Float32 chunks gap-free.
+const VOICE = 'YOUR_VOICE_ID';
+const ctx = new AudioContext({ sampleRate: 44100 });
+
+let playhead = 0; // absolute schedule time in ctx time
+const LEAD = 0.15; // s of jitter buffer before first chunk plays
+
+function scheduleChunk(f32: Float32Array) {
+  const buf = ctx.createBuffer(1, f32.length, 44100);
+  buf.copyToChannel(f32, 0);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination); // or into your DSP chain input node
+  if (playhead < ctx.currentTime + 0.02) playhead = ctx.currentTime + LEAD;
+  src.start(playhead);
+  playhead += buf.duration; // back-to-back, sample-accurate
+}
+
+function pcm16ToF32(bytes: Uint8Array): Float32Array {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const out = new Float32Array(bytes.byteLength / 2);
+  for (let i = 0; i < out.length; i++) out[i] = view.getInt16(i * 2, true) / 32768;
+  return out;
+}
+
+export function streamTTS(text: string, apiKey: string) {
+  const ws = new WebSocket(
+    \`wss://api.elevenlabs.io/v1/text-to-speech/\${VOICE}/stream-input\` +
+    \`?model_id=eleven_multilingual_v2&output_format=pcm_44100\`
+  );
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ text: ' ', xi_api_key: apiKey })); // handshake
+    ws.send(JSON.stringify({ text, try_trigger_generation: true }));
+    ws.send(JSON.stringify({ text: '' })); // EOS
+  };
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.audio) {
+      const bytes = Uint8Array.from(atob(msg.audio), (c) => c.charCodeAt(0));
+      scheduleChunk(pcm16ToF32(bytes));
+    }
+    if (msg.isFinal) ws.close();
+  };
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+  <PlaygroundShell
+    title="Voice Synthesis DSP Sandbox"
+    lead="Type text, synthesize a voice, and push it through a real Web Audio DSP rack — bandpass, feedback echo, RT60-controlled convolution reverb, pitch resampling — with a live waveform + spectrogram analyzer. Works out of the box with a built-in demo voice; plug in your own ElevenLabs API key for production-grade synthesis."
+    pillarHint="dsp-audio"
+  >
+    <!-- 1 · SIMULATOR -->
+    <section class="border-b border-border" aria-labelledby="sandbox-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <h2 id="sandbox-title" class="sr-only">Voice synthesis sandbox</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Voice source</h3>
+            <select id="src-mode" class="mt-2 w-full rounded-[10px] border border-border bg-canvas px-3 py-2 font-mono text-[0.75rem]">
+              <option value="demo">Demo formant voice (built-in, offline)</option>
+              <option value="eleven">ElevenLabs API (your key)</option>
+              <option value="mic">Microphone (live)</option>
+            </select>
+
+            <label class="mt-3 block">
+              <span class="font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-text">Text to speak</span>
+              <textarea id="tts-text" rows="3" class="mt-1 w-full rounded-[10px] border border-border bg-canvas px-3 py-2 text-[0.85rem] text-primary-text" maxlength="400">The quick brown fox jumps over the lazy dog.</textarea>
+            </label>
+
+            <div id="eleven-panel" class="mt-3 hidden space-y-2 rounded-[12px] border border-dashed border-border bg-elevated/30 p-3">
+              <label class="block">
+                <span class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">ElevenLabs API key (stays in your browser)</span>
+                <input id="eleven-key" type="password" autocomplete="off" placeholder="xi-..." class="mt-1 w-full rounded-[10px] border border-border bg-canvas px-3 py-2 font-mono text-[0.75rem]" />
+              </label>
+              <div class="flex items-center gap-2">
+                <select id="eleven-voice" class="min-w-0 flex-1 rounded-[10px] border border-border bg-canvas px-2 py-1.5 font-mono text-[0.7rem]">
+                  <option value="">— load voices with your key —</option>
+                </select>
+                <button id="btn-load-voices" class="pill-btn shrink-0">Load voices</button>
+              </div>
+              <p class="text-[0.62rem] leading-[1.45] text-muted-text">Key is stored only in <code>localStorage.mp_elevenlabs_key</code> and sent only to <code>api.elevenlabs.io</code> — never to this site. <a href={eleven.url} target="_blank" rel={eleven.rel} class="text-brand-anchor">Get a key at ElevenLabs ↗</a></p>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <button id="btn-synth" class="rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas hover:opacity-90">Synthesize</button>
+              <button id="btn-play" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.8rem] font-semibold" disabled>Play</button>
+              <span id="synth-state" class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text/70">idle</span>
+            </div>
+
+            <div class="mt-4 border-t border-border pt-3">
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">DSP rack — acoustic environment</p>
+              <label class="control-label mt-2"><span>Bandpass center Hz</span><output id="out-bp">1400</output><input id="sl-bp" type="range" min="200" max="8000" step="10" value="1400" /></label>
+              <label class="control-label"><span>Bandpass Q (0.3 = open)</span><output id="out-q">0.30</output><input id="sl-q" type="range" min="0.3" max="12" step="0.05" value="0.30" /></label>
+              <label class="control-label"><span>Echo time ms</span><output id="out-dt">220</output><input id="sl-dt" type="range" min="40" max="800" step="5" value="220" /></label>
+              <label class="control-label"><span>Echo feedback</span><output id="out-fb">0.00</output><input id="sl-fb" type="range" min="0" max="0.85" step="0.01" value="0" /></label>
+              <label class="control-label"><span>Reverb RT60 s</span><output id="out-rt">0.8</output><input id="sl-rt" type="range" min="0.15" max="6" step="0.05" value="0.8" /></label>
+              <label class="control-label"><span>Reverb mix</span><output id="out-wet">0.00</output><input id="sl-wet" type="range" min="0" max="1" step="0.01" value="0" /></label>
+              <label class="control-label"><span>Pitch semitones (buffer only)</span><output id="out-pitch">0</output><input id="sl-pitch" type="range" min="-12" max="12" step="1" value="0" /></label>
+              <label class="control-label"><span>Output gain</span><output id="out-gain">0.80</output><input id="sl-gain" type="range" min="0" max="1.5" step="0.01" value="0.8" /></label>
+            </div>
+
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.7rem] leading-[1.5] space-y-1">
+              <div class="flex justify-between"><span>Graph base latency</span><span id="ro-base">—</span></div>
+              <div class="flex justify-between"><span>Output latency</span><span id="ro-out">—</span></div>
+              <div class="flex justify-between"><span>API TTFB (measured)</span><span id="ro-ttfb">—</span></div>
+              <div class="flex justify-between"><span>API total (measured)</span><span id="ro-total">—</span></div>
+              <div class="flex justify-between"><span>Peak level</span><span id="ro-peak">—</span></div>
+              <div class="flex justify-between"><span>Clipping</span><span id="ro-clip" class="text-emerald-600">clean</span></div>
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Waveform — post-DSP</p>
+              <canvas id="wave-canvas" width="900" height="150" class="mt-3 block w-full rounded-[10px] border border-border bg-canvas"></canvas>
+              <p class="mt-4 font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Spectrogram — 0–8 kHz, scrolling</p>
+              <canvas id="spec-canvas" width="900" height="220" class="mt-3 block w-full rounded-[10px] border border-border bg-canvas"></canvas>
+              <div class="mt-3 flex flex-wrap items-center gap-2">
+                <button id="btn-rec" class="pill-btn">● Record output</button>
+                <button id="btn-wav-free" class="pill-btn" disabled>↓ WAV (watermark tone)</button>
+                <button id="btn-wav-clean" class="pill-btn" disabled>↓ WAV clean (unlock below)</button>
+                <span id="rec-state" class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text/70">not recording</span>
+              </div>
+              <div class="mt-3">
+                {eleven.isAffiliate ? (
+                  <SimSponsorChip sponsorName="ElevenLabs" message="Partner — plans started through this link support MakerPortal at no extra cost." linkUrl={eleven.url} />
+                ) : (
+                  <SimSponsorChip />
+                )}
+              </div>
+            </div>
+            <div class="rounded-[16px] border border-border bg-elevated/30 p-4 text-[0.8rem] leading-[1.6] text-muted-text">
+              <strong class="text-primary-text">Honesty note:</strong> the demo voice is a toy formant synthesizer running entirely in your browser — it is deliberately robotic and is <em>not</em> ElevenLabs output. It exists so the DSP rack is fully testable without any account. Plug in your own key to hear the real thing through the same chain.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · ANATOMY -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy: PCM chunks → Web Audio buffers</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">How a streaming TTS response becomes gap-free audio inside the browser — the exact pipeline the Code section implements.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <ol class="space-y-4">
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">WebSocket frames arrive.</strong> Each message carries base64-encoded 16-bit little-endian PCM at the sample rate you requested (<code>pcm_44100</code>). Chunk sizes vary with generation speed — you cannot assume a fixed cadence.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Decode to Float32.</strong> base64 → <code>Uint8Array</code> → <code>DataView.getInt16(i, true)</code> ÷ 32768. No <code>decodeAudioData</code> needed for raw PCM — that call is for containered formats (MP3/OGG) and adds latency.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Wrap in an AudioBuffer.</strong> <code>createBuffer(1, n, 44100)</code> + <code>copyToChannel</code>. Each chunk becomes an independent <code>AudioBufferSourceNode</code> — they are one-shot and cheap by design.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Schedule on an absolute playhead.</strong> <code>src.start(playhead); playhead += buf.duration</code>. Because <code>start(t)</code> is sample-accurate, back-to-back scheduling produces zero audible seams. A ~150 ms lead over <code>currentTime</code> absorbs network jitter.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Enter the DSP rack.</strong> Sources connect into the same chain you hear on this page: input gain → bandpass biquad → parallel dry / echo (delay + feedback) / reverb (convolver) → master gain → analyser → speakers.</p></li>
+            </ol>
+          </div>
+          <div class="rounded-[20px] border border-border bg-card-bg p-5">
+            <svg viewBox="0 0 360 240" class="mx-auto w-full max-w-[380px]" role="img" aria-label="Streaming PCM chunks scheduled into a Web Audio DSP chain">
+              <rect x="10" y="14" width="76" height="30" rx="6" fill="none" stroke="#4a7bb8" stroke-width="1.5" />
+              <text x="48" y="33" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#4a7bb8">WS chunk n</text>
+              <rect x="10" y="52" width="76" height="30" rx="6" fill="none" stroke="#4a7bb8" stroke-width="1.5" opacity="0.7" />
+              <text x="48" y="71" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#4a7bb8" opacity="0.8">WS chunk n+1</text>
+              <rect x="10" y="90" width="76" height="30" rx="6" fill="none" stroke="#4a7bb8" stroke-width="1.5" opacity="0.4" />
+              <text x="48" y="109" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#4a7bb8" opacity="0.6">WS chunk n+2</text>
+              <path d="M 90 67 L 128 67" stroke="var(--mp-muted)" stroke-width="1.5" marker-end="url(#arr)" />
+              <rect x="132" y="46" width="88" height="42" rx="6" fill="none" stroke="#CE445D" stroke-width="1.5" />
+              <text x="176" y="63" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#CE445D">int16 → f32</text>
+              <text x="176" y="77" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#CE445D">AudioBuffer</text>
+              <path d="M 224 67 L 258 67" stroke="var(--mp-muted)" stroke-width="1.5" marker-end="url(#arr)" />
+              <rect x="262" y="46" width="88" height="42" rx="6" fill="none" stroke="#3C888F" stroke-width="1.5" />
+              <text x="306" y="63" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#3C888F">start(playhead)</text>
+              <text x="306" y="77" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#3C888F">+= duration</text>
+              <path d="M 306 92 L 306 128" stroke="var(--mp-muted)" stroke-width="1.5" marker-end="url(#arr)" />
+              <rect x="20" y="132" width="330" height="36" rx="8" fill="none" stroke="var(--mp-border)" stroke-width="1.5" />
+              <text x="185" y="154" text-anchor="middle" font-family="ui-monospace" font-size="9.5" fill="var(--mp-text)">gain → bandpass → [dry ∥ echo ∥ reverb] → master</text>
+              <path d="M 185 172 L 185 200" stroke="var(--mp-muted)" stroke-width="1.5" marker-end="url(#arr)" />
+              <text x="185" y="220" text-anchor="middle" font-family="ui-monospace" font-size="10" fill="var(--mp-muted)">analyser → speakers · timeline: |—n—|—n+1—|—n+2—| gap-free</text>
+              <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--mp-muted)" /></marker></defs>
+            </svg>
+            <p class="mt-3 text-center text-[0.78rem] text-muted-text">Chunks of unpredictable size become a seam-free stream because start() is sample-accurate against an absolute playhead.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · GEAR -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Voice workstation stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Mics · monitors · interfaces
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <GearCarousel gear={gear} />
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- 4 · KIT BUILDER -->
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Build the physical voice-synthesis workstation. Select components below for a live bill of materials.</p>
+          <div class="mt-10">
+            <KitBuilder kit={kit} />
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- 5 · MATH -->
+    <section class="border-b border-border" aria-labelledby="math-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The DSP math, in full</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">RT60 decay envelope</p>
+            <Math math="h(t) = n(t)\, e^{-6.91\, t / RT_{60}}" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">The impulse response is white noise n(t) under an exponential envelope. −60 dB in amplitude is a factor 10⁻³, and e^(−6.91) ≈ 10⁻³ — so energy decays exactly 60 dB over RT60. Sabine connects RT60 to a physical room: RT60 = 0.161·V/A (V in m³, A in sabins).</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Bandpass biquad response</p>
+            <Math math="|H(f)| = \frac{(f/f_0)/Q}{\sqrt{\left(1-(f/f_0)^2\right)^2 + \left((f/f_0)/Q\right)^2}}" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Web Audio's bandpass BiquadFilterNode: unity gain at the center frequency f₀, −3 dB bandwidth f₀/Q. Q = 0.3 is nearly transparent; Q &gt; 5 gives the classic “telephone” band-limit that makes speech sound distant.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Streaming latency budget</p>
+            <Math math="t_{first} = t_{TTFB} + t_{decode} + t_{lead} + t_{base} + t_{out}" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Time to first audible sample = network time-to-first-chunk + PCM decode (µs, negligible) + jitter lead (~150 ms chosen) + graph base latency + hardware output latency. The sandbox reads the last two from your AudioContext and measures TTFB when you use your own key.</p>
+          </div>
+        </div>
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Echo as a feedback comb</p>
+            <Math math="y[n] = x[n] + g\, y[n - D],\qquad |H(e^{j\omega})| \text{ peaks at } f_k = k/T_D" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">DelayNode + feedback gain g is a comb filter: repeats every T_D seconds decaying by g each pass. Total decay to −60 dB takes T_D·log(10⁻³)/log(g) — at g = 0.5 and 220 ms, about 2.2 s of audible tail. Keep g &lt; 0.85 or energy accumulates toward instability.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Pitch by resampling</p>
+            <Math math="r = 2^{\,s/12},\qquad f' = r f,\quad T' = T/r" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">playbackRate r shifts every frequency by the same ratio and shortens duration — chipmunk artifacts included, formants shift too. Time-preserving pitch shift needs a phase vocoder or granular resynthesis (an AudioWorklet job, out of scope here — and we say so rather than fake it).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · CODE -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Production streaming code — WebSocket → sample-accurate scheduling</h2>
+        <p class="mt-3 max-w-2xl text-[0.92rem] text-muted-text">Complete TypeScript for the streaming pipeline in the Anatomy diagram. Drop your voice ID and key in; the scheduler works for any chunked-PCM source, not just ElevenLabs.</p>
+        <div class="mt-5 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
+          <Code code={streamTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Aha toast -->
+    <div id="el-aha-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Stable chain · Aha moment</p>
+      <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text">Crystal clear synthesis — 3 s of clean playback through your DSP chain.</p>
+      <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">Deploy this exact voice pipeline in your app with the streaming scheduler below.</p>
+      <div class="mt-3 flex gap-2">
+        <a id="el-aha-cta" href={eleven.url} target="_blank" rel={eleven.rel} class="pointer-events-auto inline-flex items-center justify-center rounded-full bg-primary-text px-4 py-2 text-[0.82rem] font-semibold text-canvas hover:opacity-90">Build it on ElevenLabs ↗</a>
+        <button id="el-aha-dismiss" type="button" class="pointer-events-auto rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text hover:text-primary-text">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- 7 · EXPORT GATE -->
+    <ExportGate
+      simulator="elevenlabs-dsp-sandbox"
+      fileName="voice-dsp-preset.json"
+      mimeType="application/json"
+      title="Export DSP preset + unlock clean WAV"
+      description="Your tuned rack (bandpass, echo, RT60, pitch) as a JSON preset compatible with the streaming scheduler above. Unlocking also removes the watermark tone from WAV recordings on this page."
+      fileExtension="json"
+    />
+
+    <!-- FAQ -->
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted)}
+  .pill-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
+  .pill-btn:disabled{opacity:0.4;cursor:not-allowed}
+  .pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+  .control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+  .control-label input[type=range]{grid-column:1/-1;accent-color:var(--mp-cta)}
+</style>
+
+<script>
+// @ts-nocheck
+function initVoiceSandbox(){
+  const waveC=document.getElementById('wave-canvas');
+  if(!waveC || waveC.dataset.init) return; waveC.dataset.init='true';
+  const specC=document.getElementById('spec-canvas');
+  const wCtx=waveC.getContext('2d'), sCtx=specC.getContext('2d');
+  const dpr=Math.min(devicePixelRatio||1,2);
+  [waveC,specC].forEach(c=>{const W=c.width,H=c.height;c.width=W*dpr;c.height=H*dpr;c.style.width='100%';c.getContext('2d').scale(dpr,dpr);c._w=W;c._h=H;});
+
+  const $=id=>document.getElementById(id);
+  const srcMode=$('src-mode'), ttsText=$('tts-text'), elevenPanel=$('eleven-panel'), keyInput=$('eleven-key'), voiceSel=$('eleven-voice');
+  const btnSynth=$('btn-synth'), btnPlay=$('btn-play'), synthState=$('synth-state');
+  const sl={bp:$('sl-bp'),q:$('sl-q'),dt:$('sl-dt'),fb:$('sl-fb'),rt:$('sl-rt'),wet:$('sl-wet'),pitch:$('sl-pitch'),gain:$('sl-gain')};
+  const out={bp:$('out-bp'),q:$('out-q'),dt:$('out-dt'),fb:$('out-fb'),rt:$('out-rt'),wet:$('out-wet'),pitch:$('out-pitch'),gain:$('out-gain')};
+  const ro={base:$('ro-base'),out:$('ro-out'),ttfb:$('ro-ttfb'),total:$('ro-total'),peak:$('ro-peak'),clip:$('ro-clip')};
+  const btnRec=$('btn-rec'), btnWavFree=$('btn-wav-free'), btnWavClean=$('btn-wav-clean'), recState=$('rec-state');
+  const SIM='elevenlabs-dsp-sandbox';
+
+  try{ keyInput.value=localStorage.getItem('mp_elevenlabs_key')||''; }catch{}
+  keyInput.addEventListener('change',()=>{ try{ localStorage.setItem('mp_elevenlabs_key', keyInput.value.trim()); }catch{} });
+  srcMode.addEventListener('change',()=>{ elevenPanel.classList.toggle('hidden', srcMode.value!=='eleven'); btnSynth.textContent = srcMode.value==='mic' ? 'Start mic' : 'Synthesize'; });
+
+  // ---------- audio graph ----------
+  let ctx=null, inputGain=null, bandpass=null, dryGain=null, delayNode=null, fbGain=null, echoGain=null, convolver=null, wetGain=null, master=null, analyser=null, recTap=null;
+  let currentBuffer=null, activeSrc=null, micStream=null, playing=false;
+
+  function ensureGraph(){
+    if(ctx) return ctx;
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    inputGain=ctx.createGain();
+    bandpass=ctx.createBiquadFilter(); bandpass.type='bandpass';
+    dryGain=ctx.createGain();
+    delayNode=ctx.createDelay(1.0); fbGain=ctx.createGain(); echoGain=ctx.createGain();
+    convolver=ctx.createConvolver(); wetGain=ctx.createGain();
+    master=ctx.createGain();
+    analyser=ctx.createAnalyser(); analyser.fftSize=2048; analyser.smoothingTimeConstant=0.6;
+    inputGain.connect(bandpass);
+    bandpass.connect(dryGain); dryGain.connect(master);
+    bandpass.connect(delayNode); delayNode.connect(fbGain); fbGain.connect(delayNode); delayNode.connect(echoGain); echoGain.connect(master);
+    bandpass.connect(convolver); convolver.connect(wetGain); wetGain.connect(master);
+    master.connect(analyser); analyser.connect(ctx.destination);
+    // recorder tap: ScriptProcessor is deprecated-but-universal; fine for a capture tap
+    recTap=ctx.createScriptProcessor(4096,2,2);
+    master.connect(recTap); recTap.connect(ctx.destination); // output buffer stays silent — tap only
+    recTap.onaudioprocess=e=>{
+      if(!recording) return;
+      recChunksL.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      recChunksR.push(new Float32Array(e.inputBuffer.numberOfChannels>1? e.inputBuffer.getChannelData(1):e.inputBuffer.getChannelData(0)));
+    };
+    rebuildIR();
+    applyParams();
+    ro.base.textContent=((ctx.baseLatency||0)*1000).toFixed(1)+' ms';
+    ro.out.textContent=ctx.outputLatency? (ctx.outputLatency*1000).toFixed(1)+' ms' : 'n/a';
+    return ctx;
+  }
+
+  function rebuildIR(){
+    if(!ctx) return;
+    const rt=parseFloat(sl.rt.value);
+    const len=Math.max(1,Math.floor(ctx.sampleRate*Math.min(rt*1.1,6.5)));
+    const ir=ctx.createBuffer(2,len,ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const d=ir.getChannelData(ch);
+      for(let i=0;i<len;i++){
+        const t=i/ctx.sampleRate;
+        d[i]=(Math.random()*2-1)*Math.exp(-6.908*t/rt);
+      }
+    }
+    convolver.buffer=ir;
+  }
+
+  let irTimer=0;
+  function applyParams(){
+    for(const k of Object.keys(sl)) out[k].textContent=(k==='q'||k==='fb'||k==='gain')?parseFloat(sl[k].value).toFixed(2):(k==='rt'?parseFloat(sl[k].value).toFixed(2):sl[k].value);
+    if(!ctx) return;
+    const t=ctx.currentTime+0.03;
+    bandpass.frequency.linearRampToValueAtTime(parseFloat(sl.bp.value),t);
+    bandpass.Q.linearRampToValueAtTime(parseFloat(sl.q.value),t);
+    delayNode.delayTime.linearRampToValueAtTime(parseFloat(sl.dt.value)/1000,t);
+    fbGain.gain.linearRampToValueAtTime(parseFloat(sl.fb.value),t);
+    echoGain.gain.linearRampToValueAtTime(parseFloat(sl.fb.value)>0?0.9:0,t);
+    wetGain.gain.linearRampToValueAtTime(parseFloat(sl.wet.value),t);
+    dryGain.gain.linearRampToValueAtTime(1-0.5*parseFloat(sl.wet.value),t);
+    master.gain.linearRampToValueAtTime(parseFloat(sl.gain.value),t);
+    if(activeSrc && activeSrc.playbackRate) activeSrc.playbackRate.value=Math.pow(2,parseInt(sl.pitch.value,10)/12);
+  }
+  Object.values(sl).forEach(el=>el.addEventListener('input',()=>{
+    applyParams();
+    if(el===sl.rt){ clearTimeout(irTimer); irTimer=setTimeout(rebuildIR,180); }
+  }));
+
+  // ---------- sources ----------
+  function stopSource(){
+    if(activeSrc){ try{activeSrc.stop();}catch{} try{activeSrc.disconnect();}catch{} activeSrc=null; }
+    if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+    playing=false; btnPlay.textContent='Play';
+  }
+
+  function playBuffer(){
+    if(!currentBuffer) return;
+    ensureGraph(); ctx.resume();
+    stopSource();
+    const src=ctx.createBufferSource();
+    src.buffer=currentBuffer;
+    src.playbackRate.value=Math.pow(2,parseInt(sl.pitch.value,10)/12);
+    src.connect(inputGain);
+    src.onended=()=>{ if(activeSrc===src){ playing=false; btnPlay.textContent='Play'; synthState.textContent='done'; } };
+    src.start();
+    activeSrc=src; playing=true; btnPlay.textContent='Stop'; synthState.textContent='playing';
+  }
+
+  // Demo formant voice: toy vowel/consonant synthesis rendered offline — honest stand-in, NOT ElevenLabs.
+  const VOWELS={a:[800,1150,2900],e:[400,2000,2800],i:[300,2300,3000],o:[450,800,2830],u:[325,700,2700]};
+  async function synthDemo(text){
+    const sr=44100;
+    const phones=[];
+    for(const raw of text.toLowerCase()){
+      if(/[aeiou]/.test(raw)) phones.push({type:'v',f:VOWELS[raw],dur:0.14});
+      else if(/[a-z]/.test(raw)) phones.push({type:'c',dur:0.05});
+      else if(raw===' ') phones.push({type:'p',dur:0.09});
+      else if(/[.,!?]/.test(raw)) phones.push({type:'p',dur:0.22});
+    }
+    const total=Math.max(0.5,phones.reduce((s,p)=>s+p.dur,0)+0.3);
+    const off=new OfflineAudioContext(1,Math.ceil(total*sr),sr);
+    let t=0.1;
+    for(const ph of phones){
+      if(ph.type==='p'){ t+=ph.dur; continue; }
+      if(ph.type==='c'){
+        const n=off.createBufferSource(); const nb=off.createBuffer(1,Math.floor(0.04*sr),sr); const nd=nb.getChannelData(0);
+        for(let i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1)*Math.exp(-i/nd.length*8);
+        n.buffer=nb;
+        const hp=off.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2200;
+        const g=off.createGain(); g.gain.value=0.12;
+        n.connect(hp); hp.connect(g); g.connect(off.destination);
+        n.start(t); t+=ph.dur; continue;
+      }
+      const osc=off.createOscillator(); osc.type='sawtooth';
+      osc.frequency.setValueAtTime(118,t);
+      osc.frequency.linearRampToValueAtTime(112,t+ph.dur);
+      const env=off.createGain();
+      env.gain.setValueAtTime(0,t); env.gain.linearRampToValueAtTime(0.9,t+0.02);
+      env.gain.setValueAtTime(0.9,t+ph.dur-0.03); env.gain.linearRampToValueAtTime(0,t+ph.dur);
+      osc.connect(env);
+      for(let fi=0;fi<3;fi++){
+        const bp=off.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=ph.f[fi]; bp.Q.value=8;
+        const fg=off.createGain(); fg.gain.value=[0.9,0.55,0.28][fi];
+        env.connect(bp); bp.connect(fg); fg.connect(off.destination);
+      }
+      osc.start(t); osc.stop(t+ph.dur+0.01);
+      t+=ph.dur;
+    }
+    return off.startRendering();
+  }
+
+  async function synthEleven(text){
+    const key=(keyInput.value||'').trim();
+    if(!key){ synthState.textContent='paste your API key first'; return null; }
+    const voice=voiceSel.value;
+    if(!voice){ synthState.textContent='load + pick a voice first'; return null; }
+    const t0=performance.now();
+    const res=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}?output_format=mp3_44100_128`,{
+      method:'POST',
+      headers:{'xi-api-key':key,'Content-Type':'application/json'},
+      body:JSON.stringify({text,model_id:'eleven_multilingual_v2'})
+    });
+    const ttfb=performance.now()-t0;
+    if(!res.ok){ synthState.textContent=`API error ${res.status}`; return null; }
+    const arr=await res.arrayBuffer();
+    const total=performance.now()-t0;
+    ro.ttfb.textContent=ttfb.toFixed(0)+' ms';
+    ro.total.textContent=total.toFixed(0)+' ms';
+    ensureGraph();
+    return await ctx.decodeAudioData(arr);
+  }
+
+  async function loadVoices(){
+    const key=(keyInput.value||'').trim();
+    if(!key){ synthState.textContent='paste your API key first'; return; }
+    synthState.textContent='loading voices…';
+    try{
+      const res=await fetch('https://api.elevenlabs.io/v1/voices',{headers:{'xi-api-key':key}});
+      if(!res.ok){ synthState.textContent=`voices error ${res.status}`; return; }
+      const data=await res.json();
+      voiceSel.innerHTML='';
+      (data.voices||[]).forEach(v=>{
+        const o=document.createElement('option'); o.value=v.voice_id; o.textContent=v.name+(v.category?` (${v.category})`:'');
+        voiceSel.appendChild(o);
+      });
+      synthState.textContent=`${(data.voices||[]).length} voices loaded`;
+    }catch(e){ synthState.textContent='voices fetch failed (network/CORS)'; }
+  }
+  $('btn-load-voices').addEventListener('click',loadVoices);
+
+  btnSynth.addEventListener('click',async()=>{
+    ensureGraph(); ctx.resume();
+    const mode=srcMode.value;
+    if(mode==='mic'){
+      if(micStream){ stopSource(); btnSynth.textContent='Start mic'; synthState.textContent='mic stopped'; return; }
+      try{
+        micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false}});
+        const src=ctx.createMediaStreamSource(micStream);
+        src.connect(inputGain); activeSrc=src; playing=true;
+        btnSynth.textContent='Stop mic'; synthState.textContent='mic live'; btnPlay.disabled=true;
+        sl.pitch.disabled=true;
+      }catch{ synthState.textContent='mic permission denied'; }
+      return;
+    }
+    sl.pitch.disabled=false;
+    btnSynth.disabled=true; synthState.textContent='synthesizing…';
+    try{
+      const text=(ttsText.value||'').trim()||'Hello world.';
+      currentBuffer = mode==='demo' ? await synthDemo(text) : await synthEleven(text);
+      if(currentBuffer){ btnPlay.disabled=false; playBuffer(); }
+    } finally { btnSynth.disabled=false; }
+  });
+  btnPlay.addEventListener('click',()=>{ playing? (stopSource(),synthState.textContent='stopped') : playBuffer(); });
+
+  // ---------- recorder + WAV ----------
+  let recording=false, recChunksL=[], recChunksR=[];
+  btnRec.addEventListener('click',()=>{
+    ensureGraph();
+    recording=!recording;
+    if(recording){ recChunksL=[]; recChunksR=[]; btnRec.classList.add('is-active'); btnRec.textContent='■ Stop recording'; recState.textContent='recording…'; btnWavFree.disabled=true; btnWavClean.disabled=true; }
+    else{
+      btnRec.classList.remove('is-active'); btnRec.textContent='● Record output';
+      const n=recChunksL.reduce((s,c)=>s+c.length,0);
+      recState.textContent=(n/ (ctx?ctx.sampleRate:44100)).toFixed(1)+' s captured';
+      btnWavFree.disabled=n===0; btnWavClean.disabled=n===0;
+    }
+  });
+
+  function flatten(chunks){
+    const n=chunks.reduce((s,c)=>s+c.length,0);
+    const out=new Float32Array(n); let o=0;
+    for(const c of chunks){ out.set(c,o); o+=c.length; }
+    return out;
+  }
+  function encodeWav(l,r,sr,watermark){
+    let L=l,R=r;
+    if(watermark){
+      const wm=Math.floor(0.35*sr);
+      const nl=new Float32Array(L.length+wm), nr=new Float32Array(R.length+wm);
+      nl.set(L); nr.set(R);
+      for(let i=0;i<wm;i++){ const s=0.25*Math.sin(2*Math.PI*1000*i/sr)*Math.min(1,(wm-i)/(wm*0.2)); nl[L.length+i]=s; nr[R.length+i]=s; }
+      L=nl; R=nr;
+    }
+    const n=L.length, bytes=44+n*4;
+    const buf=new ArrayBuffer(bytes), v=new DataView(buf);
+    const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+    ws(0,'RIFF'); v.setUint32(4,bytes-8,true); ws(8,'WAVE'); ws(12,'fmt ');
+    v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,2,true);
+    v.setUint32(24,sr,true); v.setUint32(28,sr*4,true); v.setUint16(32,4,true); v.setUint16(34,16,true);
+    ws(36,'data'); v.setUint32(40,n*4,true);
+    for(let i=0;i<n;i++){
+      v.setInt16(44+i*4, Math.max(-32768,Math.min(32767,L[i]*32767)), true);
+      v.setInt16(44+i*4+2, Math.max(-32768,Math.min(32767,R[i]*32767)), true);
+    }
+    return new Blob([buf],{type:'audio/wav'});
+  }
+  function downloadWav(clean){
+    if(!recChunksL.length) return;
+    if(clean && !(window.MPExportGate && window.MPExportGate.isUnlocked(SIM))){
+      document.querySelector('.export-gate')?.scrollIntoView({behavior:'smooth',block:'start'});
+      recState.textContent='clean WAV locked — unlock below';
+      return;
+    }
+    const sr=ctx?ctx.sampleRate:44100;
+    const blob=encodeWav(flatten(recChunksL),flatten(recChunksR),sr,!clean);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=clean?'voice-dsp-take.wav':'voice-dsp-take.watermarked.wav';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(a.href);},800);
+    try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'export_download',sim:SIM,variant:clean?'wav_clean':'wav_watermarked'}})); }catch{}
+  }
+  btnWavFree.addEventListener('click',()=>downloadWav(false));
+  btnWavClean.addEventListener('click',()=>downloadWav(true));
+
+  // ---------- analyzer + aha ----------
+  const aha={stable:0,shown:false};
+  const timeData=new Uint8Array(2048), freqData=new Uint8Array(1024);
+  let specX=0, lastT=performance.now(), raf=0;
+  function dspEngaged(){
+    return parseFloat(sl.fb.value)>0.05 || parseFloat(sl.wet.value)>0.05 || parseFloat(sl.q.value)>0.8;
+  }
+  function draw(){
+    raf=requestAnimationFrame(draw);
+    const now=performance.now(), dt=(now-lastT)/1000; lastT=now;
+    const W=waveC._w,H=waveC._h;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0d1117';
+    if(!analyser){ wCtx.fillStyle=bg; wCtx.fillRect(0,0,W,H); return; }
+    analyser.getByteTimeDomainData(timeData);
+    wCtx.fillStyle=bg; wCtx.fillRect(0,0,W,H);
+    wCtx.strokeStyle='rgba(128,128,140,0.25)'; wCtx.beginPath(); wCtx.moveTo(0,H/2); wCtx.lineTo(W,H/2); wCtx.stroke();
+    wCtx.beginPath(); wCtx.strokeStyle='#3C888F'; wCtx.lineWidth=1.6;
+    let peak=0;
+    for(let i=0;i<timeData.length;i++){
+      const v=(timeData[i]-128)/128; peak=Math.max(peak,Math.abs(v));
+      const x=i/timeData.length*W, y=H/2+v*(H/2-4);
+      if(i===0)wCtx.moveTo(x,y);else wCtx.lineTo(x,y);
+    }
+    wCtx.stroke();
+    ro.peak.textContent=(20*Math.log10(Math.max(1e-4,peak))).toFixed(1)+' dBFS';
+    const clipped=peak>0.985;
+    ro.clip.textContent=clipped?'CLIP':'clean';
+    ro.clip.className=clipped?'text-red-500 font-bold':'text-emerald-600';
+    // spectrogram column
+    analyser.getByteFrequencyData(freqData);
+    const SW=specC._w,SH=specC._h;
+    const nyq=(ctx?ctx.sampleRate:44100)/2, maxBin=Math.floor(8000/nyq*freqData.length);
+    for(let y=0;y<SH;y++){
+      const bin=Math.floor((1-y/SH)*maxBin);
+      const m=freqData[bin]/255;
+      sCtx.fillStyle=`hsl(${210-m*180},${40+m*55}%,${8+m*52}%)`;
+      sCtx.fillRect(specX,y,2,1);
+    }
+    specX=(specX+2)%SW;
+    sCtx.fillStyle='rgba(255,255,255,0.35)'; sCtx.fillRect(specX,0,1,SH);
+    // aha: >3s active, DSP engaged, no clipping
+    if(playing && peak>0.02 && !clipped && dspEngaged()){
+      aha.stable+=dt;
+      if(aha.stable>3 && !aha.shown){
+        aha.shown=true;
+        const toast=document.getElementById('el-aha-toast');
+        if(toast){ toast.classList.remove('hidden'); }
+        try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_moment',sim:SIM,metric:'stable_dsp_playback',seconds:3}})); }catch{}
+      }
+    } else if(clipped){ aha.stable=0; }
+  }
+  draw();
+  document.getElementById('el-aha-cta')?.addEventListener('click',()=>{
+    try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_cta_click',sim:SIM,partner:'elevenlabs'}})); }catch{}
+  });
+  document.getElementById('el-aha-dismiss')?.addEventListener('click',()=>{
+    document.getElementById('el-aha-toast')?.classList.add('hidden');
+  });
+
+  // ---------- export gate getter ----------
+  try{
+    const reg=()=>{
+      if(window.MPExportGate){
+        window.MPExportGate.register(SIM,()=>{
+          const preset={
+            generated:new Date().toISOString(),
+            source:srcMode.value,
+            text:(ttsText.value||'').slice(0,400),
+            dsp:{
+              bandpass:{type:'bandpass',frequency:parseFloat(sl.bp.value),Q:parseFloat(sl.q.value)},
+              echo:{delayMs:parseFloat(sl.dt.value),feedback:parseFloat(sl.fb.value)},
+              reverb:{rt60:parseFloat(sl.rt.value),mix:parseFloat(sl.wet.value),ir:'noise*exp(-6.91*t/rt60)'},
+              pitchSemitones:parseInt(sl.pitch.value,10),
+              outputGain:parseFloat(sl.gain.value)
+            },
+            latency:{
+              baseLatencyMs: ctx? (ctx.baseLatency||0)*1000 : null,
+              outputLatencyMs: ctx&&ctx.outputLatency? ctx.outputLatency*1000 : null,
+              apiTtfbMs: ro.ttfb.textContent==='—'?null:parseFloat(ro.ttfb.textContent),
+              apiTotalMs: ro.total.textContent==='—'?null:parseFloat(ro.total.textContent)
+            },
+            usage:'Feed dsp.* values into the WebSocket streaming scheduler from makerportal.ai/playground/elevenlabs-dsp-sandbox'
+          };
+          return JSON.stringify(preset,null,2);
+        });
+      }
+    };
+    reg();
+    document.addEventListener('astro:page-load',reg);
+  }catch{}
+
+  document.addEventListener('astro:before-swap',()=>{
+    cancelAnimationFrame(raf); stopSource();
+    try{ctx?.close();}catch{}
+  },{once:true});
+}
+document.addEventListener('astro:page-load', initVoiceSandbox);
+initVoiceSandbox();
+</script>
