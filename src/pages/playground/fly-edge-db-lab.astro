@@ -1,0 +1,592 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import GearCarousel from '../../components/GearCarousel.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import KitBuilder from '../../components/KitBuilder.astro';
+import ExportGate from '../../components/ExportGate.astro';
+import Math from '../../components/Math.astro';
+import SimSponsorChip from '../../components/SimSponsorChip.astro';
+import { affiliateLinks, resolveAffiliateLink, FLY_REFERRAL_URL, buildSaasPartnerUrl } from '../../data/affiliate-links';
+import { kitForSimulator } from '../../data/kits';
+
+const gear = affiliateLinks
+  .filter((l) => l.relatedTo?.includes('fly-edge-db-lab'))
+  .map(resolveAffiliateLink)
+  .slice(0, 6);
+const kit = kitForSimulator('fly-edge-db-lab');
+const fly = buildSaasPartnerUrl(FLY_REFERRAL_URL, 'https://fly.io/');
+
+const title = 'Edge DB Sync Lab — multi-region SQLite replication, visualized | MakerPortal';
+const description =
+  'Place a primary and read replicas at real Fly.io regions on a world map, fire client transactions from anywhere, and watch reads return from the nearest replica while writes forward to the primary — with speed-of-light-in-fiber latency math disclosed in full.';
+const canonical = new URL('/playground/fly-edge-db-lab', Astro.site);
+
+const softwareSchema = { '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Edge DB Sync Lab', url: canonical.toString(), applicationCategory: 'DeveloperApplication', operatingSystem: 'Any (browser-based)', description, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } };
+const breadcrumbSchema = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+  { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+  { '@type': 'ListItem', position: 3, name: 'Edge DB Sync Lab', item: canonical.toString() },
+] };
+
+const faqs = [
+  {
+    q: 'Are these real measured pings to Fly.io regions?',
+    a: 'No — and the page says so everywhere a number appears. Latencies come from a physics model: great-circle distance, light propagating at c/1.468 in fiber (≈ 204,000 km/s), a 1.5× route-inflation factor for real cable paths, and 1 ms per-hop processing. That model lands within tens of percent of real inter-region RTTs, which is enough to make the architectural point: reads from a local replica are one short round trip; writes pay the full trip to the primary. Your real numbers will differ — deploy and measure.',
+  },
+  {
+    q: 'What is LiteFS actually doing under the hood?',
+    a: 'LiteFS is a FUSE filesystem that sits under SQLite. On the primary it intercepts committed transactions at the page level and streams them to replicas as an ordered log (LTX files); replicas apply pages and serve plain read-only SQLite. There is exactly one writer — a lease (via Consul) elects the primary. Nothing about SQLite itself changes; your app opens the same database file.',
+  },
+  {
+    q: 'How do writes from a user in Sydney reach a primary in Virginia?',
+    a: 'Write forwarding. The Sydney replica cannot commit, so the app responds with a fly-replay: region=iad header (or proxies internally); Fly\'s router replays the whole HTTP request in the primary region, the write commits there, and replication streams the new pages back out. The Code section shows the ~10-line middleware that implements this — the simulation animates exactly this path.',
+  },
+  {
+    q: 'When does this architecture stop making sense?',
+    a: 'When your write fraction gets large or writes need low latency from every geography (every write pays the trip to one primary), when replicas must never serve stale reads (replication is asynchronous — read-your-writes needs session pinning or waiting on replication position), or when a single write region becomes a compliance problem. The lab makes the first two visible: crank up write traffic and watch the advantage evaporate.',
+  },
+];
+const faqSchema = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+
+const middlewareTS = `// Write-forwarding middleware (Hono/Express-style) — the whole trick.
+// Reads hit local SQLite replica; writes replay to the primary region.
+import { readFileSync, existsSync } from 'node:fs';
+
+const PRIMARY_FILE = '/litefs/.primary'; // LiteFS writes this on replicas
+
+function primaryRegion(): string | null {
+  // On the primary this file doesn't exist; on replicas it names the primary.
+  return existsSync(PRIMARY_FILE)
+    ? readFileSync(PRIMARY_FILE, 'utf8').trim()
+    : null;
+}
+
+export function forwardWrites(req: Request): Response | null {
+  const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+  const primary = primaryRegion();
+  if (isWrite && primary) {
+    // Fly's proxy replays the full request in the primary's region.
+    return new Response(null, {
+      status: 409,
+      headers: { 'fly-replay': \`instance=\${primary}\` },
+    });
+  }
+  return null; // handle locally — reads are always local
+}
+
+/* litefs.yml (replica-safe defaults):
+fuse:
+  dir: "/litefs"
+data:
+  dir: "/var/lib/litefs"
+lease:
+  type: "consul"
+  candidate: \${FLY_REGION == PRIMARY_REGION}   # only primary region runs candidates
+  promote: true
+proxy:
+  addr: ":8080"
+  target: "localhost:8081"
+  db: "app.db"
+  passthrough: ["/health"]
+*/`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+  <PlaygroundShell
+    title="Edge DB Sync Lab"
+    lead="Place a primary and read replicas at real Fly.io regions, then fire transactions from anywhere on Earth. Reads return from the nearest replica in one short hop; writes animate their forward to the primary — the LiteFS/SQLite edge pattern, with all latency math disclosed."
+    pillarHint="privacy-arch"
+  >
+    <!-- 1 · SIMULATOR -->
+    <section class="border-b border-border" aria-labelledby="lab-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <h2 id="lab-title" class="sr-only">Replication simulator</h2>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Topology & traffic</h3>
+            <p class="mt-1 text-[0.72rem] leading-[1.5] text-muted-text">Click a region marker to apply the selected action; click open ocean/land to fire a client transaction from that point.</p>
+            <div class="mt-3 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Click action">
+              <button data-act="primary" class="act-btn is-active">👑 Set primary</button>
+              <button data-act="replica" class="act-btn">± Toggle replica</button>
+              <button data-act="read" class="act-btn">⇢ Fire read</button>
+              <button data-act="write" class="act-btn">✎ Fire write</button>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button id="btn-burst" class="pill-btn">Burst: 12 mixed clients</button>
+              <button id="btn-reset" class="pill-btn">Reset topology</button>
+            </div>
+            <label class="control-label mt-4"><span>Write fraction in burst</span><output id="out-wf">25%</output><input id="sl-wf" type="range" min="0" max="100" step="5" value="25" /></label>
+            <label class="control-label"><span>Animation speed</span><output id="out-speed">40×</output><input id="sl-speed" type="range" min="5" max="120" step="5" value="40" /></label>
+
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.7rem] leading-[1.5] space-y-1">
+              <div class="flex justify-between"><span>Primary</span><span id="ro-primary">iad</span></div>
+              <div class="flex justify-between"><span>Replicas</span><span id="ro-replicas">ams, sin, syd</span></div>
+              <div class="flex justify-between"><span>Last read (model)</span><span id="ro-read">—</span></div>
+              <div class="flex justify-between"><span>Last write (model)</span><span id="ro-write">—</span></div>
+              <div class="flex justify-between"><span>Mean read / write</span><span id="ro-mean">— / —</span></div>
+              <div class="flex justify-between"><span>Transactions</span><span id="ro-count">0</span></div>
+            </div>
+            <div class="mt-3 rounded-[10px] border border-dashed border-border bg-canvas/70 p-2.5 text-[0.65rem] leading-[1.5] text-muted-text">
+              <strong class="uppercase">Model, not measurement:</strong> latencies are simulated — great-circle distance ÷ (c/1.468 fiber speed) × 1.5 route factor + 1 ms/hop. Real RTTs vary with actual cable paths and load. Full math below.
+            </div>
+          </div>
+
+          <div class="min-w-0">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">World map — real Fly.io region locations · Natural Earth geometry, self-hosted</p>
+              <canvas id="map-canvas" width="1040" height="520" class="mt-3 block w-full cursor-crosshair rounded-[10px] border border-border bg-canvas"></canvas>
+              <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <p class="font-mono text-[0.62rem] text-muted-text"><span class="text-amber-500">●</span> primary · <span class="text-emerald-500">●</span> replica · <span class="opacity-50">●</span> unused region · <span class="text-sky-400">●</span> read path · <span class="text-rose-400">●</span> write forward</p>
+                <SimSponsorChip />
+              </div>
+            </div>
+            <div class="mt-4 rounded-[16px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Read vs write latency — last 40 transactions (model)</p>
+              <canvas id="hist-canvas" width="1040" height="150" class="mt-3 block w-full rounded-[10px] border border-border bg-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · ANATOMY -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy: one writer, many readers</h2>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <ol class="space-y-4">
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">SQLite stays SQLite.</strong> LiteFS is a FUSE layer under the database file. The app on every node opens <code>app.db</code> normally — no client library, no wire protocol, reads are local file I/O with microsecond latency.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Primary election.</strong> A Consul lease guarantees exactly one writer. When the primary's lease lapses (deploy, crash), a candidate replica promotes — the <code>.primary</code> file on each replica always names the current one.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Page-level replication.</strong> Committed transactions ship as LTX page sets in commit order. Replicas apply them atomically — a replica never serves a torn transaction, only a slightly older complete one.</p></li>
+              <li class="flex gap-3"><span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span><p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Write forwarding.</strong> A write landing on a replica answers with <code>fly-replay: instance=&lt;primary&gt;</code>; the router replays the request in the primary region. That is the long rose-colored arc in the simulation — the price of the single-writer guarantee.</p></li>
+            </ol>
+          </div>
+          <div class="rounded-[20px] border border-border bg-card-bg p-5">
+            <svg viewBox="0 0 360 230" class="mx-auto w-full max-w-[380px]" role="img" aria-label="LiteFS replication topology">
+              <circle cx="180" cy="50" r="22" fill="none" stroke="#d97706" stroke-width="2" />
+              <text x="180" y="47" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#d97706">primary</text>
+              <text x="180" y="59" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="#d97706">iad ✍</text>
+              {[
+                { x: 60, l: 'ams' },
+                { x: 180, l: 'sin' },
+                { x: 300, l: 'syd' },
+              ].map((r) => (
+                <>
+                  <circle cx={r.x} cy="160" r="18" fill="none" stroke="#059669" stroke-width="1.5" />
+                  <text x={r.x} y="157" text-anchor="middle" font-family="ui-monospace" font-size="8.5" fill="#059669">replica</text>
+                  <text x={r.x} y="168" text-anchor="middle" font-family="ui-monospace" font-size="8.5" fill="#059669">{r.l} 👁</text>
+                  <path d={`M 180 74 L ${r.x} 140`} stroke="var(--mp-muted)" stroke-width="1" stroke-dasharray="4 3" />
+                </>
+              ))}
+              <text x="180" y="112" text-anchor="middle" font-family="ui-monospace" font-size="8.5" fill="var(--mp-muted)">LTX page stream (async, commit order)</text>
+              <text x="180" y="205" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="var(--mp-muted)">reads: local file · writes: fly-replay → iad</text>
+            </svg>
+            <p class="mt-3 text-center text-[0.78rem] text-muted-text">Single-writer, many-reader. Every guarantee and every cost in this lab follows from that one arrow direction.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · GEAR -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Home edge lab · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              SBCs · storage
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <GearCarousel gear={gear} />
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- 4 · KIT BUILDER -->
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Two Pis on your LAN make a real LiteFS primary/replica pair — measure actual replication, not a model.</p>
+          <div class="mt-10">
+            <KitBuilder kit={kit} />
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- 5 · MATH -->
+    <section class="border-b border-border" aria-labelledby="math-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The latency model, in full</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Great-circle distance</p>
+            <Math math="d = 2R \arcsin\sqrt{\sin^2\tfrac{\Delta\phi}{2} + \cos\phi_1\cos\phi_2\sin^2\tfrac{\Delta\lambda}{2}}" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Haversine on a sphere of R = 6371 km. Numerically stable for the short hops (client → local replica) where the naive arccos formula loses precision.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Fiber propagation</p>
+            <Math math="t_{prop} = \frac{d \cdot k_{route}}{c / n},\quad n = 1.468,\; k_{route} = 1.5" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Light in silica travels at c/1.468 ≈ 204,000 km/s — the single hardest constraint in distributed systems. k accounts for cables not following great circles. Both constants are stated, not hidden.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Transaction cost</p>
+            <Math math="t_{read} = RTT(c, r^*) \qquad t_{write} = RTT(c, r^*) + RTT(r^*, P)" display />
+            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">r* = nearest replica to client c, P = primary. Each RTT = 2·t_prop + 1 ms processing. The write's second term is the fly-replay forward — the whole architectural argument in one sum.</p>
+          </div>
+        </div>
+        <div class="mt-6 rounded-[16px] border border-border bg-elevated/40 p-5">
+          <p class="font-mono text-[0.6rem] uppercase text-primary-cta">What the model deliberately omits</p>
+          <p class="mt-2 max-w-3xl text-[0.78rem] leading-[1.6] text-muted-text">TCP/TLS handshakes (amortized by connection pooling), congestion and jitter, replication lag on the read path (async — a replica may serve slightly stale data at zero latency cost), and fsync time at the primary. Omissions all favor no side: handshakes penalize both paths equally; replication lag is a consistency cost, not a latency one. For measured numbers, deploy the litefs.yml below and run real pings.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · CODE -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Production pattern — write forwarding in ~10 lines</h2>
+        <p class="mt-3 max-w-2xl text-[0.92rem] text-muted-text">The middleware that turns the simulation into a running system, plus a replica-safe <code>litefs.yml</code>. <a href={fly.url} target="_blank" rel={fly.rel} class="text-brand-anchor">Fly.io ↗</a> runs LiteFS as a first-class pattern; the same code works anywhere FUSE does.</p>
+        <div class="mt-5 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
+          <Code code={middlewareTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Aha toast -->
+    <div id="fl-aha-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Edge advantage · Aha moment</p>
+      <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text" id="fl-aha-text">Local reads just beat the write path 4× in the model.</p>
+      <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">That gap is the whole LiteFS pitch — replicate reads to the edge, keep one writer.</p>
+      <div class="mt-3 flex gap-2">
+        <a id="fl-aha-cta" href={fly.url} target="_blank" rel={fly.rel} class="pointer-events-auto inline-flex items-center justify-center rounded-full bg-primary-text px-4 py-2 text-[0.82rem] font-semibold text-canvas hover:opacity-90">Deploy the pattern ↗</a>
+        <button id="fl-aha-dismiss" type="button" class="pointer-events-auto rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text hover:text-primary-text">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- 7 · EXPORT GATE -->
+    <ExportGate
+      simulator="fly-edge-db-lab"
+      fileName="edge-topology-report.json"
+      mimeType="application/json"
+      title="Export topology + latency matrix"
+      description="Your placed topology, the full modeled region-to-region RTT matrix, per-transaction log, and the litefs.yml scaffold — as JSON for your architecture doc."
+      fileExtension="json"
+    />
+
+    <!-- FAQ -->
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted)}
+  .pill-btn:hover{color:var(--mp-text);border-color:var(--mp-cta)}
+  .act-btn{border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.45rem 0.5rem;font-family:var(--font-mono);font-size:0.66rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--mp-muted)}
+  .act-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 16%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+  .control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+  .control-label input[type=range]{grid-column:1/-1;accent-color:var(--mp-cta)}
+</style>
+
+<script>
+// @ts-nocheck
+import * as d3 from 'd3-geo';
+
+function initEdgeLab(){
+  const mapC=document.getElementById('map-canvas');
+  if(!mapC || mapC.dataset.init) return; mapC.dataset.init='true';
+  const histC=document.getElementById('hist-canvas');
+  const mCtx=mapC.getContext('2d'), hCtx=histC.getContext('2d');
+  const dpr=Math.min(devicePixelRatio||1,2);
+  [mapC,histC].forEach(c=>{const W=c.width,H=c.height;c.width=W*dpr;c.height=H*dpr;c.style.width='100%';c.getContext('2d').scale(dpr,dpr);c._w=W;c._h=H;});
+
+  const $=id=>document.getElementById(id);
+  const SIM='fly-edge-db-lab';
+
+  // Real Fly.io region codes + airport coordinates (public data)
+  const REGIONS=[
+    {id:'iad',name:'Ashburn, VA',lat:38.95,lon:-77.45},
+    {id:'ord',name:'Chicago',lat:41.98,lon:-87.90},
+    {id:'sjc',name:'San Jose',lat:37.36,lon:-121.93},
+    {id:'sea',name:'Seattle',lat:47.45,lon:-122.31},
+    {id:'mia',name:'Miami',lat:25.79,lon:-80.29},
+    {id:'yyz',name:'Toronto',lat:43.68,lon:-79.63},
+    {id:'gru',name:'São Paulo',lat:-23.44,lon:-46.47},
+    {id:'scl',name:'Santiago',lat:-33.39,lon:-70.79},
+    {id:'lhr',name:'London',lat:51.47,lon:-0.45},
+    {id:'cdg',name:'Paris',lat:49.01,lon:2.55},
+    {id:'ams',name:'Amsterdam',lat:52.31,lon:4.76},
+    {id:'fra',name:'Frankfurt',lat:50.03,lon:8.56},
+    {id:'mad',name:'Madrid',lat:40.47,lon:-3.56},
+    {id:'jnb',name:'Johannesburg',lat:-26.14,lon:28.25},
+    {id:'bom',name:'Mumbai',lat:19.09,lon:72.87},
+    {id:'sin',name:'Singapore',lat:1.35,lon:103.99},
+    {id:'hkg',name:'Hong Kong',lat:22.31,lon:113.92},
+    {id:'nrt',name:'Tokyo',lat:35.77,lon:140.39},
+    {id:'syd',name:'Sydney',lat:-33.94,lon:151.18},
+  ];
+  const state={ primary:'iad', replicas:new Set(['ams','sin','syd']), action:'primary',
+    log:[], anims:[], count:0 };
+
+  // ---- latency model (disclosed in Math section) ----
+  const FIBER_KMS=299792.458/1.468; // km/s in silica
+  const K_ROUTE=1.5, HOP_MS=1.0;
+  function hav(a,b){
+    const R=6371, d2r=Math.PI/180;
+    const dphi=(b.lat-a.lat)*d2r, dl=(b.lon-a.lon)*d2r;
+    const s=Math.sin(dphi/2)**2 + Math.cos(a.lat*d2r)*Math.cos(b.lat*d2r)*Math.sin(dl/2)**2;
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+  }
+  function rtt(a,b){ return 2*(hav(a,b)*K_ROUTE/FIBER_KMS*1000) + HOP_MS; }
+  function nearestReplica(pt){
+    const cands=[...state.replicas, state.primary].map(id=>REGIONS.find(r=>r.id===id));
+    let best=null,bd=1e12;
+    for(const r of cands){ const d=hav(pt,r); if(d<bd){bd=d;best=r;} }
+    return best;
+  }
+
+  // ---- map ----
+  const projection=d3.geoNaturalEarth1().fitSize([mapC._w,mapC._h],{type:'Sphere'});
+  const path=d3.geoPath(projection,mCtx);
+  let land=null;
+  fetch('/data/world-land-110m.json').then(r=>r.json()).then(j=>{ land=j; }).catch(()=>{});
+
+  function drawMap(){
+    const W=mapC._w,H=mapC._h;
+    const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    mCtx.fillStyle=css('--mp-canvas')||'#0d1117'; mCtx.fillRect(0,0,W,H);
+    mCtx.beginPath(); path({type:'Sphere'});
+    mCtx.strokeStyle=css('--mp-border')||'#333'; mCtx.lineWidth=1; mCtx.stroke();
+    if(land){
+      mCtx.beginPath();
+      (land.features||[land]).forEach(f=>path(f));
+      mCtx.fillStyle='rgba(120,140,160,0.16)'; mCtx.fill();
+      mCtx.strokeStyle='rgba(120,140,160,0.35)'; mCtx.lineWidth=0.6; mCtx.stroke();
+    }
+    // replication links primary -> replicas (dashed)
+    const P=REGIONS.find(r=>r.id===state.primary);
+    mCtx.setLineDash([5,4]);
+    for(const id of state.replicas){
+      const r=REGIONS.find(x=>x.id===id);
+      mCtx.beginPath(); path({type:'LineString',coordinates:[[P.lon,P.lat],[r.lon,r.lat]]});
+      mCtx.strokeStyle='rgba(5,150,105,0.4)'; mCtx.lineWidth=1; mCtx.stroke();
+    }
+    mCtx.setLineDash([]);
+    // animated transactions
+    const now=performance.now();
+    state.anims=state.anims.filter(a=>now<a.t1);
+    for(const a of state.anims){
+      const f=Math.min(1,(now-a.t0)/(a.t1-a.t0));
+      const interp=d3.geoInterpolate(a.from,a.to);
+      const seg=Math.floor(f*40);
+      const coords=[]; for(let i=0;i<=seg;i++) coords.push(interp(i/40));
+      if(coords.length>1){
+        mCtx.beginPath(); path({type:'LineString',coordinates:coords});
+        mCtx.strokeStyle=a.color; mCtx.lineWidth=1.8; mCtx.stroke();
+      }
+      const p=projection(interp(f));
+      if(p){ mCtx.beginPath(); mCtx.arc(p[0],p[1],3.2,0,Math.PI*2); mCtx.fillStyle=a.color; mCtx.fill(); }
+    }
+    // region markers
+    for(const r of REGIONS){
+      const p=projection([r.lon,r.lat]); if(!p) continue;
+      const isP=r.id===state.primary, isR=state.replicas.has(r.id);
+      mCtx.beginPath(); mCtx.arc(p[0],p[1],isP?7:isR?5.5:3.5,0,Math.PI*2);
+      mCtx.fillStyle=isP?'#d97706':isR?'#059669':'rgba(140,150,160,0.45)';
+      mCtx.fill();
+      if(isP||isR){ mCtx.strokeStyle='rgba(255,255,255,0.6)'; mCtx.lineWidth=1; mCtx.stroke(); }
+      mCtx.fillStyle=isP?'#d97706':isR?'#059669':'rgba(140,150,160,0.7)';
+      mCtx.font=(isP?'bold ':'')+'9px ui-monospace';
+      mCtx.fillText(r.id,p[0]+8,p[1]+3);
+    }
+  }
+
+  function drawHist(){
+    const W=histC._w,H=histC._h;
+    const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    hCtx.fillStyle=css('--mp-canvas')||'#0d1117'; hCtx.fillRect(0,0,W,H);
+    const recent=state.log.slice(-40);
+    if(!recent.length){
+      hCtx.fillStyle=css('--mp-muted')||'#889'; hCtx.font='11px ui-monospace'; hCtx.textAlign='center';
+      hCtx.fillText('Fire transactions on the map — bars appear here (blue = read, rose = write).',W/2,H/2);
+      hCtx.textAlign='left'; return;
+    }
+    const maxV=Math.max(...recent.map(t=>t.ms),50);
+    const bw=W/40;
+    recent.forEach((t,i)=>{
+      const bh=Math.max(2,t.ms/maxV*(H-30));
+      hCtx.fillStyle=t.type==='read'?'#38bdf8':'#fb7185';
+      hCtx.fillRect(i*bw+2,H-16-bh,bw-4,bh);
+    });
+    hCtx.fillStyle=css('--mp-muted')||'#889'; hCtx.font='9px ui-monospace';
+    hCtx.fillText('0 ms',4,H-4); hCtx.fillText(maxV.toFixed(0)+' ms ceiling',4,12);
+  }
+
+  let raf=0;
+  function loop(){ raf=requestAnimationFrame(loop); drawMap(); }
+  loop();
+
+  // ---- interactions ----
+  document.querySelectorAll('.act-btn').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.act-btn').forEach(x=>x.classList.remove('is-active'));
+    b.classList.add('is-active'); state.action=b.dataset.act;
+  }));
+
+  function updReadouts(){
+    $('ro-primary').textContent=state.primary;
+    $('ro-replicas').textContent=[...state.replicas].join(', ')||'none';
+    const reads=state.log.filter(t=>t.type==='read'), writes=state.log.filter(t=>t.type==='write');
+    const mean=a=>a.length? (a.reduce((s,t)=>s+t.ms,0)/a.length).toFixed(0)+' ms':'—';
+    $('ro-mean').textContent=`${mean(reads)} / ${mean(writes)}`;
+    $('ro-count').textContent=String(state.count);
+  }
+
+  const aha={shown:false,lastWrite:null};
+  function maybeAha(tx){
+    if(tx.type==='write'){ aha.lastWrite=tx.ms; return; }
+    if(aha.shown || state.replicas.size<2 || aha.lastWrite==null) return;
+    if(tx.ms>0 && aha.lastWrite/tx.ms>=4){
+      aha.shown=true;
+      $('fl-aha-text').textContent=`Modeled edge read ${tx.ms.toFixed(0)} ms vs write ${aha.lastWrite.toFixed(0)} ms — ${(aha.lastWrite/tx.ms).toFixed(1)}× gap.`;
+      $('fl-aha-toast').classList.remove('hidden');
+      try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_moment',sim:SIM,metric:'read_write_gap',ratio:aha.lastWrite/tx.ms}})); }catch{}
+    }
+  }
+  $('fl-aha-cta').addEventListener('click',()=>{ try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_cta_click',sim:SIM,partner:'fly'}})); }catch{} });
+  $('fl-aha-dismiss').addEventListener('click',()=>$('fl-aha-toast').classList.add('hidden'));
+
+  function speed(){ return parseInt($('sl-speed').value,10); }
+  function animate(from,to,ms,color,delay){
+    const dur=Math.max(180, ms/1000*1000*speed()/40*8);
+    const t0=performance.now()+(delay||0);
+    state.anims.push({from:[from.lon,from.lat],to:[to.lon,to.lat],t0,t1:t0+dur,color});
+    return dur;
+  }
+
+  function fireTx(pt,type){
+    const P=REGIONS.find(r=>r.id===state.primary);
+    const r=nearestReplica(pt);
+    let ms;
+    if(type==='read'){
+      ms=rtt(pt,r);
+      animate(pt,r,ms,'#38bdf8',0);
+      $('ro-read').textContent=ms.toFixed(1)+' ms via '+r.id;
+    } else {
+      const leg1=rtt(pt,r), leg2=rtt(r,P);
+      ms=leg1+leg2;
+      const d1=animate(pt,r,leg1,'#fb7185',0);
+      animate(r,P,leg2,'#fb7185',d1*0.7);
+      $('ro-write').textContent=ms.toFixed(1)+` ms (${r.id}→${state.primary})`;
+    }
+    const tx={type,ms,at:Date.now(),client:[+pt.lat.toFixed(2),+pt.lon.toFixed(2)],via:r.id};
+    state.log.push(tx); if(state.log.length>500) state.log.shift();
+    state.count++;
+    updReadouts(); drawHist(); maybeAha(tx);
+  }
+
+  mapC.addEventListener('click',e=>{
+    const rect=mapC.getBoundingClientRect();
+    const x=(e.clientX-rect.left)*(mapC._w/rect.width), y=(e.clientY-rect.top)*(mapC._h/rect.height);
+    // nearest region marker within 14px?
+    let hit=null,hd=1e9;
+    for(const r of REGIONS){
+      const p=projection([r.lon,r.lat]); if(!p) continue;
+      const d=Math.hypot(p[0]-x,p[1]-y);
+      if(d<14 && d<hd){ hd=d; hit=r; }
+    }
+    if(hit && (state.action==='primary'||state.action==='replica')){
+      if(state.action==='primary'){ state.replicas.delete(hit.id); state.primary=hit.id; }
+      else if(hit.id!==state.primary){ state.replicas.has(hit.id)? state.replicas.delete(hit.id) : state.replicas.add(hit.id); }
+      updReadouts(); return;
+    }
+    const ll=projection.invert? projection.invert([x,y]) : null;
+    if(!ll || !isFinite(ll[0])) return;
+    const pt={lat:ll[1],lon:ll[0]};
+    if(state.action==='read'||state.action==='write'){ fireTx(pt,state.action); }
+    else { fireTx(pt,'read'); } // topology modes: empty-map click still demos a read
+  });
+
+  $('sl-wf').addEventListener('input',()=>$('out-wf').textContent=$('sl-wf').value+'%');
+  $('sl-speed').addEventListener('input',()=>$('out-speed').textContent=$('sl-speed').value+'×');
+  $('btn-burst').addEventListener('click',()=>{
+    const wf=parseInt($('sl-wf').value,10)/100;
+    for(let i=0;i<12;i++){
+      setTimeout(()=>{
+        const pt={lat:(Math.random()*140-60),lon:(Math.random()*360-180)};
+        fireTx(pt, Math.random()<wf?'write':'read');
+      }, i*260);
+    }
+  });
+  $('btn-reset').addEventListener('click',()=>{
+    state.primary='iad'; state.replicas=new Set(['ams','sin','syd']);
+    state.log=[]; state.count=0; state.anims=[]; aha.lastWrite=null;
+    $('ro-read').textContent='—'; $('ro-write').textContent='—';
+    updReadouts(); drawHist();
+  });
+  updReadouts(); drawHist();
+
+  // ---- export ----
+  try{
+    const reg=()=>{
+      if(window.MPExportGate){
+        window.MPExportGate.register(SIM,()=>{
+          const nodes=[state.primary,...state.replicas].map(id=>REGIONS.find(r=>r.id===id));
+          const matrix={};
+          for(const a of nodes){ matrix[a.id]={}; for(const b of nodes){ matrix[a.id][b.id]=+rtt(a,b).toFixed(2); } }
+          return JSON.stringify({
+            generated:new Date().toISOString(),
+            model:'RTT_ms = 2 * (haversine_km * 1.5 / (c/1.468)) * 1000 + 1ms — simulated, not measured',
+            topology:{primary:state.primary,replicas:[...state.replicas]},
+            regionRttMatrixMs:matrix,
+            transactions:state.log.slice(-100),
+            litefsYmlHint:'See makerportal.ai/playground/fly-edge-db-lab Code section for the replica-safe litefs.yml scaffold'
+          },null,2);
+        });
+      }
+    };
+    reg();
+    document.addEventListener('astro:page-load',reg);
+  }catch{}
+
+  document.addEventListener('astro:before-swap',()=>{ cancelAnimationFrame(raf); },{once:true});
+}
+document.addEventListener('astro:page-load', initEdgeLab);
+initEdgeLab();
+</script>
