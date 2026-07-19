@@ -101,16 +101,15 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 
 ## Owner actions (blocked on human)
 
-- [ ] **ElevenLabs PartnerStack application** — apply at
-  https://elevenlabs.io/affiliates (PartnerStack). On approval, paste link
-  into `ELEVENLABS_PARTNER_URL` in `src/data/affiliate-links.ts`; pages and
-  the SimSponsorChip flip to sponsored automatically. Update `/privacy`
-  affiliates list in the same PR.
-- [ ] **Buttondown username** — only needed when the owner is ready to collect
+- [x] **ElevenLabs PartnerStack URL live** — approved destination
+  `https://try.elevenlabs.io/jzowx8mw6p6b` is stored in
+  `ELEVENLABS_PARTNER_URL`; ElevenLabs CTAs use
+  `rel="sponsored noopener noreferrer"`, and `/privacy` names the relationship.
+- [ ] **Buttondown username — deferred by owner** — only needed when the owner is ready to collect
   explicit newsletter opt-ins. Set `PUBLIC_BUTTONDOWN_USERNAME`; clean export
   remains local and works without it. Do not provide a Buttondown API key.
-- [ ] **Pinecone affiliate application** — apply through the Affiliate Partner
-  path at https://www.pinecone.io/partners/. On approval, paste only the issued
+- [ ] **Pinecone affiliate approval pending** — application submitted through
+  the Affiliate Partner path at https://www.pinecone.io/partners/. On approval, paste only the issued
   destination URL into `PINECONE_PARTNER_URL` and add Pinecone to `/privacy` in
   the same PR. Do not infer or publish a commission rate from a third-party list.
 - [ ] **Modal DevRel credit pitch** — owner sends the reviewed draft in
@@ -124,8 +123,7 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 
 ### Exact owner inputs still needed
 
-- ElevenLabs: the approved PartnerStack destination URL (not an API key and
-  not a fabricated partner ID).
+- ElevenLabs: no further input needed; approved PartnerStack destination is live.
 - Pinecone: the approved affiliate destination URL after acceptance (not a
   project API key). No URL or public rate is currently available.
 - Modal: no referral ID is expected; later, owner workspace credentials are
@@ -141,6 +139,8 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   Fly organization handles (not credentials), and a reviewed workload estimate
   with a hard spending cap. Optional aggregate traffic evidence must include a
   source and date range.
+- PCBWay Shared Projects remain tabled until the owner has an active design with
+  real KiCad/Gerber assets; do not create placeholder project URLs.
 
 ## Phase B growth surfaces (2026-07-19)
 

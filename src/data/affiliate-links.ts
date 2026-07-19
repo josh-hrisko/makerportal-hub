@@ -57,7 +57,7 @@ export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exis
  * - Modal / Fly.io: no public affiliate program — permanently informational;
  *   monetized via DevRel credit-grant pitches instead.
  */
-export const ELEVENLABS_PARTNER_URL: string = ''; // PartnerStack link — owner to fill on approval
+export const ELEVENLABS_PARTNER_URL: string = 'https://try.elevenlabs.io/jzowx8mw6p6b'; // approved PartnerStack destination
 export const PINECONE_PARTNER_URL: string = ''; // official affiliate application; owner to fill only after approval
 export const MODAL_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
 export const FLY_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
