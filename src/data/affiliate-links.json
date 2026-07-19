@@ -219,7 +219,7 @@
     "id": "mpu9250-imu",
     "label": "MPU9250 9-DoF IMU",
     "asin": "B0BXDL3524",
-    "note": "Accelerometer/gyro/magnetometer breakout used in BLExAR's magnetometer-calibration build. Its onboard magnetometer is a 3-axis Hall-effect sensor — the same physics the field-line tracer models. The DMP also outputs attitude as a quaternion directly, the same shape CMHeadphoneMotionManager uses.",
+    "note": "9-DoF IMU used in BLExAR's calibration builds. The onboard magnetometer is a 3-axis Hall-effect sensor — the same physics modeled by the magnetic field-line tracer — while the DMP outputs attitude as a quaternion matching CMHeadphoneMotionManager's format.",
     "category": "Sensor",
     "relatedTo": [
       "blexar",
@@ -730,7 +730,7 @@
   {
     "id": "classical-mechanics-goldstein",
     "label": "Classical Mechanics (Goldstein, 3rd)",
-    "asin": "0201657029",
+    "asin": "0201657023",
     "note": "Canonical derivation of the double-pendulum equations of motion via Euler-Lagrange — exactly the T-V Lagrangian this simulator integrates symplectically.",
     "category": "Book",
     "relatedTo": [
@@ -1230,7 +1230,7 @@
   {
     "id": "scientist-engineer-dsp-smith",
     "label": "The Scientist and Engineer's Guide to DSP (Smith)",
-    "asin": "0916552011",
+    "asin": "0966017633",
     "note": "Intuitive pole-zero explanation — why a pole near unit circle rings, zero near kills — the exact intuition this pole-zero explorer makes tangible with drag-to-listen.",
     "category": "Book",
     "relatedTo": [
@@ -1257,7 +1257,7 @@
   {
     "id": "orbital-mechanics-curtis",
     "label": "Orbital Mechanics for Engineering Students (Curtis, 4th)",
-    "asin": "0128189130",
+    "asin": "008102133X",
     "note": "Derives n-body equations, figure-eight choreography existence proof, and symplectic energy conservation — exactly the trajectory this page verifies stays bounded for 500 periods.",
     "category": "Book",
     "relatedTo": [
@@ -1299,7 +1299,7 @@
   {
     "id": "lego-apollo-saturn-v-92176",
     "label": "LEGO Apollo Saturn V 92176",
-    "asin": "B07F7W2V6R",
+    "asin": "B08GNXNPR6",
     "note": "1:110 Saturn V with 1969 Apollo stages — build it while your virtual ship undergoes Lorentz contraction and relativistic Doppler shift of CMB to visible blue.",
     "category": "Model",
     "relatedTo": [
@@ -1355,6 +1355,16 @@
     "asin": "B09WDM4LBX",
     "note": "Backlit globe with constellation overlay — compare its static terminator to this page's dynamically computed solar declination and real-time weather overlay across 16 cities.",
     "category": "Model",
+    "relatedTo": [
+      "globe"
+    ]
+  },
+  {
+    "id": "mova-globe-satellite",
+    "label": "MOVA Globe Satellite View with Cloud Cover (4.5 inch)",
+    "asin": "B002U21ZZK",
+    "note": "Solar-powered, self-rotating satellite globe that spins continuously using ambient light and Earth's magnetic field — demonstrating Coriolis torque and gyroscopic rotation live.",
+    "category": "Apparatus",
     "relatedTo": [
       "globe"
     ]
@@ -1624,8 +1634,8 @@
   },
   {
     "id": "fundamentals-photonics-saleh-teich",
-    "label": "Fundamentals of Photonics (Saleh & Teich, 3rd)",
-    "asin": "1118778440",
+    "label": "Fundamentals of Photonics (Saleh & Teich, 2nd)",
+    "asin": "0471358320",
     "note": "Derives Gaussian beam resonator stability and ABCD law for laser cavities — test the g1·g2 ≤1 condition this bench evaluates for two-mirror resonators.",
     "category": "Book",
     "relatedTo": [
@@ -1635,7 +1645,7 @@
   {
     "id": "principles-optics-born-wolf",
     "label": "Principles of Optics (Born & Wolf, 7th)",
-    "asin": "1108471309",
+    "asin": "0521642221",
     "note": "Rigorous electromagnetic theory of ABCD and Fresnel diffraction — compare paraxial ray fan this bench traces to Born's exact wavefront aberrations.",
     "category": "Book",
     "relatedTo": [
