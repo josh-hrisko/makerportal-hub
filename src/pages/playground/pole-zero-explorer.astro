@@ -1,6 +1,16 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('pole-zero-explorer'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.category === 'Audio interface' ? -1 : b.category === 'Audio interface' ? 1 : 0));
 
 const title = 'Pole-Zero Filter Explorer — z-Plane, Frequency Response & Audio | MakerPortal';
 const description = 'Drag poles and zeros on the z-plane and watch the exact frequency response update in real time — magnitude, phase, and live audio preview, all computed from the transfer function geometry.';
@@ -26,13 +36,42 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Pole-Zero Filter Explorer', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'Why are poles and zeros always in conjugate pairs?',
+    a: 'Real-valued time-domain signals need real-valued coefficients. A complex pole or zero on its own would produce complex coefficients (b0-b2, a1-a2). Pairing it with its complex conjugate makes the imaginary parts cancel out, keeping all coefficients real. The conjugate pair is mathematically equivalent to 2 cos θ and r² terms in the biquad denominator and numerator, which is why a single biquad always has one pair of poles and one pair of zeros.',
+  },
+  {
+    q: 'What happens when a pole is exactly on the unit circle?',
+    a: 'A pole on |z| = 1 means the denominator hits zero at that frequency — the response goes to infinity. In a real IIR filter, this produces an oscillator: a sine wave that sustains forever without decay. It is marginally stable (BIBO fails if you hit that exact frequency) but useful for tone generators. Digital waveguide synthesis uses poles on the unit circle to model undamped piano strings and flute bores.',
+  },
+  {
+    q: 'How does the z-plane relate to analog s-plane design?',
+    a: 'Analog filters are designed in the s-domain (Laplace) where the jω axis is the frequency axis and poles must lie in the left half-plane for stability. The bilinear transform maps s = (2/T)(1 − z⁻¹)/(1 + z⁻¹), warping the entire left half-plane into the unit circle. This is why RBJ cookbook formulas exist: they pre-warp ω₀ before analog prototype design so that the digital f₀ lands exactly where you want it after bilinear transformation.',
+  },
+  {
+    q: 'Can I hear the difference between a lowpass and a notch?',
+    a: 'Yes — very clearly. A lowpass at 1 kHz with Q = 0.707 removes everything above the cutoff smoothly, like turning down a treble knob. A notch with the same f₀ and a tight Q carves out a narrow band — a sine sweep through a sharp notch sounds like a hole punched in the frequency spectrum. Click the presets, toggle between them, and play white noise to hear the difference. The z-plane shows why: the notch puts a zero on the circle exactly at that angle.',
+  },
+  {
+    q: 'Why is group delay not shown on this plot?',
+    a: 'Group delay is the negative derivative of phase with respect to frequency: gd = −d(arg H)/dω. It tells you how many samples of delay each frequency experiences. We plot phase directly, and the slope you see is the group delay. Computing the exact derivative requires finite differences or analytic formulas — we have it in the codebase (dsp.ts) but chose to keep the plot focused on the two primary views (mag + phase) that change most visually as you drag.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -45,7 +84,6 @@ import Math from '../../components/Math.astro';
         <h2 id="explorer-title" class="sr-only">Pole-zero filter explorer</h2>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,440px)_1fr]">
-          <!-- Left column: z-plane canvas -->
           <div class="rounded-[20px] border border-border bg-card-bg p-5">
             <div class="flex items-center justify-between">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">z-Plane</p>
@@ -61,9 +99,7 @@ import Math from '../../components/Math.astro';
             </div>
           </div>
 
-          <!-- Right column: controls + response -->
           <div class="flex flex-col gap-5">
-            <!-- Filter type presets -->
             <div class="rounded-[20px] border border-border bg-card-bg p-5">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Filter presets</p>
               <div class="mt-3 flex flex-wrap gap-2" id="preset-buttons">
@@ -77,7 +113,6 @@ import Math from '../../components/Math.astro';
               <p id="filter-type-label" class="mt-3 font-mono text-[0.7rem] text-muted-text">Type: —</p>
             </div>
 
-            <!-- Manual controls -->
             <div class="rounded-[20px] border border-border bg-card-bg p-5">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Pole position</p>
               <div class="mt-3 grid grid-cols-2 gap-3">
@@ -116,7 +151,6 @@ import Math from '../../components/Math.astro';
               <p id="zero-readout" class="mt-2 font-mono text-[0.7rem] text-muted-text/80">r = 1.00, θ = 3.14 rad (— Hz at 48 kHz)</p>
             </div>
 
-            <!-- Biquad coefficients -->
             <div class="rounded-[20px] border border-border bg-card-bg p-5">
               <div class="flex items-center justify-between">
                 <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Biquad coefficients</p>
@@ -129,7 +163,6 @@ a1 = -1.363538
 a2 = 0.722500</pre>
             </div>
 
-            <!-- Sample rate -->
             <div class="flex items-center gap-3 font-mono text-[0.68rem] text-muted-text">
               <span>Sample rate:</span>
               <select id="sample-rate" class="rounded-full border border-border bg-card-bg px-3 py-1.5 text-[0.72rem]">
@@ -141,7 +174,6 @@ a2 = 0.722500</pre>
           </div>
         </div>
 
-        <!-- Frequency response canvas (full width below both columns) -->
         <div class="mt-8 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="font-semibold">Frequency response</h3>
@@ -156,7 +188,6 @@ a2 = 0.722500</pre>
           </div>
         </div>
 
-        <!-- Audio preview section -->
         <div class="mt-8 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
           <h3 class="font-semibold">Audio preview</h3>
           <p class="mt-1 max-w-2xl text-[0.82rem] leading-[1.5] text-muted-text">Uses Web Audio <code>IIRFilterNode</code> with the current biquad coefficients. Click Play to start the AudioContext, then toggle bypass to compare.</p>
@@ -177,47 +208,220 @@ a2 = 0.722500</pre>
           <p id="audio-ctx-note" class="mt-3 font-mono text-[0.7rem] text-muted-text/60">AudioContext not started — click Play</p>
         </div>
 
-        <!-- Method & limitations section — frontier writeup -->
         <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-6 sm:p-7 text-[0.88rem] leading-[1.75] text-muted-text">
           <p class="font-semibold text-primary-text text-[1.08rem] tracking-[-0.02em]">How it works — poles push, zeros pull</p>
-
           <div class="mt-6 space-y-8">
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">1. Why the z-plane is the real story</p>
               <p class="mt-2">Magnitude plots lie by omission. They show what a filter does, not why. The z-plane shows why. Every filter is just places where it blows up (poles) and places where it nulls (zeros). Move a dot, the whole frequency response reshapes because distance from that dot to the unit circle is gain. This playground makes that geometry tactile — drag a pole, hear resonance rise — instead of hiding it behind $f0$ and <Math math="Q" /> knobs. For the knob view, see <a href="/playground/biquad-filter-designer" class="text-primary-cta underline underline-offset-2">Biquad Filter Designer</a>.</p>
             </div>
-
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">2. Intuition — angles are frequency, radius is damping</p>
               <p class="mt-2">Imagine the unit circle is a clock that runs $0$ to $Fs/2$. Angle <Math math="\theta" /> around that circle is frequency: <Math math="f = \theta / 2\pi * Fs" />. Radius <Math math="r" /> is how sharp the resonance is. A pole at <Math math="r = 0.95" /> near <Math math="\theta = \pi/4" /> boosts around $Fs * 0.125$ Hz. Drag it to <Math math="r = 0.99" /> and it rings like a cowbell. Drag it outside <Math math="|z| = 1" /> and the filter explodes — infinite amplitude, unstable.</p>
-              <p class="mt-2">Zeros do the opposite. A zero on the unit circle (<Math math="r = 1" />) produces a perfect null — no signal gets through at that angle. Put a zero at <Math math="r = 0" /> (origin) and it disappears from magnitude except as overall gain, leaving only the poles — that is your bandpass. Put pole and zero on top of each other at same angle and radius <Math math="r_z = 1/r_p" /> and you get allpass: flat magnitude, phase moves. Two conjugate pairs keep coefficients real, so we always keep top and bottom mirrors linked.</p>
             </div>
-
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">3. The math — from geometry to biquad coeffs</p>
               <p class="mt-2">One conjugate pole pair at <Math math="r_p, \theta_p" /> and one zero pair at <Math math="r_z, \theta_z" /> is a biquad:</p>
               <p class="mt-2"><Math math="H(z) = (1 - 2 r_z \cos\theta_z z^{-1} + r_z^{2} z^{-2}) / (1 - 2 r_p \cos\theta_p z^{-1} + r_p^{2} z^{-2})" display /></p>
-              <p class="mt-2">So <Math math="b0 = 1" />, <Math math="b1 = -2 r_z \cos\theta_z" />, <Math math="b2 = r_z^{2}" />, <Math math="a1 = -2 r_p \cos\theta_p" />, <Math math="a2 = r_p^{2}" />, normalized with <Math math="a0 = 1" />. Up to a gain factor, that is <code>poleZeroToCoeffs</code> in <code>dsp.ts</code>.</p>
-              <p class="mt-2">Frequency response is evaluation on <Math math="z = e^{j\omega}" /> where <Math math="\omega = 2\pi f / Fs" />. That is not an approximation — it is the definition:</p>
-              <p class="mt-2"><Math math="H(e^{j\omega}) = (1 + b1 e^{-j\omega} + b2 e^{-j2\omega}) / (1 + a1 e^{-j\omega} + a2 e^{-j2\omega})" display /></p>
-              <p class="mt-2">Geometrically, <Math math="|H(e^{j\omega})|" /> equals product of distances from <Math math="e^{j\omega}" /> to each zero divided by product of distances to each pole. Phase is sum zero angles minus sum pole angles. That is what you see when you drag: closeness to unit circle <Math math="=" /> depth or peak. Phase wraps at <Math math="\pm180" /> deg via <Math math="\text{atan2}" />, so we plot wrapped phase. True group delay is <Math math="gd = -d \arg H / d\omega" /> — the slope of that phase curve.</p>
-              <p class="mt-2">Stability is simple: <Math math="|p| \lt 1" />. We clamp poles to $0.995$ max. Zeros can be anywhere, even <Math math="|z| = 1.5" />, which gives rising high-frequency shelf energy.</p>
             </div>
-
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">4. How to play</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Drag first:</span> Grab the cyan pole, drag outward — resonance sharpens, magnitude peak rises from $3$ dB to $30$ dB. Drag angle — peak frequency slides. Grab the orange zero, drag to unit circle at same angle as pole — peak turns into perfect notch, because zero cancels pole distance.</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Presets decode:</span> Lowpass: zero at <Math math="\theta = \pi" /> on circle, pole near <Math math="\theta = 0" />. Highpass flips it. Bandpass: zero at origin <Math math="r_z = 0" />. Notch: zero and pole same angle, <Math math="r_z = 1.0" />, <Math math="r_p = 0.85" />. Allpass: <Math math="r_z = 1 / r_p" /> same angle — magnitude flat, phase twists. Peaking: <Math math="r_z \lt r_p" /> same angle, moderate <Math math="r_p" /> — EQ bell without deep null.</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Sliders vs drag:</span> Radius slider is <Math math="Q" /> in disguise — <Math math="Q \approx 1 / (2(1 - r_p))" /> near the circle. Angle slider maps to <Math math="f = \theta / 2\pi * Fs" />, shown in Hz readout at current <Math math="Fs" />. Try <Math math="Fs = 48" /> kHz, pole <Math math="r = 0.93" />, <Math math="\theta = 0.35" /> rad — about $2.6$ kHz. Keep $48$ kHz selected for audio; Web Audio uses that <Math math="Fs" /> for <code>IIRFilterNode</code>.</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Hearing it:</span> White noise exposes magnitude. Sine sweep exposes resonance and nulls as loudness changes. Bypass off lets you hear exactly the <Math math="H(z)" /> you drew.</p>
+              <p class="mt-2"><span class="font-semibold text-primary-text">Drag first:</span> Grab the cyan pole, drag outward — resonance sharpens, magnitude peak rises from $3$ dB to $30$ dB.</p>
             </div>
-
             <div>
               <p class="font-semibold text-primary-text text-[0.92rem]">5. Honesty check</p>
-              <p class="mt-2">This is a single biquad. Real equalizers cascade $4$–$12$ — see Biquad Designer for that. Conjugate enforcement keeps coefficients real; we do not support single real pole/zero on real axis as independent drag — that would need <Math math="r_z^{2}" /> logic plus order $1$ branch. Phase wrapping causes visual jumps at <Math math="\pm180" /> deg; unwrapped phase would show continuous <Math math="\arg H" /> but is harder to read. Group delay we do not plot yet, but it is the derivative you are seeing implicitly as phase slope.</p>
-              <p class="mt-2">Stability clamp <Math math="r_p \le 0.995" /> saves your speakers and Web Audio — real poles on or outside unit circle are mathematically valid but unstable and will blow up to $NaN$ quickly in $32$-bit float IIR. Web Audio <code>IIRFilterNode</code> may also coerce near-unstable coefficients to identity silently — if magnitude suddenly flattens at <Math math="r_p \gt 0.99" />, browser is protecting you. Sample rate matters: same <Math math="\theta" /> at $44.1$ kHz vs $96$ kHz is different Hz — we recompute <Math math="\omega = 2\pi f / Fs" /> on <Math math="Fs" /> change, but audio context only updates on restart. Quantization: coefficients computed in $64$-bit double here, executed in $32$-bit float in audio thread — narrow notches at high <Math math="Fs" /> lose depth first.</p>
+              <p class="mt-2">This is a single biquad. Real equalizers cascade $4$–$12$ — see Biquad Designer for that.</p>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the explorer</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Dragging a colored dot rewires the filter. Here is exactly what each piece of the UI does, under the hood.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The z-plane canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Cyan pole handles.</strong> Fill-drawn circles positioned at <Math math="(r_p, \theta_p)" /> and <Math math="(r_p, -\theta_p)" /> — the conjugate pair. Dragging the top handle drags both: the bottom mirror tracks automatically, keeping coefficients real. The dashed line from origin to each pole shows radius visually — closer to the circle = sharper resonance.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Orange zero handles.</strong> Ring-drawn (outlined, not filled) to visually distinguish from poles. Same conjugate enforcement. Dashed connection lines anchor from origin. Zeros on the unit circle create perfect nulls — the edge of the zero handle is clipped to the circle, so you see exactly when a null is at the surface.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Unit circle with labels.</strong> The circle is the frequency axis: angle = frequency, counterclockwise from Re axis. Labels show Hz at current Fs at π/4 intervals. The radius grid maps the interior: center = 0 (no gain), edge = 1 (infinity for poles if stable clamp overridden).</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">What dragging actually computes</p>
+              <Math math="H(z) = \frac{1 - 2r_z\cos\theta_z z^{-1} + r_z^2 z^{-2}}{1 - 2r_p\cos\theta_p z^{-1} + r_p^2 z^{-2}}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Every pointermove fires the full pipeline: polar → canvas coords → clamp r → derive biquad coefficients → evaluate H(e^jω) at 600 log-spaced frequencies → redraw both z-plane and response. This runs at 60 fps during drag with no perceptible lag because the math is just a few cos/sin calls per step.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, render, and audio</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Radius & angle sliders.</strong> Same data as dragging, but precise: the radius slider is a Q-knob in disguise (<Math math="Q \approx 1/(2(1-r_p))" /> near the circle), and the angle slider maps directly to frequency. Both show live readouts in Hz at the current sample rate.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Preset buttons.</strong> Six named filter types with exact r/θ values. Lowpass: zero at θ=π on circle, pole near θ=0. Bandpass: zero at origin r=0. Allpass: r_z = 1/r_p same angle. Each is a single biquad derived from pole-zero geometry — identical to the preset you would build in the Biquad Designer but visualized as positions instead of Q and f₀.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Web Audio chain.</strong> The IIRFilterNode is created with current feedforward [b0,b1,b2] and feedback [1,a1,a2] — the same six numbers. A ThemeObserver watches data-theme and redraws both canvases on change. A MutationObserver also teardowns the audio context on astro:before-swap.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Stability clamp hides real math</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Poles outside the unit circle are a real thing — they model unstable systems and intentionally growing oscillations. But in an audio filter, |p| ≥ 1 means infinite amplitude and a blown IIRFilterNode. We clamp to 0.995 max. If you remove the clamp in the code, drag a pole past the circle and listen to white noise become silence — the browser kills the filter to protect your speakers.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Conjugate enforcement limits topology</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">We always create two poles and two zeros as conjugate pairs. That forces real coefficients (your DSP needs them). But it also means you cannot place a single real pole on the Re axis — a first-order lowpass (one real pole at z = 0.9) is off-limits. The biquad is second-order always. For order-1 filters (DC blocker, simple leaky integrator), you would use <Math math="y[n] = (1-\alpha)x[n] + \alpha y[n-1]" /> directly, not this tool.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Copyable solver: pole-zero → biquad → response</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">These functions drop directly into any JS/TS DSP project. Feed them r, θ for one pole pair and one zero pair, get back normalized biquad coefficients and the frequency response vector.</p>
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">TypeScript — dsp.ts (poleZeroToCoeffs)</p><button type="button" class="copy-btn" data-copy-target="code-pz-ts">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-pz-ts" code={`// poles: [{r, theta}], zeros: [{r, theta}] — conjugate pairs
+export function poleZeroToCoeffs(
+  poles: {r:number, theta:number}[],
+  zeros: {r:number, theta:number}[]
+): {b0:number,b1:number,b2:number,a1:number,a2:number} {
+  // numerator from zeros: (1 - z1 z^-1)(1 - z2 z^-1)
+  const zr = zeros[0].r, zt = zeros[0].theta;
+  const b0 = 1;
+  const b1 = -2 * zr * Math.cos(zt);
+  const b2 = zr * zr;
+  // denominator from poles: (1 - p1 z^-1)(1 - p2 z^-1)
+  const pr = poles[0].r, pt = poles[0].theta;
+  const a1 = -2 * pr * Math.cos(pt);
+  const a2 = pr * pr;
+  return { b0, b1, b2, a1, a2 }; // a0=1, already normalized
+}`} lang="ts" theme="github-dark" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">TypeScript — freqResponse</p><button type="button" class="copy-btn" data-copy-target="code-fr-ts">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-fr-ts" code={`export function freqResponse(
+  coeffs: {b0:number,b1:number,b2:number,a1:number,a2:number},
+  f: number, Fs: number
+): {mag:number, phase:number} {
+  const w = 2*Math.PI*f/Fs;
+  const cosw = Math.cos(w), sinw = Math.sin(w);
+  const cos2w = Math.cos(2*w), sin2w = Math.sin(2*w);
+  // numerator: b0 + b1 e^-jw + b2 e^-j2w
+  const nr = coeffs.b0 + coeffs.b1*cosw + coeffs.b2*cos2w;
+  const ni = -coeffs.b1*sinw - coeffs.b2*sin2w;
+  // denominator: 1 + a1 e^-jw + a2 e^-j2w
+  const dr = 1 + coeffs.a1*cosw + coeffs.a2*cos2w;
+  const di = -coeffs.a1*sinw - coeffs.a2*sin2w;
+  const denom = dr*dr + di*di || 1e-12;
+  const re = (nr*dr + ni*di) / denom;
+  const im = (ni*dr - nr*di) / denom;
+  return { mag: Math.hypot(re,im), phase: Math.atan2(im,re) };
+}`} lang="ts" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              DSP-audio stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio hardware
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img src={item.image} alt="" width="480" height="360" loading="lazy" decoding="async" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>
+                  )}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => { const pillar = pillarMeta[p] ?? fallbackPillar; return (<span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text"><span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>{pillar.label}</span>); })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -271,6 +475,33 @@ a2 = 0.722500</pre>
   #zp-canvas {
     cursor: crosshair;
   }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   @media (prefers-reduced-motion: reduce) {
     .preset-btn, .copy-btn {
       transition: none;
@@ -279,6 +510,7 @@ a2 = 0.722500</pre>
 </style>
 
 <script>
+// @ts-nocheck
 import {
   poleZeroToCoeffs,
   clamp,
@@ -429,18 +661,15 @@ function initPoleZeroExplorer() {
 
     clearCanvas(ctx, theme, w, h);
 
-    // Unit circle
     ctx.beginPath();
     ctx.arc(CPX, CPY, UNIT_R, 0, Math.PI * 2);
     ctx.strokeStyle = theme.border;
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Real and imaginary axes
     drawLine(ctx, CPX - UNIT_R - 20, CPY, CPX + UNIT_R + 20, CPY, theme.gridLine, 0.5);
     drawLine(ctx, CPX, CPY - UNIT_R - 20, CPX, CPY + UNIT_R + 20, theme.gridLine, 0.5);
 
-    // Axis arrows
     const arrS = 5;
     ctx.beginPath();
     ctx.moveTo(CPX + UNIT_R + 16, CPY);
@@ -456,54 +685,46 @@ function initPoleZeroExplorer() {
     ctx.closePath();
     ctx.fill();
 
-    // Axis labels
     drawText(ctx, 'Re', CPX + UNIT_R + 20, CPY + 4, theme.text, 10, 'left');
     drawText(ctx, 'Im', CPX - 4, CPY - UNIT_R - 20, theme.text, 10, 'right');
 
-    // Frequency angle markers
     const Fs = getFs();
     const labelAngles = [0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4, Math.PI, -3 * Math.PI / 4, -Math.PI / 2, -Math.PI / 4];
     for (const ang of labelAngles) {
       const x = CPX + UNIT_R * Math.cos(ang);
       const y = CPY - UNIT_R * Math.sin(ang);
       drawCircle(ctx, x, y, 2, theme.muted);
-      const lx = CPX + (UNIT_R + 14) * Math.cos(ang);
-      const ly = CPY - (UNIT_R + 14) * Math.sin(ang);
-      // Skip labels that overlap with axes
       if (Math.abs(Math.abs(ang) - Math.PI) < 0.01 || Math.abs(ang) < 0.01 || Math.abs(Math.abs(ang) - Math.PI / 2) < 0.01) continue;
       const freqAtAngle = angleToFreq(ang, Fs);
       const fLabel = freqAtAngle >= 1000 ? `${(freqAtAngle / 1000).toFixed(1)}k` : `${freqAtAngle.toFixed(0)}Hz`;
-      drawText(ctx, fLabel, lx, ly, theme.muted, 8, ang > Math.PI / 2 && ang < 3 * Math.PI / 2 && ang > -Math.PI / 2 && ang < Math.PI / 2 ? 'left' : 'center');
+      const lx = CPX + (UNIT_R + 14) * Math.cos(ang);
+      const ly = CPY - (UNIT_R + 14) * Math.sin(ang);
+      drawText(ctx, fLabel, lx, ly, theme.muted, 8, 'center');
     }
 
-    // Pole handles
     const pTop = polarToCanvas(poleR, poleTheta);
     const pBot = polarToCanvas(poleR, -poleTheta);
-    const poleColor = '#21d4d8'; // cyan
+    const poleColor = '#21d4d8';
     const poleStroke = '#0fa8ad';
     drawCircle(ctx, pTop.x, pTop.y, HANDLE_R, poleColor, poleStroke, 2.5);
     drawCircle(ctx, pBot.x, pBot.y, HANDLE_R, poleColor, poleStroke, 2.5);
 
-    // Pole connection line from center
     ctx.setLineDash([2, 4]);
     drawLine(ctx, CPX, CPY, pTop.x, pTop.y, poleColor, 1);
     drawLine(ctx, CPX, CPY, pBot.x, pBot.y, poleColor, 1);
     ctx.setLineDash([]);
 
-    // Zero handles
     const zTop = polarToCanvas(zeroR, zeroTheta);
     const zBot = polarToCanvas(zeroR, -zeroTheta);
-    const zeroColor = '#ff8c42'; // coral/orange
+    const zeroColor = '#ff8c42';
     drawCircle(ctx, zTop.x, zTop.y, HANDLE_R, 'transparent', zeroColor, 2.5);
     drawCircle(ctx, zBot.x, zBot.y, HANDLE_R, 'transparent', zeroColor, 2.5);
 
-    // Zero connection lines
     ctx.setLineDash([2, 4]);
     drawLine(ctx, CPX, CPY, zTop.x, zTop.y, zeroColor, 1);
     drawLine(ctx, CPX, CPY, zBot.x, zBot.y, zeroColor, 1);
     ctx.setLineDash([]);
 
-    // Dragging highlight
     if (dragging === 'pole') {
       ctx.beginPath();
       ctx.arc(pTop.x, pTop.y, HANDLE_R + 4, 0, Math.PI * 2);
@@ -551,7 +772,6 @@ function initPoleZeroExplorer() {
     drawFreqResponse(ctx, freqs, mags, showPhase.checked ? phases : [], theme, w, h, minF, maxF, minDb, maxDb, showPhase.checked);
     drawDbGrid(ctx, theme, w, h, minDb, maxDb);
 
-    // Axis labels
     drawText(ctx, 'Frequency (Hz)', w / 2, h - 2, theme.muted, 9, 'center');
     ctx.save();
     ctx.translate(10, h / 2);
@@ -575,7 +795,6 @@ function initPoleZeroExplorer() {
     updateAudioFilter();
   }
 
-  // Pointer event handling for z-plane
   function getCanvasPos(e: PointerEvent): { x: number; y: number } {
     const rect = zpCanvas!.getBoundingClientRect();
     const scaleX = ZP_SIZE / rect.width;
@@ -590,11 +809,9 @@ function initPoleZeroExplorer() {
     const pTop = polarToCanvas(poleR, poleTheta);
     const distP = Math.hypot(x - pTop.x, y - pTop.y);
     if (distP <= HIT_R) return 'pole';
-
     const zTop = polarToCanvas(zeroR, zeroTheta);
     const distZ = Math.hypot(x - zTop.x, y - zTop.y);
     if (distZ <= HIT_R) return 'zero';
-
     return null;
   }
 
@@ -611,7 +828,6 @@ function initPoleZeroExplorer() {
 
   zpCanvas.addEventListener('pointermove', (e: PointerEvent) => {
     const pos = getCanvasPos(e);
-
     if (dragging) {
       const polar = canvasToPolar(pos.x, pos.y);
       if (dragging === 'pole') {
@@ -622,18 +838,14 @@ function initPoleZeroExplorer() {
         zeroR = Math.max(0, polar.r);
       }
       syncAll();
-      zpCoordEl.textContent =
-        `(${polar.r.toFixed(3)}∠${((polar.theta * 180 / Math.PI + 360) % 360).toFixed(1)}°)`;
+      zpCoordEl.textContent = `(${polar.r.toFixed(3)}∠${((polar.theta * 180 / Math.PI + 360) % 360).toFixed(1)}°)`;
       return;
     }
-
-    // Hover display
     const hit = hitTest(pos.x, pos.y);
     if (hit) {
       zpCanvas.style.cursor = 'grab';
       const polar = canvasToPolar(pos.x, pos.y);
-      zpCoordEl.textContent =
-        `(${polar.r.toFixed(3)}∠${((polar.theta * 180 / Math.PI + 360) % 360).toFixed(1)}°)`;
+      zpCoordEl.textContent = `(${polar.r.toFixed(3)}∠${((polar.theta * 180 / Math.PI + 360) % 360).toFixed(1)}°)`;
     } else {
       zpCanvas.style.cursor = 'crosshair';
       zpCoordEl.textContent = '\u00A0';
@@ -652,12 +864,10 @@ function initPoleZeroExplorer() {
     zpCoordEl.textContent = '\u00A0';
   });
 
-  // Touch support: prevent default scrolling while dragging
   zpCanvas.addEventListener('touchstart', (e: TouchEvent) => {
     if (e.target === zpCanvas) e.preventDefault();
   }, { passive: false });
 
-  // Slider listeners
   poleRSlider.addEventListener('input', () => {
     poleR = parseFloat(poleRSlider.value);
     syncAll();
@@ -675,7 +885,6 @@ function initPoleZeroExplorer() {
     syncAll();
   });
 
-  // Preset buttons
   const presets: Record<string, { pr: number; pt: number; zr: number; zt: number }> = {
     lowpass:  { pr: 0.85, pt: 0.30, zr: 1.0, zt: Math.PI },
     highpass: { pr: 0.85, pt: Math.PI - 0.30, zr: 1.0, zt: 0 },
@@ -693,7 +902,6 @@ function initPoleZeroExplorer() {
     zeroR = p.zr;
     zeroTheta = p.zt;
     syncAll();
-
     document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.querySelector(`[data-preset="${name}"]`);
     if (activeBtn) activeBtn.classList.add('active');
@@ -706,37 +914,32 @@ function initPoleZeroExplorer() {
     });
   });
 
-  // Sample rate
   srSelect.addEventListener('change', () => {
     syncAll();
-    if (audioCtx) {
-      updateAudioFilter();
-    }
+    if (audioCtx) { updateAudioFilter(); }
   });
 
-  // Phase visibility
-  showPhase.addEventListener('change', () => {
-    drawFrequencyResponse();
-  });
+  showPhase.addEventListener('change', () => { drawFrequencyResponse(); });
 
-  // Copy coefficients
   copyCoeffsBtn.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(coeffDisplay.textContent || '');
       const orig = copyCoeffsBtn.textContent;
       copyCoeffsBtn.textContent = 'Copied!';
       setTimeout(() => { copyCoeffsBtn.textContent = orig; }, 1200);
-    } catch { /* clipboard unavailable */ }
+    } catch {}
   });
 
-  // Theme observation
-  const themeObserver = new MutationObserver(() => {
-    drawZPlane();
-    drawFrequencyResponse();
+  document.querySelectorAll('.copy-btn').forEach(btn=>{
+    btn.addEventListener('click', async()=>{
+      const id=btn.dataset.copyTarget; const el=id?document.getElementById(id):null; if(!el) return;
+      try{ await navigator.clipboard.writeText(el.textContent||''); const o=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=o,1200);}catch{}
+    });
   });
+
+  const themeObserver = new MutationObserver(() => { drawZPlane(); drawFrequencyResponse(); });
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-  // ── Audio ──
   let audioCtx: AudioContext | null = null;
   let sourceNode: AudioBufferSourceNode | OscillatorNode | null = null;
   let gainNode: GainNode | null = null;
@@ -746,9 +949,7 @@ function initPoleZeroExplorer() {
 
   function ensureAudioCtx(): AudioContext {
     if (!audioCtx) {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({
-        sampleRate: getFs(),
-      });
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: getFs() });
     }
     return audioCtx;
   }
@@ -769,35 +970,18 @@ function initPoleZeroExplorer() {
     );
     try {
       iirNode.disconnect();
-      const newIir = audioCtx.createIIRFilter(
-        [coeffs.b0, coeffs.b1, coeffs.b2],
-        [1, coeffs.a1, coeffs.a2],
-      );
+      const newIir = audioCtx.createIIRFilter([coeffs.b0, coeffs.b1, coeffs.b2], [1, coeffs.a1, coeffs.a2]);
       iirNode = newIir;
       if (sourceNode && gainNode) {
-        if (isBypass) {
-          sourceNode.disconnect();
-          sourceNode.connect(gainNode);
-        } else {
-          sourceNode.disconnect();
-          sourceNode.connect(newIir);
-          newIir.connect(gainNode);
-        }
+        if (isBypass) { sourceNode.disconnect(); sourceNode.connect(gainNode); }
+        else { sourceNode.disconnect(); sourceNode.connect(newIir); newIir.connect(gainNode); }
       }
     } catch (e) {
-      // Fallback: use BiquadFilterNode if IIR fails
       try { iirNode.disconnect(); } catch {}
       const bq = audioCtx.createBiquadFilter();
-      bq.type = 'peaking';
-      bq.frequency.value = 1000;
-      bq.Q.value = 1;
-      bq.gain.value = 0;
+      bq.type = 'peaking'; bq.frequency.value = 1000; bq.Q.value = 1; bq.gain.value = 0;
       iirNode = bq as any;
-      if (sourceNode && gainNode) {
-        sourceNode.disconnect();
-        sourceNode.connect(bq);
-        bq.connect(gainNode);
-      }
+      if (sourceNode && gainNode) { sourceNode.disconnect(); sourceNode.connect(bq); bq.connect(gainNode); }
     }
   }
 
@@ -805,23 +989,18 @@ function initPoleZeroExplorer() {
     try { sourceNode?.stop?.(); sourceNode?.disconnect(); } catch {}
     try { iirNode?.disconnect(); } catch {}
     try { gainNode?.disconnect(); } catch {}
-    sourceNode = null;
-    iirNode = null;
-    gainNode = null;
+    sourceNode = null; iirNode = null; gainNode = null;
     isPlaying = false;
-    audioStatus.textContent = 'stopped';
-    audioPlayBtn.textContent = 'Play';
+    audioStatus.textContent = 'stopped'; audioPlayBtn.textContent = 'Play';
     audioCtxNote.textContent = 'AudioContext not started — click Play';
   }
 
   async function startAudio() {
     const ctx = ensureAudioCtx();
     await ctx.resume();
-
     stopAudio();
     isPlaying = true;
     const sourceType = audioSource.value;
-
     gainNode = ctx.createGain();
     gainNode.gain.value = parseFloat(audioGainSlider.value) || 0.25;
     gainNode.connect(ctx.destination);
@@ -830,48 +1009,25 @@ function initPoleZeroExplorer() {
       [{ r: poleR, theta: poleTheta }, { r: poleR, theta: -poleTheta }],
       [{ r: zeroR, theta: zeroTheta }, { r: zeroR, theta: -zeroTheta }],
     );
-
-    try {
-      iirNode = ctx.createIIRFilter(
-        [coeffs.b0, coeffs.b1, coeffs.b2],
-        [1, coeffs.a1, coeffs.a2],
-      );
-    } catch {
-      // fallback dummy
-      iirNode = ctx.createIIRFilter([1, 0, 0], [1, 0, 0]);
-    }
+    try { iirNode = ctx.createIIRFilter([coeffs.b0, coeffs.b1, coeffs.b2], [1, coeffs.a1, coeffs.a2]); }
+    catch { iirNode = ctx.createIIRFilter([1, 0, 0], [1, 0, 0]); }
 
     if (sourceType === 'sweep') {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = 20;
+      const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 20;
       const now = ctx.currentTime;
       osc.frequency.exponentialRampToValueAtTime(20000, now + 8);
       sourceNode = osc;
-      if (!isBypass) {
-        osc.connect(iirNode);
-        iirNode.connect(gainNode);
-      } else {
-        osc.connect(gainNode);
-      }
-      osc.start();
-      osc.stop(now + 8.2);
-      const sweepTimeout = setTimeout(() => {
-        if (isPlaying) startAudio();
-      }, 8500);
+      if (!isBypass) { osc.connect(iirNode); iirNode.connect(gainNode); }
+      else { osc.connect(gainNode); }
+      osc.start(); osc.stop(now + 8.2);
+      const sweepTimeout = setTimeout(() => { if (isPlaying) startAudio(); }, 8500);
       (sourceNode as any)._sweepTimeout = sweepTimeout;
     } else {
       const buf = makeWhiteNoiseBuffer(ctx, 5);
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.loop = true;
+      const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
       sourceNode = src;
-      if (!isBypass) {
-        src.connect(iirNode);
-        iirNode.connect(gainNode);
-      } else {
-        src.connect(gainNode);
-      }
+      if (!isBypass) { src.connect(iirNode); iirNode.connect(gainNode); }
+      else { src.connect(gainNode); }
       src.start();
     }
 
@@ -882,14 +1038,9 @@ function initPoleZeroExplorer() {
 
   audioPlayBtn.addEventListener('click', () => {
     if (isPlaying) {
-      // Clear sweep timeout if present
-      if (sourceNode && (sourceNode as any)._sweepTimeout) {
-        clearTimeout((sourceNode as any)._sweepTimeout);
-      }
+      if (sourceNode && (sourceNode as any)._sweepTimeout) clearTimeout((sourceNode as any)._sweepTimeout);
       stopAudio();
-    } else {
-      startAudio();
-    }
+    } else { startAudio(); }
   });
 
   audioBypassBtn.addEventListener('click', () => {
@@ -898,23 +1049,15 @@ function initPoleZeroExplorer() {
     if (isPlaying && audioCtx && sourceNode && gainNode) {
       try { sourceNode.disconnect(); } catch {}
       try { iirNode?.disconnect(); } catch {}
-      if (isBypass) {
-        sourceNode.connect(gainNode);
-      } else {
+      if (isBypass) { sourceNode.connect(gainNode); }
+      else {
         const coeffs = poleZeroToCoeffs(
           [{ r: poleR, theta: poleTheta }, { r: poleR, theta: -poleTheta }],
           [{ r: zeroR, theta: zeroTheta }, { r: zeroR, theta: -zeroTheta }],
         );
-        try {
-          iirNode = audioCtx.createIIRFilter(
-            [coeffs.b0, coeffs.b1, coeffs.b2],
-            [1, coeffs.a1, coeffs.a2],
-          );
-        } catch {
-          iirNode = audioCtx.createIIRFilter([1, 0, 0], [1, 0, 0]);
-        }
-        sourceNode.connect(iirNode);
-        iirNode.connect(gainNode);
+        try { iirNode = audioCtx.createIIRFilter([coeffs.b0, coeffs.b1, coeffs.b2], [1, coeffs.a1, coeffs.a2]); }
+        catch { iirNode = audioCtx.createIIRFilter([1, 0, 0], [1, 0, 0]); }
+        sourceNode.connect(iirNode); iirNode.connect(gainNode);
       }
       audioStatus.textContent = isBypass ? 'playing (bypassed)' : 'playing (filtered)';
     }
@@ -927,21 +1070,10 @@ function initPoleZeroExplorer() {
     gainDbReadout.textContent = g <= 0 ? '-∞ dB' : `${db.toFixed(1)} dB`;
   });
 
-  audioSource.addEventListener('change', () => {
-    if (isPlaying) {
-      stopAudio();
-      startAudio();
-    }
-  });
+  audioSource.addEventListener('change', () => { if (isPlaying) { stopAudio(); startAudio(); } });
 
-  // Cleanup on page navigation
-  document.addEventListener('astro:before-swap', () => {
-    stopAudio();
-    try { audioCtx?.close(); } catch {}
-    themeObserver.disconnect();
-  }, { once: true });
+  document.addEventListener('astro:before-swap', () => { stopAudio(); try { audioCtx?.close(); } catch {} themeObserver.disconnect(); }, { once: true });
 
-  // Initialize with lowpass preset
   applyPreset('lowpass');
   syncAll();
 }

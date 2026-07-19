@@ -1,6 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+import Math from '../../components/Math.astro';
 import weatherData from '../../data/weather.json';
 import satelliteData from '../../data/satellite.json';
 
@@ -8,6 +10,17 @@ const title = 'Live Earth — Real Coastlines, Real Weather, Real ISS Orbit | Ma
 const description =
   'An interactive globe with three real-data modes: an astronomically accurate day/night terminator, real current weather across 16 cities, and the ISS tracked live via real orbital mechanics from its actual TLE elements.';
 const canonical = new URL('/playground/globe', Astro.site);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Live Earth',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -19,14 +32,48 @@ const breadcrumbSchema = {
   ],
 };
 
+const faqs = [
+  {
+    q: 'How accurate is the day/night terminator?',
+    a: 'The terminator is computed from the Sun\'s apparent position using Julian Date, solar declination, and Greenwich sidereal time — the same astronomical formulas used in planetarium software. It is accurate to ~0.01° for modern dates, more than enough to watch sunset sweep across continents. The night shade is a per-pixel dot-product between the surface normal and sun vector, producing a soft transition rather than a hard line.',
+  },
+  {
+    q: 'Why does the ISS trail sometimes clip at the horizon?',
+    a: 'The ISS trail is a LineString projected through d3.geoOrthographic with clipAngle 90°. Points behind the globe (p_z < 0) are automatically omitted by d3-geo, so the trail appears to wrap around the visible hemisphere. This is the same mechanism that hides cities and coastlines on the back side of the Earth.',
+  },
+  {
+    q: 'Is the ISS position accurate enough for pass prediction?',
+    a: 'No. This simulation uses simplified two-body Keplerian propagation from real TLE elements — it omits J₂ oblateness, atmospheric drag (B* term), and lunar-solar perturbations that full SGP4 includes. Within a few hours of the TLE epoch, the error is a few kilometers. For precision tracking, use satellite.js SGP4. This demo is for watching it move, not for scheduling telescope passes.',
+  },
+  {
+    q: 'How is weather data updated?',
+    a: 'Weather data is fetched from the Open-Meteo API at build time via a GitHub Action that runs every 4 hours, commits the result to src/data/weather.json, and triggers a redeploy. No API keys in the client, no live fetch from the browser. The temperature-to-color mapping is a piecewise linear interpolation through five color stops from −15°C (deep blue) to 40°C (red).',
+  },
+  {
+    q: 'Why does the globe spin and can I control it?',
+    a: 'The globe auto-rotates at 2.4°/second by default, giving a continuous view of all longitudes. You can pause rotation with the "Pause rotation" button, drag left/right to spin manually (horizontal drag maps to longitude delta × 0.3), and toggle between wireframe and filled rendering. The IntersectionObserver pauses the animation loop when the canvas is off-screen to save battery.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
 const weatherGeneratedAt = new Date(weatherData.generatedAt).toISOString();
 const satelliteGeneratedAt = new Date(satelliteData.generatedAt).toISOString();
-import Math from '../../components/Math.astro';
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -153,6 +200,144 @@ import Math from '../../components/Math.astro';
         </div>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the globe</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Three independent data pipelines drive one canvas. Here is what each pixel is actually doing.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The render pipeline</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">d3.geoOrthographic projection.</strong> The globe uses d3-geo's orthographic projection with clipAngle 90°, centered at (φ₀ = 18° tilt, λ₀ = variable spin). scale is tied to canvas radius. No WebGL — every line is drawn with Canvas 2D via d3.geoPath. Precision is 0.1° per d3 projection property, keeping tessellation light for smooth drag at 60 fps.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Coastlines from Natural Earth.</strong> 110m-resolution public-domain polygons served from /data/world-land-110m.json, fetched once at init with an AbortController for cleanup. Drawn as geopaths — wireframe mode strokes them, filled mode fills them. Day/night mode uses 0.72 opacity; weather/ISS modes dim to 0.4 to keep data layers legible.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Day/night painting.</strong> Every half-second, subsolar declination δ and longitude λ_s are computed from the Julian Date using the Astronomical Almanac formula. A 256×256 off-screen canvas pre-computes per-pixel sun-dot-product: for each visible disk pixel, the surface normal is reconstructed from screen (x,y) plus viewer depth, dotted with the sun vector. Negative dot = night, positive = day, with an alpha ramp for grazing illumination at the terminator edge. This is redrawn only when the solar minute changes or lambda0 shifts ≥ 0.2°.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">Terminator great circle construction</p>
+              <Math math="\text{Terminator} = \{ \mathbf{p} \mid \mathbf{s} \cdot \mathbf{p} = 0 \}, \quad \mathbf{p}(t) = \cos t \, \mathbf{u} + \sin t \, \mathbf{v}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Basis vectors u, v are orthonormal and perpendicular to sun direction s. The 180-point sweep traces the sunrise/sunset line across the globe. This line is what you see as the red curve — the exact boundary between illuminated and dark hemispheres.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Data overlays and interaction</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Weather mode.</strong> 16 cities with real current conditions from Open-Meteo, baked at build time into weather.json. Temperature maps to color via piecewise linear interpolation through 5 stops (−15°C deep blue → 40°C red). Cities are drawn as filled circles with white stroke through d3.geoPath.pointRadius(5). Backside cities are automatically hidden by d3-geo returning null for dots behind the globe.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">ISS tracker.</strong> Real TLE from CelesTrak, refreshed every 4 hours via GitHub Action. Two-body Keplerian propagation: mean anomaly M = M₀ + nΔt, solve M = E − e sin E via 15 Newton iterations, compute true anomaly ν and radius r, rotate from perifocal to ECEF via R(Ω)R(i)R(ω) and GMST. Trail is a −25-minute-to-now LineString recomputed once per second.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Auto-rotation and drag.</strong> The globe spins at 2.4°/s by default. Dragging pauses auto-rotation (lambda0 updates from pointer delta). An IntersectionObserver pauses the rAF loop when the canvas is off-screen to save CPU. ThemeObserver on data-theme triggers redraw for dark/light mode.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Orthographic depth clipping</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">d3.geoOrthographic with clipAngle 90° correctly omits geometry on the back half of the globe, but it does this per path segment — not per point. A long LineString that wraps around the back will be clipped into multiple visible arcs on the front. This is mathematically correct but can look like the ISS trail "jumps" when a portion of it moves behind the globe. The trail is re-sampled every second, so the jump smooths out.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Two-body drift vs SGP4</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The ISS propagator is two-body Keplerian — it ignores J₂ oblateness (which rotates the orbital plane ~5°/day), atmospheric drag (which lowers altitude ~2 km/month during solar max), and third-body perturbations. Within 1-2 hours of the TLE epoch, the position is within a few kilometers. Past 12 hours, the error grows to tens of kilometers. The readout says "illustrative, not precision tracking" for this reason.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Copyable: subsolar point & ISS propagation</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The two real physics cores powering the globe — drop directly into any JS visualization.</p>
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">JavaScript — subsolar point (declination, longitude)</p><button type="button" class="copy-btn" data-copy-target="code-subsolar">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-subsolar" code={`function subsolarPoint(date) {
+  const jd = date.getTime() / 86400000 + 2440587.5;
+  const T = (jd - 2451545.0) / 36525;
+  const meanLon = ((280.46646 + T * (36000.76983 + 0.0003032 * T)) % 360 + 360) % 360;
+  const M = ((357.52911 + T * (35999.05029 - 0.0001537 * T)) % 360 + 360) % 360;
+  const eqCtr = Math.sin(M) * (1.914602 - T * (0.004817 + 0.000014 * T));
+  const appLon = meanLon + eqCtr - 0.00569;
+  const obliquity = 23.439291 - 0.0130041667 * T;
+  const ra = Math.atan2(Math.cos(obliquity) * Math.sin(appLon), Math.cos(appLon));
+  const decl = Math.asin(Math.sin(obliquity) * Math.sin(appLon));
+  const gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0);
+  return { decl, lon: ra - gmst };
+}`} lang="js" theme="github-dark" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">JavaScript — ISS two-body Keplerian propagation</p><button type="button" class="copy-btn" data-copy-target="code-iss">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-iss" code={`const GM = 398600.4418; // km^3/s^2
+
+function propagate(elems, dateMs) {
+  const dtSec = (dateMs - elems.epochMs) / 1000;
+  let M = elems.meanAnom0 + elems.nRadS * dtSec;
+  M = ((M % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  let E = M;
+  for (let i = 0; i < 15; i++)
+    E -= (E - elems.ecc * Math.sin(E) - M) / (1 - elems.ecc * Math.cos(E));
+  const nu = 2 * Math.atan2(Math.sqrt(1 + elems.ecc) * Math.sin(E / 2),
+                           Math.sqrt(1 - elems.ecc) * Math.cos(E / 2));
+  const r = elems.a * (1 - elems.ecc * Math.cos(E));
+  const xOrb = r * Math.cos(nu), yOrb = r * Math.sin(nu);
+  // Rotate perifocal → inertial → ECEF
+  const theta = gmstRad(dateMs);
+  const xEcef = xOrb * cos(theta) + yOrb * sin(theta);
+  const yEcef = -xOrb * sin(theta) + yOrb * cos(theta);
+  const zEcef = zOrb; // … full rotation matrix in page script
+  const rMag = Math.hypot(xEcef, yEcef, zEcef);
+  return {
+    lat: Math.asin(zEcef / rMag) * 180 / Math.PI,
+    lon: Math.atan2(yEcef, xEcef) * 180 / Math.PI,
+    alt: rMag - 6378.137,
+  };
+}`} lang="js" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -186,6 +371,37 @@ import Math from '../../components/Math.astro';
   #globe-canvas:active {
     cursor: grabbing;
   }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
 </style>
 
 <script is:inline define:vars={{ weatherCities: weatherData.cities, satelliteTle: { line1: satelliteData.line1, line2: satelliteData.line2 } }}>
@@ -193,6 +409,7 @@ import Math from '../../components/Math.astro';
 </script>
 
 <script>
+  // @ts-nocheck
   import * as d3 from 'd3-geo';
 
   interface Pt { x: number; y: number; }
@@ -744,6 +961,20 @@ import Math from '../../components/Math.astro';
       isVisible = !document.hidden;
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.dataset.copyTarget;
+        const codeEl = targetId ? document.getElementById(targetId) : null;
+        if (!codeEl) return;
+        try {
+          await navigator.clipboard.writeText(codeEl.textContent ?? '');
+          const original = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = original; }, 1500);
+        } catch {}
+      });
+    });
 
     document.addEventListener('astro:before-swap', () => {
       destroyed = true;

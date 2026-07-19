@@ -1,12 +1,35 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const title = 'Loudspeaker Enclosure Designer — Sealed & Vented Box Alignments | MakerPortal';
 const description = 'Design a sealed or vented loudspeaker enclosure using Thiele–Small parameters. Compute alignment, fc, f3, sensitivity, max SPL, and visualize the frequency response.';
 const canonical = new URL('/playground/loudspeaker-enclosure-designer', Astro.site);
 
-const breadcrumb = {
+const slug = 'loudspeaker-enclosure-designer';
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes(slug))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => a.title.localeCompare(b.title));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Loudspeaker Enclosure Designer',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
@@ -15,12 +38,46 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Loudspeaker Enclosure Designer', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'What Qtc should I target for a sealed enclosure?',
+    a: 'Qtc = 0.707 (Butterworth) gives maximally flat amplitude response — the universal default. Qtc = 0.577 (Bessel) gives best transient response with minimal ringing. Qtc = 0.5 is critically damped, tightest bass but the box needs to be very large. Qtc = 1.0 adds about 1.5 dB of peaking at fc for a warmer, fuller sound. For most music, 0.7–0.85 is the sweet spot.',
+  },
+  {
+    q: 'Why does a smaller box raise the system resonance frequency?',
+    a: 'The air in the box acts as a second spring in parallel with the driver\'s suspension. A small box contains stiff air — it\'s harder to compress. The compliance ratio α = Vas/Vb determines the spring constant: when Vb is small, α is large, and the system resonance fc = fs·√(1+α) rises. Hoffman\'s Iron Law says you can\'t cheat this: smaller box means either higher fc or lower efficiency.',
+  },
+  {
+    q: 'When should I choose vented over sealed?',
+    a: 'Vented enclosures work best with drivers that have Qts < 0.4. Above Qts ≈ 0.5, sealed usually wins because the vented box needed for a flat alignment becomes impractically large. Vented gives about 3 dB more sensitivity at fb and extends f3 about half an octave lower — but at the cost of a steeper 24 dB/octave rolloff below fb, more group delay, and the risk of port chuffing at high SPL.',
+  },
+  {
+    q: 'How accurate is the port length calculation?',
+    a: 'The calculator uses the flanged-end correction (0.732·rp) which assumes the port terminates flush with the baffle. Real ports with flares act slightly longer at high SPL because end correction changes with velocity. Build the port 5–10% longer than calculated, measure the impedance peak with a test signal, then trim to exact tuning. A port that\'s too long tunes lower; too short tunes higher.',
+  },
+  {
+    q: 'Why is my maximum SPL sometimes limited by Xmax and sometimes by power?',
+    a: 'The tool computes both and takes the minimum. At low frequencies, excursion demand grows as 1/f² — your driver hits Xmax before you run out of amplifier power. At higher frequencies, excursion is small and thermal power handling is the limit. The cross-check ensures you see the real bottleneck. If Xmax is the limit and you want more SPL, you need a driver with more excursion or a larger radiating area — more power alone won\'t help below the Xmax-limited region.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -354,6 +411,225 @@ import Math from '../../components/Math.astro';
 
       </div>
     </section>
+
+    <!-- Anatomy -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Seven driver parameters, two enclosure types, four sealed alignments, three vented alignments, one live SPL canvas, and a cube-root-scaled box visual. Here is how each piece connects to the Thiele-Small math.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Driver parameters and alignment logic</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">fs, Qts, Vas — the big three.</strong> These are the minimum required to compute any box alignment. fs is the driver's natural resonance, Qts is the damping, Vas is the air volume with equivalent compliance. Every slider has a paired numeric input; the <code>_syncing</code> flag prevents infinite loops when slider and number update each other. The sliders are range inputs for quick sweeps; the numbers are for exact entry.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Alignment presets compute Vb automatically.</strong> Choosing a sealed target Qtc solves <Math math="V_b = V_{as} / ((Q_{tc}/Q_{ts})^2 - 1)" /> and sets the Vb slider to the result. Choosing QB3, SBB4, or SC4 sets approximate Vb and fb ratios. The active preset gets highlighted with the brand-anchor border.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Sealed/vented toggle.</strong> Switches the transfer function between a 2nd-order high-pass (sealed) and a 4th-order Helmholtz-coupled system (vented, using Small's 1973 ABCD coefficients). The toggle also shows/hides the fb slider, port diameter, port length readout, and switches the alignment preset buttons.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Qa and Ql — the loss parasites.</strong> These absorb into Qtc via <Math math="1/Q_{tc} = 1/Q_{tc,ideal} + 1/Q_a + 1/Q_l" />. Qa models stuffing absorption; Ql models air leakage through seams. Setting both to 100 effectively disables them (ideal case). Lowering Qa or Ql reduces the effective Qtc, making the response more damped.</p>
+              </li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The SPL canvas and box visual</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">SPL frequency response.</strong> A log-frequency canvas from 10–500 Hz, showing both the system response (solid magenta) and free-air driver response (dashed). The f3 point is found by scanning backward from high frequency until the magnitude crosses -3 dB. fc (sealed) or fb (vented) is marked with a filled circle. A crosshair cursor shows frequency and SPL at any mouse position.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The box visual.</strong> An isometric SVG whose face dimensions scale with the cube root of Vb. The driver circle radius is proportional to Sd but clamped to prevent it from exceeding the box face. In vented mode, a second smaller circle (the port) appears below or beside the driver. A dimension line shows the volume in liters and the edge length in decimeters.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">07</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Max SPL: Xmax vs power.</strong> The calculator computes both the thermal limit (sensitivity + 10·log(Power)) and the excursion limit at fc. It takes the minimum — at low frequencies excursion dominates, at higher frequencies power dominates. The dashboard shows which limit is active in the title attribute.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">08</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Raf-throttled updates.</strong> The <code>scheduleUpdate()</code> function uses <code>requestAnimationFrame</code> to batch slider changes. If you drag a slider rapidly, only the last value before the next frame triggers a recompute. The canvas is HiDPI-scaled via <code>setupHiDPI()</code> and redraws from scratch on each frame with log-frequency and dB grids from the chart-core library.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The transfer function implementations</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Sealed: <code>r = f/fc; return r² / sqrt((1−r²)² + r²/Qtc²)</code>. Vented: Small's 1973 ABCD coefficients with <Math math="\Omega = f/f_s, h = f_b/f_s" />. The 4th-order numerator is <Math math="\Omega^8" /> (two rolloff pairs), denominator is the quartic polynomial from the coupled mass-spring system.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gotchas -->
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Driver Qts shifts with power — your Butterworth alignment drifts</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Thiele-Small parameters are small-signal — measured at a few milliwatts. As you push power, the voice coil heats up and Re rises, which raises Qes and therefore Qts. A driver with Qts = 0.38 cold may measure Qts = 0.52 after 30 seconds at 50 W. Your perfectly flat Butterworth alignment becomes a peaked underdamped alignment. The tool assumes cold parameters — for high-power designs, simulate with Qts inflated by 20–30% to see the worst case.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Port chuffing is not predicted by the length formula</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The port length calculator gives you the correct acoustic mass for the target tuning, but says nothing about air velocity in the port. If port diameter is too small for the SPL you need, air velocity exceeds ~17 m/s and becomes turbulent — audible chuffing. Rule of thumb: port area should be at least 25–30% of Sd for clean output. If the calculator gives a short port length with your chosen diameter, increase the diameter and recalculate — port length increases with area, but so does clean output headroom.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">JavaScript — the sealed-box solver</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The core sealed-box transfer function and compliance-ratio math. Drop this into any speaker design tool — input fs, Qts, Vas, Vb and get Qtc, fc, and the full frequency response.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Sealed enclosure — JavaScript</p>
+            <button type="button" class="copy-btn" data-copy-target="code-sealed-box">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-sealed-box" code={`const sealedBox = (fs, Qts, Vas, Vb, Qa = 100, Ql = 100) => {
+  const alpha = Vas / Vb;
+  const QtcIdeal = Qts * Math.sqrt(1 + alpha);
+  const Qtc = 1 / (1 / QtcIdeal + 1 / Qa + 1 / Ql);
+  const fc = fs * Math.sqrt(1 + alpha);
+
+  const H = (f) => {
+    const r = f / fc;
+    const r2 = r * r;
+    return r2 / Math.sqrt((1 - r2) ** 2 + r2 / (Qtc * Qtc));
+  };
+
+  const sensitivity = () => {
+    const Qes = 1 / (1 / Qts - 1 / (Qts * 5));
+    const k = (4 * Math.PI ** 2) / (343 ** 3);
+    const eta = k * fs ** 3 * Vas / Qes;
+    return 112 + 10 * Math.log10(Math.max(eta, 1e-12));
+  };
+
+  const vbForQtc = (targetQtc) => {
+    if (targetQtc <= Qts) return Infinity;
+    return Vas / ((targetQtc / Qts) ** 2 - 1);
+  };
+
+  return { alpha, Qtc, QtcIdeal, fc, H, sensitivity, vbForQtc };
+};`} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gear -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear for speaker measurement &amp; design</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Speaker design stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Measurement &amp; monitoring gear
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={{ background: pillar.color }} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- FAQ -->
+    <section aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -454,6 +730,41 @@ import Math from '../../components/Math.astro';
     border: 1px solid var(--mp-border);
     background: var(--mp-canvas);
     padding: 0.75rem 1rem;
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 
@@ -699,7 +1010,6 @@ function initDesigner() {
     drawCircle(ctx, xForF(r.f3), yForDb(splAtF3), 4, theme.muted, theme.text, 1.5);
     drawText(ctx, `f3=${r.f3.toFixed(0)}Hz`, xForF(r.f3) + 7, yForDb(splAtF3) - 6, theme.muted, 10);
 
-    // Axis labels
     ctx.fillStyle = theme.muted;
     ctx.font = '10px ui-monospace, monospace';
     ctx.textAlign = 'center';
@@ -757,12 +1067,10 @@ function initDesigner() {
     svg += `<circle cx="${dCx}" cy="${dCy}" r="${driverR}" fill="${driverFill}" stroke="${strokeCol}" stroke-width="1" />`;
     svg += `<circle cx="${dCx}" cy="${dCy}" r="${driverR * 0.35}" fill="none" stroke="${strokeCol}" stroke-width="0.8" />`;
 
-    // Port visual
     if (state.type === 'vented') {
       const portRCm = state.portD / 2;
       const portPx = (portRCm / (edgeDm * 10)) * size;
       const pR = clamp(portPx, 3, driverR * 0.8);
-      // Place port below the driver if it fits, else next to it
       const pCy = dCy + driverR + pR + 4;
       if (pCy + pR < fy + rh - 4) {
         svg += `<circle cx="${dCx}" cy="${pCy}" r="${pR}" fill="#0a0f16" stroke="${strokeCol}" stroke-width="1" />`;
@@ -863,17 +1171,13 @@ function initDesigner() {
         setVbForQtc(targetQtc);
       } else {
         const align = (btn as HTMLElement).dataset.align;
-        // Basic alignments for Vented
         if (align === 'qb3') {
-          // Quasi-Butterworth 3 approximation
           state.Vb = state.Vas / 3;
           state.fb = state.fs * 1.5;
         } else if (align === 'sbb4') {
-          // Super Boom Box 4
           state.Vb = state.Vas;
           state.fb = state.fs;
         } else if (align === 'sc4') {
-          // Sub-Chebyshev 4
           state.Vb = state.Vas * 2;
           state.fb = state.fs * 0.8;
         }
@@ -886,7 +1190,6 @@ function initDesigner() {
     });
   });
 
-  // Type Toggle
   const typeBtns = document.querySelectorAll('.type-btn');
   const sealedPresets = document.getElementById('sealed-presets')!;
   const ventedPresets = document.getElementById('vented-presets')!;
@@ -912,7 +1215,6 @@ function initDesigner() {
     });
   });
 
-  // Canvas tooltip
   canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -940,6 +1242,21 @@ function initDesigner() {
 
   window.addEventListener('resize', () => {
     scheduleUpdate();
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.copyTarget;
+      const el = document.getElementById(id ?? '');
+      if (!el) return;
+      try {
+        const text = (el as HTMLElement).textContent ?? '';
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = orig; }, 1200);
+      } catch {}
+    });
   });
 
   updateAll();

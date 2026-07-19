@@ -2,6 +2,15 @@
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import { Code } from 'astro:components';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('biquadia') || link.relatedTo?.includes('biquad-filter-designer'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.category === 'Audio interface' ? -1 : b.category === 'Audio interface' ? 1 : 0));
 
 const title = 'Biquad Filter Designer — Hear a cascade, not just see a curve | MakerPortal';
 const description = 'Design a cascade of biquad filters with live Web Audio preview, magnitude + phase plots, and exact Direct Form II Transposed code — the real DSP core from Biquadia.';
@@ -51,13 +60,46 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Biquad Filter Designer', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'Is DF2T better than Direct Form 1?',
+    a: 'DF2T uses two state variables per biquad instead of four. Fewer state variables mean less memory and less quantization noise because you only round once per sample instead of twice. The transposed topology also eliminates the feed-forward delay line. The trade-off is that the internal node can clip at high Q if not guarded with saturation — Biquadia clamps z1/z2 after every sample for exactly this reason.',
+  },
+  {
+    q: 'Why do the coefficients change when I switch sample rates?',
+    a: 'The RBJ cookbook formulas compute w0 = 2π f0 / Fs. Changing Fs changes w0, which cascades through every cos/sin computation and alpha. A 1 kHz lowpass at 48 kHz and 44.1 kHz needs different b0–a2 to hit the same f0. The frequency response recalculates automatically, but if you are switching rates mid-audio-stream in a real app, you must recompute all coefficients at the new Fs before the next buffer.',
+  },
+  {
+    q: 'Can I implement more than four biquads on a microcontroller?',
+    a: 'Yes — on a 180 MHz Cortex-M4 with a CMSIS-DSP biquad cascade, you can run 30–60 biquads at 48 kHz before hitting the real-time deadline. Each DF2T stage costs 5 MACs per sample. At 48 kHz, 60 stages is 14.4 MMAC/s — well within budget. Q format (Q1.31 fixed-point) matters more than stage count. See the MPU9250 field note for Biquadia\'s fixed-point DF2T ARM implementation used on-device.',
+  },
+  {
+    q: 'Why does a high-Q peaking filter ring even after the impulse stops?',
+    a: 'High Q means poles are close to the unit circle — near |z| = 1. The impulse response is an exponentially-decaying sinusoid where decay rate = ln(r) per sample. At Q = 10 and f0 = 1 kHz, r ≈ 0.96, so it takes about 100 samples (~2 ms) to decay to 10%. That ringing is not a bug — it is what makes a resonant filter sound like an instrument body or a room mode.',
+  },
+  {
+    q: 'How does Biquadia run hundreds of these on Metal?',
+    a: 'Biquadia serializes cascade coefficients into a Metal buffer, then dispatches one compute kernel per audio channel. Each thread processes a DFT block (512–4096 samples), pulling coefficients from the buffer and applying DF2T in an unrolled loop. The GPU\'s SIMD lanes handle stereo pairs in parallel. The same kernel verified via Accelerate vDSP on CPU for bit-exact cross-check. The Metal path adds ~0.3 ms latency at 512-sample blocks.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -136,53 +178,141 @@ import Math from '../../components/Math.astro';
             </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-6 sm:p-7 text-[0.88rem] leading-[1.75] text-muted-text">
-          <p class="font-semibold text-primary-text text-[1.08rem] tracking-[-0.02em]">How we compute — biquads are the atoms of audio</p>
-
-          <div class="mt-6 space-y-8">
-            <div>
-              <p class="font-semibold text-primary-text text-[0.92rem]">1. Why biquads</p>
-              <p class="mt-2">Every EQ you have touched, every synth ladder, every speaker crossover, is built from biquads. A biquad is the smallest IIR that can ring: two poles, two zeros, second order. One stage gives you $12$ dB/oct and a controllable resonance. Four in series give $48$ dB/oct Linkwitz-Riley with $20$ multiplies per sample. Cascade them and you can match any magnitude response to within fractions of a dB. Biquadia runs hundreds of these in parallel on Metal with Accelerate verification — this playground runs $1$–$4$ in your browser so you hear the chain, not just see a curve.</p>
-            </div>
-
-            <div>
-              <p class="font-semibold text-primary-text text-[0.92rem]">2. Intuition — feedback plus two numbers of state</p>
-              <p class="mt-2">A FIR filter only mixes past inputs. An IIR filter feeds past outputs back in, which is what creates resonance: <Math math="y[n] = b0 x[n] + b1 x[n-1] + b2 x[n-2] - a1 y[n-1] - a2 y[n-2]" />. The $a1, a2$ terms are memory. Push <Math math="Q" /> high, poles approach the unit circle, and the impulse rings for hundreds of samples.</p>
-              <p class="mt-2">Direct Form II Transposed (DF2T) is the engineer's implementation. Instead of storing $x[n-1], x[n-2], y[n-1], y[n-2]$, keep two state floats $z1, z2$ per stage per channel. Per sample:</p>
-              <p class="mt-2 font-mono text-[0.78rem] bg-canvas rounded-[10px] p-3 border border-border">
-                <Math math="y = b0 x + z1" /><br />
-                <Math math="z1 = b1 x - a1 y + z2" /><br />
-                <Math math="z2 = b2 x - a2 y" />
-              </p>
-              <p class="mt-2">No history arrays, no $a0$ divide in the hot loop, minimal quantization noise. That is the exact code Biquadia ships in C++ and Swift — same DF2T, stereo-safe. Zero $z1, z2$ on reset, smooth coefficients if you want click-free sweeps.</p>
-            </div>
-
-            <div>
-              <p class="font-semibold text-primary-text text-[0.92rem]">3. The math — RBJ cookbook, for real</p>
-              <p class="mt-2">We use Robert Bristow-Johnson’s Audio EQ Cookbook. Input: <Math math="Fs" />, $f0$, <Math math="Q" />, $dBgain$. Compute:</p>
-              <p class="mt-2"><Math math="w0 = 2\pi f0 / Fs" />, <Math math="\alpha = \sin w0 / 2Q" />, <Math math="A = 10^{dBgain/40}" /></p>
-              <p class="mt-2">Shelf slope is fixed at <Math math="S = 1" />. Then <Math math="\sqrt{A}\alpha" /> appears in shelf equations. Each type defines unnormalized $b0, b1, b2, a0, a1, a2$. Lowpass: <Math math="b0 = (1 - \cos w0)/2" />, <Math math="b1 = 1 - \cos w0" />, <Math math="b2 = (1 - \cos w0)/2" />, <Math math="a0 = 1 + \alpha" />, <Math math="a1 = -2\cos w0" />, <Math math="a2 = 1 - \alpha" />. Peaking: <Math math="b0 = 1 + \alpha A" />, <Math math="b1 = -2\cos w0" />, <Math math="b2 = 1 - \alpha A" />, <Math math="a0 = 1 + \alpha / A" />, <Math math="a1 = -2\cos w0" />, <Math math="a2 = 1 - \alpha / A" />. High/low shelf, notch, allpass, bandpass follow the same pattern with <Math math="A" /> and <Math math="\sqrt{A}" />.</p>
-              <p class="mt-2">Normalize by $a0$: <Math math="b0/=a0" />, <Math math="b1/=a0" />, <Math math="b2/=a0" />, <Math math="a1/=a0" />, <Math math="a2/=a0" />, <Math math="a0 = 1" />. Those are the numbers you see in the box and we feed to Web Audio.</p>
-              <p class="mt-2">Frequency response is exact evaluation on the unit circle:</p>
-              <p class="mt-2"><Math math="H(e^{j\omega}) = (b0 + b1 e^{-j\omega} + b2 e^{-j2\omega}) / (1 + a1 e^{-j\omega} + a2 e^{-j2\omega})" display /></p>
-              <p class="mt-2">We implement it as real/imag: <Math math="nr = b0 + b1\cos\omega + b2\cos2\omega" />, <Math math="ni = -b1\sin\omega - b2\sin2\omega" />, <Math math="dr = 1 + a1\cos\omega + a2\cos2\omega" />, <Math math="di = -a1\sin\omega - a2\sin2\omega" />, then complex divide. Magnitude is <Math math="20\log10|H|" />, phase is <Math math="\arg H" />.</p>
-              <p class="mt-2">Cascade is complex multiplication. So <Math math="|Htotal| = |H1||H2|..." />, and in dB <Math math="|Htotal|dB = \sum |Hk|dB" />. Phase sums too: <Math math="\arg Htotal = \sum \arg Hk" />. Stability check: poles must satisfy <Math math="|p| \lt 1" />, equivalently <Math math="a2 \lt 1" /> and <Math math="|a1| \lt 1 + a2" /> for a biquad. We keep <Math math="Q \gt 0.1" /> in the UI to avoid blowup.</p>
-            </div>
-
-            <div>
-              <p class="font-semibold text-primary-text text-[0.92rem]">4. How to play</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Lowpass vs peaking:</span> Lowpass is <Math math="Q" /> controls resonance at cutoff — set <Math math="f0 = 1000" />, <Math math="Q = 0.707" /> for Butterworth flat, <Math math="Q = 2" />–$5$ to hear ringing. Peaking is your EQ bell — $f0$ is center, <Math math="Q" /> is width, $gain$ is boost. <Math math="Q = 1" /> means about one octave wide.</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Q and gain:</span> <Math math="Q" /> below $0.5$ sounds mushy, above $5$ sounds surgical and rings. $gain$ only matters for peaking and shelves — others ignore it, which is why we dim it. Try <Math math="f0 = 2000" />, <Math math="Q = 1" />, <Math math="gain = 6" /> then toggle $12$ dB.</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Cascade $1$–$4$:</span> Put lowpass at $800$ Hz, then peaking at $2$ kHz $+6$ dB, then highshelf at $8$ kHz. Watch magnitude add. Phase gets messy fast — that messiness is real acoustic phase, not a plot bug. Four stages is enough for a $4$-band EQ chain.</p>
-              <p class="mt-2"><span class="font-semibold text-primary-text">Why you can hear it:</span> Web Audio <code>IIRFilterNode</code> takes the same $b0,b1,b2,a0,a1,a2$ we plot. Biquadia uses near-identical kernels compiled via <code>clang++</code> and Accelerate vDSP on device, then Metal for parallel graphs. Same math, different transport — browser vs. on-device. Bypass button lets you AB the chain with zero extra latency.</p>
-            </div>
-
-            <div>
-              <p class="font-semibold text-primary-text text-[0.92rem]">5. Honesty check</p>
-              <p class="mt-2">RBJ is an approximation that bilinear-transforms analog prototypes. Near Nyquist, response warps — a $18$ kHz lowpass at $44.1$ kHz does not match analog. <Math math="Q" /> definition matches RBJ, not constant-Q or proportional-Q variants. Shelf slope <Math math="S" /> is fixed to $1$ here — Biquadia exposes <Math math="S" /> as a knob, this playground does not. Coefficient quantization matters: $48$-bit double in JS is fine, but $32$-bit float on hardware at very low $f0/Fs$ loses resolution — Biquadia uses double for design, float for execution with error checks. If a stage goes unstable due to extreme <Math math="Q" /> or $f0$, Web Audio may clamp or drop to identity — the UI clamps <Math math="r" /> to $0.995$ equivalent for safety.</p>
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the designer</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every knob and curve above answers to the RBJ cookbook below. Here is what each piece is actually doing.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The cascade builder and response plot</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Stage cards.</strong> Each card is one biquad. Type selects the RBJ formula branch, freq sets w0 = 2πf0/Fs, Q controls alpha = sin(w0)/(2Q), and gain only affects peaking/shelf types. Removing a stage splices the chain — the remaining stages recompute and redraw instantly.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Magnitude + phase plot.</strong> For each frequency from 20 Hz to 20 kHz (log-spaced, 400 steps), the script evaluates every stage's transfer function H(e^jω) on the unit circle via exact complex arithmetic, then multiplies all Hk for the cascade. dB is 20 log10|H_total|. Phase is the sum of arg(Hk), wrapped to [-180°, 180°]. The plot is not a visual approximation — those curves are the literal mathematical response of the coefficients you see.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Coefficient readout.</strong> The real-time b0,b1,b2,a1,a2 for every stage, normalized to a0=1. These are the exact numbers fed to Web Audio's IIRFilterNode and the same format Biquadia's Metal kernel expects. Copy them into any DF2T implementation and the filter is identical.</p>
+              </li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Audio pipeline and interaction</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Web Audio chain.</strong> Source → IIRFilterNode × N → Gain → destination. Each IIRFilterNode is constructed from the current biquad coefficients with feedforward [b0,b1,b2] and feedback [1,a1,a2]. Changing any parameter tears down and rebuilds the chain — new IIR nodes, clean state, no pops.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Noise generators.</strong> White noise is Math.random() × 2 − 1. Pink noise uses the Voss-McCartney algorithm (seven white noise sources at octave intervals) producing −3 dB/octave rolloff — flatter to the ear. Sine is a standard OscillatorNode at 440 Hz. The sweep does an exponential ramp from 20 Hz to 20 kHz over 8 seconds.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Bypass toggle.</strong> Disconnects the IIR chain and reconnects source directly to gain — zero added latency, direct A/B. The coefficients stay live in the readout, so the plot still shows what you are not hearing. Toggling bypass back rebuilds the chain from the same coefficients.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">What the render loop evaluates per pixel</p>
+              <Math math="H_{\text{total}}(e^{j\omega}) = \prod_{k=1}^{N} \frac{b_{0,k} + b_{1,k}e^{-j\omega} + b_{2,k}e^{-j2\omega}}{1 + a_{1,k}e^{-j\omega} + a_{2,k}e^{-j2\omega}}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is computed 400 times per plot redraw — once per log-spaced frequency bin. Each evaluation unpacks to a complex division: real/imag numerator divided by real/imag denominator. The cascade multiplies complex numbers, not dB — the dB display is the final step.</p>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">RBJ α inversion</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">LLMs love writing <Math math="\alpha = Q \sin w_0" /> (inverted). The correct formula is <Math math="\alpha = \sin w_0 / (2Q)" />. A high-Q filter with inverted α shifts the cutoff by an octave and changes the shape entirely. This page uses the real RBJ — check the α line in the script if you are porting it to your own codebase.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Cascade phase pile-up</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Each biquad adds its phase shift to the total. Four stages can easily exceed ±360° of total phase at Nyquist. That is not a bug — it is real group delay. If you stack four high-Q peaking filters, you will hear audible pre-ringing on transients. Phase-wrapping the plot to ±180° hides this, but your ears and an oscilloscope will not be fooled.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Biquadia stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio & DSP hardware
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img src={item.image} alt="" width="480" height="360" loading="lazy" decoding="async" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>
+                  )}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => { const pillar = pillarMeta[p] ?? fallbackPillar; return (<span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text"><span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>{pillar.label}</span>); })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -197,6 +327,33 @@ import Math from '../../components/Math.astro';
   .tool-input:focus{outline:none;border-color:var(--mp-cta);box-shadow:0 0 0 3px color-mix(in srgb,var(--mp-cta) 20%,transparent)}
   .stage-card{border-radius:16px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:14px}
   .pill{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.25rem 0.6rem;font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em}
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 
 <script>
@@ -296,14 +453,10 @@ function initBiquad(){
     const w = 2*Math.PI*f/Fs;
     const cosw = Math.cos(w), cos2w=Math.cos(2*w);
     const sinw = Math.sin(w), sin2w=Math.sin(2*w);
-    // e^-jw = cosw - j sinw
-    // numerator: b0 + b1 e^-jw + b2 e^-j2w
     let nr = coeffs.b0 + coeffs.b1*cosw + coeffs.b2*cos2w;
     let ni = -coeffs.b1*sinw - coeffs.b2*sin2w;
     let dr = 1 + coeffs.a1*cosw + coeffs.a2*cos2w;
     let di = -coeffs.a1*sinw - coeffs.a2*sin2w;
-    // complex division (nr+j ni)/(dr+j di) but ni,di are actually imaginary with sign already? above ni is imag part
-    // So (nr+ j ni)/(dr+ j di)
     const denom = dr*dr+di*di || 1e-12;
     const re = (nr*dr+ni*di)/denom;
     const im = (ni*dr - nr*di)/denom;
@@ -317,14 +470,12 @@ function initBiquad(){
     for(const st of chain){
       const c = coeffsFor(st.type, st.freq, st.q, st.gain, Fs);
       const r = freqResponse(c,freq,Fs);
-      // multiply complex
       const newRe = reTotal*r.re - imTotal*r.im;
       const newIm = reTotal*r.im + imTotal*r.re;
       reTotal=newRe; imTotal=newIm;
       mag *= r.mag;
       phase += r.phase;
     }
-    // wrap phase to -pi..pi for display? keep unwrapped sum but we will plot wrapped
     return {mag, phase, re:reTotal, im:imTotal};
   }
 
@@ -343,10 +494,8 @@ function initBiquad(){
     const width=W, height=H;
     const ctx=mCtx;
     ctx.clearRect(0,0,width,height);
-    // grid
     const bg = getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#f8f4ed';
     ctx.fillStyle=bg; ctx.fillRect(0,0,width,height);
-    // grid lines
     const freqsGrid=[20,50,100,200,500,1000,2000,5000,10000,20000];
     const minF=20, maxF=20000;
     function xForF(f){ return Math.log(f/minF)/Math.log(maxF/minF)*width; }
@@ -356,8 +505,7 @@ function initBiquad(){
       const x=xForF(f);
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,height); ctx.stroke();
     }
-    // horizontal dB grid -24..24
-    function yForDb(db){ // map -36..36 to height
+    function yForDb(db){
       const minDb=-36,maxDb=36;
       return height - (db-minDb)/(maxDb-minDb)*height;
     }
@@ -366,12 +514,10 @@ function initBiquad(){
       const y=yForDb(db);
       ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(width,y); ctx.strokeStyle=db===0?'rgba(0,0,0,0.15)':'rgba(0,0,0,0.06)'; ctx.stroke();
     }
-    // compute response
     const steps=400;
     const freqSteps=logFreqSteps(minF,maxF,steps);
     const mags=freqSteps.map(f=>{ const r=totalResponse(f,Fs); return 20*Math.log10(r.mag||1e-12); });
     const phases=freqSteps.map(f=>{ const r=totalResponse(f,Fs); return r.phase*180/Math.PI; });
-    // magnitude plot
     ctx.beginPath(); ctx.strokeStyle='#b8324f'; ctx.lineWidth=2;
     for(let i=0;i<steps;i++){
       const x=xForF(freqSteps[i]); const y=yForDb(clamp(mags[i],-36,36));
@@ -379,23 +525,19 @@ function initBiquad(){
     }
     ctx.stroke();
     if(showPhase.checked){
-      // phase -180..180 mapped to same height? Use secondary scale: -180 at bottom, 180 at top? Map -180..180 to height
       function yForPhase(ph){ const minP=-180,maxP=180; return height - (ph-minP)/(maxP-minP)*height; }
-      // grid for phase
       ctx.strokeStyle='rgba(0,0,0,0.04)'; ctx.setLineDash([4,4]);
       for(const ph of [-90,0,90]){ const y=yForPhase(ph); ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(width,y); ctx.stroke();}
       ctx.setLineDash([]);
       ctx.beginPath(); ctx.strokeStyle='#4a7bb8'; ctx.lineWidth=1.5;
       for(let i=0;i<steps;i++){
-        const x=xForF(freqSteps[i]); const y=yForPhase(((phases[i]+540)%360)-180); // wrap -180..180
+        const x=xForF(freqSteps[i]); const y=yForPhase(((phases[i]+540)%360)-180);
         if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
       ctx.stroke();
     }
-    // labels
     ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.font='10px ui-monospace, monospace';
     for(const f of [20,100,1000,10000]){ const x=xForF(f); ctx.fillText(f>=1000? (f/1000)+'k' : String(f), x+2, height-4); }
-    // update coeff text
     let txt='';
     chain.forEach((st,i)=>{
       const c=coeffsFor(st.type,st.freq,st.q,st.gain,Fs);
@@ -403,7 +545,6 @@ function initBiquad(){
       txt+=`  b0=${c.b0.toFixed(6)} b1=${c.b1.toFixed(6)} b2=${c.b2.toFixed(6)}\n`;
       txt+=`  a1=${c.a1.toFixed(6)} a2=${c.a2.toFixed(6)}\n\n`;
     });
-    // total at 1k
     const at1k=totalResponse(1000,Fs);
     txt+=`Total @1k: ${ (20*Math.log10(at1k.mag)).toFixed(2)} dB, phase ${(at1k.phase*180/Math.PI).toFixed(1)}°\n`;
     coeffOut.textContent=txt;
@@ -443,11 +584,9 @@ function initBiquad(){
       stagesEl.appendChild(card);
       const sel=card.querySelector(`select[data-field="type"]`);
       sel.value=st.type;
-      // disable gain where irrelevant? Keep but visual hint
       const gainRow=card.querySelectorAll('label')[3];
       if(['lowpass','highpass','bandpass','notch','allpass'].includes(st.type)) gainRow.style.opacity='0.4';
     });
-    // attach listeners
     stagesEl.querySelectorAll('select[data-field], input[data-field]').forEach(el=>{
       el.addEventListener('input',(e)=>{
         const idx=parseInt(e.target.dataset.idx,10);
@@ -457,7 +596,6 @@ function initBiquad(){
         if(field==='q') v=parseFloat(v)||0.707;
         if(field==='gain') v=parseFloat(v)||0;
         chain[idx][field]=v;
-        // update label spans
         renderStages(); renderPlots(); rebuildAudioChain();
       });
     });
@@ -466,7 +604,6 @@ function initBiquad(){
     });
   }
 
-  // Audio
   let audioCtx=null, sourceNode=null, gainNode=null, iirNodes=[], isPlaying=false, isBypass=false, oscNode=null, sweepOsc=null;
   const playBtn=document.getElementById('audio-play');
   const bypassBtn=document.getElementById('audio-bypass');
@@ -506,11 +643,9 @@ function initBiquad(){
   }
   function rebuildAudioChain(){
     if(!audioCtx || !isPlaying) return;
-    // disconnect existing
     try{ iirNodes.forEach(n=>{ try{n.disconnect();}catch{}}); }catch{}
     iirNodes=[];
     const Fs=audioCtx.sampleRate;
-    // build new chain
     let prev = sourceNode;
     chain.forEach(st=>{
       const c=coeffsFor(st.type, st.freq, st.q, st.gain, Fs);
@@ -520,7 +655,6 @@ function initBiquad(){
         prev=iir;
         iirNodes.push(iir);
       }catch(e){
-        // fallback to BiquadFilterNode for unsupported (some browsers restrict IIR)
         const bq=audioCtx.createBiquadFilter();
         bq.type=st.type; bq.frequency.value=st.freq; bq.Q.value=st.q; bq.gain.value=st.gain;
         if(prev) prev.connect(bq);
@@ -529,7 +663,6 @@ function initBiquad(){
     });
     if(prev && gainNode) prev.connect(gainNode);
     if(isBypass){
-      // bypass: source -> gain directly
       try{ sourceNode.disconnect(); }catch{}
       sourceNode.connect(gainNode);
       iirNodes.forEach(n=>{ try{n.disconnect();}catch{}});
@@ -583,7 +716,6 @@ function initBiquad(){
     isBypass=!isBypass;
     bypassBtn.textContent='Bypass: '+(isBypass?'ON':'OFF');
     if(isPlaying){
-      // reconnect
       const ctx=audioCtx;
       try{ sourceNode.disconnect(); }catch{}
       try{ iirNodes.forEach(n=>n.disconnect()); }catch{}
@@ -594,12 +726,11 @@ function initBiquad(){
   });
   gainSlider.addEventListener('input', ()=>{ if(gainNode) gainNode.gain.value=parseFloat(gainSlider.value); });
   sourceSel.addEventListener('change', ()=>{ if(isPlaying){ stopAudio(); startAudio(); }});
-  srEl.addEventListener('change', ()=>{ renderPlots(); if(audioCtx) { /* will use new Fs on rebuild */ rebuildAudioChain(); } });
+  srEl.addEventListener('change', ()=>{ renderPlots(); if(audioCtx) { rebuildAudioChain(); } });
   showPhase.addEventListener('change', renderPlots);
   addBtn.addEventListener('click', ()=>{ if(chain.length<4){ chain.push({type:'peaking', freq:2000, q:1, gain:6}); renderStages(); renderPlots(); rebuildAudioChain(); }});
   clearBtn.addEventListener('click', ()=>{ chain=[{type:'lowpass', freq:1000, q:0.7071, gain:0}]; renderStages(); renderPlots(); rebuildAudioChain(); });
 
-  // copy
   document.querySelectorAll('.copy-btn').forEach(btn=>{
     btn.addEventListener('click', async()=>{
       const id=btn.dataset.copyTarget; const el=id?document.getElementById(id):null; if(!el) return;

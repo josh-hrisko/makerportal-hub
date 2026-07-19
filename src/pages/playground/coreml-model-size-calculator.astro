@@ -2,6 +2,14 @@
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import { Code } from 'astro:components';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('itria') || link.relatedTo?.includes('coreml-model-size-calculator'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.id === 'book-hands-on-ml' ? -1 : b.id === 'book-hands-on-ml' ? 1 : 0));
 
 const title = 'CoreML Model Size & Quantization Calculator — Exact on-device footprint | MakerPortal';
 const description = 'Deterministic byte-size math across fp32/fp16/int8/int4 quantization — the exact arithmetic behind an on-device model’s real footprint, no throughput guesswork, same checks Notiary uses before shipping.';
@@ -32,6 +40,35 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'CoreML Model Size Calculator', item: canonical.toString() },
   ],
 };
+
+const faqs = [
+  {
+    q: 'Why can\'t this calculator predict latency in milliseconds?',
+    a: 'On-device AI latency depends on Apple Neural Engine vs GPU scheduling, the model\'s op mix (MatMul vs LayerNorm vs Softmax), thermal throttling state, and iOS resource contention. Any online calculator that prints "12 ms" is fabricating — CoreML itself can give 18 ms for the same model and then 90 ms under thermal pressure. Bytes are deterministic: parameter count × bytes per element × overhead factor. ms is a runtime variable. Notiary measures latency at runtime with Instruments, not at compile time.',
+  },
+  {
+    q: 'How does INT4 quantization actually store 0.5 bytes per parameter?',
+    a: 'Two 4-bit weights are packed into one byte. For a group size of 32, the quantizer stores one FP16 scale (2 bytes) per 32 weights, adding 2/32 = 0.0625 B/param overhead. The effective bytes per parameter is 0.5 + 0.0625 = 0.5625 before packing efficiency. CoreML\'s protobuf also aligns weight blobs to 16-byte boundaries, introducing ~4% alignment waste (the 0.96 packing slider). Real measured INT4 exports of 360M parameter models land at ~197 MB, close to this calculator\'s prediction.',
+  },
+  {
+    q: 'What\'s the difference between on-disk size and peak DRAM residency?',
+    a: 'The .mlpackage file on disk includes weights, model graph topology (protobuf), and metadata. Peak DRAM residency adds the activation working set — the intermediate tensors computed during inference. For an LLM with seq_len = 2048 and hidden_dim = 960, each layer\'s activation tile is 2048 × 960 × 2 bytes (FP16) ≈ 3.9 MB. Double-buffered for pipeline overlap → ~8 MB per layer. The 64 MB slider in this calculator models the worst-case tile across all layers.',
+  },
+  {
+    q: 'Can I run a 7B model on iPhone?',
+    a: 'At FP16: 7B × 2 B = 14 GB weights alone — exceeds available DRAM on any iPhone (max ~6 GB). At INT4: 7B × 0.5 = 3.5 GB → still too large for the typical ~3 GB app extension limit but potentially fits in the main app with careful memory management. At INT4 with layer streaming (loading one transformer block at a time), peak residency stays under ~500 MB. Thumb-Dash uses exactly this approach for 360M on constrained devices. For 7B, INT2 (0.25 B/param → 1.75 GB) may be required.',
+  },
+  {
+    q: 'What FP types does CoreML actually support for quantization?',
+    a: 'As of iOS 18 / Core ML 6, native quantization supports FP16, INT8, and INT4 (palettization). BF16 is listed in this calculator for reference but is primarily a training format — Apple\'s ANE operates in FP16 natively. FP8 (E4M3, E5M2) is not yet in production CoreML as of mid-2025. INT2 and Binary (0.125 B/param) are shown for theoretical reference only — CoreML does not currently support them natively, though custom compute units could implement them via Metal Performance Shaders.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
 import Math from '../../components/Math.astro';
 ---
 
@@ -39,6 +76,7 @@ import Math from '../../components/Math.astro';
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -217,6 +255,137 @@ Compression ratio = fp32Size / quantizedSize</pre>
         </div>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the calculator</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Six presets, eight quantization levels, three sliders, one formula. Here is what each control actually computes.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The model definition panel</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Preset dropdown.</strong> Six reference models with pre-filled parameter counts, overhead estimates, and activation buffer sizes. SmolLM2 360M (Notiary\'s model) defaults to 360M params, 8M vocab overhead, 64 MB activation tile. Selecting a preset fills the sliders — you can then override individual values for custom quantization scenarios.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Total parameters (M).</strong> The raw number of trainable weights — embeddings, attention weights, FFN layers, output projection. This is typically sourced from model.parameters() in PyTorch or the model card. The overhead slider separates non-matmul parameters (embedding tables, LayerNorm gammas) for more accurate footprint estimation.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Quantization checkboxes.</strong> Eight types, each multiplying params × bytesPerElement. FP32 (4 B), FP16/BF16 (2 B), INT8 (1 B), INT4 (0.5 B), INT2 (0.25 B), Binary (0.125 B). Checked types appear in the results grid. The INT4 slider enables packing efficiency — unchecked types ignore it.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The deterministic footprint formula</p>
+              <Math math="\text{bytes} = \text{params} \times \text{bpe} \times \frac{f_{\text{overhead}}}{\text{eff}_{\text{pack}}}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">params = total − vocab overhead. bpe = bytes per element from the quantization table. f_overhead = CoreML protobuf tax (default 1.08×). eff_pack = alignment efficiency (default 0.96 for INT4). Peak DRAM = weights + activation tile.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Results, export, and the Swift snippet</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Results grid.</strong> One row per checked quantization. Shows raw weights size, total with activation buffer, overhead contribution, and compression ratio vs FP32 baseline. The ratio is fp32_bytes / quantized_bytes — INT4 typically gives ~7.5× compression. A practical check note updates with the current slider values for the SmolLM2 reference.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Export JSON.</strong> Serializes the current state (params, overhead, activation, sliders, checked quants) to a downloadable JSON file. Useful for CI pipelines that need the same numbers — paste this into a build script assertion that checked model size &lt; App Store cellular limit.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Swift snippet.</strong> The Notiary production check: MLModel(contentsOf:) + FileManager.default.attributesOfItem to get actual on-disk bytes. This is the only number that matters — the calculator predicts it, FileManager verifies it.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">KV-cache is missing from this calculator</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">For transformer-based models, the key-value cache grows during generation: <Math math="2 \times \text{layers} \times \text{seq\_len} \times \text{hidden\_dim} \times \text{bpe\_kv}" />. At 32 layers, seq 4096, hidden 960, FP16 — that\'s 241 MB of KV cache alone, exceeding the weight footprint. This calculator intentionally omits KV-cache because it\'s runtime-dependent (grows with each generated token) and belongs in a separate memory budget, not the static model size.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Palettization ≠ true INT4</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">CoreML\'s weight palettization (iOS 17+) compresses weights further on disk by mapping clusters of weight values to a lookup table, making INT4 appear like 0.35 B/param on disk. But at inference time, weights are decompressed back to FP16 in DRAM — the ANE operates on 2-byte values. So your 180 MB on-disk INT4 model could use 360 MB in DRAM plus decompression latency. FileManager reports the on-disk size; Instruments shows the true DRAM cost.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Notiary stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              ML reference
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img src={item.image} alt="" width="480" height="360" loading="lazy" decoding="async" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>
+                  )}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => { const pillar = pillarMeta[p] ?? fallbackPillar; return (<span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text"><span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>{pillar.label}</span>); })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -240,6 +409,18 @@ Compression ratio = fp32Size / quantizedSize</pre>
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--mp-muted);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 

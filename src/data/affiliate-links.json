@@ -5,7 +5,11 @@
     "asin": "B01EWOE0UU",
     "note": "ATmega328P-based Uno R3 clone — used across BLExAR's RFID, GPS, and joystick hardware builds. Also the usual microcontroller for reading an IMU's raw quaternion over I2C.",
     "category": "Microcontroller",
-    "relatedTo": ["blexar", "quaternion-euler-converter"]
+    "relatedTo": [
+      "blexar",
+      "quaternion-euler-converter",
+      "ble-gatt-visualizer"
+    ]
   },
   {
     "id": "arduino-nano-esp32",
@@ -13,7 +17,9 @@
     "asin": "B0C947BHK5",
     "note": "Official Arduino board (ABX00083) — Bluetooth/WiFi capable, used for BLExAR's e-paper and BLE prototyping.",
     "category": "Microcontroller",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "raspberry-pi-4-4gb-kit",
@@ -21,7 +27,9 @@
     "asin": "B07XTRK8D4",
     "note": "4GB Pi 4 kit with case/fan — the compute base for BLExAR's LiDAR, thermal, GPS, and audio-array builds.",
     "category": "SBC",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "raspberry-pi-pico",
@@ -29,7 +37,9 @@
     "asin": "B0BDLHMQ9C",
     "note": "RP2040 board used for the WS2812 LED ring and OLED display builds.",
     "category": "Microcontroller",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "mfrc522-rfid-kit",
@@ -37,7 +47,9 @@
     "asin": "B0FND311F3",
     "note": "RFID reader + tag kit used in BLExAR's Arduino RFID build.",
     "category": "RFID",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "tf-luna-lidar",
@@ -45,7 +57,9 @@
     "asin": "B09PZ559ZB",
     "note": "Single-point LiDAR module used for BLExAR's distance-detection build.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "amg8833-thermal-camera",
@@ -53,7 +67,9 @@
     "asin": "B07D7LXXWR",
     "note": "Grid-EYE 8x8 thermal array used in BLExAR's thermal-camera build.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "mlx90640-thermal-camera",
@@ -61,7 +77,9 @@
     "asin": "B0F312VWW3",
     "note": "Higher-resolution thermal array used as an alternative sensor across BLExAR's thermal and audio-array builds.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "mlx90614-ir-sensor",
@@ -69,7 +87,9 @@
     "asin": "B071VF2RWM",
     "note": "Non-contact IR temperature sensor used alongside the thermal-camera builds.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "nema17-stepper-motor",
@@ -77,7 +97,9 @@
     "asin": "B0C36GKZ8D",
     "note": "Stepper motor used in BLExAR's Raspberry Pi motor-control build.",
     "category": "Motor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "drv8825-stepper-driver",
@@ -85,7 +107,9 @@
     "asin": "B0CP92T4QR",
     "note": "Driver board paired with the NEMA 17 in the stepper-motor build.",
     "category": "Driver",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "neo-6m-gps",
@@ -93,7 +117,9 @@
     "asin": "B0B31NRSD2",
     "note": "GPS module used across BLExAR's GPS tracker and audio-array builds.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "atgm336h-gps",
@@ -101,7 +127,9 @@
     "asin": "B09LQDG1HY",
     "note": "Compact dual-mode GPS module used for BLExAR's pocket GPS tracker build.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "mg90s-micro-servo",
@@ -109,7 +137,9 @@
     "asin": "B0CP98TZJ2",
     "note": "Micro servo used across several BLExAR Arduino builds.",
     "category": "Actuator",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "ssd1306-oled-display",
@@ -117,7 +147,9 @@
     "asin": "B0FSRQG23K",
     "note": "Small OLED display used in BLExAR's Pico display build.",
     "category": "Display",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "ads1115-adc-module",
@@ -125,7 +157,9 @@
     "asin": "B0CNV9G4K1",
     "note": "Analog-to-digital converter used across BLExAR's sensor builds.",
     "category": "Component",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "ws2812b-led-strip",
@@ -133,7 +167,9 @@
     "asin": "B0B2D5QXG5",
     "note": "Individually-addressable LEDs used in BLExAR's Pico LED ring build.",
     "category": "LED",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "micro-sd-card-module",
@@ -141,7 +177,9 @@
     "asin": "B07X478BPL",
     "note": "SD card module used for on-device logging in BLExAR's GPS and solar-panel builds.",
     "category": "Storage",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "waveshare-epaper-display",
@@ -149,7 +187,9 @@
     "asin": "B072Q4WTWH",
     "note": "Low-power e-paper display used in BLExAR's Bluetooth e-paper build.",
     "category": "Display",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "esp32-d1-mini",
@@ -157,7 +197,9 @@
     "asin": "B0D1V336DL",
     "note": "Compact ESP32 board used for BLExAR's haptic-feedback joystick build.",
     "category": "Microcontroller",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "seeed-xiao-nrf52840",
@@ -165,7 +207,9 @@
     "asin": "B0DRNTBPNT",
     "note": "Tiny nRF52840 BLE board used for BLExAR's Bluetooth prototyping.",
     "category": "Microcontroller",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "mpu9250-imu",
@@ -173,7 +217,12 @@
     "asin": "B0BXDL3524",
     "note": "Accelerometer/gyro/magnetometer breakout used in BLExAR's magnetometer-calibration build. Its onboard magnetometer is a 3-axis Hall-effect sensor — the same physics the field-line tracer models. The DMP also outputs attitude as a quaternion directly, the same shape CMHeadphoneMotionManager uses.",
     "category": "Sensor",
-    "relatedTo": ["blexar", "quaternion-euler-converter", "magnetic-field-tracer"]
+    "relatedTo": [
+      "blexar",
+      "quaternion-euler-converter",
+      "magnetic-field-tracer",
+      "ble-gatt-visualizer"
+    ]
   },
   {
     "id": "ina226-current-sensor",
@@ -181,7 +230,9 @@
     "asin": "B0DRNG1VKM",
     "note": "Power-monitoring module used in BLExAR's solar-panel characterization build.",
     "category": "Sensor",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "potentiometer-kit",
@@ -189,7 +240,9 @@
     "asin": "B07WDCVGJV",
     "note": "Used as a rheostat in BLExAR's solar-panel characterization build.",
     "category": "Component",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "breadboard-400-points",
@@ -197,7 +250,9 @@
     "asin": "B0CYPVMK9J",
     "note": "Standard prototyping breadboard used across BLExAR builds.",
     "category": "Prototyping",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "sandisk-16gb-microsd",
@@ -205,7 +260,9 @@
     "asin": "B074B4P7KD",
     "note": "Storage card used in BLExAR's solar-panel data-logging build.",
     "category": "Storage",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "small-solar-panel",
@@ -213,7 +270,9 @@
     "asin": "B07BLP238X",
     "note": "54x54mm panel used in BLExAR's solar characterization build.",
     "category": "Power",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "analog-joystick-module",
@@ -221,7 +280,9 @@
     "asin": "B0DSZ9D9WH",
     "note": "Joystick module used in BLExAR's haptic-feedback joystick build.",
     "category": "Input",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "vibration-motor",
@@ -229,7 +290,9 @@
     "asin": "B0DY65KVQR",
     "note": "Haptic motor used in BLExAR's joystick build.",
     "category": "Actuator",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "hall-effect-flow-meter",
@@ -237,7 +300,11 @@
     "asin": "B07RF49TZH",
     "note": "Flow sensor used in BLExAR's water-metering build. Uses a Hall-effect magnetic sensor — the same Biot–Savart field the tracer models.",
     "category": "Sensor",
-    "relatedTo": ["blexar", "magnetic-field-tracer"]
+    "relatedTo": [
+      "blexar",
+      "magnetic-field-tracer",
+      "ble-gatt-visualizer"
+    ]
   },
   {
     "id": "lipo-battery-600mah",
@@ -245,7 +312,9 @@
     "asin": "B094FW6VKN",
     "note": "Rechargeable battery used across portable BLExAR builds.",
     "category": "Power",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "12v-2a-power-supply",
@@ -253,7 +322,9 @@
     "asin": "B0DZGTTBGZ",
     "note": "Power supply used for BLExAR's stepper-motor build.",
     "category": "Power",
-    "relatedTo": ["blexar"]
+    "relatedTo": [
+      "blexar"
+    ]
   },
   {
     "id": "5v-3a-usbc-power-supply",
@@ -261,7 +332,11 @@
     "asin": "B09JW4QQJ2",
     "note": "Power supply used for Raspberry Pi builds and Biquadia's studio desk.",
     "category": "Power",
-    "relatedTo": ["blexar", "biquadia"]
+    "relatedTo": [
+      "blexar",
+      "biquadia",
+      "biquad-filter-designer"
+    ]
   },
   {
     "id": "behringer-umc1820",
@@ -269,8 +344,23 @@
     "asin": "B01EXI8Y9S",
     "note": "Audio interface used building Biquadia — 8-preamp USB I/O for real-time DSP testing.",
     "category": "Audio interface",
-    "relatedTo": ["inside-biquadia", "biquadia", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "inside-biquadia",
+      "biquadia",
+      "fourier-epicycles",
+      "biquad-filter-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "usb-sound-card",
@@ -278,8 +368,22 @@
     "asin": "B00IRVQ0F8",
     "note": "USB audio interface used in early Biquadia MEMS-mic prototyping.",
     "category": "Audio",
-    "relatedTo": ["biquadia", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "biquadia",
+      "fourier-epicycles",
+      "biquad-filter-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "admp401-mems-mic",
@@ -287,8 +391,22 @@
     "asin": "B07W5Z9NJD",
     "note": "MEMS mic breakout used for real-time DSP experiments feeding into Biquadia.",
     "category": "Audio",
-    "relatedTo": ["biquadia", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "biquadia",
+      "fourier-epicycles",
+      "biquad-filter-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "irig-pro-duo",
@@ -296,8 +414,22 @@
     "asin": "B084PP4DT8",
     "note": "Portable 2-channel USB-C audio interface used for mobile Biquadia field recording.",
     "category": "Audio interface",
-    "relatedTo": ["biquadia", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "biquadia",
+      "fourier-epicycles",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer",
+      "biquad-filter-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "shure-mv88-plus",
@@ -305,8 +437,22 @@
     "asin": "B08G7T3Q9S",
     "note": "Portable stereo condenser mic kit used for Biquadia field/video capture.",
     "category": "Microphone",
-    "relatedTo": ["biquadia", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "biquadia",
+      "fourier-epicycles",
+      "biquad-filter-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "shure-mv7",
@@ -314,8 +460,21 @@
     "asin": "B0CTJ8BSWN",
     "note": "USB/XLR hybrid mic used building and testing nymic.",
     "category": "Microphone",
-    "relatedTo": ["nymic", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "nymic",
+      "fourier-epicycles",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "blue-yeti-nano",
@@ -323,8 +482,21 @@
     "asin": "B07X5JNT3F",
     "note": "Compact USB condenser mic used for nymic testing.",
     "category": "Microphone",
-    "relatedTo": ["nymic", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "nymic",
+      "fourier-epicycles",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "rode-nt-usb-plus",
@@ -332,8 +504,21 @@
     "asin": "B00MMKQOEM",
     "note": "USB condenser mic used for nymic testing.",
     "category": "Microphone",
-    "relatedTo": ["nymic", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "nymic",
+      "fourier-epicycles",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "ath-m50x",
@@ -341,8 +526,21 @@
     "asin": "B00HVLUR86",
     "note": "Reference monitoring headphones used for akous's binaural audio testing.",
     "category": "Headphones",
-    "relatedTo": ["akous", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "akous",
+      "fourier-epicycles",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "sony-mdr-7506",
@@ -350,8 +548,21 @@
     "asin": "B000AJIF4E",
     "note": "Reference studio headphones used for akous's binaural audio testing.",
     "category": "Headphones",
-    "relatedTo": ["akous", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "akous",
+      "fourier-epicycles",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "sennheiser-wireless-mic",
@@ -359,8 +570,21 @@
     "asin": "B00B0YPAYQ",
     "note": "Wireless mic system used for akous's ambient/binaural field recording.",
     "category": "Microphone",
-    "relatedTo": ["akous", "fourier-epicycles"],
-    "pillars": ["dsp-audio"]
+    "relatedTo": [
+      "akous",
+      "fourier-epicycles",
+      "pole-zero-explorer",
+      "agentic-dsp-pipeline",
+      "acoustic-calculators",
+      "acoustics-room-modes",
+      "loudspeaker-enclosure-designer",
+      "loudspeaker-nonlinearity-lab",
+      "cone-breakup",
+      "waveguide-designer"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   },
   {
     "id": "airpods-pro-3",
@@ -368,8 +592,13 @@
     "asin": "B0FQFB8FMG",
     "note": "MotionLink's head-tracking feature depends on the Headphone Motion API, which requires AirPods Pro.",
     "category": "Wearable",
-    "relatedTo": ["motionlink"],
-    "pillars": ["ios-craft"]
+    "relatedTo": [
+      "motionlink",
+      "head-tracked-stereo-pan"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
   },
   {
     "id": "book-deep-learning",
@@ -377,8 +606,13 @@
     "asin": "0262035618",
     "note": "Foundational deep-learning textbook referenced while building itria.",
     "category": "Book",
-    "relatedTo": ["itria"],
-    "pillars": ["on-device-ai"]
+    "relatedTo": [
+      "itria",
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
   },
   {
     "id": "book-hands-on-ml",
@@ -386,8 +620,13 @@
     "asin": "1098125975",
     "note": "Practical ML reference used while building itria.",
     "category": "Book",
-    "relatedTo": ["itria"],
-    "pillars": ["on-device-ai"]
+    "relatedTo": [
+      "itria",
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
   },
   {
     "id": "book-designing-ml-systems",
@@ -395,8 +634,13 @@
     "asin": "1098107969",
     "note": "ML systems-design reference used while building itria.",
     "category": "Book",
-    "relatedTo": ["itria"],
-    "pillars": ["on-device-ai"]
+    "relatedTo": [
+      "itria",
+      "coreml-model-size-calculator"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
   },
   {
     "id": "sandisk-extreme-ssd-1tb",

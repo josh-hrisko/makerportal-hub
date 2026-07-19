@@ -1,11 +1,33 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => (link.pillars ?? []).includes('dsp-audio'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.id === 'ath-m50x' ? -1 : b.id === 'ath-m50x' ? 1 : 0));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
 const title = 'Voice-Coil Thermal Compression — Heat, Resistance & SPL Sag | MakerPortal';
 const description =
   'Interactive lumped thermal RC model of voice-coil heating. Simulate copper TCR, power compression, and SPL sag with configurable cooling architectures and real-time charts.';
 const canonical = new URL('/playground/voice-coil-thermal-compression', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Voice-Coil Thermal Compression',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,12 +38,76 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Voice-Coil Thermal Compression', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const solverJS = `function steadyStateTemp(P_input, Re0, Tamb, alpha, Rth_v, Rth_m) {
+  const Rth = Rth_v + Rth_m;
+  const VinSq = P_input * Re0;
+  const T_REF = 20;
+  let T = Tamb + P_input * Rth;
+  for (let i = 0; i < 60; i++) {
+    const ReT = Re0 * (1 + alpha * (T - T_REF));
+    const Pe = VinSq / ReT;
+    const residual = Pe - (T - Tamb) / Rth;
+    if (Math.abs(residual) < 1e-6) break;
+    const dPe_dT = -VinSq * Re0 * alpha / (ReT * ReT);
+    const dRes_dT = dPe_dT - 1 / Rth;
+    T -= residual / dRes_dT;
+  }
+  return Math.max(Tamb, Math.min(Tamb + 1000, T));
+}
+
+function stepPhysics(dt) {
+  const ReT = Re0 * (1 + alpha * (T_coil - T_REF));
+  const VinSq = P_input * Re0;
+  const Pe = VinSq / ReT;
+  const heatVC = (T_coil - T_mag) / Rth_v;
+  const heatMag = (T_mag - Tamb) / Rth_m;
+  T_coil += (Pe - heatVC) / Cth_v * dt;
+  T_mag += (heatVC - heatMag) / Cth_m * dt;
+}
+
+const ReT = Re0 * (1 + alpha * (T_coil - T_REF));
+const splComp = -20 * Math.log10(ReT / Re0);`;
+
+const faqs = [
+  {
+    q: 'What is power compression in a loudspeaker?',
+    a: `Power compression is the SPL loss that happens when a voice coil heats up under sustained drive. Copper's electrical resistance increases about 0.39% per degree Celsius. As the coil gets hotter, less current flows for the same amplifier voltage, so the cone moves less. The amplifier meter still reads the same output setting, but the speaker is quieter — typically 1–3 dB for a pro woofer driven hard.`,
+  },
+  {
+    q: 'Why does copper resistance change with temperature?',
+    a: `Copper's electrons scatter off thermal lattice vibrations. More temperature means stronger vibrations, more scattering, higher resistance. The relationship is nearly linear over the range voice coils operate in: Re(T) = Re0 × (1 + α × (T − 20°C)) where α = 0.00393 K⁻¹. At 200°C the resistance is about 1.7× the cold value.`,
+  },
+  {
+    q: 'How much does ferrofluid actually help with cooling?',
+    a: `Ferrofluid bridges the air gap between the voice coil and the magnet pole pieces with a heat-conducting liquid — it replaces still air (a good insulator) with a much better thermal path. In this sim the ferrofluid preset cuts Rth_v from 1.5 to 0.4 K/W, which drops the steady-state temperature at 300 W from over 350°C to about 150°C. In real drivers the effect is similar: ferrofluid can increase power handling by 2–4× before hitting the same coil temperature.`,
+  },
+  {
+    q: 'What temperature kills a voice coil?',
+    a: `The epoxy or polyimide adhesive that bonds the copper wire to the former softens around 200°C. At that point the windings can delaminate, rub the gap, and short-circuit. Some specialty adhesives survive 250–300°C but most pro-audio drivers use standard formulations. The simulation shows a warning banner at 200°C for this reason — it is not a theoretical limit, it is the glue.`,
+  },
+  {
+    q: "How do I measure my own driver's thermal constants?",
+    a: `Drive the speaker with a known DC voltage and measure the voice-coil resistance as it heats (current = V / R). The resistance follows R(t) = Re0 × (1 + α × (T(t) − 20°C)), so you can extract T(t) from a resistance measurement. Fit the temperature curve to an exponential: T(t) = Tamb + (Tss − Tamb) × (1 − e^(−t/τ)). The time constant τ = Rth_v × Cth_v. You can repeat with different back enclosures to separate Rth_v from Rth_m — the magnet's Cth_m dominates the slow tail.`,
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -439,6 +525,196 @@ import Math from '../../components/Math.astro';
         <p class="mt-8 text-[0.84rem] leading-[1.7] text-muted-text">If you want to push further: make <Math math="R_{th\_v}" /> a function of <Math math="x_{coil}(t)" /> to model pumping, add a third node for pole piece with its own <Math math="C" />, let <Math math="Bl = Bl_0[1 - \beta(T_m-20)]" /> for ferrite tempco, or drive <Math math="P_e(t)" /> from a real audio envelope instead of continuous sine. All fit inside the same ladder — more nodes, same idea.</p>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the simulator</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every slider, pixel, and readout traces back to the two coupled thermal ODEs. Here is what each piece of the dashboard is doing and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The time-history canvas</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Dual stacked plot.</strong> Top half: coil temperature <Math math="T_v" /> in red, with a dashed <Math math="T_{amb}" /> baseline and a dotted <Math math="T_{ss}" /> asymptote. Bottom half: SPL compression in blue — same <Math math="-20\log_{10}(R_e/R_{e0})" /> formula, different axis. The two traces share one x-axis so you see compression lagging temperature directly.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Danger zone shading.</strong> The region above 200°C is tinted red. It is not cosmetic — the warning banner fires from the same threshold. The shade persists even if the actively controlled slider briefly pushes past.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Rolling window.</strong> Only the most recent <Math math="WINDOW\_SECONDS = 60" /> simulated seconds are visible. The buffer trims with a while-loop on each data push — <code>MAX_BUFFER = 1800</code> points at ~30 Hz. The x-axis always ends at the current time, so you read left-to-right like an oscilloscope.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Live dot indicator.</strong> The most recent data point is a filled circle on each trace — red on the temperature curve, blue on the SPL curve — so you can tell at a glance where the sim is right now relative to the history.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls, readouts, and the motor SVG</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Seven metric readouts.</strong> Coil temp (color-coded: green below 80°C, yellow to 150°C, orange to 200°C, red above), <Math math="R_e" /> (live from TCR), current, electrical power (drops as resistance climbs), SPL compression in dB, coil thermal time constant <Math math="\tau_v = R_{th\_v}C_{th\_v}" />, and the Newton-solved steady-state <Math math="T_{ss}" />. They all derive from one state vector <Math math="[T_v, T_m]^{\top}" />.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Cooling architecture presets.</strong> Standard, vented pole-piece, ferrofluid — each swaps <Math math="R_{th\_v}, C_{th\_v}, R_{th\_m}, C_{th\_m}" /> from the <code>PRESETS</code> map. The custom button unlocks the thermal-parameter sliders for manual tweaking. Toggling back to a preset restores its exact values.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Motor cross-section SVG.</strong> Voice-coil rectangles are colored by the <code>coilHexColor()</code> function — a three-segment gradient from copper-orange through red to danger-red based on temperature normalized against <Math math="T_{amb}" />. Heat-flow arrows fade opacity with the temperature gradient. Not a physics solver, just an honest visual indicator.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Power sweep canvas.</strong> Pre-computes <Math math="T_{ss}" /> at 100 power points up to <Math math="2\times P_{input}" /> using the same Newton solver. The live operating point is a filled circle; a separate hollow circle shows current <Math math="T_{coil}" /> when it diverges from steady-state (transient). The "Show all architectures" toggle overlays dashed curves for standard, vented, and ferrofluid presets — revealing how <Math math="R_{th\_v}" /> separates the curves at high power.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> Runs a fixed <Math math="PHYSICS\_DT = 0.02" /> s Euler step via an accumulator pattern decoupled from frame rate. Time acceleration (up to <Math math="40\times" />) is a multiplier on wall-clock elapsed time, capped at 200 steps per frame to prevent spiral-of-death. All canvases repaint every frame; the sim pauses when off-screen via <code>IntersectionObserver</code>.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Adhesive failure is the real limit</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The 200°C warning is not some conservative safety margin. Polyimide adhesives — the standard for bonding copper windings to the former — soften around 200°C. At that point the wire can de-bond, rub the magnet gap, and short-circuit. The simulation happily runs past 400°C because it is just numbers — in a real driver, you would have already smelled the failure.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Constant-voltage assumption</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The sim models the amplifier as an ideal voltage source: <Math math="V_{in}^2 = P_{input}R_{e0}" /> is computed once and held constant. A real amplifier's output impedance, rail sag under sustained load, and the reactive component of the driver's impedance all modify the actual voltage at the terminals. This means the sim slightly underestimates SPL compression at very high power — real amps droop more.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The solver, copyable</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The two functions driving every number on this page. The first is a Newton iteration for steady-state temperature; the second is the explicit Euler step that advances the two coupled ODEs. Both run in the browser — hit copy and drop them into your own thermal model.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">steadyStateTemp + stepPhysics</p>
+            <button type="button" class="copy-btn" data-copy-target="code-thermal-solver">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-thermal-solver" code={solverJS} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Akous · DSP audio stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio DSP hardware
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -533,6 +809,23 @@ import Math from '../../components/Math.astro';
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--mp-muted);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
   }
   .metric-card dd {
     margin-top: 0.35rem;

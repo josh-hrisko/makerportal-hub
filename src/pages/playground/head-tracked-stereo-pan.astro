@@ -2,6 +2,15 @@
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import { Code } from 'astro:components';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('motionlink') || link.relatedTo?.includes('head-tracked-stereo-pan'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.id === 'airpods-pro-3' ? -1 : b.id === 'airpods-pro-3' ? 1 : 0));
 
 const title = 'Head-Tracked Stereo Pan — Rotate a virtual head, hear the pan move | MakerPortal';
 const description = 'Combines the quaternion yaw output with a live StereoPannerNode demo — spatial audio and head tracking in one research-grade instrument, same math as MotionLink.';
@@ -50,12 +59,42 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Head-Tracked Stereo Pan', item: canonical.toString() },
   ],
 };
+
+const faqs = [
+  {
+    q: 'Why does pan use sin(yaw) instead of a linear mapping?',
+    a: 'The sinusoidal pan law preserves constant power: sin²(yaw) + cos²(yaw) = 1, so the signal power delivered to left + right ears stays constant regardless of pan position. A linear mapping (yaw/90°) would create a 3 dB dip at center because power would be 0.5² + 0.5² = 0.5 instead of sin² + cos² = 1. The sin law is the Web Audio standard for StereoPannerNode and matches human perception of center-panned sources.',
+  },
+  {
+    q: 'What is the difference between StereoPannerNode and PannerNode with HRTF?',
+    a: 'StereoPannerNode applies a constant-power gain law to left and right channels — it only models azimuth, with no elevation, no distance, no head shadow. PannerNode with panningModel="HRTF" uses a generic KEMAR head-related transfer function dataset that models interaural time difference (ITD), interaural level difference (ILD), and spectral comb filtering above 4 kHz that your brain uses for front/back and up/down discrimination. For head-tracked audio, HRTF is the production path.',
+  },
+  {
+    q: 'How does MotionLink handle headphone orientation drift?',
+    a: 'CoreMotion attitude tracking uses sensor fusion (gyro + accelerometer) and does not reference an absolute heading like a compass. Zero is wherever the headphones were when you called startDeviceMotionUpdates. AirPods can drift 1-2° per minute due to gyro bias integration. MotionLink stores a baseline quaternion on user-triggered recentering and subtracts it from incoming samples. A one-pole lowpass at 8 Hz on yaw further filters jitter without adding perceptible lag.',
+  },
+  {
+    q: 'Why does 180° yaw flip still give pan=0 with sin law?',
+    a: 'sin(180°) = 0, so pan returns to center. The listener is facing away from a source that is in front of them — the source is now behind. Simple stereo pan cannot encode front/back because it only controls left/right gain. The HRTF path handles this correctly: when the listener\'s forward vector rotates 180°, the source moves from +X to −X relative to the listener, and the HRTF applies rear-ear shadowing automatically.',
+  },
+  {
+    q: 'Can I use this same chain on iOS with AVAudioEngine?',
+    a: 'Yes. Replace Web Audio PannerNode with AVAudioEnvironmentNode and listener.forwardX/Y/Z with AVAudioMakeAngularOrientation(fwd). The forward vector extraction from the quaternion is identical: fwd = [2(xz+wy), 2(yz−wx), 1−2(x²+y²)]. Source stays at (1,0,0) in world space, listener at origin with orientation from quaternion. The same relative-baseline and smoothing from the playbook above applies on both platforms.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -251,6 +290,137 @@ const breadcrumb = {
         </div>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the spatial-audio instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every pixel in the head view drives a live audio chain. Here is exactly what each piece does under the hood.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The 2D head view and quaternion extraction</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Head model.</strong> Canvas-drawn with procedural OpenGL-style flat shading: a lat/long sphere (18×24 bands) with a red nose cone and green ear boxes. Rotated via a 3×3 matrix built from the current quaternion, then projected through a fixed isometric view matrix (∂ = −28° pitch, −18° yaw, 28° roll) for the default top-front perspective.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Axis triad.</strong> Red +X (nose), green +Y (left ear), blue +Z (up) — same convention as the quaternion converter. The axes are rotated by the same quaternion matrix so they stay attached to the head frame while you drag.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Drag map.</strong> Horizontal drag → world-frame yaw (−dx), vertical → world-frame pitch (−dy). Shift drag → local X roll. The quaternion composition uses world pre-multiply for yaw/pitch and local post-multiply for roll — same order as the quaternion converter, where getting this wrong caused the documented nose-tumble bug.</p>
+              </li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Audio chain: three nodes, one quaternion</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">StereoPannerNode.</strong> pan = sin(yaw) with yaw extracted from the quaternion via the same atan2 formula as the converter. Pan bar visualizes the current position on a gradient bar. Simple, instant, what you hear first.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">HRTF PannerNode.</strong> panningModel = "HRTF", distanceModel = "inverse", source at (1,0,0), listener at origin. Only the listener orientation updates — forward from quaternion fwd = [2(xz+wy), 2(yz−wx), 1−2(x²+y²)]. The source never moves. Web Audio computes ITD and ILD from built-in KEMAR HRTF dataset.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Bypass toggle.</strong> Disconnects source from both panner nodes and reconnects directly to the gain node — pure mono, no spatialization. Zero added latency. Re-engaging bypass rebuilds the full chain: source → HRTF panner → stereo panner → gain → destination.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">Forward vector: rotate +X by quaternion q</p>
+              <Math math="\mathbf{f} = q \begin{pmatrix}1\\0\\0\end{pmatrix} q^{-1} = \begin{pmatrix}1 - 2(y^2+z^2) & 2(xy+wz) & 2(xz-wy) \\ \cdots \\ \cdots \end{pmatrix} \begin{pmatrix}1\\0\\0\end{pmatrix}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">The closed-form result is fwd = [2(xz + wy), 2(yz − wx), 1 − 2(x² + y²)]. That is the +X column of the rotation matrix — feed this into WebAudio listener.forwardX/Y/Z or AVAudioEnvironmentNode.listenerAngularOrientation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Listener up vector is not optional</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Web Audio defaults the listener up vector to (0,1,0) — Y-up. If you tilt your head (pitch or roll), forward alone is not enough: the up vector must also rotate. Without it, the HRTF panner produces elevation errors. The up vector comes from the +Z column of the same rotation matrix: up = [2(xy − wz), 1 − 2(x² + z²), 2(yz + wx)]. MotionLink sets both fwd and up from the same quaternion.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">KEMAR HRTF is not your head</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The Web Audio HRTF dataset is based on KEMAR mannequin measurements — a single generic head. Front/back confusions at ±30° are expected because generic HRTFs have blurry pinna notches compared to your personal ears. Professional spatial audio systems use individualized HRTFs measured in an anechoic chamber. For head-tracking demos and music spatialization, the generic set works well enough — the interaural timing cues that dominate azimuth perception are consistent across heads.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              MotionLink stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Head-tracking hardware
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img src={item.image} alt="" width="480" height="360" loading="lazy" decoding="async" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>
+                  )}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => { const pillar = pillarMeta[p] ?? fallbackPillar; return (<span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text"><span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>{pillar.label}</span>); })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -272,6 +442,18 @@ const breadcrumb = {
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--mp-muted);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 

@@ -1,11 +1,24 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import Math from '../../components/Math.astro';
 
-const title = 'Chladni Cymatics — Standing-Wave Sand Patterns | MakerPortal';
+const title = 'Chladni Cymmatics — Standing-Wave Sand Patterns | MakerPortal';
 const description =
   'Thousands of virtual sand grains migrate to the nodal lines of a vibrating plate. Sweep the drive frequency through real modal resonances — with a movable driver, live mode readouts, and honest math.';
 const canonical = new URL('/playground/chladni-cymatics', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Chladni Cymatics',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,11 +29,86 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Chladni Cymatics', item: canonical.toString() },
   ],
 };
+
+const solverJS = `const modeFreq = (m, n) => (m * m + n * n) / 2;
+
+function computeCoefficients(f) {
+  const all = [];
+  for (let m = 0; m <= MAX_MODE; m++) {
+    for (let n = 0; n <= MAX_MODE; n++) {
+      if (m === 0 && n === 0) continue;
+      const fmn = modeFreq(m, n);
+      const coupling = Math.cos(m * Math.PI * driveX)
+                     * Math.cos(n * Math.PI * driveY);
+      const denom = Math.hypot(fmn * fmn - f * f, gamma * f * fmn);
+      const c = coupling / denom;
+      if (Math.abs(c) > 1e-9) all.push({ m, n, c });
+    }
+  }
+  all.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
+  const kept = all.slice(0, COEFF_KEEP);
+  const floor = kept.length ? Math.abs(kept[0].c) * 1e-3 : 0;
+  return kept.filter(k => Math.abs(k.c) >= floor);
+}
+
+function stepPhysics() {
+  const umax = blendedUMax(), inv = 1 / umax;
+  for (let p = 0; p < grainCount; p++) {
+    const s = sampleField(px[p], py[p]);
+    const un = s[0] * inv;
+    const drift = -MU * 2 * un * inv * PHYSICS_DT;
+    let dx = drift * s[1]
+           + JITTER * Math.abs(un) * (Math.random() - 0.5);
+    let dy = drift * s[2]
+           + JITTER * Math.abs(un) * (Math.random() - 0.5);
+    dx = Math.min(STEP_CAP, Math.max(-STEP_CAP, dx));
+    dy = Math.min(STEP_CAP, Math.max(-STEP_CAP, dy));
+    let nx = px[p] + dx, ny = py[p] + dy;
+    if (nx < 0) nx = -nx; else if (nx > 1) nx = 2 - nx;
+    if (ny < 0) ny = -ny; else if (ny > 1) ny = 2 - ny;
+    px[p] = nx; py[p] = ny;
+  }
+}`;
+
+const faqs = [
+  {
+    q: 'What are Chladni patterns?',
+    a: "Chladni patterns are the visible geometry of standing waves. When you vibrate a plate at a resonant frequency, regions of high vibration amplitude eject sand, while the nodal lines — the curves where amplitude is zero — collect it. The sand traces out the eigenfunctions of the plate. Different frequencies excite different mode shapes, each with a distinct pattern of intersecting nodal lines.",
+  },
+  {
+    q: 'Why do some modal patterns look the same or share symmetry?',
+    a: "On a square plate, the modes (m,n) and (n,m) share the same eigenfrequency because f \u221d m\u00B2 + n\u00B2. When the drive excites a degenerate frequency, both modes respond simultaneously and their superposition creates a new pattern — often with diagonal symmetry. The (4,2) and (2,4) pair produces the classic star-shaped pattern, not either mode alone. This degeneracy is not a bug: it is why a square plate has richer patterns than a rectangular one.",
+  },
+  {
+    q: 'What does the resonance width \u03B3 control?',
+    a: "\u03B3 sets how sharply the plate responds to being slightly off resonance. A small \u03B3 (0.01) isolates a single mode: you must hit its exact eigenfrequency or the plate stays nearly silent. A large \u03B3 (0.12) blends neighboring modes together, creating broader, less distinct patterns. Think of it as the Q-factor of the plate — high Q means narrow, sharp resonance peaks.",
+  },
+  {
+    q: 'Why does moving the drive point change the pattern?',
+    a: "Each mode's amplitude depends on the product \u03C6\u2098\u2099(x\u2080,y\u2080) \u00D7 \u03C6\u2098\u2099(x,y). The first factor is the mode shape evaluated at the drive point. If you place the driver on a nodal line of a particular mode — a line where that mode's amplitude is zero — that mode cannot be excited at all. Move the driver away and the mode comes back. This is why off-axis drive creates asymmetric patterns: it selectively suppresses modes symmetric about the new position.",
+  },
+  {
+    q: "What is the difference between a Chladni plate and a drum membrane?",
+    a: "Chladni plates are driven by a vibrating point source and the plate itself supports bending waves where \u03C9 \u221D k\u00B2. A drum membrane stretches under tension and obeys a different wave equation where \u03C9 \u221D k. The pattern families differ: plate modes spread out quadratically (f \u221D m\u00B2 + n\u00B2), membrane modes linearly (f \u221D \u221A(m\u00B2 + n\u00B2)). The plate has richer, denser patterns, and the eigenfrequencies are not integer multiples of the fundamental — which is why the slider uses a log scale.",
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -114,37 +202,170 @@ const breadcrumbSchema = {
       </div>
     </section>
 
-    <section aria-labelledby="math-title">
-      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+    <section aria-labelledby="math-title" class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math under the sand</h2>
-        <div class="mt-5 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
-          <p>
-            A plate driven at a point responds as a weighted sum of its standing-wave modes. Each mode’s weight is a resonance curve: enormous when the drive frequency sits on that mode’s eigenfrequency, tiny elsewhere. Two modes like (4,2) and (2,4) share an eigenfrequency on a square plate, so at resonance they respond <em>together</em> — the diagonal symmetry of the classic patterns is degeneracy you can hear.
-          </p>
-          <p>
-            The grains aren’t decoration; they are the measurement. Vibrating regions kick grains into a random walk whose step size grows with local amplitude, while the time-averaged bounce drifts them down the amplitude gradient. Both effects vanish exactly on a nodal line, so the silent curves are the only places grains can come to rest — which is why sand draws the mathematics by itself.
-          </p>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Cosines, resonance denominators, and gradient drift — every grain of sand follows the same three equations. Here they are in full, the same expressions the solver evaluates every 1/120th of a second.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The driven modal superposition</h3>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              A plate driven at a point <Math math="(x_0,y_0)" /> responds as a weighted sum of its standing-wave modes. The weight is the product of the mode shape at the drive point and a resonance curve — enormous when the drive frequency sits on that mode's eigenfrequency, tiny elsewhere:
+            </p>
+            <div class="mt-5 math-card">
+              <p class="math-label">Driven response at every grid cell</p>
+              <Math math="u(x,y) = \sum_{m,n} \frac{\phi_{mn}(x_0,y_0)\,\phi_{mn}(x,y)}{\sqrt{(f_{mn}^2 - f^2)^2 + (\gamma f f_{mn})^2}}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+                Where <Math math="\phi_{mn}(x,y) = \cos(m\pi x)\cos(n\pi y)" /> with free-edge (Neumann) boundary conditions. The drive point <Math math="(x_0,y_0)" /> sets each mode's coupling: placing the driver on a mode's nodal line zeroes that mode entirely. Moving the driver genuinely re-weights the sum.
+              </p>
+            </div>
+            <div class="mt-4 math-card">
+              <p class="math-label">Plate dispersion — why the slider is logarithmic</p>
+              <Math math="\frac{f_{mn}}{f_1} = \frac{m^2 + n^2}{2}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+                Bending waves in a stiff plate obey <Math math="\omega \propto k^2" />, unlike a membrane's <Math math="\omega \propto k" />. Resonances spread quadratically: the gap from mode <Math math="(1,0)" /> to <Math math="(2,0)" /> is smaller than from <Math math="(7,0)" /> to <Math math="(8,0)" />. The frequency slider is a <Math math="\log_2" /> scale for this reason — it compresses the octaves so you can sweep the whole audible range linearly by hand.
+              </p>
+            </div>
+            <p class="mt-5 text-[0.92rem] leading-[1.7] text-muted-text">
+              Two modes like <Math math="(4,2)" /> and <Math math="(2,4)" /> share an eigenfrequency on a square plate because <Math math="m^2+n^2" /> is symmetric. At resonance they respond <em>together</em>, and their superposition creates the diagonal symmetry of the classic star pattern. This degeneracy is not a coding shortcut — it is the physics of symmetry, the same reason a circular plate has richer patterns than a square one.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">How the sand actually moves</h3>
+            <p class="mt-3 text-[0.92rem] leading-[1.7] text-muted-text">
+              The grains are not decoration; they are the measurement. Vibrating regions kick grains into a random walk whose step size grows with local amplitude, while the time-averaged bounce drifts them down the amplitude gradient:
+            </p>
+            <div class="mt-5 math-card">
+              <p class="math-label">Stochastic grain transport (Grabec-style)</p>
+              <Math math="d\mathbf{x} = -\mu\,\nabla(u^2)\,dt + \sigma|u|\,d\mathbf{W}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">
+                Deterministic drift down the squared-amplitude gradient (<Math math="\mu = 0.12" />) plus amplitude-scaled jitter (<Math math="\sigma = 0.006" />), capped at <Math math="0.004" /> per step in plate-normalized units. Integrated at a fixed <Math math="\frac{1}{120}" /> s timestep independent of display frame rate — the same timestep the grid solver uses.
+              </p>
+            </div>
+            <div class="mt-4 math-card">
+              <p class="math-label">Why it works everywhere at once</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Both effects — jitter and gradient drift — vanish exactly where <Math math="u=0" /> (the nodal lines) and scale with <Math math="|u|" />. That is why the silent curves are the only places grains can come to rest: any grain that lands on a node experiences zero kick and zero drift, so it stays. Any grain off a node gets pushed. After a few seconds thousands of grains self-organize into the eigenfunction geometry — no pattern database, no lookup table.
+              </p>
+            </div>
+            <div class="mt-4 math-card">
+              <p class="math-label">Separable evaluation</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
+                Because <Math math="\phi_{mn}(x,y)=\cos(m\pi x)\cos(n\pi y)" /> is separable, the <Math math="144\times144" /> grid is rebuilt from pre-computed cosine tables — each cell is a pure multiply-add with no trig calls. The <Math math="16" /> strongest modes per frequency are kept, and a smoothstep blend fades discrete jumps over <Math math="0.7" /> s so the grains never teleport.
+              </p>
+            </div>
+            <p class="mt-5 text-[0.92rem] leading-[1.7] text-muted-text">
+              The response amplitude is auto-normalized so patterns stay visible between resonances. Grain–grain collisions are ignored (the real physics involves avalanche-like piling at nodes, which is visually interesting but computationally separate). Cosine modes are exact for a free membrane and a standard approximation for a free plate — a real plate's biharmonic eigenfunctions bend the lines near edges. Patterns are qualitatively faithful; eigenfrequencies of any physical plate will differ.
+            </p>
+          </div>
         </div>
-        <div class="mt-7 grid gap-4 md:grid-cols-2">
-          <div class="math-card">
-            <p class="math-label">Driven modal superposition</p>
-            <p class="mt-2">u(x,y) = Σ φₘₙ(x₀,y₀) · φₘₙ(x,y) / √((f²ₘₙ − f²)² + (γ f fₘₙ)²)</p>
-            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">φₘₙ = cos(mπx)cos(nπy) with free-edge (Neumann) boundary conditions; the drive point (x₀,y₀) sets each mode’s coupling, so moving the driver genuinely re-weights the sum.</p>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the simulator</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Every grain, every grid cell, and every readout traces back to the modal superposition and the stochastic transport model. Here is what each piece is doing and why it is built that way.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The canvas and its grains</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The plate.</strong> A <Math math="640\times640" /> HiDPI canvas with up to <Math math="2\times" /> device-pixel scaling. Each grain is a <Math math="2\times2" /> px filled rectangle — deliberately not a particle system with sprites. At 5,000 grains the browser draws 10,000 rects per frame, which is trivial for the Canvas API and leaves the CPU for the physics step.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The driver marker.</strong> A ring-and-crosshair drawn at <Math math="(x_0, y_0)" /> in the theme's CTA color. Dragging anywhere on the plate moves it; the <code>pointToPlate()</code> function normalizes pointer coordinates to <Math math="[0,1]" /> plate units. Keyboard arrows nudge it at <Math math="0.02" /> or <Math math="0.05" /> (shift) per press — the same precision a finger gives.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The field overlay.</strong> Toggled via "Show field", it is a <Math math="145\times145" /> imageData rendered on an offscreen canvas — one texel per grid cell, CTA-colored, alpha proportional to <Math math="|u|" />. It rebuilds only when the grid changes (not per frame) and shares the same fade-blend as the physics field, so it never disagrees with what the grains feel.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The render loop.</strong> Fixed <Math math="\frac{1}{120}" /> s physics step via an accumulator pattern decoupled from frame rate (capped at 8 steps per frame). An <code>IntersectionObserver</code> pauses the sim when the canvas leaves the viewport. The loop never spins idle — it only ticks when visible and unpaused.</p>
+              </li>
+            </ol>
           </div>
-          <div class="math-card">
-            <p class="math-label">Plate dispersion</p>
-            <p class="mt-2">fₘₙ / f₁ = (m² + n²) / 2</p>
-            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Bending waves in a stiff plate obey ω ∝ k², unlike a membrane’s ω ∝ k — resonances spread out quadratically as you sweep upward, exactly as the slider feels.</p>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Controls and readouts</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Frequency slider.</strong> Logarithmic <Math math="\log_2(f)" /> scale from <Math math="2^{-0.32}\approx 0.8\times f_1" /> to <Math math="2^{6.15}\approx 71\times f_1" />, spanning the first <Math math="8\times8" /> mode pairs. Presets snap to named resonances like star <Math math="(4,2)/(2,4)" /> and rosette <Math math="(6,2)/(2,6)" />. The slider is continuous — any fractional <Math math="\log_2" /> value produces a valid superposition.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Resonance width <Math math="\gamma" />.</strong> Controls the denominator in the resonance curve: small <Math math="\gamma" /> gives sharp, isolated modes; large <Math math="\gamma" /> blends neighbors. At the default <Math math="0.03" />, the star preset shows clean degenerate mixing; at <Math math="0.12" /> the same frequency produces a mushy blend with adjacent modes leaking in.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Drive point buttons.</strong> Center <Math math="(0.5,0.5)" /> excites only symmetric modes; off-axis <Math math="(0.353,0.278)" /> breaks symmetry and reveals asymmetric patterns; edge <Math math="(0.5,0.02)" /> simulates bowing the plate rim. The cross preset uses edge drive specifically to flip the sign of <Math math="(2,0)" /> coupling relative to <Math math="(0,2)" /> — the same physics, mathematically different superposition.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Grain count.</strong> 2.5k, 5k, or 9k particles. The transport model is <Math math="O(N)" /> — each grain independently samples the field and steps. At 9k on mobile the physics loop stays under budget because the grid evaluation is cheap (bilinear lookup into pre-computed arrays). Changing grain count re-initializes all positions randomly.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Readouts.</strong> Dominant modes lists the top 3 mode pairs by coefficient magnitude (degenerate partners folded together). Mode share shows the leading mode's percentage of total coefficient weight. Grains settled samples every <Math math="N" />-th grain and counts those with <Math math="|u| < 0.1u_{max}" /> — effectively, grains on or near a node. Driver shows the current <Math math="(x_0, y_0)" /> coordinates.</p>
+              </li>
+            </ol>
           </div>
-          <div class="math-card">
-            <p class="math-label">Grain transport</p>
-            <p class="mt-2">dx = −μ ∇(u²) dt + σ|u| dW</p>
-            <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Deterministic drift down the squared-amplitude gradient plus amplitude-scaled jitter (a Grabec-style stochastic model), integrated at a fixed 1/120 s timestep independent of display frame rate.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Cosine modes approximate, not exact</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">A free plate obeys the biharmonic equation, not the Helmholtz equation. Its eigenfunctions are not pure <Math math="\cos(m\pi x)\cos(n\pi y)" /> — they bend near the edges in ways cosine modes cannot capture. This sim produces qualitatively faithful Chladni patterns, but the exact curvature of nodal lines near boundaries and the eigenfrequencies themselves differ from any physical plate. If you build a real Chladni rig, expect the frequencies to be shifted and some patterns to look slightly warped.</p>
           </div>
-          <div class="math-card">
-            <p class="math-label">Honest limitations</p>
-            <p class="mt-2 text-[0.74rem] leading-[1.55] text-muted-text">Cosine modes are exact for a free membrane and a standard approximation for a free plate — a real plate’s biharmonic eigenfunctions bend the lines near edges. Response amplitude is auto-normalized so patterns stay visible between resonances, and grain–grain collisions are ignored. Patterns are qualitatively faithful; eigenfrequencies of any physical plate will differ.</p>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Degenerate modes share the work</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">On a square plate, <Math math="(m,n)" /> and <Math math="(n,m)" /> are always at the same eigenfrequency. Both respond together and the resulting pattern is their superposition — not "one of them won." The metrics readout folds degenerate partners into one entry so you see the combined effect. If you see diagonal symmetry in a pattern, it is almost always coming from a degenerate pair, not from a single mode with unusual shape.</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The solver, copyable</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The two functions behind every grain on this page. The first computes the mode coefficients from a drive frequency and point — the heart of the modal superposition. The second advances the sand grains along the amplitude gradient with stochastic jitter.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">computeCoefficients + stepPhysics</p>
+            <button type="button" class="copy-btn" data-copy-target="code-chladni-solver">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-chladni-solver" code={solverJS} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">&#8995;</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -233,6 +454,23 @@ const breadcrumbSchema = {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--mp-muted);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
   }
   .metric-card,
   .math-card {

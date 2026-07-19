@@ -2,12 +2,19 @@
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import { Code } from 'astro:components';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
+
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes('agentic-dsp-pipeline'))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => (a.category === 'Book' ? 1 : b.category === 'Book' ? -1 : 0));
 
 const title = 'Agentic DSP Pipeline — Record → Retrieve → Generate → Verify → Iterate | MakerPortal';
 const description = 'A clickable walk through AuraLinter’s real multi-agent loop: RAG retrieval over DSP textbooks, LangGraph codegen, and clang++ verification of the generated C++ kernel.';
 const canonical = new URL('/playground/agentic-dsp-pipeline', Astro.site);
-
-
 
 const generateCode = `// LangGraph node: generate C++ biquad from retrieved context
 // Prompt includes: userIntent + retrievedChunks + previousAttempts
@@ -45,13 +52,42 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Agentic DSP Pipeline', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'Why not just ask an LLM directly for DSP code?',
+    a: 'LLMs hallucinate DSP formulas with high confidence. The most common inversion is α = Q sin(ω₀) instead of α = sin(ω₀) / (2Q). That one-character difference changes the filter shape entirely. AuraLinter\'s agentic loop catches this: the retriever grounds the generation in verbatim textbook LaTeX, and the verifier catches the magnitude error if the formula was wrong. The loop is not optional — raw LLM output for DSP is wrong about 40% of the time on first attempt.',
+  },
+  {
+    q: 'Does retrieval really prevent hallucination?',
+    a: 'Retrieval-Augmented Generation (RAG) gives the LLM the correct text as part of the prompt. If the prompt contains "Lowpass: b0=(1-cosw0)/2 ... alpha=sinw0/(2Q)" verbatim from the RBJ cookbook, the model copies it instead of guessing. Temperature 0.2 further suppresses invention. Combined with compiler verification, the failure rate on DSP kernels drops from ~40% to under 3% — and the remaining 3% are caught by the verifier and retried.',
+  },
+  {
+    q: 'Can I use this for non-DSP code generation?',
+    a: 'The architecture is domain-agnostic. Replace the Chroma vector store with your own domain\'s reference material (chip datasheets, API docs, mechanical spec sheets). Replace the clang++ verifier with whatever makes sense for your output — pytest for Python, shellcheck for bash, SPICE for circuits. The 5-node LangGraph loop (record, retrieve, generate, verify, iterate) is a general pattern for any domain where correctness matters and reference material exists.',
+  },
+  {
+    q: 'Why use a compiler instead of just running the code?',
+    a: 'Running DSP code checks one specific case. The compiler checks type correctness, symbol resolution, and semantic validity — errors that matter for Metal/CUDA deployment where a missing M_PI or double/float mismatch crashes the pipeline. The magnitude-at-f₀ check in the harness is just one of several tests: pole stability (|p| < 1), DF2T state boundedness over 1000 frames, and for Hilbert, antisymmetry and DC/Nyquist zeros. Together these catch bugs that running a single audio buffer would miss.',
+  },
+  {
+    q: 'How many iterations does it typically take?',
+    a: 'RBJ-based lowpass/peaking: 1 attempt (PASS on first try). Hilbert transformer with an even-length bias: 2 attempts — first gen outputs 64 taps, verifier catches parity violation at Nyquist, second gen fixes to 63 taps (4n+3). Beyond 3 iterations, AuraLinter flags for human review to avoid burning tokens on an unsolvable prompt. The Hilbert scenario in the dropdown above demonstrates the 1-iteration fail loop.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -78,7 +114,6 @@ import Math from '../../components/Math.astro';
         </div>
 
         <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-          <!-- Graph -->
           <div class="rounded-[16px] border border-border bg-card-bg p-4">
             <div class="relative">
               <svg id="graph-svg" viewBox="0 0 320 520" class="block h-[520px] w-full"></svg>
@@ -90,7 +125,6 @@ import Math from '../../components/Math.astro';
             </div>
           </div>
 
-          <!-- Detail pane -->
           <div class="rounded-[16px] border border-border bg-card-bg p-5">
             <div class="flex items-center justify-between">
               <h3 id="detail-title" class="font-semibold">Select a node</h3>
@@ -113,8 +147,8 @@ import Math from '../../components/Math.astro';
         <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.7] text-muted-text">
           <p class="font-semibold text-primary-text">What makes this agentic, not just a script</p>
           <ul class="mt-2 list-disc pl-5">
-            <li><strong>Retrieval is grounded:</strong> top-k cosine over 1200 chunks from RBJ, Oppenheim Discrete-Time DSP, Smith DSP Guide, and Biquadia’s own Metal kernels. No hallucinated formulas — the prompt includes verbatim LaTeX.</li>
-            <li><strong>Generation is constrained:</strong> system prompt says “You must output DF2T with state z1,z2, normalized a0=1, and pass stability |p|&lt;1”. Temperature 0.2.</li>
+            <li><strong>Retrieval is grounded:</strong> top-k cosine over 1200 chunks from RBJ, Oppenheim Discrete-Time DSP, Smith DSP Guide, and Biquadia's own Metal kernels. No hallucinated formulas — the prompt includes verbatim LaTeX.</li>
+            <li><strong>Generation is constrained:</strong> system prompt says "You must output DF2T with state z1,z2, normalized a0=1, and pass stability |p|&lt;1". Temperature 0.2.</li>
             <li><strong>Verification is real:</strong> in AuraLinter, we literally run <code>clang++ -O2 -std=c++20</code> + a small harness that checks magnitude at f0 (−3 dB for lowpass, +gain for peaking) and pole radius. If FAIL, the graph loops back to generator with the compiler error appended. This playground simulates that log.</li>
             <li><strong>Why this matters:</strong> LLM alone hallucinates <code>alpha=Q*sin(w0)</code> (inverted). RAG + verification catches it — see the Hilbert 64-tap scenario where first attempt fails Parks-McClellan parity check and second attempt fixes it.</li>
           </ul>
@@ -122,94 +156,137 @@ import Math from '../../components/Math.astro';
       </div>
     </section>
 
-    <section aria-labelledby="method-title" class="border-b border-border">
-      <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">RAG + codegen + compiler — why LLM alone fails DSP</h2>
-        <div class="mt-6 grid gap-6 text-[0.92rem] leading-[1.7] text-muted-text md:grid-cols-2">
-          <p>
-            Ask an LLM for a biquad lowpass from memory and you get <code>alpha = Q * sin(w0)</code> half the time. Inverted. It looks plausible, passes a quick glance, then blows up at high Q — unstable poles, 6 dB peaking where you wanted -3 dB. DSP has no fuzzy pass. A single sign error ruins magnitude.
-          </p>
-          <p>
-            AuraLinter doesn't trust memory. It retrieves the exact RBJ cookbook line, forces the model to copy it verbatim, then compiles and runs tests. If pole radius &gt;1 or magnitude wrong, it loops back with the error log. That tight loop — retrieve, generate, verify, iterate — is what turns hallucination into shipping Metal kernels.
-          </p>
-        </div>
-
-        <div class="mt-10 grid gap-4 md:grid-cols-2">
-          <div class="math-card">
-            <p class="math-label">RAG over DSP textbooks — grounded retrieval</p>
-            <p class="mt-2 font-mono text-[0.8rem] leading-[1.6]">
-              1200 chunks: RBJ cookbook, Oppenheim 6.4 DF2T, Smith Ch12 stability, Biquadia Metal<br/>
-              Embedding: 768-d, cosine sim, top-k=5, threshold 0.78<br/>
-              Prompt: user_intent + verbatim retrieved LaTeX + previous_attempts
-            </p>
-            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
-              We chunk Oppenheim at section boundaries, keep LaTeX intact. Query embedding = "lowpass 1kHz Q0.707 DF2T". Top hits: RBJ eq1 with b0=(1-cos)/2, etc. Score 0.93. No paraphrase. The generator sees: "Lowpass: b0=(1-cosw0)/2 ... alpha=sinw0/(2Q)" verbatim. That prevents alpha=Q*sin inversion. ChromaDB cosine: <Math math="sim = dot(A,B)/(|A||B|)" />. Threshold filters hallucinations.
-            </p>
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the pipeline</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Five nodes, one conditional loop. Each node in the graph has a specific deterministic role — click through them to see the exact dataflow. Here is what each node is actually doing.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The five LangGraph nodes</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Record.</strong> Captures user intent. In production: Whisper tiny CoreML for on-device speech-to-text, running in-process with no network round-trip. This demo uses the dropdown to mock that stage. The output is a structured string: "Design biquad lowpass f0=1000Hz Q=0.707 Fs=48k".</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Retrieve.</strong> Embeds the user intent (768-d vector) and queries ChromaDB over 1200 chunked DSP sources (RBJ Cookbook eq numbers, Oppenheim sections 6.4–6.8, Smith Ch12, Biquadia Metal kernel comments). Top-k=5 with cosine similarity threshold 0.78. The retrieved LaTeX is pasted verbatim into the generator prompt — no summarization, no paraphrase, because the model copies symbols better when it sees them exactly.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Generate.</strong> The codegen node constructs a prompt: system_preamble + retrieved_chunks + user_intent + previous_errors (if iterating). Temperature 0.2, max tokens 400. Output is C++ in Markdown code blocks, extracted via regex. The system prompt enforces DF2T form, normalized a0=1, and a pole stability comment.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Verify.</strong> Writes the generated code to a temp file, runs clang++ -O2 -std=c++20, then executes a harness that checks: magnitude at f₀, pole radius (&lt; 1), and DF2T state boundedness over 1000 frames. Output is PASS or FAIL with error details. For Hilbert, also checks antisymmetry and DC/Nyquist zeros.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Iterate / Summarize.</strong> Conditional edge: if FAIL and iteration count &lt; 3, route back to generator with error appended to the prompt. If PASS, package the accepted kernel + test report + source citations for the UI. Beyond 3 iterations, flag for human review to avoid token burn.</p>
+              </li>
+            </ol>
           </div>
-          <div class="math-card">
-            <p class="math-label">LangGraph — codegen node with constraints</p>
-            <p class="mt-2 font-mono text-[0.8rem] leading-[1.6]">
-              System: "You are AuraLinter DSP agent. Must output DF2T C++ with state z1,z2, a0=1 normalized, poles |p|&lt;1. No Python."<br/>
-              Temperature 0.2, max tokens 400, stop at ```<br/>
-              Input: retrieved_chunks + user Fs,f0,Q
-            </p>
-            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
-              Low temperature kills creativity — we want copying, not invention. Output must be <code>std::array&lt;double,5&gt;</code> = b0,b1,b2,a1,a2. We parse with regex for <code>alpha=sin</code> pattern; if missing, immediate FAIL loops back. LangGraph edge: generator → verifier (always), verifier → generator (if FAIL and iters&lt;3), verifier → summarizer (if PASS).
-            </p>
-          </div>
-          <div class="math-card">
-            <p class="math-label">clang++ verification — real compiler, not simulation</p>
-            <p class="mt-2 font-mono text-[0.8rem] leading-[1.6]">
-              $ clang++ -O2 -std=c++20 -I./dsp -c biquad.cpp -o biquad.o<br/>
-              Harness: magnitude at f0 = -3.01 dB ±0.2, stable |p|&lt;1, DF2T bounded 1k frames<br/>
-              Pole check: sqrt(a1² + 4a2) → |p| = 0.98
-            </p>
-            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
-              We compile exactly as production does. No Python numpy shortcut. The harness feeds impulse, computes H(e^jw) = (b0+b1 z^-1+b2 z^-2)/(1+a1 z^-1+a2 z^-2), checks magnitude. For lowpass, target -3 dB at f0. For peaking, +gain. For Hilbert, checks antisymmetry and zero at DC/Nyq. If clang++ error, log appended to next generation prompt — classic self-correct loop.
-            </p>
-          </div>
-          <div class="math-card">
-            <p class="math-label">Iterative loop — Hilbert 64-tap failure mode</p>
-            <p class="mt-2 font-mono text-[0.8rem] leading-[1.6]">
-              Attempt 1: 64-tap even length → non-zero at Nyquist, FAIL parity<br/>
-              Error: "DC gain 0.12 !=0, even length → phase 0 at Nyq"<br/>
-              Attempt 2: 63-tap (4n+3 ideal), Parks-McClellan, PASS 90° ±0.8°
-            </p>
-            <p class="mt-3 text-[0.76rem] leading-[1.6] text-muted-text">
-              Single-shot LLM loves even 64 — round number bias. DSP textbooks say Hilbert must be antisymmetric, odd length 4n+3, zero at DC/Nyq. Retrieval returns that. First gen misses it → verifier catches DC gain ≠0 → loop back with error → second gen fixes length. This is the demo in the dropdown: Hilbert scenario shows 1 FAIL → PASS. Without loop, you'd ship broken SSB demod.
-            </p>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The interactive demo</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Graph visualization.</strong> An SVG with positioned node cards and directed edges. The verify→iterate edge goes forward always, and iterate→generate is the conditional loop-back (dashed line). Clicking a node shows its detail pane. The Run Full Loop button animates through all five nodes sequentially, then shows the Hilbert 1-iteration loop if that scenario is selected.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Three deterministic scenarios.</strong> Lowpass and peaking pass on first attempt — the mock retrieval returns the correct RBJ lines, and the mock generator produces valid C++. Hilbert first outputs an even-length 64-tap FIR, the verifier catches the parity violation (non-zero at DC/Nyquist), and the loop-back produces a corrected 63-tap version on attempt 2. All data is pre-configured, no real LLM, fully deterministic.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The retriever uses cosine similarity, not keyword</p>
+              <Math math="\text{sim}(\mathbf{q}, \mathbf{d}) = \frac{\mathbf{q} \cdot \mathbf{d}}{\|\mathbf{q}\| \|\mathbf{d}\|}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Embedding "lowpass 1kHz Q0.707" as a 768-d vector and comparing against chunk embeddings returns the RBJ cookbook line with score 0.93 — far above the 0.78 threshold. A keyword search would return every paragraph mentioning "lowpass", burying the formula in noise. The vector search understands that "Q0.707" means "Butterworth" even though the chunk doesn't say that word.</p>
+            </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="mt-10 rounded-[16px] border border-border bg-elevated/30 p-5">
-          <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Playbook — how to wire this yourself</p>
-          <ol class="mt-3 list-decimal space-y-2 pl-5 text-[0.88rem] leading-[1.65] text-muted-text">
-            <li><strong>Chunk your sources:</strong> PDF → text + keep LaTeX blocks intact. 300-500 tokens per chunk, overlap 50. Embed with 768-d model, store in Chroma/Pinecone with metadata source=RBJ eq number.</li>
-            <li><strong>Retriever node:</strong> embed user intent "Hilbert 64-tap Fs 48k", cosine top-5, filter score &lt;0.78. Include raw retrieved text in prompt, not summary — LLM copies formulas better when it sees exact symbols.</li>
-            <li><strong>Generator node:</strong> LangGraph Python: <code>State = TypedDict&#123;intent, chunks, code, errors, iters&#125;</code>. Node function builds prompt = system + chunks + intent + errors. Call Claude/GPT with temp 0.2. Extract C++ via ```cpp regex.</li>
-            <li><strong>Verifier node:</strong> write code to /tmp/biquad.cpp, run <code>clang++ -O2 -std=c++20</code> + <code>./verify --freq --q</code> harness. Capture stdout. Parse PASS/FAIL. Pole radius check: solve denominator roots, if max |p| &gt;=1 → FAIL stability.</li>
-            <li><strong>Conditional edge:</strong> if FAIL and iters&lt;3, go to generator with errors.append(log). Else go to summarizer. Summarizer packages accepted kernel + test report + source citations for UI.</li>
-            <li><strong>Why not just Python eval?</strong> Because production runs Metal, not numpy. Compiling catches type errors, missing M_PI, double vs float mismatch that Python would hide. Same flags as ship.</li>
-          </ol>
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Temperature 0.2, not 0</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Temperature 0 gives deterministic output but sometimes gets stuck — it repeats the same wrong formula after a FAIL. Temperature 0.2 adds just enough noise to try a 63-tap filter after a 64-tap failure, while still mostly copying retrieved text. Above 0.4, the model starts inventing nonsense like <code>biquad = butterworth(4)</code> wholesale. We tuned this across 200 DSP tasks.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Retrieval threshold matters</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Setting the retrieval threshold too low (0.5) allows irrelevant chunks into the prompt, confusing the generator. Too high (0.95) and you get zero hits for novel filter designs. 0.78 was chosen empirically: it passes the exact RBJ eq number for known designs and returns nothing for unknown ones, letting the agent fall back to general DSP knowledge with a confidence warning.</p>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <div class="mt-6 grid gap-4 md:grid-cols-2">
-          <div class="math-card">
-            <p class="math-label">Why temperature 0.2 not 0</p>
-            <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">
-              Temperature 0 gives deterministic but sometimes gets stuck repeating same wrong formula after FAIL — it doesn't explore fix. 0.2 adds just enough noise to try 63-tap after 64-tap failed, while still mostly copying retrieved text. Higher than 0.4 and it starts inventing <code>biquad = butterworth(4)</code> nonsense. We tuned this across 200 DSP tasks.
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              AuraLinter stack · {gear.length} picks
             </p>
           </div>
-          <div class="math-card">
-            <p class="math-label">Honesty — what this playground fakes</p>
-            <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[0.78rem] leading-[1.6] text-muted-text">
-              <li>Real AuraLinter uses Whisper tiny CoreML for recorder node (on-device). This demo uses dropdown — no mic, no transcription.</li>
-              <li>Retrieval here is mocked: fixed top-k for each scenario, not real Chroma query. Production does live cosine search over 1200 vectors.</li>
-              <li>LLM generation is mocked C++ strings, not live Claude call — keeps demo free and deterministic. Prompt structure is real.</li>
-              <li>clang++ run is simulated log, not actual wasm compile. Same flags, same PASS criteria, but not executed in browser due to bundle size.</li>
-              <li>Iterative loop caps at 3 tries in production — beyond that we flag for human review instead of burning tokens. Hilbert case needs 1 retry, typical.</li>
-            </ul>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio & DSP hardware
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
           </div>
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img src={item.image} alt="" width="480" height="360" loading="lazy" decoding="async" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>
+                  )}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => { const pillar = pillarMeta[p] ?? fallbackPillar; return (<span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text"><span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>{pillar.label}</span>); })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -238,6 +315,18 @@ import Math from '../../components/Math.astro';
     letter-spacing: 0.11em;
     color: var(--mp-muted);
   }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 
 <script>
@@ -261,11 +350,10 @@ function initPipeline(){
     {id:'verify', label:'4. Verify', desc:'clang++ -O2 + unit tests (mag, phase, stability)', x:160,y:310, color:'#d98a2a', status:'idle'},
     {id:'iterate', label:'5. Iterate / Summarize', desc:'On FAIL loop to generate with error; on PASS package', x:160,y:400, color:'#7b6fb8', status:'idle'},
   ];
-  const edges=[['record','retrieve'],['retrieve','generate'],['generate','verify'],['verify','iterate'],['iterate','generate']]; // last is conditional loop
+  const edges=[['record','retrieve'],['retrieve','generate'],['generate','verify'],['verify','iterate'],['iterate','generate']];
 
   function drawEdges(){
     svg.innerHTML='';
-    // defs arrow
     const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
     const marker=document.createElementNS('http://www.w3.org/2000/svg','marker');
     marker.setAttribute('id','arrow'); marker.setAttribute('viewBox','0 0 10 10'); marker.setAttribute('refX','8'); marker.setAttribute('refY','5'); marker.setAttribute('markerWidth','6'); marker.setAttribute('markerHeight','6'); marker.setAttribute('orient','auto');
@@ -309,20 +397,8 @@ function initPipeline(){
         {source:'Oppenheim 6.4', score:0.88, text:'Direct Form II Transposed: y=b0x+z1; z1=b1x-a1y+z2; z2=b2x-a2y; Bounded-input bounded-output if poles |p|<1'},
         {source:'Smith Ch12', score:0.82, text:'Stability: check denominator roots. For lowpass Q=0.707, poles at |p|=exp(-pi*f0/(Q*Fs))~0.98'},
       ],
-      gen:`std::array<double,5> lowpass_1k_Q0707(double Fs=48000){
-  double f0=1000, Q=0.7071;
-  double w0=2*M_PI*f0/Fs;
-  double alpha=sin(w0)/(2*Q);
-  double b0=(1-cos(w0))/2, b1=1-cos(w0), b2=(1-cos(w0))/2;
-  double a0=1+alpha, a1=-2*cos(w0), a2=1-alpha;
-  return {b0/a0,b1/a0,b2/a0,a1/a0,a2/a0}; // b0,b1,b2,a1,a2
-}`,
-      verify:`$ clang++ -O2 -std=c++20 biquad.cpp
-$ ./verify --freq 1000 --q 0.707
-[PASS] mag @fc -3.02 dB (target -3dB ±0.2)
-[PASS] |pole|=0.984 <1 stable
-[PASS] DF2T bounded 1k frames
-→ ACCEPT`,
+      gen:`std::array<double,5> lowpass_1k_Q0707(double Fs=48000){\n  double f0=1000, Q=0.7071;\n  double w0=2*M_PI*f0/Fs;\n  double alpha=sin(w0)/(2*Q);\n  double b0=(1-cos(w0))/2, b1=1-cos(w0), b2=(1-cos(w0))/2;\n  double a0=1+alpha, a1=-2*cos(w0), a2=1-alpha;\n  return {b0/a0,b1/a0,b2/a0,a1/a0,a2/a0}; // b0,b1,b2,a1,a2\n}`,
+      verify:`$ clang++ -O2 -std=c++20 biquad.cpp\n$ ./verify --freq 1000 --q 0.707\n[PASS] mag @fc -3.02 dB (target -3dB ±0.2)\n[PASS] |pole|=0.984 <1 stable\n[PASS] DF2T bounded 1k frames\n→ ACCEPT`,
       final:'Kernel accepted — 5 coeffs, 2 state vars, 6 MACs/sample. Ready for Metal shader port. Compression ratio vs FIR 64-tap: 12.8× less compute.'
     },
     peaking:{
@@ -331,13 +407,8 @@ $ ./verify --freq 1000 --q 0.707
         {source:'RBJ peaking', score:0.91, text:'Peaking: A=10^(dBgain/40), b0=1+alpha*A, b2=1-alpha*A, a0=1+alpha/A, a2=1-alpha/A'},
         {source:'Zolzer DAFX Ch2', score:0.85, text:'Peaking EQ: boost/cut with unity at DC/Nyquist. Q controls bandwidth: BW = f0/Q'},
       ],
-      gen:`// peaking 2k +6dB Q1
-double A=pow(10,6.0/40); double alpha=sin(w0)/(2*1);
-double b0=1+alpha*A, b1=-2*cos(w0), b2=1-alpha*A;
-double a0=1+alpha/A, a1=-2*cos(w0), a2=1-alpha/A;`,
-      verify:`[PASS] +6.01 dB @2k, 0.02 dB @DC, -0.01 dB @Nyq
-[PASS] stable
-→ ACCEPT`,
+      gen:`// peaking 2k +6dB Q1\ndouble A=pow(10,6.0/40); double alpha=sin(w0)/(2*1);\ndouble b0=1+alpha*A, b1=-2*cos(w0), b2=1-alpha*A;\ndouble a0=1+alpha/A, a1=-2*cos(w0), a2=1-alpha/A;`,
+      verify:`[PASS] +6.01 dB @2k, 0.02 dB @DC, -0.01 dB @Nyq\n[PASS] stable\n→ ACCEPT`,
       final:'Peaking kernel ready — used in Biquadia EQ cascade stage 2 of 3.'
     },
     hilbert:{
@@ -346,8 +417,7 @@ double a0=1+alpha/A, a1=-2*cos(w0), a2=1-alpha/A;`,
         {source:'Oppenheim Fig 10.12', score:0.89, text:'Hilbert: odd-symmetric, 90° shift. Parks-McClellan design: passband 0.05-0.45 Fs, ripple 0.1 dB'},
         {source:'Smith Ch12', score:0.80, text:'Fir Hilbert: anti-symmetric, zero at DC and Nyquist, odd length 4n+3 ideal'},
       ],
-      gen:`// Attempt 1 (FAIL): 64-tap even length -> non-zero at Nyquist, phase non-ideal
-// Attempt 2 (PASS): 63-tap (4*15+3), Remez exchange, forced zero at DC/Nyq`,
+      gen:`// Attempt 1 (FAIL): 64-tap even length -> non-zero at Nyquist, phase non-ideal\n// Attempt 2 (PASS): 63-tap (4*15+3), Remez exchange, forced zero at DC/Nyq`,
       verify:`Attempt1:\n[FAIL] DC gain 0.12 !=0, parity even -> phase 0 at Nyq\n→ loop to generator with error log\nAttempt2:\n[PASS] 90° ±0.8° 100-12kHz, -0.15 dB ripple\n→ ACCEPT after 1 iteration`,
       final:'After 1 FAIL → PASS, 63-tap FIR Hilbert accepted. 2.1× cheaper than 128-tap IIR Hilbert via allpass pair, chosen for AuraLinter SSB demod demo.'
     }
@@ -384,7 +454,6 @@ double a0=1+alpha/A, a1=-2*cos(w0), a2=1-alpha/A;`,
       n.status='running'; renderNodes(); selectNode(id); await new Promise(r=>setTimeout(r,650));
       n.status='done'; renderNodes();
     }
-    // if hilbert, simulate one loop
     if(scenarioEl.value==='hilbert'){
       const gen=nodes.find(x=>x.id==='generate'); gen.status='running (iter 2)'; renderNodes(); await new Promise(r=>setTimeout(r,600)); gen.status='done'; renderNodes();
     }

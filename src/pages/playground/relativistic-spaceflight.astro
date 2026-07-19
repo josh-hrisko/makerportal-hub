@@ -1,11 +1,24 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+import Math from '../../components/Math.astro';
 
 const title = 'Relativistic Starship Journey — 1g Flight, Time Dilation & Minkowski Diagram | MakerPortal';
 const description =
   'Fly a starship at constant proper acceleration and watch special relativity unfold: ship time vs Earth time, Lorentz contraction, the relativistic Doppler shift of the cosmic microwave background, and a live Minkowski spacetime diagram of the hyperbolic worldline. Flip-and-burn trips to real destinations, computed exactly.';
 const canonical = new URL('/playground/relativistic-spaceflight', Astro.site);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Relativistic Starship Journey',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -34,6 +47,10 @@ const faqs = [
     q: 'Is this simulation physically exact?',
     a: 'The special-relativistic kinematics are exact for a point ship under constant proper acceleration in flat spacetime: the hyperbolic worldline, time dilation, Lorentz contraction, and Doppler factor all come from closed-form equations. What it deliberately ignores is general relativity (no real gravity wells or cosmological expansion), the staggering fuel and energy such a flight would demand, and any redshift evolution of the background over cosmic timescales.',
   },
+  {
+    q: 'What is rapidity and why use it instead of velocity directly?',
+    a: 'Rapidity φ = aτ/c is the natural velocity parameter in special relativity because it adds linearly: φ_total = φ₁ + φ₂. Velocity β = tanh(φ) saturates at 1, γ = cosh(φ), and the Lorentz transform becomes a hyperbolic rotation. At constant proper acceleration a, rapidity grows linearly with ship proper time τ — that simple relationship (φ = aτ/c) is why the hyperbolic worldline, time dilation, and distance formulas all simplify to clean sinh/cosh expressions. The script in src/lib/relativity.ts uses rapidity internally for all computations.',
+  },
 ];
 
 const faqSchema = {
@@ -45,6 +62,7 @@ const faqSchema = {
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
@@ -145,6 +163,140 @@ const faqSchema = {
         </p>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the flight console</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">One acceleration knob, seven destinations, a Minkowski diagram, and three live readouts — all driven by four hyperbolic functions. Here is exactly what each piece computes.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The relativistic kinematics engine</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Rapidity accumulator.</strong> The core of the computation is rapidity φ = aτ/c — it grows linearly with ship proper time τ. All other quantities derive from φ via hyperbolic trig: β = tanh φ (velocity / c), γ = cosh φ (Lorentz factor), ct = (c/a) · sinh φ (Earth time), x = (c²/a) · (cosh φ − 1) (distance traveled). No numerical integration — these are exact closed-form solutions for constant proper acceleration in flat spacetime.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Flip-and-burn trip.</strong> The ship accelerates at constant a for the first half of the coordinate distance, then flips 180° and decelerates for the second half, arriving at rest at the destination. The turnaround proper time τ_half is found by solving x(τ_half) = d/2 in closed form. The ship state function uses a mirrored time parameter for the deceleration phase: τ_effective = 2τ_half − τ.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">CMB Doppler shift.</strong> The forward CMB temperature is T = T₀ × √((1+β)/(1−β)), the relativistic Doppler factor. At β = 0.99, the factor is ~14.1 → T ≈ 38 K ahead. Peak wavelength follows Wien\'s law: λ_peak = 2.898 × 10⁻³ / T K·m. The script reads CMB_TEMPERATURE = 2.725 K from the relativity.ts library constant.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The hyperbolic worldline — why ct vs x is a hyperbola</p>
+              <Math math="\left(\frac{a}{c^2}\,x + 1\right)^2 - \left(\frac{a}{c}\,t\right)^2 = 1" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">This is the invariant hyperbola: x = (c²/a)(cosh φ − 1), ct = (c/a) sinh φ. For any φ, (a·x/c² + 1)² − (a·t/c)² = cosh² φ − sinh² φ = 1. The light cone is the asymptote at 45°: x = ct where the hyperbola approaches but never reaches.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Minkowski diagram and live readouts</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Minkowski diagram.</strong> Canvas-drawn with space (light-years) horizontal and time (years) vertical — ct axis goes up. The light cone from the origin is a dashed 45° line. The worldline is drawn by sampling shipState(τ) at 400 evenly spaced proper times from 0 to total τ. The diagram uses coordinate time vs coordinate distance — not proper time — because the worldline is what an Earth observer would measure.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Line of simultaneity.</strong> A dashed CTA-colored line with slope β intersects the worldline at the current ship position. Points on this line are simultaneous in the ship\'s instantaneous rest frame. At high β, the line tilts dramatically — the ship\'s "now" slices through Earth time at a steep angle, which is why the twin paradox works.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Trip summary readouts.</strong> Ship time, Earth time, peak velocity, peak Lorentz factor, contracted trip length, peak CMB temperature and wavelength, and turnaround time. All are computed once at recompute() via the flipAndBurn function in relativity.ts — the scrubbing playback just reads the already-computed state from the closed-form formulas.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Float64 overflow at extreme rapidity</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">cosh(φ) and sinh(φ) overflow Float64 at φ ≈ 710. At 1g, this corresponds to τ ≈ 2.2 × 10¹⁰ seconds (~690 years) — well beyond any real mission but reachable with the "edge of observable universe" at 46.5 Gly. The trip to Andromeda (2.54 Mly) is well within range. When overflow occurs, the script displays an error banner and stops the diagram. The flipAndBurn function in relativity.ts checks Number.isFinite before returning.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Gly-scale trips ignore cosmological expansion</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The special-relativistic formulas assume flat, static spacetime. At 46.5 Gly, the universe has expanded significantly since the light we see was emitted — special relativity alone cannot describe it. General relativity and the FLRW metric are required. The edge-of-universe destination is included for scale comparison only: "how long would it take if spacetime were flat?" — the answer (ship time) is surprisingly short (~24 years at 1g) due to time dilation, but the Earth time (~46.5 billion years) shows how meaningless this question is in a real expanding universe.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Copyable solver: constant proper acceleration in flat spacetime</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The closed-form kinematics powering every number on this page. Port to any language — the math is just sinh, cosh, tanh.</p>
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">JavaScript/TypeScript — flight kinematics</p><button type="button" class="copy-btn" data-copy-target="code-rel">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-rel" code={`export const C = 299792458; // m/s
+export const G = 9.80665;   // standard gravity
+
+export function gToMetric(g: number): number { return g * G; }
+
+export function betaAtProperTime(a: number, tau: number): number {
+  return Math.tanh(a * tau / C);
+}
+
+export function gammaAtProperTime(a: number, tau: number): number {
+  return Math.cosh(a * tau / C);
+}
+
+export function coordinateTime(a: number, tau: number): number {
+  return (C / a) * Math.sinh(a * tau / C);
+}
+
+export function distanceTraveled(a: number, tau: number): number {
+  return (C * C / a) * (Math.cosh(a * tau / C) - 1);
+}
+
+export function cmbTemperatureAhead(beta: number): number {
+  const CMB_T0 = 2.725; // K
+  return CMB_T0 * Math.sqrt((1 + beta) / (1 - beta));
+}
+
+export function flipAndBurn(a: number, distance: number) {
+  const tauHalf = (C / a) * Math.acosh(1 + (a * distance) / (2 * C * C));
+  const totalTau = 2 * tauHalf;
+  const totalCoordT = 2 * coordinateTime(a, tauHalf);
+  const peakBeta = betaAtProperTime(a, tauHalf);
+  const peakGamma = gammaAtProperTime(a, tauHalf);
+  return { properTime: totalTau, coordinateTime: totalCoordT,
+           turnaroundProperTime: tauHalf, peakBeta, peakGamma };
+}`} lang="ts" theme="github-dark" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Constants and unit conversion</p><button type="button" class="copy-btn" data-copy-target="code-const">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-const" code={`export const C = 299792458;               // speed of light, m/s
+export const LIGHT_YEAR = 9.4607304725808e15;  // meters per light-year
+export const JULIAN_YEAR = 31557600;            // seconds per Julian year
+export const CMB_TEMPERATURE = 2.725;           // cosmic microwave background, K
+export const WIEN_CONSTANT = 2.897771955e-3;    // Wien's displacement law, m·K
+
+// Peak wavelength from Wien's law
+function wienPeak(temperatureK: number): number {
+  return WIEN_CONSTANT / temperatureK; // meters
+}
+
+// Example: Andromeda (2.54 Mly) at 1g
+const a = 9.80665; // m/s²
+const d = 2.54e6 * LIGHT_YEAR; // meters
+const trip = flipAndBurn(a, d);
+// → properTime: ~28.6 years ship, coordinateTime: ~2.54 Mly/c ≈ 2.54 Myr Earth`} lang="ts" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -164,6 +316,37 @@ const faqSchema = {
   .live-lab { font-family: var(--font-mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mp-muted); }
   .live-val { font-weight: 700; color: var(--mp-text); font-size: 0.98rem; }
   input[type='range'] { accent-color: var(--mp-cta); }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .math-card {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mp-elevated) 48%, transparent);
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono);
+    color: var(--mp-text);
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
 </style>
 
 <script>
@@ -389,6 +572,20 @@ function initRelativisticFlight() {
 
   const themeObserver = new MutationObserver(() => { readColors(); draw(); });
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copyTarget;
+      const codeEl = targetId ? document.getElementById(targetId) : null;
+      if (!codeEl) return;
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent ?? '');
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      } catch {}
+    });
+  });
+
   document.addEventListener('astro:before-swap', () => { destroyed = true; if (rafId) cancelAnimationFrame(rafId); themeObserver.disconnect(); }, { once: true });
 
   recompute();

@@ -1,11 +1,34 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const title = 'Cone Breakup Explorer — Piston Range, Breakup & Resonances | MakerPortal';
 const description =
   'Interactive cone breakup visualization: explore how a loudspeaker cone transitions from rigid-piston motion to modal breakup as frequency increases. Illustrative model showing radial modes, nodal circles, and frequency response — not an FEA simulation.';
 const canonical = new URL('/playground/cone-breakup', Astro.site);
+
+const slug = 'cone-breakup';
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes(slug))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => a.title.localeCompare(b.title));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Cone Breakup Explorer',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,12 +39,46 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Cone Breakup Explorer', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'What does the breakup frequency depend on?',
+    a: 'fb ∝ √(E/ρ) / D — stiffness (Young\'s modulus E) pushes it up, density (ρ) drags it down, and diameter (D) is the strongest lever (fb ∝ 1/D² for constant thickness, approximately 1/D here since effective t/R is treated as thin-shell). A 15 cm paper cone breaks up around 2.8 kHz; the same size in carbon fiber breaks up around 11.8 kHz. That\'s why tweeters are small and midranges use stiff materials.',
+  },
+  {
+    q: 'Why does phase coherence drop even when the displacement pattern looks mild?',
+    a: 'Phase coherence is |Σ e^(jφᵢ)| / N — a measure of how many points on the cone are moving in the same direction at the same time. Even a small modal contribution creates opposing rings. Once two regions 180° out of phase have comparable area, coherence drops fast. Below 40%, the on-axis cancellation is so severe that EQ cannot restore flat response — you need a physically stiffer cone.',
+  },
+  {
+    q: 'Are Bessel functions really how real cones behave?',
+    a: 'Only approximately. Real cones are curved (conical or curvilinear profiles), which stiffens the structure against radial modes. The edge condition in a real driver is compliant (surround + spider), not clamped. Dust caps add mass and stiffness. Anisotropic materials like woven carbon fiber have different stiffness along warp vs weft. The Bessel modes shown here give the correct qualitative pattern — central dome, then concentric nodal circles, then diametral splitting — but real frequencies differ by 20–50% from the ideal clamped-plate prediction.',
+  },
+  {
+    q: 'Can I use this tool to pick a crossover frequency?',
+    a: 'Yes, for quick intuition. Keep your crossover below 0.7·fb. If the breakup frequency is 2.8 kHz, cross no higher than ~2.0 kHz. If you must cross higher (e.g., a 2-way with a tweeter that can\'t go below 3 kHz), you need a driver with breakup above 4.3 kHz — select a stiffer material or smaller diameter in the tool and check. For production designs, always verify with polar measurements.',
+  },
+  {
+    q: 'Why is paper often preferred despite its low breakup frequency?',
+    a: 'Paper has high internal damping (loss factor η ≈ 0.04–0.08). When it breaks up, the modal peaks are gentle — only 2–4 dB. Aluminum has very low damping (η ≈ 0.001) — when it breaks up, resonance peaks can reach 10–15 dB and ring for many cycles. So paper\'s breakup is "softer" and more easily managed with simple EQ, while metal cones need notch filters precisely tuned to each breakup mode. The frequency response plot in this tool is illustrative and does not show damping — in reality, paper shows gentler peaks.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -29,7 +86,6 @@ import Math from '../../components/Math.astro';
     lead="An illustrative modal-shape explorer — not an FEA simulation. Explore how a circular membrane/plate transitions from rigid-piston motion to modal breakup as frequency increases. Tune material, cone diameter, and frequency to see radial modes, nodal circles, and the qualitative frequency response."
     pillarHint="dsp-audio"
   >
-    <!-- Model Description -->
     <section class="border-b border-border" aria-label="Model description">
       <div class="mx-auto max-w-[76rem] px-5 py-12 sm:px-8 lg:px-10">
         <p class="max-w-3xl text-[0.9rem] leading-[1.7] text-muted-text">
@@ -44,7 +100,6 @@ import Math from '../../components/Math.astro';
       </div>
     </section>
 
-    <!-- Simulation Area -->
     <section class="border-b border-border" aria-labelledby="sim-title">
       <div class="mx-auto max-w-[88rem] px-5 py-14 sm:px-8 lg:px-10">
         <div class="flex flex-wrap items-start justify-between gap-4">
@@ -56,7 +111,6 @@ import Math from '../../components/Math.astro';
         </div>
 
         <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-          <!-- Left: Cone Visualization -->
           <div class="flex flex-col gap-6">
             <div class="canvas-card">
               <div class="canvas-label-row">
@@ -71,7 +125,6 @@ import Math from '../../components/Math.astro';
               ></canvas>
             </div>
 
-            <!-- Frequency Response -->
             <div class="canvas-card">
               <div class="canvas-label-row">
                 <span>Frequency response — illustrative on-axis</span>
@@ -85,7 +138,6 @@ import Math from '../../components/Math.astro';
               ></canvas>
             </div>
 
-            <!-- Mode Shape Selector -->
             <div>
               <p class="control-heading">Mode shape selector</p>
               <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Mode shape selector">
@@ -117,9 +169,7 @@ import Math from '../../components/Math.astro';
             </div>
           </div>
 
-          <!-- Right: Controls + Metrics -->
           <div class="flex flex-col gap-5">
-            <!-- Controls Card -->
             <div class="rounded-[20px] border border-border bg-card-bg p-5 lg:p-6">
               <div class="flex flex-wrap gap-2" aria-label="Material presets">
                 <button type="button" class="preset-btn is-active" data-material="paper">Paper</button>
@@ -167,7 +217,6 @@ import Math from '../../components/Math.astro';
               </div>
             </div>
 
-            <!-- Metrics Cards -->
             <dl class="grid grid-cols-2 gap-3 font-mono text-[0.75rem]" aria-live="polite">
               <div class="metric-card"><dt>Mode</dt><dd id="metric-mode">Piston range</dd></div>
               <div class="metric-card"><dt>Breakup freq</dt><dd id="metric-breakup">2,800 Hz</dd></div>
@@ -179,7 +228,6 @@ import Math from '../../components/Math.astro';
       </div>
     </section>
 
-    <!-- Method & Limitations — frontier rewrite -->
     <section aria-labelledby="method-title">
       <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">How a cone stops being a piston</h2>
@@ -244,6 +292,230 @@ import Math from '../../components/Math.astro';
               Use this to build intuition for <Math math="f_{breakup} \propto \sqrt{E/\rho}/D" /> and to recognize mode shapes in Klippel scans or laser vibrometry. For decisions, measure or run proper shell FEA + BEM.
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Anatomy -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">An isometric mesh rendered via canvas, an illustrative frequency response plot, and six material presets feeding Bessel-mode displacement computation. Here is exactly how every pixel gets its color and how the animation loop drives the oscillation.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The cone mesh and material engine</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Isometric projection.</strong> The cone is rendered as a triangle mesh (36 radial × 64 angular divisions → 2,405 vertices, 4,608 triangles) projected into isometric view with <Math math="\cos(30°)" /> / <Math math="\sin(30°)" /> factors. Each vertex's 3D position includes axial displacement z = disp × 45 px, computed from the mode shape. The isometric transform: sx = (x − y)·cos30°, sy = (x + y)·sin30° − z.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Bessel function mode shapes.</strong> Modes 1–5 are hardcoded: Mode 1 is uniform (piston), Mode 2 is <Math math="J_0(3.8317r)" /> (first root of J₀), Mode 3 is <Math math="J_0(7.0156r)" /> (second root), Mode 4 is <Math math="J_1(3.8317r)\cos\theta" /> (first diametral), Mode 5 is <Math math="J_2(5.1356r)\cos 2\theta" /> (mixed). The <code>besselJ()</code> function from the acoustics library evaluates Bessel J_n(x) via series expansion.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Material presets.</strong> Six materials with different E and ρ values mapped to a breakup_scale factor: paper=1.0, PP=0.7, Al=2.5, carbon=4.2, Kevlar=3.6, Ti=2.4. The effective breakup frequency is fb = scale × 2800 Hz × (15 cm / diameter). That base 2.8 kHz for a 15 cm paper cone comes from typical midrange driver measurements. Changing material updates the fb in real time.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Displacement blending.</strong> The actual displacement at each point is a weighted sum: pistonAmp (falls from 1 at f≤fb to 0 at high f) + modalAmp (rises smoothly from zero above 0.35·fb). The piston contribution is a flat 0.35·pistonAmp across the whole surface; the modal contribution is modalAmp × Bessel mode shape. This blending gives a smooth piston-to-breakup transition rather than a hard switch.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The canvases and animation loop</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Per-vertex color coding.</strong> Each vertex's color is RGB based on displacement: near-zero (&lt; 0.08) → white (nodal region), positive → warm red (0.95, 0.25–0.80, 0.25–0.80), negative → cool blue (0.25–0.70, 0.35–0.80, 0.88). Saturation increases with |displacement|. Each quad is drawn as two triangles with the average color of its four vertices at 85% opacity, creating a smooth color gradient across the mesh.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Wireframe overlay.</strong> Every third radial ring and eighth angular meridian is stroked at low opacity to reveal the mesh geometry. This is purely illustrative — it helps you see the nodal circles and diametral lines as physical features of the deformed surface, not just color artifacts.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">07</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Frequency response plot (synthetic).</strong> Not measured — it's a procedural shape generator. Below 0.5·fb: flat at 0 dB. 0.5–0.7·fb: slight lift. 0.7–1.05·fb: sinusoidal peak/dip around fb. Above fb: modulated sine envelope that decays as 1/(1+0.4(r−1)). The synthetic curve gives the right qualitative shape — flat piston, breakup peak, jagged modal tail — without claiming measurement accuracy.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">08</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Animation phase accumulation.</strong> When animating, the phase advances by f × elapsed × 2π each frame. The oscillation factor sin(phase) multiplies all vertex displacements, creating the breathing effect. The frequency response cursor (a magenta vertical line) tracks the current frequency and crosses the SPL curve at the current value. Respects prefers-reduced-motion.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The render loop</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">On each frame: if animating, advance phase. Then clear both canvases, compute all 2,405 vertex positions with current displacement, draw the mesh triangles, overlay wireframe, draw frequency response curve with log-frequency and dB grids, mark fb and current frequency with vertical lines. Uses IntersectionObserver to pause rendering when scrolled off-screen.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gotchas -->
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">The breakup_scale factor hides thickness, curvature, and edge condition</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Real cone breakup depends on thickness (∝ t), curvature (curvilinear profiles raise fb by 20–40%), edge compliance (real surrounds lower fb by 15–25%), and anisotropy (woven materials differ 2× between warp and weft). The tool collapses all of this into a single material multiplier. Two 15 cm aluminum cones from different manufacturers can have fb anywhere from 5 kHz to 9 kHz. Use the override slider if you have a measured fb — the material selector is for qualitative exploration.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Frequency response plot is illustrative, not predictive</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The synthetic SPL curve at the bottom uses procedural sine-modulation math, not actual acoustic radiation integrals. A real on-axis response includes: radiation impedance from the air load (which changes with frequency), the exact spatial integration of velocity over the cone surface weighted by Green's function, baffle diffraction, and the driver's electrical impedance interacting with the amplifier. The squiggles you see are qualitatively correct (peaks and dips grow past fb) but their exact dB values and frequencies are fabricated. For real response prediction, use a boundary element method (BEM) solver.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">JavaScript — the mode shape solver</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The core Bessel-mode displacement function mapping radius, angle, and a mode index to surface displacement. This is the heart of every colored triangle on the cone mesh.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Cone breakup modes — JavaScript</p>
+            <button type="button" class="copy-btn" data-copy-target="code-cone-modes">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-cone-modes" code={`const MATERIALS = {
+  paper:        { label: 'Paper',        E: 3,    rho: 700,  scale: 1.0 },
+  polypropylene:{ label: 'Polypropylene', E: 1.5,  rho: 900,  scale: 0.7 },
+  aluminum:     { label: 'Aluminum',      E: 70,   rho: 2700, scale: 2.5 },
+  'carbon-fiber':{ label: 'Carbon fiber', E: 120,  rho: 1600, scale: 4.2 },
+  kevlar:       { label: 'Kevlar',        E: 80,   rho: 1440, scale: 3.6 },
+  titanium:     { label: 'Titanium',      E: 110,  rho: 4500, scale: 2.4 },
+};
+
+const breakupFreq = (material, diamCm) =>
+  MATERIALS[material].scale * 2800 * (15 / diamCm);
+
+const modeShape = (r, theta, mode) => {
+  const rn = Math.min(1, Math.max(0, r));
+  switch (mode) {
+    case 1: return 1.0; // piston
+    case 2: return besselJ(0, 3.8317 * rn); // J₀ first root
+    case 3: return besselJ(0, 7.0156 * rn); // J₀ second root
+    case 4: return besselJ(1, 3.8317 * rn) * Math.cos(theta);
+    case 5: return besselJ(2, 5.1356 * rn) * Math.cos(2 * theta);
+    default: return 1.0;
+  }
+};
+
+const computeDisplacement = (r, theta, f, fb, mode) => {
+  const ratio = f / Math.max(1, fb);
+  const pistonAmp = Math.max(0, 1 - ratio);
+  const modalAmp = Math.pow(Math.max(0, ratio - 0.35), 1.2) * 1.5;
+  return 0.35 * pistonAmp + modalAmp * modeShape(r, theta, mode);
+};`} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gear -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear for cone &amp; driver testing</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Measurement stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio interfaces &amp; monitoring
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={{ background: pillar.color }} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- FAQ -->
+    <section aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -393,6 +665,34 @@ import Math from '../../components/Math.astro';
     color: var(--mp-muted);
     text-align: center;
     line-height: 1.2;
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 
@@ -888,6 +1188,21 @@ import Math from '../../components/Math.astro';
         selectedEmphasis = e === 'auto' ? 'auto' : parseInt(e, 10);
         markEmphasisButtons();
         renderAll();
+      });
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.copyTarget;
+        const el = document.getElementById(id ?? '');
+        if (!el) return;
+        try {
+          const text = (el as HTMLElement).textContent ?? '';
+          await navigator.clipboard.writeText(text);
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1200);
+        } catch {}
       });
     });
 

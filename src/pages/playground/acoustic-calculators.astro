@@ -1,23 +1,35 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const title = 'Acoustic Calculators — Wavelength, SPL, RT60 & more | MakerPortal';
 const description = 'Free online acoustic calculators: speed of sound, wavelength/frequency, delay/distance, SPL summation, dB/ratio conversion, RT60 (Sabine & Eyring), Helmholtz resonance, and port length for speaker design.';
 const canonical = new URL('/playground/acoustic-calculators', Astro.site);
 
-const appSchema = {
+const slug = 'acoustic-calculators';
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes(slug))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => a.title.localeCompare(b.title));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
+
+const softwareSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'Acoustic Calculators',
   url: canonical.toString(),
   applicationCategory: 'MultimediaApplication',
-  operatingSystem: 'Any',
+  operatingSystem: 'Any (browser-based)',
   description,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 };
 
-const breadcrumb = {
+const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
@@ -26,13 +38,46 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Acoustic Calculators', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'Which RT60 formula should I trust — Sabine or Eyring?',
+    a: 'For average absorption below 0.2 (most furnished rooms) they nearly agree, so either is fine. Once ᾱ exceeds 0.3, Eyring is more physically correct because Sabine overestimates the number of reflections per second. Real measured RT60 typically falls between the two — use Sabine as a conservative upper bound and Eyring as the physics-consistent lower bound.',
+  },
+  {
+    q: 'Why do two 80 dB sources sum to 83 dB, not 86 dB?',
+    a: 'Two independent noise sources are incoherent — their instantaneous pressures aren\'t correlated. You add intensities (power), not pressures. 10·log₁₀(10⁸ + 10⁸) = 10·log₁₀(2×10⁸) ≈ 83.0 dB. If they were perfectly in phase and coherent (same signal on two identical speakers wired together), you\'d get +6 dB instead — but that only happens in controlled setups, not with independent sources.',
+  },
+  {
+    q: 'What is Schroeder frequency and why does it matter?',
+    a: 'It divides your room into two acoustic regimes. Below fs, room eigenmodes are sparse and audible as discrete booms — that\'s where you need modal treatment. Above fs, modes overlap so densely they blend into a smooth decay — that\'s where broadband absorption works. The tool computes it from volume and RT60 using fs = 2000·√(T₆₀/V).',
+  },
+  {
+    q: 'Does humidity affect my delay calculations?',
+    a: 'Negligibly for timing. At 40 °C and 100% RH, speed of sound rises only about 0.5%. Your 1 ms delay would be off by 0.005 ms — far below what a DSP delay line can resolve. Temperature matters far more: from 20 °C to 30 °C, c rises from 343 to 349 m/s (1.7%), which is 5 mm per meter of propagation — audible as comb filtering in multi-speaker arrays.',
+  },
+  {
+    q: 'How do I use the port length calculator and actually build from it?',
+    a: 'Enter box volume, desired tuning frequency, and port diameter. The calculator gives you the physical length including the flanged end correction. Build the port 10% longer than the computed value, install it, measure the impedance peak with your audio interface, then trim to exact length. A port that\'s too long tunes lower than predicted; too short tunes higher. PVC pipe with a hose clamp is forgiving for prototyping.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(appSchema)}></script>
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -495,6 +540,257 @@ import Math from '../../components/Math.astro';
 
       </div>
     </section>
+
+    <!-- Anatomy -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Eleven calculators, one shared physics engine. Here is what each card does, how the script ties them together, and why the temperature input sits at the top of the page.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The shared engine</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Temperature as the root node.</strong> The top card computes <Math math="c(T)" /> via ISO 9613-1. Every other calculator reads this single <code>currentC</code> variable — wavelength, delay, Helmholtz, port length, and Doppler all depend on it. Change temperature and every card recalculates in one pass, because in the real world you don't get different speeds of sound in different formulas.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Event-driven recalculation.</strong> There is no polling loop. Each input's <code>input</code> event fires a targeted update function. The temperature handler fans out to six dependent calculators; the others trigger just their own readouts. The <code>wlUpdating</code> and <code>delayUpdating</code> flags prevent infinite circular updates when wavelength↔frequency or distance↔delay inputs drive each other bidirectionally.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">SPL dynamic rows.</strong> The summation card starts with two sources and lets you add up to six via a DOM factory. Each new row gets an input listener and a remove button wired at creation time. Renumbering keeps labels consistent when you delete from the middle. The <code>splSumArray</code> function converts each dB to linear power, sums, then converts back — the same math a sound level meter does internally.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">dB mode toggle.</strong> The dB↔ratio converter switches between 20·log (voltage/pressure) and 10·log (power). Changing the radio fires <code>updateFromDb()</code> which recomputes both fields from the current dB input value. The visual density card gives you both sides at once so you can spot-check which convention applies.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">Central equation — c(T)</p>
+              <Math math="c(T) = 331.3 \sqrt{1 + \frac{T}{273.15}}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">Every result on this page — wavelength, delay, Helmholtz resonance, Doppler shift — traces back to this one line. At 20 °C it's 343 m/s; at 30 °C it's 349 m/s. That 1.7% difference is 5 mm per meter of propagation, which is audible as comb filtering in multi-speaker arrays. Set temperature first.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">RT60, Helmholtz, and the bigger cards</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">RT60 dual-output.</strong> Both Sabine and Eyring compute in parallel from the same dimensions and α. The Sabine formula uses <Math math="A = \bar{\alpha} S" /> directly; Eyring uses <Math math="-S \ln(1-\bar{\alpha})" /> instead. They diverge at high absorption because Sabine's small-α approximation breaks. Critical distance and Schroeder frequency derive from whichever RT60 is finite — the dashboard uses Sabine preferentially for the Schroeder constant.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Helmholtz ↔ Port Length duality.</strong> These two cards are inverses of each other. Helmholtz takes port diameter, port length, and cavity volume → gives resonance frequency. Port length takes box volume, port diameter, and target tuning → gives required length. Both use the same end-correction <Math math="+0.85r" />. If you enter the output of one as the input of the other, the numbers should agree — a built-in sanity check.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">07</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Doppler shift sign convention.</strong> Positive velocity means moving toward each other — source velocity <Math math="v_s" /> is + when source approaches observer, observer velocity <Math math="v_o" /> is + when observer approaches source. This matches the standard physics convention <Math math="f' = f(c+v_o)/(c-v_s)" />. If you set source velocity to negative (receding), frequency drops instead of rises.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">08</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">NR curve grid.</strong> The nine octave bands (31.5 Hz to 8 kHz) are hard-coded ISO 1996 constants. Each band's allowed SPL = <Math math="a_n + b_n \cdot NR" />. The grid updates all nine cells when you change the target NR level. If you're measuring a room, compare each octave band against the grid — any band exceeding the limit means the room fails that NR rating, even if other bands are quiet.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">09</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Mass Law baseline.</strong> The transmission loss calculator uses the limp-wall formula <Math math="TL \approx 20\log_{10}(m f) - 47.2" />. It's accurate to about ±3 dB for single-leaf homogeneous panels above the critical frequency. Below coincidence, stiffness resonance dominates instead of mass — this tool assumes you're above that region.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">10</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">No idle compute.</strong> The page initializes once via <code>initAcousticCalculators()</code>, guarded by a <code>data-init</code> flag to prevent re-init on Astro page transitions. No setInterval, no requestAnimationFrame. The only computation happens on user input events. Zero CPU while you read the method section.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gotchas -->
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Decibel addition without coherence check</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">This page adds dB sources incoherently — 10·log sum of powers. That's right for independent noise sources, separate HVAC vents, or uncorrelated drivers. But if you're summing two outputs of the same DSP carrying the same signal, and they're wired in phase, pressure adds linearly — the result is up to 6 dB higher per doubling, not 3 dB. The calculator has no way to know your coherence scenario. Always ask: are these independent sources or two copies of the same signal?</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Temperature drift across cards</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The temperature input sits in the first card and every other calculator reads <code>currentC</code> reactively. If you change temperature, all dependent cards recompute. But if you enter dimensions first and then change temperature before noting the earlier results, you may not realize the wavelength and delay numbers you just read have shifted underneath you. Always confirm temperature before taking critical measurements — a 10 °C error is a 1.7% error in c, which propagates to every derived quantity on the page.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">JavaScript — the core solver</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The acoustics library underpinning all calculators on this page. Copy-paste <code>speedOfSound</code> and <code>splSumArray</code> into any audio tool — they have zero dependencies and the same math as a <Math math="\approx" />$<a href={gearById['behringer-umc1820']?.url} target="_blank" rel="sponsored noopener noreferrer" class="text-brand-anchor hover:text-primary-text">UMC1820</a>-equipped measurement rig uses internally.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Core acoustics — JavaScript</p>
+            <button type="button" class="copy-btn" data-copy-target="code-acoustic-core">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-acoustic-core" code={`const speedOfSound = (tC) => 331.3 * Math.sqrt(1 + tC / 273.15);
+
+const splSumArray = (levels) => {
+  let sum = 0;
+  for (const L of levels) sum += Math.pow(10, L / 10);
+  return 10 * Math.log10(sum);
+};
+
+const wavelength = (f, c) => c / f;
+
+const frequencyFromWavelength = (wl, c) => c / wl;
+
+const delayFromDistance = (d, c) => (d / c) * 1000;
+
+const distanceFromDelay = (ms, c) => (ms / 1000) * c;
+
+const rt60Sabine = (V, A) => A > 0 ? 0.161 * V / A : Infinity;
+
+const rt60Eyring = (V, S, alpha) => {
+  if (alpha <= 0 || alpha >= 1) return Infinity;
+  return 0.161 * V / (-S * Math.log(1 - alpha));
+};
+
+const schroederFrequency = (V, T60) => {
+  if (V <= 0 || T60 <= 0) return NaN;
+  return 2000 * Math.sqrt(T60 / V);
+};
+
+const criticalDistance = (Q, R) => {
+  if (Q <= 0 || R <= 0) return NaN;
+  return Math.sqrt(Q * R / (16 * Math.PI));
+};
+
+const helmholtzFrequency = (S, L, V, c) => {
+  const r = Math.sqrt(S / Math.PI);
+  const Leff = L + 0.85 * r;
+  return (c / (2 * Math.PI)) * Math.sqrt(S / (V * Leff));
+};
+
+const portLength = (Sp, fb, Vb, c) => {
+  const rp = Math.sqrt(Sp / Math.PI);
+  const Leff = (Sp * c * c) / (4 * Math.PI * Math.PI * fb * fb * Vb);
+  return Leff - 0.85 * rp;
+};
+
+const dopplerShift = (f, vs, vo, c) => f * (c + vo) / (c - vs);
+
+const massLawTransmissionLoss = (mass, f) => 20 * Math.log10(mass * f) - 47.2;`} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gear -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              DSP audio · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio measurement &amp; monitoring
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={{ background: pillar.color }} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- FAQ -->
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -559,6 +855,13 @@ import Math from '../../components/Math.astro';
     font-weight: 650;
     color: var(--mp-text);
   }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
   .pill {
     display: inline-flex;
     align-items: center;
@@ -587,6 +890,34 @@ import Math from '../../components/Math.astro';
   }
   .spl-source-row .tool-input {
     margin-bottom: 0;
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 
@@ -635,8 +966,33 @@ import Math from '../../components/Math.astro';
       speedOutM.textContent = `${currentC.toFixed(1)} m/s`;
       speedOutFt.textContent = `${(currentC * 3.28084).toFixed(1)} ft/s`;
     }
-    tempInput.addEventListener('input', () => { updateSpeed(); updateWavelengthFromFreq(); updateDelayFromDist(); updateHelmholtz(); updatePortLength(); });
-    tempInput.addEventListener('change', updateSpeed);
+
+    function updateAllFromTemp() {
+      updateSpeed();
+      updateWavelengthFromFreq();
+      updateDelayFromDist();
+      updateHelmholtz();
+      updatePortLength();
+    }
+
+    tempInput.addEventListener('input', updateAllFromTemp);
+    tempInput.addEventListener('change', updateAllFromTemp);
+
+    // ---- copy buttons ----
+    document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.copyTarget;
+        const el = document.getElementById(id ?? '');
+        if (!el) return;
+        try {
+          const text = (el as HTMLElement).textContent ?? '';
+          await navigator.clipboard.writeText(text);
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1200);
+        } catch {}
+      });
+    });
 
     // ---- wavelength / frequency ----
     const freqInput = document.getElementById('ac-freq') as HTMLInputElement;
@@ -989,11 +1345,10 @@ import Math from '../../components/Math.astro';
         return;
       }
       const radiusM = (diaCm / 2) / 100;
-      const S = Math.PI * radiusM * radiusM;
+      const Sp = Math.PI * radiusM * radiusM;
       const Vb = volL / 1000;
-      const L_m = portLength(S, tuneHz, Vb, currentC);
-      const L_cm = L_m * 100;
-      plLen.textContent = L_cm > 0 ? `${L_cm.toFixed(1)} cm` : '\u2014';
+      const Lm = portLength(Sp, tuneHz, Vb, currentC);
+      plLen.textContent = Lm > 0 ? `${(Lm * 100).toFixed(1)} cm` : '\u2014';
     }
     [plVol, plDia, plTune].forEach(el => el.addEventListener('input', updatePortLength));
 
@@ -1007,12 +1362,8 @@ import Math from '../../components/Math.astro';
       const f = parseFloat(dsFreq.value);
       const vs = parseFloat(dsVs.value);
       const vo = parseFloat(dsVo.value);
-      if (!currentC || isNaN(f) || isNaN(vs) || isNaN(vo) || f <= 0) {
+      if (!currentC || isNaN(f) || f <= 0 || isNaN(vs) || isNaN(vo)) {
         dsOut.textContent = '\u2014';
-        return;
-      }
-      if (currentC <= vs) {
-        dsOut.textContent = 'Supersonic source';
         return;
       }
       const shifted = dopplerShift(f, vs, vo, currentC);
@@ -1020,59 +1371,55 @@ import Math from '../../components/Math.astro';
     }
     [dsFreq, dsVs, dsVo].forEach(el => el.addEventListener('input', updateDoppler));
 
-    // ---- Mass Law (TL) ----
+    // ---- Mass Law ----
     const tlM = document.getElementById('ac-tl-m') as HTMLInputElement;
     const tlF = document.getElementById('ac-tl-f') as HTMLInputElement;
     const tlOut = document.getElementById('ac-tl-out') as HTMLElement;
 
-    function updateMassLaw() {
+    function updateTransmissionLoss() {
       const m = parseFloat(tlM.value);
       const f = parseFloat(tlF.value);
-      if (isNaN(m) || isNaN(f) || m <= 0 || f <= 0) {
+      if (isNaN(m) || m <= 0 || isNaN(f) || f <= 0) {
         tlOut.textContent = '\u2014';
         return;
       }
       const tl = massLawTransmissionLoss(m, f);
-      tlOut.textContent = `${tl.toFixed(1)} dB`;
+      tlOut.textContent = isFinite(tl) ? `${tl.toFixed(1)} dB` : '\u2014';
     }
-    [tlM, tlF].forEach(el => el.addEventListener('input', updateMassLaw));
+    [tlM, tlF].forEach(el => el.addEventListener('input', updateTransmissionLoss));
 
     // ---- NR Curves ----
     const nrVal = document.getElementById('ac-nr-val') as HTMLInputElement;
-    const nrBands = [31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000];
+    const nrFreqs = [31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000];
 
-    function updateNRCurves() {
-      const nr = parseFloat(nrVal.value);
-      if (isNaN(nr)) {
-        nrBands.forEach(f => {
+    function updateNR() {
+      const nr = parseInt(nrVal.value, 10);
+      if (isNaN(nr) || nr < 0 || nr > 130) {
+        nrFreqs.forEach(f => {
           const el = document.getElementById(`ac-nr-band-${f}`);
-          if (el) el.textContent = '\u2014';
+          if (el) el.textContent = '—';
         });
         return;
       }
-      nrBands.forEach(f => {
+      nrFreqs.forEach(f => {
         const el = document.getElementById(`ac-nr-band-${f}`);
         if (el) {
-          const limit = noiseRatingSpl(nr, f);
-          el.textContent = isFinite(limit) ? `${Math.round(limit)} dB` : '\u2014';
+          const spl = noiseRatingSpl(f, nr);
+          el.textContent = `${spl.toFixed(0)} dB`;
         }
       });
     }
-    nrVal.addEventListener('input', updateNRCurves);
+    nrVal.addEventListener('input', updateNR);
 
-    // ---- initialise all ----
     updateSpeed();
     updateWavelengthFromFreq();
     updateDelayFromDist();
-    updateSpl();
     updateRT60();
     updateHelmholtz();
     updatePortLength();
-    updateFromDb();
-    refreshSplRowVisibility();
     updateDoppler();
-    updateMassLaw();
-    updateNRCurves();
+    updateTransmissionLoss();
+    updateNR();
   }
 
   document.addEventListener('astro:page-load', initAcousticCalculators);

@@ -1,11 +1,34 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const title = 'Driver Nonlinearity Lab — Bl(x), Kms(x) & Harmonic Distortion | MakerPortal';
 const description =
   'Interactive lumped-parameter model of a moving-coil loudspeaker driver with nonlinear Bl(x), Kms(x), and Le(x). Visualize excursion, harmonic distortion, and force-factor droop under realistic voltage drive.';
 const canonical = new URL('/playground/loudspeaker-nonlinearity-lab', Astro.site);
+
+const slug = 'loudspeaker-nonlinearity-lab';
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes(slug))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => a.title.localeCompare(b.title));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Driver Nonlinearity Lab',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,12 +39,46 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Driver Nonlinearity Lab', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'What exactly do β, γ, and δ control?',
+    a: 'β (0–1) controls Bl(x) asymmetry — how much the force factor drops as the coil leaves the magnetic gap. γ (0–1) controls Kms(x) progressive stiffening — spider and surround getting stiffer with excursion. δ (0–1) controls Le(x) modulation — how voice coil inductance changes with position. Set each to 0 to isolate the others; real drivers exhibit all three simultaneously. Typical values for a mid-range 6" woofer: β≈0.1, γ≈0.2, δ≈0.05.',
+  },
+  {
+    q: 'Why does the displacement waveform flatten at high drive?',
+    a: 'That\'s Kms(x) stiffening. As excursion grows, the suspension spring constant increases quadratically (Kms ∝ 1 + γ·(x/Xmax)²), so the restoring force grows faster than displacement. The waveform clips symmetrically — both positive and negative peaks compress. This is a Duffing oscillator and it generates odd harmonics (3rd, 5th). Increase γ to 0.8 and watch the waveform square off.',
+  },
+  {
+    q: 'Is the THD number accurate to real measurements?',
+    a: 'No. This THD is computed from the displacement waveform using numerical harmonic extraction over a 1024-sample window — it\'s displacement THD, not acoustic SPL THD. Acoustic THD includes additional sources: cone breakup, port nonlinearity, air nonlinearity at high SPL, and microphone distortion. The tool is educational: it shows which nonlinearity produces which harmonic pattern. For real driver validation you need a Klippel LSI or laser vibrometer.',
+  },
+  {
+    q: 'What happens when the coil leaves the gap?',
+    a: 'The motor SVG shows the coil position relative to the magnet gap. When "Coil out of gap" appears, Bl(x) has dropped significantly — the force per amp is reduced. Current spikes because back-EMF (Bl·v) collapses, and the remaining force is applied through a stiffer suspension. The result is intermodulation distortion: the current waveform interacts with the position-dependent force factor to produce sum and difference frequencies. This is why drivers sound harsh when overdriven.',
+  },
+  {
+    q: 'Why does changing Mms affect fs and distortion?',
+    a: 'The tool ties Kms₀ to Mms via the fixed fs = 40 Hz: Kms₀ = Mms·(2π·40)². Heavier cone means higher Kms₀ to maintain the same resonance frequency. But the nonlinear Kms(x) model then applies γ to this higher baseline, so a heavier driver with the same γ is actually stiffer at any given excursion. This is realistic — adding mass without redesigning the suspension increases effective compliance nonlinearity.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -42,33 +99,24 @@ import Math from '../../components/Math.astro';
             </div>
             <div class="motor-svg-wrap" id="motor-svg-wrap">
               <svg id="motor-svg" viewBox="0 0 400 480" width="400" height="480" aria-label="Loudspeaker motor cross-section showing magnet, pole piece, voice coil, cone, spider, and surround">
-                <!-- Magnet top -->
                 <rect id="mag-top" x="80" y="200" width="240" height="36" fill="#3a3d44" rx="2" />
                 <rect id="mag-bottom" x="80" y="284" width="240" height="36" fill="#3a3d44" rx="2" />
-                <!-- Pole piece -->
                 <rect id="pole" x="176" y="220" width="48" height="84" fill="#6b6e75" rx="1" />
-                <!-- Top plate -->
                 <rect x="80" y="232" width="240" height="16" fill="#52555c" />
-                <!-- Bottom plate -->
                 <rect x="80" y="272" width="240" height="16" fill="#52555c" />
-                <!-- Voice coil group -->
                 <g id="coil-group">
                   <rect id="coil-left" x="170" y="224" width="8" height="76" fill="#d4875e" rx="1" opacity="0.9" />
                   <rect id="coil-right" x="222" y="224" width="8" height="76" fill="#d4875e" rx="1" opacity="0.9" />
                 </g>
-                <!-- Spider (wavy lines) -->
                 <g id="spider-group" opacity="0.7">
                   <path d="M170,310 Q140,320 170,330 Q200,340 170,350 Q140,360 170,370" fill="none" stroke="#8a8d94" stroke-width="1.4" />
                   <path d="M230,310 Q260,320 230,330 Q200,340 230,350 Q260,360 230,370" fill="none" stroke="#8a8d94" stroke-width="1.4" />
                 </g>
-                <!-- Cone -->
                 <polygon id="cone" points="178,310 130,140 270,140 222,310" fill="none" stroke="#9a9da4" stroke-width="1.8" opacity="0.8" />
-                <!-- Surround (accordion) -->
                 <g id="surround-group" opacity="0.7">
                   <path d="M130,140 Q120,128 130,120 Q140,112 130,104" fill="none" stroke="#8a8d94" stroke-width="1.2" />
                   <path d="M270,140 Q280,128 270,120 Q260,112 270,104" fill="none" stroke="#8a8d94" stroke-width="1.2" />
                 </g>
-                <!-- Force arrow (Bl*i) -->
                 <g id="force-arrow-group">
                   <line id="force-arrow" x1="200" y1="340" x2="200" y2="280" stroke="#ce445d" stroke-width="3" marker-end="url(#arrowhead)" opacity="0" />
                   <defs>
@@ -77,9 +125,7 @@ import Math from '../../components/Math.astro';
                     </marker>
                   </defs>
                 </g>
-                <!-- Gap highlight -->
                 <rect id="gap-indicator" x="178" y="264" width="44" height="4" fill="#f07a94" rx="1" opacity="0.5" />
-                <!-- Labels -->
                 <text x="200" y="212" fill="currentColor" font-family="monospace" font-size="9" text-anchor="middle" opacity="0.5">Magnet</text>
                 <text x="200" y="320" fill="currentColor" font-family="monospace" font-size="9" text-anchor="middle" opacity="0.5">Magnet</text>
                 <text x="200" y="350" fill="currentColor" font-family="monospace" font-size="8" text-anchor="middle" opacity="0.4">Back plate</text>
@@ -192,7 +238,7 @@ import Math from '../../components/Math.astro';
       </div>
     </section>
 
-    <!-- Method & Limitations — frontier rewrite -->
+    <!-- Method & Limitations -->
     <section aria-labelledby="method-title" class="border-b border-border">
       <div class="mx-auto max-w-[66rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The motor is linear until you ask it to work</h2>
@@ -291,6 +337,227 @@ import Math from '../../components/Math.astro';
               Euler at 8 kHz timestep, no flux modulation <Math math="Bl(i)" />, no eddy-current hysteresis in pole, no thermal memory, no cone breakup, no port nonlinearity, no equivalent circuit of <Math math="Q_{ms}" />, <Math math="Q_{es}" />. <Math math="Bl" />, <Math math="K_{ms}" />, <Math math="Le" /> shapes are simplified polynomials — real curves have asymmetry, plateau, and hysteresis loops. THD is displacement THD via 1024-sample history, not acoustic SPL THD. Use for qualitative cause → effect, not for validating a driver design. For that, need Klippel LSI or laser vibrometer.
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Anatomy -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">A real-time ODE solver at 8 kHz, two live canvases, an animated motor SVG, and a harmonic analyzer. Here is what each piece computes and how the render loop ties them together.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The physics engine and motor SVG</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Euler integration at 8 kHz.</strong> Three state variables — displacement x, velocity v, current i — updated via forward Euler with <Math math="dt = 1/8000" /> s. Each step: compute <Math math="Bl(x)" />, <Math math="K_{ms}(x)" />, <Math math="Le(x)" /> from the current x, then integrate: <Math math="i_{new} = i + (V_{in} - R_e i - Bl\cdot v)/L_e \cdot dt" />, <Math math="a = (Bl\cdot i - K_{ms}\cdot x)/M_{ms}" />, <Math math="v_{new} = v + a\cdot dt" />, <Math math="x_{new} = x + v_{new}\cdot dt" />. A 1024-sample circular buffer stores displacement and voltage history for waveform display and harmonic extraction.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Run/pause with fixed timestep accumulation.</strong> The <code>renderFrame()</code> callback measures elapsed wall-clock time and accumulates physics steps. When running, up to 5000 steps are processed per frame to prevent spiral-of-death if the tab loses focus. The accumulator caps at 0.05 s per frame to prevent bursts. When paused, physics freezes but canvases still redraw — you can study a frozen state.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Animated motor SVG.</strong> The coil-group, cone, and force arrow translate vertically based on the historical peak excursion scaled to ±30 px. The gap indicator dims when |x| exceeds Xmax, and the status label switches from "Coil in gap" to "Coil out of gap" styled in the theme's magenta color. The force arrow length scales with <Math math="|Bl(x)\cdot i|" /> — you see the motor push weaken as the coil leaves the gap.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">THD from harmonic extraction.</strong> Every frame, the <code>extractHarmonics()</code> function from the DSP library performs numerical Fourier integration over the 1024-sample displacement buffer at the drive frequency and its first three harmonics. THD = √(H₂²+H₃²+H₄²)/H₁ × 100%. This is computed synchronously in the animation loop — no FFT, no windowing overhead.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The two canvases</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Waveform canvas (top).</strong> Upper half: displacement (magenta, 2 px) and input voltage (gray, 1 px) over the full 1024-sample history window. Auto-scaled symmetrically so the zero line stays at the midpoint. The y-axis labels show the current voltage and displacement ranges. Lower half: the <Math math="Bl(x)" /> curve — a tent shape whose width is set by Xmax and whose height is <Math math="Bl_0" />. A magenta dot marks the current operating point on the curve.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Spectrum canvas (bottom).</strong> Up to four harmonic bars positioned by their frequency on a linear x-axis from 0 to 5×f₀. The fundamental (f₀) bar uses the magenta color; harmonics 2–4 use blue. Each bar is labeled with its harmonic order and displacement amplitude in mm. The THD readout in the top-left corner matches the metric card. The maximum amplitude is auto-scaled to 1.3× the largest harmonic.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">07</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Visibility-aware frame skipping.</strong> An IntersectionObserver watches the motor card. When the page is scrolled off-screen or the tab is hidden, the render loop skips canvas drawing (but continues physics accumulation). This prevents wasting GPU on invisible canvases while maintaining physics continuity for when the user scrolls back.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">08</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Respects reduced-motion.</strong> On page load, the script checks <code>prefers-reduced-motion</code>. If the user has that preference enabled, the simulation starts paused so no animation runs automatically.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The rendering loop</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Each frame: if running, accumulate elapsed time into physics steps. Then call <code>syncControls()</code> (update metrics, animate SVG) and <code>renderPlots()</code> (redraw both canvases from the circular buffer). The canvases use <code>setupHiDPI()</code> for retina-quality rendering. On theme change, all canvases redraw automatically via a MutationObserver.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gotchas -->
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Forward Euler is conditionally stable at 8 kHz</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The solver uses explicit Euler integration — the simplest possible numerical method. At 8 kHz timestep, the mechanical resonance (40 Hz) is well-resolved (~200 samples per cycle) and the electrical time constant Le/Re ≈ 0.08 ms is just barely stable. If you set extreme parameter combinations (very low Re + very high Le via large δ), the current integration can go unstable and blow up. The tool caps Le at reasonable values to prevent this, but it's a reminder that this is an educational model, not a production circuit simulator.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">THD from displacement is not THD from SPL</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The THD metric analyzes the displacement waveform — how much the cone motion deviates from a pure sine. Acoustic THD depends on additional factors: the cone's radiation impedance, breakup modes that filter displacement into SPL differently at each frequency, air nonlinearity at high SPL, and port distortion in vented boxes. Displacement THD is typically 2–5× lower than measured acoustic THD at bass frequencies and can be higher or lower at mid frequencies depending on breakup. Treat the THD number here as a lower bound on total harmonic distortion.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">JavaScript — the nonlinear ODE solver</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The core time-stepping loop. Three state variables, three nonlinear curves, one Euler integrator. This is the engine behind the animated SVG and waveform canvases.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Nonlinear driver step — JavaScript</p>
+            <button type="button" class="copy-btn" data-copy-target="code-nonlinear-step">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-nonlinear-step" code={`const stepPhysics = (state, dt, t) => {
+  const omega = 2 * Math.PI * state.freq;
+  const vin = state.vrms * Math.sqrt(2) * Math.sin(omega * t);
+
+  // Nonlinear force factor: drops as coil leaves gap
+  const bl = state.bl0 * (1 - state.beta
+    * Math.abs(state.x / (state.xmax || 1e-9)));
+
+  // Suspension stiffness: progressive quadratic stiffening
+  const kms0 = state.mms * (2 * Math.PI * 40) ** 2;
+  const kms = kms0 * (1 + state.gamma
+    * (state.x / (state.xmax || 1e-9)) ** 2);
+
+  // Inductance modulation with position
+  const le0 = 0.5e-3;
+  const le = le0 * (1 + state.delta
+    * Math.abs(state.x / (state.xmax || 1e-9)));
+
+  // State update: forward Euler
+  const di = (vin - state.re * state.i - bl * state.v) / le * dt;
+  state.i += di;
+  const a = (bl * state.i - kms * state.x) / state.mms;
+  state.v += a * dt;
+  state.x += state.v * dt;
+
+  return { x: state.x, v: state.v, i: state.i, bl, kms, le };
+};`} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gear -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear for driver measurement</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Measurement stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Audio interfaces &amp; monitoring
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={{ background: pillar.color }} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- FAQ -->
+    <section aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -424,6 +691,35 @@ import Math from '../../components/Math.astro';
 
   .motor-svg-wrap input[type="range"] {
     accent-color: var(--mp-cta);
+  }
+
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
 
@@ -605,11 +901,9 @@ import Math from '../../components/Math.astro';
       clearCanvas(wfCtx, theme, W_WF, H_WF);
       clearCanvas(spCtx, theme, W_SP, H_SP);
 
-      // ── Waveform Canvas (upper half: voltage/displacement, lower half: Bl(x)) ──
       const topH = H_WF * 0.52;
       const botTop = H_WF * 0.58;
 
-      // Upper half bounds
       const margTop = { left: 56, right: 28, top: 28, bottom: 14 };
       const plotW = W_WF - margTop.left - margTop.right;
       const plotH = topH - margTop.top - margTop.bottom;
@@ -619,7 +913,6 @@ import Math from '../../components/Math.astro';
       const vMax = Math.max(1e-9, voltageHistory.reduce((max, val) => Math.max(max, Math.abs(val)), 0));
       const vRange = Math.max(p.vrms * Math.sqrt(2) * 1.1, vMax * 1.2);
 
-      // Grid lines
       wfCtx.strokeStyle = theme.gridLine;
       wfCtx.lineWidth = 0.5;
       for (let i = 0; i <= 5; i++) {
@@ -639,7 +932,6 @@ import Math from '../../components/Math.astro';
       drawText(wfCtx, 'Displacement (x)', W_WF / 2, margTop.top + 12, theme.muted, 10, 'center');
       drawText(wfCtx, 'Voltage (gray)', W_WF / 2, margTop.top + 24, theme.muted, 9, 'center');
 
-      // Draw voltage waveform (gray)
       wfCtx.beginPath();
       wfCtx.strokeStyle = '#8899aa';
       wfCtx.lineWidth = 1.0;
@@ -653,7 +945,6 @@ import Math from '../../components/Math.astro';
       }
       wfCtx.stroke();
 
-      // Draw displacement waveform (colored)
       wfCtx.beginPath();
       wfCtx.strokeStyle = theme.magColor;
       wfCtx.lineWidth = 2.0;
@@ -667,16 +958,13 @@ import Math from '../../components/Math.astro';
       }
       wfCtx.stroke();
 
-      // Separator line
       drawLine(wfCtx, margTop.left, topH + 14, W_WF - margTop.right, topH + 14, theme.border, 1);
 
-      // ── Lower half: Bl(x) curve ──
       const blMarg = { left: 56, right: 28, top: 24, bottom: 28 };
       const blPlotW = W_WF - blMarg.left - blMarg.right;
       const blPlotH = H_WF - botTop - blMarg.top - blMarg.bottom;
       const blMaxX = p.xmax * 2.5;
 
-      // Grid
       wfCtx.strokeStyle = theme.gridLine;
       wfCtx.lineWidth = 0.5;
       for (let i = 0; i <= 4; i++) {
@@ -686,7 +974,6 @@ import Math from '../../components/Math.astro';
         wfCtx.lineTo(blMarg.left + blPlotW, y);
         wfCtx.stroke();
       }
-      // Zero x line
       const zeroX = blMarg.left + blPlotW / 2;
       wfCtx.strokeStyle = theme.border;
       wfCtx.beginPath();
@@ -700,7 +987,6 @@ import Math from '../../components/Math.astro';
       drawText(wfCtx, `−${(blMaxX * 1000).toFixed(1)}`, blMarg.left, botTop + blMarg.top + blPlotH + 16, theme.muted, 9, 'left');
       drawText(wfCtx, '0', zeroX + 4, botTop + blMarg.top + blPlotH + 16, theme.muted, 9, 'left');
 
-      // Bl(x) curve
       const bl0Flat = p.bl0;
       const blMax = bl0Flat * 1.05;
       const blMin = bl0Flat * 0.3;
@@ -719,18 +1005,15 @@ import Math from '../../components/Math.astro';
       }
       wfCtx.stroke();
 
-      // Operating point marker
       const opX = zeroX + (x / (p.xmax || 1e-9)) * (blPlotW / 2) * 0.5;
       const blOp = bl0Flat * (1 - p.beta * Math.abs(x / (p.xmax || 1e-9)));
       const opY = botTop + blMarg.top + blPlotH - ((blOp - blMin) / blRange) * blPlotH;
       drawCircle(wfCtx, opX, opY, 5, theme.magColor, theme.text, 1.5);
 
-      // ── Spectrum Canvas ──
       const spMarg = { left: 56, right: 28, top: 24, bottom: 28 };
       const spPlotW = W_SP - spMarg.left - spMarg.right;
       const spPlotH = H_SP - spMarg.top - spMarg.bottom;
 
-      // Compute approximate Fourier amplitudes using exact numerical integration
       const Nspec = displacementHistory.length;
       const P = getParams();
       const buf = new Array(Nspec);
@@ -739,7 +1022,6 @@ import Math from '../../components/Math.astro';
         buf[k] = displacementHistory[(historyCursor + 1 + k) % Nspec];
         times[k] = k * PHYSICS_DT;
       }
-      
       const mags = extractHarmonics(times, buf, P.freq, 4);
 
       const harmonics: { label: string; freq: number; amp: number }[] = [];
@@ -749,11 +1031,10 @@ import Math from '../../components/Math.astro';
       }
 
       const spMaxAmp = 0.0001;
-      const maxHarmonic = Math.max(spMaxAmp, ...harmonics.map(h => h.amp));
+      const maxHarmonic = Math.max(spMaxAmp, ...harmonics.map(hh => hh.amp));
       const spRange = maxHarmonic * 1.3;
       const spMaxFreq = P.freq * 5;
 
-      // Grid
       spCtx.strokeStyle = theme.gridLine;
       spCtx.lineWidth = 0.5;
       for (let i = 0; i <= 4; i++) {
@@ -768,14 +1049,12 @@ import Math from '../../components/Math.astro';
       drawText(spCtx, '0', spMarg.left - 4, spMarg.top + spPlotH + 4, theme.muted, 9, 'right');
       drawText(spCtx, `${(spRange * 1e6).toFixed(1)} μm`, spMarg.left - 4, spMarg.top + 10, theme.muted, 9, 'right');
 
-      // Frequency axis labels
       for (let h = 1; h <= 4; h++) {
         const f = P.freq * h;
         const xp = spMarg.left + (f / spMaxFreq) * spPlotW;
         drawText(spCtx, `${f.toFixed(0)} Hz`, xp, spMarg.top + spPlotH + 16, theme.muted, 8, 'center');
       }
 
-      // Bars
       const barWidth = Math.min(60, spPlotW / 10);
       for (const h of harmonics) {
         const barH = (h.amp / spRange) * spPlotH;
@@ -783,19 +1062,13 @@ import Math from '../../components/Math.astro';
         const yp = spMarg.top + spPlotH - barH;
         spCtx.fillStyle = h.label === 'f₀' ? theme.magColor : '#71b9e3';
         spCtx.fillRect(xp, yp, barWidth, barH);
-
-        // Harmonic label
         drawText(spCtx, h.label, xp + barWidth / 2, yp - 5, theme.text, 9, 'center');
         drawText(spCtx, `${(h.amp * 1000).toFixed(3)} mm`, xp + barWidth / 2, yp - 17, theme.muted, 8, 'center');
       }
 
-      // THD readout
       const thd = metThd.textContent;
       drawText(spCtx, `THD ≈ ${thd}`, spMarg.left, spMarg.top + 14, theme.muted, 10, 'left');
-
       drawText(spCtx, 'Approximate spectral view — educational, not measurement-grade', spMarg.left + spPlotW - 4, spMarg.top + 14, theme.muted, 8, 'right');
-
-      // Separator at zero
       drawLine(spCtx, spMarg.left, spMarg.top + spPlotH, spMarg.left + spPlotW, spMarg.top + spPlotH, theme.border, 1);
     }
 
@@ -836,7 +1109,7 @@ import Math from '../../components/Math.astro';
     const io = new IntersectionObserver((entries) => {
       isVisible = entries[0].isIntersecting && !document.hidden;
     });
-    io.observe(document.getElementById('motor-canvas') || document.body);
+    io.observe(document.getElementById('motor-card') || document.body);
 
     function handleVisibilityChange() {
       lastFrameTime = performance.now();
@@ -860,13 +1133,24 @@ import Math from '../../components/Math.astro';
     ];
 
     for (const [slider, num] of sliderNumPairs) {
-      slider.addEventListener('input', () => {
-        num.value = slider.value;
-      });
-      num.addEventListener('input', () => {
-        slider.value = num.value;
-      });
+      slider.addEventListener('input', () => { num.value = slider.value; });
+      num.addEventListener('input', () => { slider.value = num.value; });
     }
+
+    document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.copyTarget;
+        const el = document.getElementById(id ?? '');
+        if (!el) return;
+        try {
+          const text = (el as HTMLElement).textContent ?? '';
+          await navigator.clipboard.writeText(text);
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1200);
+        } catch {}
+      });
+    });
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 

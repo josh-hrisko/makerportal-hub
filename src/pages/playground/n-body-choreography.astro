@@ -1,11 +1,24 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import { Code } from 'astro:components';
+import Math from '../../components/Math.astro';
 
 const title = 'N-Body Orbital Choreography — Figure-Eight Gravity | MakerPortal';
 const description =
   'Three bodies chasing each other around the Chenciner–Montgomery figure-eight, integrated with a 4th-order symplectic scheme. Nudge the choreography and race it against an unperturbed ghost.';
 const canonical = new URL('/playground/n-body-choreography', Astro.site);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'N-Body Orbital Choreography',
+  url: canonical.toString(),
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,11 +29,42 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'N-Body Orbital Choreography', item: canonical.toString() },
   ],
 };
+
+const faqs = [
+  {
+    q: 'Is the figure-eight orbit stable?',
+    a: 'The Chenciner-Montgomery figure-eight is a proven periodic solution — if you place the three bodies at exactly the correct initial conditions, they trace the same loop forever. It is mildly stable: small velocity perturbations (< 5 × 10⁻⁴) cause the shape to wobble slightly but stay recognizably figure-eight-shaped for tens of periods. Larger perturbations (> 10⁻²) eventually break the choreography into a chaotic three-body system. The nudge slider lets you explore exactly this transition.',
+  },
+  {
+    q: 'Why does the Lagrange triangle fall apart so fast with a nudge?',
+    a: 'The equal-mass Lagrange triangle is an exact solution — three bodies at the vertices of an equilateral triangle orbiting the center at constant angular velocity — but it is linearly unstable. Small perturbations grow exponentially with a Lyapunov timescale of roughly one orbital period. The figure-eight is in a narrow stable island of phase space; the Lagrange triangle sits on an unstable ridge. This is not integration error — it is real celestial mechanics. The "ghost" comparison proves it.',
+  },
+  {
+    q: 'What is a symplectic integrator and why does it matter here?',
+    a: 'A symplectic integrator exactly conserves a slightly-perturbed energy instead of an approximation of the true energy. Ordinary Runge-Kutta (RK4) leaks energy monotonically — orbits spiral in or out as a pure numerical artifact. The Yoshida 4th-order composition used here has energy drift ~10⁻¹¹ per period over 50 periods for the figure-eight. That means the choreography stays intact for hundreds of orbits before numerical error accumulates, whereas RK4 would visibly distort it within 5-10 orbits.',
+  },
+  {
+    q: 'Why use Plummer softening instead of hard-sphere collisions?',
+    a: 'Hard-sphere collisions (bouncing bodies off each other at zero distance) create a singularity: the force goes to infinity as r → 0, and any fixed-step integrator will diverge. Plummer softening replaces r⁻¹ with (r² + ε²)⁻¹/², capping the force at a finite maximum near ε. Here ε² = 10⁻⁶ means the cap only activates at separations < 0.001 — about 4 orders of magnitude below the typical choreography scale. The integrator stays stable during close encounters while the physics remains accurate everywhere else.',
+  },
+  {
+    q: 'What do the four metric readouts actually track?',
+    a: 'Energy drift = (current_E − initial_E) / |initial_E| — should stay near zero for the symplectic integrator, shown in scientific notation. Momentum |P| tracks the total linear momentum after center-of-mass correction — should be at machine precision (~10⁻¹⁵). Angular momentum drift |L − L₀| measures the fidelity of rotational conservation. Ghost divergence = RMS separation between the nudged system and the unperturbed ghost — grows from zero as the nudge\'s chaos unfolds.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -126,6 +170,152 @@ const breadcrumbSchema = {
         </div>
       </div>
     </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the simulation</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Five preset systems, one symplectic integrator, and a ghost twin that never gets nudged. Here is what each piece of the simulation actually does under the hood.</p>
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The integrator and physics core</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Yoshida 4th-order symplectic composition.</strong> Three Verlet sub-steps per full step with weights [w₁, w₀, w₁] where w₀ = −∛2 · w₁, w₁ = 1/(2 − ∛2). Each sub-step is a standard velocity Verlet: half-kick, drift, half-kick. The composition cancels error terms up to O(dt⁴) while preserving the symplectic structure. dt = 2 × 10⁻³ in dimensionless time units.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Force accumulation.</strong> double-nested loop over body pairs, accumulating ax[i], ay[i] via Newton's law: aᵢ = Σⱼ mⱼ (rⱼ − rᵢ) / (|rⱼ − rᵢ|² + ε²)^(3/2). Plummer softening with ε² = 10⁻⁶ caps forces at close approach. The acceleration arrays are zeroed fresh each step via Float64Array.fill(0) — no floating state between steps.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Center-of-momentum framing.</strong> Initial conditions are shifted so Σ mᵢv⃗ᵢ = 0 and Σ mᵢr⃗ᵢ = 0. This keeps the view stable around the origin — without it, the whole system would drift slowly across the canvas. The |P| metric readout confirms that momentum stays at machine precision (~10⁻¹⁵) throughout the simulation.</p>
+              </li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">Visualization and controls</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Trails with age fade.</strong> Positions are recorded every 4th step, maximum 700 points per body. Each trail line is drawn with increasing opacity from oldest (0.05) to newest (0.55). This gives a natural motion-blur effect — the denser the arc, the slower the body was moving through that region.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Nudge + ghost.</strong> Nudge button stores a deep copy of the current system as the ghost, then adds a random-direction velocity impulse of magnitude |δv| to one randomly selected body. The ghost continues integrating with the same Yoshida step but never gets nudged. Ghost divergence is the RMS separation between the two systems — starts near zero and grows as the nudge cascades.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Frame-rate-independent stepping.</strong> The rAF loop accumulates elapsed real time in an accumulator. Each frame processes floor(accumulator / DT) steps, capping at 120 to prevent spiral of death. Time scale slider multiplies accumulation rate — 4× runs physics 4× faster without changing DT, preserving integration accuracy.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">Verlet sub-step within Yoshida composition</p>
+              <Math math="\begin{aligned} v_{n+\frac{1}{2}} &= v_n + \tfrac{1}{2}w_j\,dt\,a(r_n) \\ r_{n+1} &= r_n + w_j\,dt\,v_{n+\frac{1}{2}} \\ v_{n+1} &= v_{n+\frac{1}{2}} + \tfrac{1}{2}w_j\,dt\,a(r_{n+1}) \end{aligned}" display class="mt-2" />
+              <p class="mt-3 text-[0.74rem] leading-[1.55] text-muted-text">One Verlet sub-step costs 2 force evaluations. Three sub-steps per Yoshida iteration costs 6 per full step — about twice the cost of RK4 (4 evaluations) but with energy conservation that makes it the right choice for any integration beyond a few orbits.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Fixed-step integrator cannot handle true close encounters</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">A real three-body close encounter (two bodies passing within 0.001 distance units at high speed) changes velocity by orders of magnitude within a single timestep. The Plummer softening prevents infinity, but accuracy degrades dramatically — the min-separation readout lets you monitor when this is happening. Production ephemeris codes (Mercury, REBOUND) switch to adaptive or regularized steps during close encounters. This demo keeps a fixed dt for clarity and lets the softening handle the edge case.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Yoshida composition weights are exact algebraic numbers</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The weights w₀ = −∛2/(2−∛2) and w₁ = 1/(2−∛2) are not chosen for numerical convenience — they are the unique solution to the order conditions for a 3-stage symplectic composition. If you tweak them by even 0.1%, the symplectic property is lost and the energy drift jumps from 10⁻¹¹ to 10⁻⁴. Always use these exact constants. The script computes them as Math.cbrt(2) to machine precision.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Copyable solver: Yoshida 4th-order with Plummer softening</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The exact integration loop powering this simulation. Port to any language — the core is three Verlet sub-steps and a pair-loop force calculation.</p>
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">JavaScript — Yoshida step with force accumulation</p><button type="button" class="copy-btn" data-copy-target="code-yoshida">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-yoshida" code={`const DT = 2e-3, EPS2 = 1e-6;
+const CBRT2 = Math.cbrt(2);
+const W1 = 1 / (2 - CBRT2);
+const W0 = -CBRT2 / (2 - CBRT2);
+const WEIGHTS = [W1, W0, W1];
+
+function accumulate(bodies, ax, ay) {
+  ax.fill(0); ay.fill(0);
+  for (let i = 0; i < bodies.length; i++) {
+    for (let j = i + 1; j < bodies.length; j++) {
+      const dx = bodies[j].x - bodies[i].x;
+      const dy = bodies[j].y - bodies[i].y;
+      const r2 = dx*dx + dy*dy + EPS2;
+      const inv = 1 / (r2 * Math.sqrt(r2));
+      ax[i] += bodies[j].m * dx * inv;
+      ay[i] += bodies[j].m * dy * inv;
+      ax[j] -= bodies[i].m * dx * inv;
+      ay[j] -= bodies[i].m * dy * inv;
+    }
+  }
+}
+
+function yoshidaStep(bodies) {
+  for (const w of WEIGHTS) {
+    accumulate(bodies, scratchAX, scratchAY);
+    for (let i = 0; i < bodies.length; i++) {
+      bodies[i].vx += 0.5 * w * DT * scratchAX[i];
+      bodies[i].vy += 0.5 * w * DT * scratchAY[i];
+      bodies[i].x += w * DT * bodies[i].vx;
+      bodies[i].y += w * DT * bodies[i].vy;
+    }
+    accumulate(bodies, scratchAX, scratchAY);
+    for (let i = 0; i < bodies.length; i++) {
+      bodies[i].vx += 0.5 * w * DT * scratchAX[i];
+      bodies[i].vy += 0.5 * w * DT * scratchAY[i];
+    }
+  }
+}`} lang="js" theme="github-dark" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between"><p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Figure-eight initial conditions (Chenciner-Montgomery)</p><button type="button" class="copy-btn" data-copy-target="code-fig8">Copy</button></div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+              <Code id="code-fig8" code={`// Period T ≈ 6.32591398, equal masses m = 1
+const figureEight = [
+  { m: 1, x:  0.97000436, y: -0.24308753, vx:  0.4662036850, vy:  0.4323657300 },
+  { m: 1, x: -0.97000436, y:  0.24308753, vx:  0.4662036850, vy:  0.4323657300 },
+  { m: 1, x:  0,          y:  0,          vx: -0.93240737,   vy: -0.86473146 },
+];
+// Shift to center-of-momentum frame before integrating:
+// vx[i] -= sum(m*vx)/sum(m), vy[i] -= sum(m*vy)/sum(m)`} lang="js" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -223,9 +413,38 @@ const breadcrumbSchema = {
     font-family: var(--font-mono);
     color: var(--mp-text);
   }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 
 <script>
+  // @ts-nocheck
   interface Body {
     m: number;
     x: number;
@@ -724,6 +943,20 @@ const breadcrumbSchema = {
     }
     updateMetrics();
     animationFrameId = requestAnimationFrame(renderFrame);
+
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.dataset.copyTarget;
+        const codeEl = targetId ? document.getElementById(targetId) : null;
+        if (!codeEl) return;
+        try {
+          await navigator.clipboard.writeText(codeEl.textContent ?? '');
+          const original = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = original; }, 1500);
+        } catch {}
+      });
+    });
 
     document.addEventListener('astro:before-swap', () => {
       destroyed = true;

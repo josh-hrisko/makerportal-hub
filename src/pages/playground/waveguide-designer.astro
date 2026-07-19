@@ -1,12 +1,35 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const title = 'Waveguide Designer — 1D Webster Horn Profiles | MakerPortal';
 const description = 'Design acoustic horns and waveguides using the 1D Webster horn equation. Compare exponential, conical, and oblate spheroidal profiles.';
 const canonical = new URL('/playground/waveguide-designer', Astro.site);
 
-const breadcrumb = {
+const slug = 'waveguide-designer';
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes(slug))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => a.title.localeCompare(b.title));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Waveguide Designer',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
@@ -15,12 +38,46 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 3, name: 'Waveguide Designer', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'What is the Webster horn equation and what does it assume?',
+    a: 'Webster\'s equation is a 1D wave equation that assumes planar or spherical isophase wavefronts — pressure is constant across each cross-section and varies only along the horn axis. It\'s valid when the flare rate is moderate (wall angle < 30° half-angle) and ka < 3–5 at the throat. Beyond that, transverse (higher-order) modes appear and you need a 3D boundary element method (BEM) solver.',
+  },
+  {
+    q: 'Which profile should I choose for a studio monitor waveguide?',
+    a: 'Oblate spheroidal (OSWG). It transitions from a flat throat to a spherical-cap mouth with continuous second-derivative curvature, minimizing higher-order mode (HOM) generation at the throat-wall junction. Set throat to driver diameter (25.4 mm for 1"), length 150–250 mm, half-angle 40–50°. This gives pattern control down to ~1.2 kHz with a mouth diameter around 180–220 mm.',
+  },
+  {
+    q: 'Why doesn\'t the conical horn have a defined cutoff frequency?',
+    a: 'The conical horn\'s area grows as x² — it has no exponential flare rate m. There is no sharp cutoff like the exponential fc = m·c/(4π). Instead, loading drops gradually: the throat radiation impedance transitions from resistive at high frequencies to mass-like at low frequencies. Conical horns are used for constant-directivity applications (PA) where controlled beamwidth matters more than maximum loading efficiency.',
+  },
+  {
+    q: 'How do I read the cross-section profile canvas?',
+    a: 'The canvas shows a 1:1 true-aspect-ratio side view of the horn. The central dashed line is the axis. The upper and lower magenta curves are the horn walls — their gap at the left is the throat, and at the right is the mouth. The profile area is filled with a semi-transparent magenta tint. Throat diameter and mouth diameter are labeled at the ends. The total length is dimensioned below the profile. You can compare profiles side-by-side by switching types and watching the shape update.',
+  },
+  {
+    q: 'What is the beamwidth number on the dashboard?',
+    a: 'For conical and OSWG profiles, beamwidth is estimated as 2× the half-angle θ. A 45° half-angle gives ~90° nominal beamwidth. This is geometric directivity — it assumes ka at the mouth is large enough (>2–3) for pattern control to hold. At low frequencies where ka < 2, the mouth is acoustically small and beamwidth widens toward omnidirectional regardless of wall angle. The dashboard number is the high-frequency asymptote.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumb)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -32,7 +89,6 @@ import Math from '../../components/Math.astro';
     <section class="mx-auto max-w-[960px] px-4 pb-20 pt-8 sm:px-6 lg:px-8">
       <div class="space-y-6">
 
-        <!-- Parameters Card -->
         <div class="rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-4">
             <h2 class="text-[1.05rem] font-[650] tracking-[-0.02em]">Horn Parameters</h2>
@@ -43,7 +99,6 @@ import Math from '../../components/Math.astro';
             </div>
           </div>
           <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-            <!-- Throat Diameter -->
             <div>
               <span class="control-label">Throat Dia. <span class="eyebrow">(mm)</span></span>
               <div class="flex items-center gap-3 mt-1">
@@ -51,7 +106,6 @@ import Math from '../../components/Math.astro';
                 <input type="number" id="d0-num" class="tool-input w-[5.5rem]" min="10" max="100" step="0.1" value="25.4" />
               </div>
             </div>
-            <!-- Flare Parameter -->
             <div id="param-container">
               <span class="control-label" id="param-label">Flare m <span class="eyebrow">(1/m)</span></span>
               <div class="flex items-center gap-3 mt-1">
@@ -59,7 +113,6 @@ import Math from '../../components/Math.astro';
                 <input type="number" id="param-num" class="tool-input w-[5.5rem]" min="1" max="50" step="0.1" value="15" />
               </div>
             </div>
-            <!-- Length -->
             <div>
               <span class="control-label">Length <span class="eyebrow">(mm)</span></span>
               <div class="flex items-center gap-3 mt-1">
@@ -70,7 +123,6 @@ import Math from '../../components/Math.astro';
           </div>
         </div>
 
-        <!-- Results Dashboard -->
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-4" id="results-grid">
           {[ 
             { id: 'res-mouth-d', label: 'Mouth Dia.', unit: 'mm', desc: 'Exit dimension' },
@@ -86,7 +138,6 @@ import Math from '../../components/Math.astro';
           ))}
         </div>
 
-        <!-- Profile Visual -->
         <div class="rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="font-semibold">Cross-Section Profile</h3>
@@ -100,7 +151,6 @@ import Math from '../../components/Math.astro';
           </div>
         </div>
 
-        <!-- Method & limitations — frontier rewrite -->
         <div class="mt-12 rounded-[16px] border border-border bg-elevated/30 p-5 text-[0.86rem] leading-[1.6] text-muted-text" aria-labelledby="method-title">
           <h2 id="method-title" class="text-[clamp(1.25rem,2.6vw,1.6rem)] font-[680] tracking-[-0.03em] text-primary-text">Shape controls where sound goes</h2>
           <p class="mt-2 max-w-3xl text-[0.88rem] leading-[1.65]">A horn is an impedance transformer. Thin air at throat, dense air at mouth. Webster's equation tells you how area change loads the driver down to a cutoff, and how mouth size sets directivity when <Math math="ka" /> gets big. Get shape right — you keep directivity constant. Get it wrong — beam narrows, HOMs ring, response ripples.</p>
@@ -172,6 +222,218 @@ import Math from '../../components/Math.astro';
           </div>
         </div>
 
+        <!-- Anatomy -->
+        <div class="mt-14" id="anatomy-title-wrapper">
+          <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Three parameters, three profile types, one live cross-section canvas. Here is how the sliders connect to the Webster area function and how the canvas draws the horn walls at true 1:1 aspect ratio.</p>
+
+          <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+            <div>
+              <h3 class="text-[1.15rem] font-[650] text-primary-text">Parameters and the profile engine</h3>
+              <ol class="mt-5 space-y-4">
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Throat diameter → S₀.</strong> The first parameter sets the initial throat area <Math math="S_0 = \pi (d_0/2)^2" />. All three profile types use this as the starting area. For a 1" compression driver, the standard throat is 25.4 mm. The slider range (10–100 mm) covers everything from small tweeter throats to large-format midrange horns.</p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Flare parameter — dual identity.</strong> For exponential, this is the flare constant m (1/m), ranging 1–50. For conical and OSWG, it's the half-angle θ in degrees (5–85°), internally converted to radians. Switching profile type updates the label, slider range, and default value so the parameter never goes out of bounds.</p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Length → mouth size.</strong> The third parameter is total horn length L (10–500 mm). The <code>websterHornArea()</code> function evaluates S(L) for the given profile: exponential gives <Math math="S_0 e^{mL}" />, conical gives <Math math="\pi(r_0+L\tan\theta)^2" />, OSWG gives <Math math="S_0(1+(L/a)^2)" /> where <Math math="a" /> is derived from the half-angle. Mouth diameter is then <Math math="2\sqrt{S_{mouth}/\pi}" />.</p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Cutoff and directivity outputs.</strong> For exponential, fc = m·c/(4π) — the frequency below which the horn doesn't load. For conical/OSWG, fc is not sharply defined (shown as "—"), and directivity is estimated as 2θ — the full geometric beamwidth. These are first-order approximations: real fc is influenced by mouth size, and real directivity depends on ka at the mouth.</p>
+                </li>
+              </ol>
+            </div>
+
+            <div>
+              <h3 class="text-[1.15rem] font-[650] text-primary-text">The cross-section canvas</h3>
+              <ol class="mt-5 space-y-4">
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">True 1:1 aspect ratio.</strong> The canvas enforces equal x and y scaling — the horn profile is not stretched. The scale is computed as <Math math="\min((cw-80)/L, (ch-80)/(2\cdot r_{max}))" /> where r_max is the mouth radius. This means very long/narrow horns fill the canvas width, and very wide horns are constrained by height. The result always shows the geometric shape accurately.</p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Area-to-radius conversion.</strong> The canvas samples 201 points along the horn axis, computing <Math math="S(x)" /> at each x via <code>websterHornArea()</code>. Each S is converted to radius <Math math="r = \sqrt{S/\pi}" />. The upper wall is drawn at <Math math="y_{center} - r" />, the lower wall at <Math math="y_{center} + r" />. The area between them is filled with semi-transparent magenta.</p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">07</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Dimension annotations.</strong> Throat diameter is labeled at the left edge, mouth diameter at the right edge. A dimension line below the profile shows the total length in mm. The central axis is drawn as a dashed line. These labels update live as you drag sliders — compare different flare rates side-by-side by noting the mouth diameter at a fixed length.</p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">08</span>
+                  <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Raf-throttled, no idle loop.</strong> Slider updates are batched via <code>requestAnimationFrame</code> — changing any slider triggers a recompute of the mouth area, dashboard readouts, and canvas redraw in the next frame. There is no animation loop, no idle computation. The canvas also redraws on window resize and theme change via a MutationObserver on <code>data-theme</code>.</p>
+                </li>
+              </ol>
+              <div class="mt-6 math-card">
+                <p class="math-label">The area functions defined</p>
+                <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text">Exponential: <Math math="S(x)=S_0 e^{mx}" />. Conical: <Math math="S(x)=\pi(r_0+x\tan\theta)^2" />. OSWG: <Math math="S(x)=S_0(1+(2x\tan\theta/r_0)^2)" />. All three share S₀ and converge at x=0. The difference is the second derivative: exponential accelerates, conical is constant d²S/dx², OSWG starts flat at the throat and smoothly transitions to spherical-cap expansion.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gotchas -->
+        <div class="mt-14">
+          <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+          <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">The 1D assumption breaks at wide angles</p>
+              <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Webster's equation assumes isophase wavefronts are planar or spherical caps — pressure varies only along the axis, not across the cross-section. This holds for half-angles below ~30°. At 45° and above, transverse pressure variation becomes significant and higher-order modes (HOMs) appear. The tool will still compute an area profile and draw a cross-section, but the acoustic predictions (fc, directivity) become increasingly inaccurate. For wide-angle horns, use this for geometry only and verify acoustically with BEM.</p>
+            </div>
+            <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">The exponential flare rate m is wavelength-dependent in real horns</p>
+              <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">In a true exponential horn, m is constant. But many "exponential" horns in practice have a flare rate that changes along the length — the throat may expand slowly for loading, then the mouth flares more rapidly to reach the desired mouth size within a practical length. This tool uses strict mathematical exponentials with constant m. The cutoff frequency fc = m·c/(4π) only applies if the flare rate is truly constant over the entire length. Real horns with variable flare rates have a more gradual cutoff transition.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code -->
+        <div class="mt-14">
+          <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">JavaScript — the horn profile solver</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The <code>websterHornArea()</code> function that computes cross-sectional area at any point along the horn axis. Three profiles, one function, zero dependencies.</p>
+          <div class="mt-8">
+            <div class="flex items-center justify-between">
+              <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Horn area profile — JavaScript</p>
+              <button type="button" class="copy-btn" data-copy-target="code-horn-area">Copy</button>
+            </div>
+            <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+              <Code id="code-horn-area" code={`const websterHornArea = (type, S0, param, x) => {
+  switch (type) {
+    case 'exponential': {
+      return S0 * Math.exp(param * x);
+    }
+    case 'conical': {
+      const r0 = Math.sqrt(S0 / Math.PI);
+      return Math.PI * (r0 + x * Math.tan(param)) ** 2;
+    }
+    case 'oblate-spheroidal': {
+      const r0 = Math.sqrt(S0 / Math.PI);
+      const a = r0 / (2 * Math.tan(param));
+      return S0 * (1 + (x / a) ** 2);
+    }
+    default:
+      return S0;
+  }
+};
+
+// Cutoff for exponential horns
+const hornCutoff = (m, c = 343) => (m * c) / (4 * Math.PI);
+
+// Mouth diameter from throat + profile + length
+const mouthDiameter = (type, d0, param, L) => {
+  const S0 = Math.PI * (d0 / 2) ** 2;
+  const S_mouth = websterHornArea(type, S0, param, L);
+  return 2 * Math.sqrt(S_mouth / Math.PI);
+};`} lang="javascript" theme="github-dark" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Gear -->
+        {gear.length > 0 && (
+          <div class="mt-14">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear for waveguide &amp; horn measurement</h2>
+                <AffiliateDisclosure class="mt-3 max-w-2xl" />
+              </div>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+                <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+                Measurement stack · {gear.length} picks
+              </p>
+            </div>
+
+            <div class="mt-10 flex items-center gap-3">
+              <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+                <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+                Audio interfaces &amp; monitoring
+                <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+              </h3>
+              <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {gear.map((item) => (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="sponsored noopener noreferrer"
+                  class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+                >
+                  <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt=""
+                        width="480"
+                        height="360"
+                        loading="lazy"
+                        decoding="async"
+                        class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                      />
+                    ) : (
+                      <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                        {item.category}
+                      </div>
+                    )}
+                    {item.price && (
+                      <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                        {item.price}
+                      </span>
+                    )}
+                    <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                      {item.category}
+                    </span>
+                  </div>
+
+                  <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                    <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                      {item.title}
+                    </h4>
+                    <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                    {(item.pillars ?? []).length > 0 && (
+                      <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                        {(item.pillars ?? []).slice(0, 2).map((p) => {
+                          const pillar = pillarMeta[p] ?? fallbackPillar;
+                          return (
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                              <span class="size-1 rounded-full" style={{ background: pillar.color }} aria-hidden="true"></span>
+                              {pillar.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+            <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+          </div>
+        )}
+
+        <!-- FAQ -->
+        <div class="mt-14">
+          <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+          <div class="mt-8 divide-y divide-border border-y border-border">
+            {faqs.map((f) => (
+              <details class="group py-4">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+                </summary>
+                <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
       </div>
     </section>
   </PlaygroundShell>
@@ -236,6 +498,47 @@ import Math from '../../components/Math.astro';
     background: var(--mp-card);
     padding: 0.9rem 1rem;
   }
+  .math-card {
+    border-radius: 14px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-canvas);
+    padding: 0.75rem 1rem;
+  }
+  .math-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--mp-muted);
+  }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 
 <script>
@@ -245,9 +548,9 @@ import { websterHornArea } from '../../lib/acoustics.ts';
 function initWaveguide() {
   const state: Record<string, any> = {
     type: 'exponential',
-    d0: 25.4, // mm
-    param: 15, // m for exponential, deg for conical/OS
-    len: 150, // mm
+    d0: 25.4,
+    param: 15,
+    len: 150,
   };
 
   let _syncing = false;
@@ -284,7 +587,7 @@ function initWaveguide() {
     
     let paramVal = state.param;
     if (state.type === 'conical' || state.type === 'oblate-spheroidal') {
-      paramVal = paramVal * (Math.PI / 180); // convert deg to rad
+      paramVal = paramVal * (Math.PI / 180);
     }
 
     const S_mouth = websterHornArea(state.type as any, S0, paramVal, L_m);
@@ -295,10 +598,10 @@ function initWaveguide() {
     
     if (state.type === 'exponential') {
       fc = (state.param * 343) / (4 * Math.PI);
-      dir = 0; // variable
+      dir = 0;
     } else if (state.type === 'conical' || state.type === 'oblate-spheroidal') {
-      fc = 0; // Not sharply defined
-      dir = state.param * 2; // Full beamwidth
+      fc = 0;
+      dir = state.param * 2;
     }
 
     return { S0, L_m, paramVal, S_mouth, d_mouth_m, fc, dir };
@@ -324,15 +627,11 @@ function initWaveguide() {
 
     const r = compute();
     
-    // Determine scale to fit the profile
     const marginX = 40;
     const marginY = 40;
     const maxRadiusM = r.d_mouth_m / 2;
     
-    // We want the length to fit in cw - 2*marginX, and 2*maxRadius to fit in ch - 2*marginY
     const scaleX = (cw - 2 * marginX) / r.L_m;
-    // For visual aspect ratio, we should use the same scale if possible, buthorns can be very long or wide.
-    // Let's enforce true 1:1 aspect ratio.
     const maxScaleY = (ch - 2 * marginY) / (maxRadiusM * 2);
     const scale = Math.min(scaleX, maxScaleY);
     
@@ -341,7 +640,6 @@ function initWaveguide() {
     const cy = ch / 2;
     const startX = cx - drawW / 2;
 
-    // Draw axis
     ctx.beginPath();
     ctx.strokeStyle = theme.muted;
     ctx.lineWidth = 1;
@@ -351,7 +649,6 @@ function initWaveguide() {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Sample profile
     const steps = 200;
     const ptsTop: [number, number][] = [];
     const ptsBot: [number, number][] = [];
@@ -366,16 +663,14 @@ function initWaveguide() {
       ptsBot.push([px, cy + rad_m * scale]);
     }
 
-    // Fill profile
     ctx.beginPath();
     ctx.moveTo(ptsTop[0][0], ptsTop[0][1]);
     for (let i = 1; i <= steps; i++) ctx.lineTo(ptsTop[i][0], ptsTop[i][1]);
     for (let i = steps; i >= 0; i--) ctx.lineTo(ptsBot[i][0], ptsBot[i][1]);
     ctx.closePath();
-    ctx.fillStyle = theme.magColor + '15'; // slight opacity
+    ctx.fillStyle = theme.magColor + '15';
     ctx.fill();
 
-    // Outline profile
     ctx.beginPath();
     ctx.strokeStyle = theme.magColor;
     ctx.lineWidth = 2.5;
@@ -388,12 +683,10 @@ function initWaveguide() {
     for (let i = 1; i <= steps; i++) ctx.lineTo(ptsBot[i][0], ptsBot[i][1]);
     ctx.stroke();
 
-    // Draw dimensions
     ctx.fillStyle = theme.text;
     ctx.font = '11px ui-monospace, monospace';
     ctx.textAlign = 'center';
     
-    // Length
     const lY = cy + maxRadiusM * scale + 20;
     ctx.beginPath();
     ctx.strokeStyle = theme.muted;
@@ -407,11 +700,9 @@ function initWaveguide() {
     ctx.stroke();
     drawText(ctx, `${state.len.toFixed(0)} mm`, cx, lY + 14, theme.text, 11);
     
-    // Throat Dia
     ctx.textAlign = 'right';
     drawText(ctx, `${state.d0.toFixed(1)}ø`, startX - 8, cy + 4, theme.text, 11);
     
-    // Mouth Dia
     ctx.textAlign = 'left';
     drawText(ctx, `${(r.d_mouth_m * 1000).toFixed(1)}ø`, startX + drawW + 8, cy + 4, theme.text, 11);
   }
@@ -458,7 +749,21 @@ function initWaveguide() {
     numEls[key].addEventListener('change', () => syncFromNum(key));
   }
 
-  // Type Toggle
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.copyTarget;
+      const el = document.getElementById(id ?? '');
+      if (!el) return;
+      try {
+        const text = (el as HTMLElement).textContent ?? '';
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = orig; }, 1200);
+      } catch {}
+    });
+  });
+
   const typeBtns = document.querySelectorAll('.type-btn');
   typeBtns.forEach(btn => {
     btn.addEventListener('click', () => {

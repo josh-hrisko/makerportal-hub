@@ -1,11 +1,34 @@
 ---
+import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const title = 'Room Mode Analyzer — Axial, Tangential & Oblique Modes | MakerPortal';
 const description =
   'Compute every axial, tangential, and oblique room mode for a rectangular space. See the standing-wave pressure pattern overlaid on your room, count modes below the Schroeder frequency, and understand why certain bass notes boom.';
 const canonical = new URL('/playground/acoustics-room-modes', Astro.site);
+
+const slug = 'acoustics-room-modes';
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes(slug))
+  .map(resolveAffiliateLink)
+  .sort((a, b) => a.title.localeCompare(b.title));
+const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Room Mode Analyzer',
+  url: canonical.toString(),
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -16,12 +39,46 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: 'Room Mode Analyzer', item: canonical.toString() },
   ],
 };
-import Math from '../../components/Math.astro';
+
+const faqs = [
+  {
+    q: 'Why are axial modes the loudest and most problematic?',
+    a: 'Axial modes bounce between only two parallel walls — they touch the least total surface area per cycle and therefore lose the least energy to wall absorption. Tangential (four walls) and oblique (all six surfaces) leak energy faster because every wall contact bleeds a small fraction. In a concrete room, the (1,0,0) axial at c/(2Lx) is almost always the worst offender — it\'s the one you hear booming when you clap.',
+  },
+  {
+    q: 'How do I read the pressure at listener column?',
+    a: 'It\'s the eigenfunction value p(x,y,z) at your listening position, ranging from -1 (antinode with inverted phase) to +1 (antinode). Values near 0 mean you\'re sitting in that mode\'s pressure null — you won\'t hear that frequency even if the source is exciting it. Values above 0.5 in magnitude mean that mode dominates your seat. Scan the table: modes with |p| > 0.5 are the ones you need to treat or move away from.',
+  },
+  {
+    q: 'What should I do with the Schroeder frequency number?',
+    a: 'Below fs, individual modes are sparse and audible — treat them with tuned traps, sub/listener placement, or narrow EQ cuts. Above fs, modes overlap densely and behave statistically — broadband absorption works. The tool estimates T₆₀ from Sabine with ᾱ=0.15 (typical furnished room). If your room is more absorbent, fs shifts down; if it\'s concrete, fs shifts up. Measure T₆₀ to get the real crossover.',
+  },
+  {
+    q: 'Why do my measured room modes differ from the calculator\'s predictions?',
+    a: 'Several reasons: real walls are not perfectly rigid (they\'re compliant, shifting frequencies down 2-5%), absorption isn\'t uniform across surfaces, furniture breaks the modal cosine shape, and non-rectangular geometry (alcoves, sloped ceilings) breaks the integer-index assumption entirely. This tool gives the rigid-wall ideal — it\'s typically within 5% for concrete rooms and serves as an excellent starting point for placement decisions even in imperfect rooms.',
+  },
+  {
+    q: 'How do I use the 2D pressure map to place a subwoofer?',
+    a: 'Select a problematic mode from the dropdown, then look for red or blue regions — those are pressure antinodes (walls and certain interior regions where cosines peak). Placing a sub in an antinode maximally excites that mode. If you want to kill the mode instead, place the sub at a white/light region (pressure node) where cos≈0 — the sub physically cannot couple to that mode. Move the listener dot similarly: put your head in a zero-pressure region for that frequency and you won\'t hear it.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical}>
   <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   </Fragment>
 
   <PlaygroundShell
@@ -150,7 +207,7 @@ import Math from '../../components/Math.astro';
       <div class="mx-auto max-w-[76rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="map-title" class="text-[clamp(1.35rem,3vw,1.8rem)] font-[650] tracking-[-0.04em] text-primary-text">2D Pressure map</h2>
         <p class="mt-2 text-[0.88rem] leading-[1.55] text-muted-text">
-          Horizontal slice at listener height (z = <span id="slice-z-readout">1.20</span> m). Each cell’s colour shows the standing‑wave pressure of the selected mode.
+          Horizontal slice at listener height (z = <span id="slice-z-readout">1.20</span> m). Each cell's colour shows the standing‑wave pressure of the selected mode.
         </p>
 
         <div class="mt-5 flex flex-wrap items-end gap-4">
@@ -299,6 +356,240 @@ import Math from '../../components/Math.astro';
 
       </div>
     </section>
+
+    <!-- Anatomy -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the instrument</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Seven sliders, one SVG map, one live table. Here is what each control and visualization is actually doing under the hood — and why the slider limits, the color scale, and the cell resolution were chosen the way they are.</p>
+
+        <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The input controls and metrics</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">01</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Room dimensions (Lx, Ly, Lz).</strong> Range sliders with linked numeric readouts. The <code>readParams()</code> function pulls all values and feeds them to the <code>roomModes()</code> solver. Slider max values are deliberately capped (Lx/Ly 1–20 m, Lz 1–10 m) because below 1 m the modal density explodes and above 20 m you're in a hall where statistical acoustics replaces modal analysis.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">02</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Temperature.</strong> This sets <Math math="c(T)" /> via ISO 9613-1 and feeds every frequency calculation. At -10 °C, <Math math="c \approx 325" /> m/s; at 45 °C, <Math math="c \approx 358" /> m/s — a 10% spread. Every mode frequency shifts proportionally. The Schroeder frequency also shifts because T₆₀ depends on <Math math="c" /> through the Sabine constant 0.161.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Listener and source positions.</strong> Six additional range sliders whose max values update dynamically to stay within the room bounds. When you drag a room dimension slider, <code>updateReadouts()</code> re-clamps the listener/source max values so you can't position them outside the room. Both positions feed the pressure-at-listener column and determine the dot/diamond positions on the SVG map.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The metrics dashboard.</strong> Volume, surface area, and edge length are simple geometry. Schroeder frequency uses Sabine with ᾱ=0.15 — deliberately a conservative estimate because real furnished rooms typically have ᾱ between 0.12 and 0.25 at low frequencies. The mode counter runs all three types so you can instantly see that obliques outnumber axials by hundreds above 300 Hz.</p>
+              </li>
+            </ol>
+            <div class="mt-6 math-card">
+              <p class="math-label">The mode-counting loop</p>
+              <p class="mt-2 text-[0.78rem] leading-[1.6] text-muted-text"><code>roomModes(Lx, Ly, Lz, c, fmax)</code> iterates integer triples (nx, ny, nz) from 0 upward, computes <Math math="f = (c/2)\sqrt{(n_x/L_x)^2 + (n_y/L_y)^2 + (n_z/L_z)^2}" />, halts when f exceeds fmax, and classifies each triple as axial (one non-zero), tangential (two), or oblique (three). This is an exhaustive search, not a formula — for a 5×4×2.8 m room up to 400 Hz, it produces about 450 modes. The algorithm stops per-axis loops when a single-axis contribution alone exceeds fmax.</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-[1.15rem] font-[650] text-primary-text">The pressure map and table</h3>
+            <ol class="mt-5 space-y-4">
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">SVG pressure map.</strong> Built entirely from <code>&lt;rect&gt;</code> elements in an inline SVG — no canvas, no WebGL. Each cell computes <Math math="p(x,y,z_{listener})" /> at its centroid via <code>modePressure()</code> which evaluates <Math math="\cos(n_x\pi x/L_x)\cos(n_y\pi y/L_y)\cos(n_z\pi z/L_z)" />. The color is HSL with hue at 0° (positive/red) or 240° (negative/blue), saturation proportional to |p|. The grid resolution slider (15–60 cells) trades visual fidelity for DOM weight.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">06</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Colorbar and legend.</strong> A linear gradient from −1 (blue) through 0 (white) to +1 (red), drawn as a vertical bar to the right of the map. The listener dot (white) and source dot (CTAs colored) are overlaid at their scaled xy positions. The dimension labels Lx and Ly are annotated at the bottom and left of the map, rotated for Ly.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">07</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">The modes table.</strong> Built by mapping the sorted mode array to HTML rows, capped at 200 rows with a truncation notice. Rows are color-coded by type: green-tinted axials, yellow-tinted tangentials, purple-tinted obliques. Any mode with |p| > 0.5 at the listener position gets a left-border highlight — these are your priority targets. The table-note paragraph updates to tell you how many modes are shown vs total.</p>
+              </li>
+              <li class="flex gap-3">
+                <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">08</span>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">No idle render loop.</strong> The page computes on every slider input event — no requestAnimationFrame, no polling. The <code>handleInput()</code> function re-clamps listener/source positions, calls <code>recalculate()</code> which runs the mode solver, builds the table, populates the dropdown, and redraws the SVG. When you change the mode dropdown or grid resolution, only <code>drawPressureMap()</code> re-runs — the mode table is not rebuilt.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gotchas -->
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">The rigid-wall assumption breaks at the first drywall</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">This tool assumes perfectly rigid walls — the Neumann boundary condition. Drywall on studs is not rigid; it's a compliant panel that shifts eigenfrequencies down by 2–5% and adds damping (finite Q). A mode computed at 42.9 Hz may measure at 40.5 Hz in a real room. The ordering and nodal geometry remain correct, but don't trust the absolute frequency to better than ±5%. If you need measurement-grade accuracy, use a calibrated mic and swept sine — the map is for placement decisions, not absolute frequency confirmation.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">The 2D map is a single z-slice illusion</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The pressure map shows a horizontal slice at the listener's ear height. But room modes are fully 3D — a mode you see as "null at center" on the 2D map may actually peak at z=1.80 m (standing height) while vanishing at z=1.20 m (sitting height). Oblique modes especially have strong z-dependence. If you move your measurement mic vertically and the boom returns, you're seeing exactly this effect. The table's "Pressure at listener" column uses all three coordinates, so it's always correct — trust the number, not just the 2D visual.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">JavaScript — the mode solver</h2>
+        <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">The core <code>roomModes()</code> and <code>modePressure()</code> functions. Exhaustive integer scan, temperature-dependent speed of sound, zero-allocation cosine evaluation.</p>
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted-text">Room modes — JavaScript</p>
+            <button type="button" class="copy-btn" data-copy-target="code-room-modes">Copy</button>
+          </div>
+          <div class="mt-2 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.8rem]">
+            <Code id="code-room-modes" code={`const speedOfSound = (tC) => 331.3 * Math.sqrt(1 + tC / 273.15);
+
+const schroederFrequency = (V, T60) => {
+  if (V <= 0 || T60 <= 0) return NaN;
+  return 2000 * Math.sqrt(T60 / V);
+};
+
+const modePressure = (x, y, z, Lx, Ly, Lz, nx, ny, nz) => {
+  return Math.cos(nx * Math.PI * x / Lx)
+       * Math.cos(ny * Math.PI * y / Ly)
+       * Math.cos(nz * Math.PI * z / Lz);
+};
+
+const roomModes = (Lx, Ly, Lz, c, fmax) => {
+  const modes = [];
+  const maxNx = Math.ceil(2 * Lx * fmax / c) + 1;
+  const maxNy = Math.ceil(2 * Ly * fmax / c) + 1;
+  const maxNz = Math.ceil(2 * Lz * fmax / c) + 1;
+
+  for (let nx = 0; nx <= maxNx; nx++) {
+    const fx = (nx * c) / (2 * Lx);
+    if (fx > fmax) break;
+    for (let ny = 0; ny <= maxNy; ny++) {
+      const fy = (ny * c) / (2 * Ly);
+      if (Math.hypot(fx, fy) > fmax) break;
+      for (let nz = 0; nz <= maxNz; nz++) {
+        if (nx === 0 && ny === 0 && nz === 0) continue;
+        const f = (c / 2) * Math.sqrt(
+          (nx / Lx) ** 2 + (ny / Ly) ** 2 + (nz / Lz) ** 2
+        );
+        if (f > fmax) break;
+        const nonZero = (nx > 0 ? 1 : 0) + (ny > 0 ? 1 : 0) + (nz > 0 ? 1 : 0);
+        const type = nonZero === 1 ? 'axial'
+          : nonZero === 2 ? 'tangential' : 'oblique';
+        modes.push({ nx, ny, nz, freq: f, type });
+      }
+    }
+  }
+  return modes.sort((a, b) => a.freq - b.freq);
+};`} lang="javascript" theme="github-dark" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gear -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear for room measurement &amp; treatment</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Room acoustics stack · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Measurement mics &amp; monitors
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map((item) => (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+              >
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      width="480"
+                      height="360"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                    />
+                  ) : (
+                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                      {item.category}
+                    </div>
+                  )}
+                  {item.price && (
+                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                      {item.price}
+                    </span>
+                  )}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                    {item.category}
+                  </span>
+                </div>
+
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
+                    {item.title}
+                  </h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                  {(item.pillars ?? []).length > 0 && (
+                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
+                      {(item.pillars ?? []).slice(0, 2).map((p) => {
+                        const pillar = pillarMeta[p] ?? fallbackPillar;
+                        return (
+                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                            <span class="size-1 rounded-full" style={{ background: pillar.color }} aria-hidden="true"></span>
+                            {pillar.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <!-- FAQ -->
+    <section aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </PlaygroundShell>
 </Layout>
 
@@ -397,6 +688,34 @@ import Math from '../../components/Math.astro';
   tr.row-highlight {
     box-shadow: inset 3px 0 0 var(--mp-cta);
   }
+  .copy-btn {
+    border-radius: 9999px;
+    border: 1px solid var(--mp-border);
+    background: var(--mp-elevated);
+    padding: 0.3rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mp-muted);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover {
+    color: var(--mp-text);
+    border-color: var(--mp-cta);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 
 <script>
@@ -457,7 +776,6 @@ import Math from '../../components/Math.astro';
 
     const MAX_TABLE_ROWS = 200;
     let modes: RoomMode[] = [];
-    
 
     function readParams(): { Lx: number; Ly: number; Lz: number; tempC: number; maxFreq: number; listener: [number, number, number]; source: [number, number, number] } {
       const Lx = parseFloat(lxInput.value) || 5;
@@ -700,6 +1018,22 @@ import Math from '../../components/Math.astro';
       gridResReadout.textContent = gridResSlider.value;
       const p = readParams();
       drawPressureMap(p);
+    });
+
+    // ---- copy buttons ----
+    document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.copyTarget;
+        const el = document.getElementById(id ?? '');
+        if (!el) return;
+        try {
+          const text = (el as HTMLElement).textContent ?? '';
+          await navigator.clipboard.writeText(text);
+          const orig = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1200);
+        } catch {}
+      });
     });
 
     handleInput();
