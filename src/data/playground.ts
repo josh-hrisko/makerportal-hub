@@ -305,6 +305,7 @@ export const playground: PlaygroundEntry[] = [
       'Synthesize a voice — a built-in formant demo voice, your microphone, or your own ElevenLabs API key — and push it through a real Web Audio DSP chain: bandpass filtering, feedback echo, RT60-controlled convolution reverb, and pitch resampling, with a live waveform + spectrogram analyzer and gated clean-WAV export.',
     pillarHint: 'dsp-audio',
     isGrounded: false,
+    relatedFieldNote: 'elevenlabs-web-audio-streaming-latency',
     status: 'live',
   },
   {
@@ -315,6 +316,7 @@ export const playground: PlaygroundEntry[] = [
       'Run real WebGPU compute workloads shaped like Whisper-tiny inference on your own device, then race them against a serverless GPU endpoint you deploy on Modal with the provided script. Every number on the chart is measured on your hardware or your endpoint — nothing is fabricated.',
     pillarHint: 'on-device-ai',
     isGrounded: false,
+    relatedFieldNote: 'webgpu-benchmark-browser',
     status: 'live',
   },
   {
@@ -325,6 +327,7 @@ export const playground: PlaygroundEntry[] = [
       'A multi-region SQLite/LiteFS replication simulator: place a primary and read replicas at real Fly.io regions on a world map, click anywhere to fire client transactions, and watch read queries return from the nearest replica while writes forward to the primary — with speed-of-light-in-fiber latency math disclosed in full.',
     pillarHint: 'privacy-arch',
     isGrounded: false,
+    relatedFieldNote: 'litefs-multi-region-sqlite',
     status: 'live',
   },
   {
@@ -345,4 +348,43 @@ export function livePlayground(): PlaygroundEntry[] {
 
 export function plannedPlayground(): PlaygroundEntry[] {
   return playground.filter((p) => p.status === 'planned');
+}
+
+/**
+ * Editorial relationships for high-intent next clicks. The explicit map keeps
+ * deployment labs connected to the existing instruments that teach their
+ * underlying client-side math; same-pillar entries fill any remaining slots.
+ */
+const relatedSlugs: Record<string, string[]> = {
+  'elevenlabs-dsp-sandbox': ['biquad-filter-designer', 'head-tracked-stereo-pan', 'modal-gpu-benchmarker'],
+  'modal-gpu-benchmarker': ['webgpu-pinn-studio', 'agentic-dsp-pipeline', 'fly-edge-db-lab'],
+  'fly-edge-db-lab': ['globe', 'rtos-scheduler', 'modal-gpu-benchmarker'],
+  'biquad-filter-designer': ['elevenlabs-dsp-sandbox', 'agentic-dsp-pipeline', 'head-tracked-stereo-pan'],
+  'head-tracked-stereo-pan': ['elevenlabs-dsp-sandbox', 'biquad-filter-designer', 'quaternion-euler-converter'],
+  'agentic-dsp-pipeline': ['modal-gpu-benchmarker', 'elevenlabs-dsp-sandbox', 'biquad-filter-designer'],
+  'fourier-epicycles': ['elevenlabs-dsp-sandbox', 'biquad-filter-designer', 'chladni-cymatics'],
+  'webgpu-pinn-studio': ['modal-gpu-benchmarker', 'coreml-model-size-calculator', 'pid-flight-arena'],
+  'coreml-model-size-calculator': ['modal-gpu-benchmarker', 'webgpu-pinn-studio', 'agentic-dsp-pipeline'],
+  'slam-odometry-arena': ['fly-edge-db-lab', 'modal-gpu-benchmarker', 'pid-flight-arena'],
+  'pid-flight-arena': ['modal-gpu-benchmarker', 'webgpu-pinn-studio', 'slam-odometry-arena'],
+  globe: ['fly-edge-db-lab', 'n-body-choreography', 'relativistic-spaceflight'],
+  'rtos-scheduler': ['fly-edge-db-lab', 'modal-gpu-benchmarker', 'verilog-live-sculptor'],
+  'signal-integrity-lab': ['fly-edge-db-lab', 'modal-gpu-benchmarker', 'rf-microwave-bench'],
+  'rf-microwave-bench': ['fly-edge-db-lab', 'signal-integrity-lab', 'antenna-em-sandbox'],
+};
+
+export function relatedPlayground(slug: string, limit = 3): PlaygroundEntry[] {
+  const current = playground.find((entry) => entry.slug === slug);
+  if (!current) return [];
+
+  const explicit = relatedSlugs[slug] ?? [];
+  const samePillar = playground
+    .filter((entry) => entry.status === 'live' && entry.slug !== slug && entry.pillarHint === current.pillarHint)
+    .map((entry) => entry.slug);
+  const candidates = [...new Set([...explicit, ...samePillar])];
+
+  return candidates
+    .map((candidate) => playground.find((entry) => entry.slug === candidate && entry.status === 'live'))
+    .filter((entry): entry is PlaygroundEntry => Boolean(entry))
+    .slice(0, limit);
 }

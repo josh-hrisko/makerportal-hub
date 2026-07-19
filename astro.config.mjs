@@ -37,6 +37,11 @@ export default defineConfig({
     contentIntellisense: true,
   },
   markdown: {
+    shikiConfig: {
+      // Reading pages use a dark code surface in both site themes. The high-
+      // contrast palette keeps comments and punctuation at WCAG AA contrast.
+      theme: 'github-dark-high-contrast',
+    },
     rehypePlugins: [
       rehypeSlug,
       [rehypeAutolinkHeadings, { behavior: 'wrap', properties: { className: ['heading-anchor'] } }],

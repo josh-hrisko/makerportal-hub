@@ -14,6 +14,10 @@ const blog = defineCollection({
     tags: z.array(z.string()).default([]),
     eyebrow: z.string().default('Field note'),
     readingTime: z.string().default('4 min read'),
+    faq: z.array(z.object({
+      question: z.string().min(1),
+      answer: z.string().min(1),
+    })).optional(),
   }),
 });
 

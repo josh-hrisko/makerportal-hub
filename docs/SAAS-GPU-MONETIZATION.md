@@ -100,17 +100,14 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - [ ] **Buttondown username** — only needed when the owner is ready to collect
   explicit newsletter opt-ins. Set `PUBLIC_BUTTONDOWN_USERNAME`; clean export
   remains local and works without it. Do not provide a Buttondown API key.
-- [ ] **Modal DevRel credit pitch** — email devrel/community@modal.com (or
-  Slack community) once the benchmarker has ~2–4 weeks of traffic data from
-  `mp_analytics_log` (aha/export counts, no PII). Pitch: the page teaches
-  Modal's own deploy flow with a runnable script; ask for $1k–$10k credits
-  to run AuraLinter's clang++ verification backend on Modal, offer a
-  "powered by Modal" chip + field-note blog post in return.
-- [ ] **Fly.io grant pitch** — Fly does community credits case-by-case.
-  Same package: the lab is a teaching asset for their LiteFS story; ask for
-  edge-hosting credits, offer SimSponsorChip placement + write-up.
-- [ ] Decide whether the ElevenLabs sandbox warrants a field-note blog post
-  (SEO: "elevenlabs web audio streaming latency").
+- [ ] **Modal DevRel credit pitch** — owner sends the reviewed draft in
+  `docs/DEVREL-PITCHES-SAAS-GPU.md` through the official community Slack or
+  `support@modal.com` routing path. Fill in a capped pilot estimate first; do
+  not invent a traffic number or paste visitor data.
+- [ ] **Fly.io technical review / credit inquiry** — owner posts the reviewed
+  draft to the official community forum or sends it to a real Fly team contact.
+  Current official docs do not expose a public grant application, so the draft
+  asks for the correct contact instead of claiming a program exists.
 
 ### Exact owner inputs still needed
 
@@ -125,11 +122,36 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - No shared ElevenLabs, Modal, Fly.io, Amazon, or other API key is needed for
   these static pages. Visitor BYO keys/tokens remain in their own localStorage
   and are sent only to the provider endpoint they explicitly invoke.
+- To send the pitch drafts: owner name/role/reply address, Modal workspace and
+  Fly organization handles (not credentials), and a reviewed workload estimate
+  with a hard spending cap. Optional aggregate traffic evidence must include a
+  source and date range.
+
+## Phase B growth surfaces (2026-07-19)
+
+- [x] Homepage now features the Modal, ElevenLabs, and Fly labs first and derives
+  the live-lab count from the registry instead of the stale hard-coded “18”.
+- [x] `/playground` leads with a dedicated three-card deployment-labs row, keeps
+  the full catalog below it, and emits a 31-item `CollectionPage` / `ItemList`.
+- [x] `PlaygroundShell` derives field-note CTAs from the registry and adds three
+  editorially related instruments. Twelve relevant existing labs explicitly
+  link into the SaaS/GPU funnels; same-pillar fallback covers the rest.
+- [x] Published three query-focused field notes with visible FAQ sections and
+  `FAQPage` schema:
+  - `/blog/elevenlabs-web-audio-streaming-latency`
+  - `/blog/webgpu-benchmark-browser`
+  - `/blog/litefs-multi-region-sqlite`
+- [x] Added owner-ready Modal and Fly outreach drafts with evidence/privacy gates
+  in `docs/DEVREL-PITCHES-SAAS-GPU.md`.
+- [x] Strengthened the AuraLinter loop: Modal's benchmark narrative links compute
+  placement to the verification worker, and unsourced failure-rate, retrieval-score,
+  temperature-tuning, and cost-ratio claims were removed from the agentic DSP lab.
+- [x] Rejected a visible aggregate “social proof” count for now. The local
+  `mp_analytics_log` cannot represent site-wide use; displaying one would require
+  a first-party aggregate backend or fabrication.
 
 ## Follow-ups (agent-executable later)
 
-- [ ] Wire the three sims into any "newest playgrounds" surfaces on the
-  landing page if editorial wants them featured.
 - [ ] Once a real Modal deployment for AuraLinter exists, consider a shared
   demo endpoint with rate limiting (needs a backend secret — currently
   rejected by design; BYO-endpoint only).

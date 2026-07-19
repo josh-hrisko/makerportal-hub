@@ -41,12 +41,22 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 3, name: post.data.title, item: canonical.toString() },
   ],
 };
+const faqSchema = post.data.faq?.length ? {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: post.data.faq.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+} : null;
 ---
 
 <Layout title={`${post.data.title} — MakerPortal`} description={post.data.description} canonical={canonical} type="article" publishedTime={publishedTime} modifiedTime={modifiedTime}>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(articleSchema)}></script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    {faqSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>}
   </Fragment>
 
   <!-- Reading paper: warm light surface for long-form dwell (research polarity) -->
