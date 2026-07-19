@@ -20,7 +20,7 @@ export const SPARKFUN_AFFILIATE_CODE = 'rOtrc44SZw';
 
 export const SPARKFUN_BASE = 'https://www.sparkfun.com';
 
-/** PCBWay / JLCPCB — pending owner referral IDs. Stub-ready, no fake IDs shipped. */
+/** PCB fabrication partners: PCBWay referral is live; JLCPCB remains an empty, owner-gated stub. */
 export const PCBWAY_BASE = 'https://www.pcbway.com';
 export const JLCPCB_BASE = 'https://jlcpcb.com';
 
@@ -44,10 +44,10 @@ export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exis
 
 /**
  * SaaS / GPU-cloud partners (docs/SAAS-GPU-MONETIZATION.md).
- * Same integrity rule as PCB fab: no fake IDs shipped. Empty string = link
- * renders as a clean informational link (rel="noopener noreferrer", no
- * "sponsored"); once the real partner URL lands, pages flip to
- * rel="sponsored noopener noreferrer" automatically via buildSaasPartnerUrl.
+ * Same integrity rule as PCB fab: no fake IDs shipped. An empty constant makes
+ * that provider render as a clean informational link (rel="noopener noreferrer",
+ * no "sponsored"); a verified destination flips only that provider to
+ * rel="sponsored noopener noreferrer" via buildSaasPartnerUrl.
  *
  * - ElevenLabs: PartnerStack, 22% recurring 12 mo (commission to us, NOT a
  *   user-facing discount — never phrase it as "22% off" in UI copy).
@@ -58,7 +58,7 @@ export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exis
  *   monetized via DevRel credit-grant pitches instead.
  */
 export const ELEVENLABS_PARTNER_URL: string = 'https://try.elevenlabs.io/jzowx8mw6p6b'; // approved PartnerStack destination
-export const PINECONE_PARTNER_URL: string = ''; // official affiliate application; owner to fill only after approval
+export const PINECONE_PARTNER_URL: string = ''; // approval pending; accept only the issued destination URL, never an API key
 export const MODAL_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
 export const FLY_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
 

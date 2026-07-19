@@ -4,6 +4,9 @@ Owner-send drafts for the SaaS/GPU playground program. These are deliberately
 written without audience-size, cost-savings, conversion, or performance claims.
 Add a number only when it comes from a named, reproducible source.
 
+Contact paths were rechecked against official provider documentation on
+2026-07-19. This repo contains drafts only; nothing has been sent.
+
 ## Evidence and privacy gate before sending
 
 - Public assets:
@@ -29,7 +32,8 @@ Add a number only when it comes from a named, reproducible source.
 
 Current official contact paths: Modal community Slack or `support@modal.com`.
 The first message should ask to be routed to the DevRel/community owner; support
-is not assumed to control sponsorships or credits.
+is not assumed to control sponsorships or credits. Source:
+`https://modal.com/docs/guide/feature-maturity`.
 
 Subject: MakerPortal built a verification-first Modal GPU teaching lab
 
@@ -88,7 +92,12 @@ Fly's official public route for general questions and sharing technical work is
 `https://community.fly.io`; account/billing questions use `billing@fly.io`.
 There is no verified public credit-grant application in the current docs, so do
 not claim one exists. Post the public version in the community, or send the
-private version only to a real Fly team contact the owner already has.
+private version only to a real Fly team contact the owner already has. Sources:
+`https://fly.io/docs/about/support/` and
+`https://fly.io/docs/about/cost-management/`. Fly's current cost-management
+documentation says billing alerts are not supported, so a pilot needs explicit
+resource limits, manual cost checks, and a time-boxed cleanup plan; a credit is
+not a spending cap.
 
 Title: We built an interactive LiteFS topology lab—looking for technical review
 
@@ -139,3 +148,36 @@ Title: We built an interactive LiteFS topology lab—looking for technical revie
   review request).
 - No API key, provider token, user export, or credential belongs in this repo or
   in the initial outreach.
+
+## Owner walkthrough: what to provide and what happens next
+
+1. Copy the template below into a private conversation. A reply email is used
+   only to tailor the message and should not be committed to this public repo.
+2. For Modal, describe one bounded job. Multiply jobs/day × maximum seconds/job
+   × pilot days, then add the maximum concurrency and GPU class only if a GPU is
+   genuinely required. Set a hard dollar cap independently.
+3. For Fly, start with a technical-review request unless a real deployment plan
+   exists. If one does, list apps, regions, Machines, volumes, expected egress,
+   pilot duration, and the maximum tolerated replication staleness.
+4. The next agent may tailor the drafts from this metadata. It must not send the
+   messages, deploy infrastructure, add a payment method, or incur spend unless
+   the owner explicitly asks for that separate action.
+
+```text
+Public sender name:
+Role/title:
+Reply email:                 # private; keep out of git
+
+Modal workspace display name:
+Pilot job description:
+GPU genuinely required?:
+Expected jobs/day:
+Maximum seconds/job:
+Maximum concurrency:
+Pilot duration:
+Hard spending cap:
+
+Fly organization handle:    # optional; never a token
+Send Fly technical review now?: yes/no
+Fly pilot topology:          # only if a real deployment is planned
+```

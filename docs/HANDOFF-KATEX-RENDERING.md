@@ -1,5 +1,8 @@
 # HANDOFF — KaTeX Rendering Fix for Playground & Sitewide Math
 
+> Historical as of 2026-07-19. Do not execute this prompt as current work; use
+> `STATUS.md` and `HANDOFF-FRONTIER-CHECK.md`.
+
 **Date:** 2026-07-18
 **From:** OpenCode (Muse Spark) — frontier rewrite pass
 **Status:** Partially fixed, needs verification in production + potential server-side render switch

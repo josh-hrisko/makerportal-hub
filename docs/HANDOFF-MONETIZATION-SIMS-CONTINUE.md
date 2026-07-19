@@ -1,5 +1,8 @@
 # Handoff: Frontier Simulator Monetization — Continue Execution
 
+> Historical as of 2026-07-19. Use `SAAS-GPU-MONETIZATION.md` and
+> `HANDOFF-FRONTIER-CHECK.md` for current state and owner blockers.
+
 **Date:** 2026-07-19  
 **Repo:** `/Users/josh/Documents/GitHub/makerportal-hub`  
 **Branch:** `main` (verify with `git status`)  

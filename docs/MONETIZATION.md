@@ -9,25 +9,28 @@ Replaces `HANDOFF-MONETIZATION.md` + `MONETIZATION-STRATEGY-2026-07-15.md` + ad-
 - **Affiliate (approved paths):**
   1. **Amazon Associates** — tag `engineersport-20`. Curated ASINs in `affiliate-links.json`, live title/image/price via Creators API → `amazon-catalog.json` (build-time, D-015). Books/tools preferred over thin electronics margins.
   2. **SparkFun Affiliate** — code `rOtrc44SZw` (`?ref=` on sparkfun.com). **10% on SparkFun Originals** only; third-party (Pi, Jetson, Teensy) still linked for UX but may pay $0. URL helper: `buildSparkFunUrl()` in `affiliate-links.ts`.
-  3. **PCBWay / JLCPCB** — **stub-ready but not live** (no referral IDs shipped per G2 gate). Helpers `buildPcbWayUrl()` / `buildJlcUrl()`, `isFabLive()`, `FabOrderPanel.astro` export-adjacent CTA on SI / Antenna / Verilog (renders nothing until IDs land). Owner ask still open.
-  4. **Interactive kits** — `kits.json` + `KitBuilder.astro` — 10 kits live (6 original + 4 new: gan-foc-starter, antenna-rf-starter, verilog-fpga-starter, pinn-edge-stack). GearGrid capped at 6 cards to reduce decision paralysis, merchant badges (★ Original 10%).
-  5. **SaaS / GPU cloud** — dual engine (ElevenLabs PartnerStack cash + Modal/Fly credit-grant pitches) via three playgrounds; constants ship empty until real partner URLs land. Full plan + owner checklist: `SAAS-GPU-MONETIZATION.md`.
-  6. **Soft export gate** — `ExportGate.astro` — free watermarked + clean after email unlock (localStorage `mp_export_unlock_{sim}` + `mp_export_email_{sim}`). Wired on 6 sims: RTOS FreeRTOSConfig.h, SI stackup CSV, SLAM trajectory CSV, PID gains JSON, Antenna array JSON, Verilog RTL + timing. Analytics events `export_gate_unlock`, `export_download`, `gear_click`, `kit_cta_click`, `fab_*_click` as first-party `mp:analytics` CustomEvent (no ad pixels).
+  3. **PCBWay / JLCPCB** — PCBWay's verified generic referral is live; Shared Projects are tabled until a real board exists, and JLCPCB remains an empty stub. Helpers `buildPcbWayUrl()` / `buildJlcUrl()`, `isFabLive()`, and `FabOrderPanel.astro` preserve the split without fake destinations.
+  4. **Interactive kits** — `kits.json` + `KitBuilder.astro` — 14 kits live. Gear is capped at 6 cards to reduce decision paralysis, with merchant badges (★ Original 10%).
+  5. **SaaS / GPU cloud** — ElevenLabs PartnerStack is live, Pinecone approval is pending, and Modal/Fly remain informational DevRel-credit prospects across four playgrounds. Full plan + owner checklist: `SAAS-GPU-MONETIZATION.md`.
+  6. **Soft export gate** — `ExportGate.astro` — free watermarked + clean after email unlock (localStorage `mp_export_unlock_{sim}` + `mp_export_email_{sim}`). Wired on 10 sims. Newsletter subscription is a separate unchecked opt-in; analytics are local-only `mp:analytics` events with no ad pixels.
   - Disclosure + `rel="sponsored"` on all outbound affiliate CTAs. Integrity: `npm run amazon:audit` + `amazon:smoke` (wired into `npm run check`). Privacy disclosure includes fab pending notice + export gate localStorage handling.
 - **Trends → Signals Journal:** Daily digest `trends-digest.yml` 14:00 UTC, gated pipeline + thumbnails self-hosted (D-012/D-013/D-017). **Auto-publishes** each day directly to `/journal/YYYY-MM-DD` (D-022) — gate tests, not a PR, are the pre-publish gate; latest entry also feeds `/resources#trending` and re-ranks gear. Bluesky + HN only (Reddit disabled, D-023).
 
-Hard constraints: never fabricate usage, no auto-discovery/auto-publish of *products or blog content* without a human-review gate (the trends *signal digest* auto-publishes curated public links gated by the pipeline tests — D-022 — which is distinct from generating content/product recommendations), no runtime API calls, no second payment processor without discussion, verify slugs/titles, check rendered output on volume changes (Playwright).
+Hard constraints: never fabricate usage, no auto-discovery/auto-publish of *products or blog content* without a human-review gate (the trends *signal digest* auto-publishes curated public links gated by the pipeline tests — D-022 — which is distinct from generating content/product recommendations), no site-owned runtime data API by default (an explicit BYO-provider action may call that named provider directly), no second payment processor without discussion, verify slugs/titles, check rendered output on volume changes (Playwright).
 
-## Current state (2026-07-19 post GearGrid rollup + ExportGate)
+## Current state (2026-07-19 post browser-hardening + SaaS/GPU expansion)
 
-- 177 affiliate links (163 Amazon unique ASINs + 14 SparkFun) — smoke 70 cards across 10 sims (29 SparkFun), 0 collisions
-- Gear: `/resources#gear` grouped collapsible, trending re-ranked (D-017). All 10 sims now use `GearGrid` (capped 6, merchant badges) + `KitBuilder` (10 kits: pid-hover-stack, si-vna-starter, rf-bench-starter, rtos-lab-stack, fea-mech-lab, slam-edge-stack, gan-foc-starter, antenna-rf-starter, verilog-fpga-starter, pinn-edge-stack). PID success-toast CTA → scroll to kit on stable hover 2s.
+- 177 audited affiliate links. Gear smoke covers 14 monetized simulators and 94 rendered cards (34 SparkFun), with 0 collisions at the last verification.
+- Gear: `/resources#gear` grouped/collapsible and trend re-ranked (D-017). Fourteen simulator kits are live; every simulator gear surface remains capped at 6 cards. PID success-toast CTA scrolls to the kit after a stable hover.
 - Amazon catalog live (163 ASINs refreshed 2026-07-19) — `AssociateNotEligible` cleared after 48h window, but still handle graceful fallback
 - SparkFun live code `rOtrc44SZw` — 10 kits reference Originals for yield
-- PCBWay/JLCPCB: stub-ready (`buildPcbWayUrl`, `buildJlcUrl`, `isFabLive()`, `FabOrderPanel.astro` on SI/Antenna/Verilog) — no fake IDs, returns empty base until owner supplies IDs. Acceptance G2 = blocked with clear owner ask + stub not linked (compliant).
-- ExportGate live on 6 sims: RTOS FreeRTOSConfig.h, SI stackup CSV, SLAM trajectory CSV, PID gains JSON + toast, Antenna array JSON, Verilog RTL — soft gate, localStorage unlock per sim, Buttondown optional POST, watermark line `makerportal.ai` footer.
+- PCBWay generic referral is live and disclosed. PCBWay Shared Projects are tabled; JLCPCB remains deferred and empty.
+- ExportGate is live on 10 sims: the original RTOS/SI/SLAM/PID/Antenna/Verilog exports plus ElevenLabs preset JSON/WAV, Modal benchmark JSON, Fly topology JSON, and vector-retrieval JSON. Buttondown is contacted only after a separate unchecked opt-in.
+- ElevenLabs PartnerStack destination is live and disclosed. Pinecone's official Affiliate Partner application is pending; no public commission rate is claimed. Modal/Fly have no verified public affiliate path, so their links remain informational.
+- Third-party Vercel Analytics was removed after browser QA exposed a runtime request. The only interaction log is the 100-event per-browser `mp_analytics_log`; it cannot support aggregate traffic or social-proof claims.
 - Conversion: gear capping 6, merchant Original badge (★ 10%), `mp:analytics` events for kit_cta_click, gear_click, export_gate_unlock, export_download, fab_*_click — first-party, no pixels.
-- Shop placeholder, /advertise copy only, blog 3 posts — newsletter form on /blog etc still TODO (ButtondownSignup needs username)
+- Shop placeholder and `/advertise` copy only; 11 blog posts are live. Newsletter
+  components remain disabled/deferred until a Buttondown public username exists.
 
 ## Pricing research (verified)
 
@@ -102,9 +105,9 @@ To maintain consistency and maximize conversion at "aha moments", all simulator/
 
 - [x] Amazon Creators API catalog live (163 ASINs refreshed 2026-07-19)
 - [x] SparkFun Affiliate live — code `rOtrc44SZw`, 14 products, multi-merchant model
-- [x] GearGrid on all 10 sims (was 6/10) + 10 kits live (was 6)
-- [x] ExportGate soft-gate on 6 sims (RTOS/SI/SLAM/PID/Antenna/Verilog) — free watermark + clean unlock via email + localStorage
-- [x] PCBWay/JLCPCB stub-ready — helpers + FabOrderPanel + isFabLive() — blocked until owner IDs (no fake IDs) — G2 compliant
+- [x] Gear smoke covers 14 monetized sims / 94 cards + 14 kits live
+- [x] ExportGate soft-gate on 10 sims — free watermark + clean unlock via local email storage; newsletter consent separate
+- [x] PCBWay referral live; Shared Projects tabled; JLCPCB deferred/empty
 - [x] Conversion polish — cap 6, merchant badges (★ Original 10%), PID toast → kit, analytics events mp:*
 - [x] Privacy disclosure updated (2026-07-19) + AffiliateDisclosure multi-merchant + fab pending note
 - [x] Upgrade /advertise copy with Simulator rail sponsorships ($200/mo format added)

@@ -5,11 +5,11 @@
  * Free path: watermarked file (footer includes makerportal.ai branding)
  * Gated path: clean file after email capture + localStorage unlock per sim.
  *
- * Privacy-first, telemetry-free:
+ * Privacy-first, network-silent unless the visitor separately opts into email:
  * - Email stored only in localStorage mp_export_email_{sim} + unlock flag
  * - Optional Buttondown POST only after an explicit, unchecked newsletter opt-in
  * - Tag = sim id for segmentation, no tracking pixels (D-014)
- * - Analytics via privacy-safe first-party CustomEvent mp:analytics
+ * - Analytics via a first-party CustomEvent written only to localStorage
  *
  * Wiring:
  *  1. Place <ExportGate simulator="rtos-scheduler" fileName="FreeRTOSConfig.h" ... />
@@ -375,7 +375,9 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
           console.debug(`[analytics] export_gate_unlock`, { sim });
         } catch {}
 
-        // Buttondown wiring — privacy-compliant, server-side via fetch no-cors, tag = sim id for segmentation
+        // Buttondown is the only optional network action in this gate. It runs only
+        // when a public username exists AND the separate newsletter box is checked.
+        // The clean export itself never depends on this request succeeding.
         // Reads from: data-buttondown-user attr (SSOT from newsletter.ts) or window.__MP_BUTTONDOWN_USER__ (set by ButtondownSignup)
         try {
           const btnUser = panel.getAttribute('data-buttondown-user') || (window.__MP_BUTTONDOWN_USER__ || '');

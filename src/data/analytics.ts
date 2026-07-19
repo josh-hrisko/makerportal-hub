@@ -5,8 +5,10 @@ export interface AnalyticsEvent {
 }
 
 /**
- * Privacy-safe first-party analytics aggregator.
+ * Privacy-safe, per-browser interaction log.
  * Logs events to console and appends to a 100-event rolling log in localStorage.
+ * Nothing is transmitted, so this must never be presented as site-wide traffic,
+ * conversions, unique users, or aggregate social proof.
  * No third-party pixels, trackers, or telemetry endpoints.
  */
 export function logEvent(detail: any): void {

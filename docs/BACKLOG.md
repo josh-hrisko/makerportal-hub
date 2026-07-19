@@ -6,10 +6,33 @@ Restructured 2026-07-15 evening around a single growth thesis: **site was indexe
 
 ## Phase 0 — Visibility (do this before judging anything else)
 
-- [x] Ship Vercel Web Analytics (or similar privacy-friendly option) — Search Console only covers search-referred sessions, zero visibility into direct/referrer/App-Store-driven traffic otherwise. `@vercel/analytics` + one `Layout.astro` component, ~30min. **Done 2026-07-15:** `<Analytics />` from `@vercel/analytics/astro` in `Layout.astro` `<head>`, verified in build output on every page. Starts collecting once deployed + Web Analytics toggled on in the Vercel dashboard (no code needed there).
+- [x] Keep runtime analytics local-only. Vercel Web Analytics was initially added,
+  then removed in `234daa5` after browser QA exposed a request to
+  `va.vercel-scripts.com`. Current `mp:analytics` writes a 100-event ring buffer
+  to that browser's localStorage and never uploads it. It is useful for local QA,
+  not site-wide audience or conversion reporting.
 - [ ] Audit whether the 11 live apps link back to `makerportal.ai` (About/Support screens, App Store listing "developer" link, in-app cross-promotion). This is free, compounding traffic independent of SEO — check each app's repo/App Store Connect listing. Not this repo's code, but worth a session to confirm.
 - [x] Recurring: re-run `node --env-file=.env scripts/search-console/build-report.mjs` every 1-2 weeks, log the delta in `STATUS.md` Traffic section. Output stays local (`analytics/reports/`, gitignored) — never commit real numbers, this repo is public. **Re-run 2026-07-15:** still 1 click / 3 impressions (window 2026-06-15..2026-07-13) — unchanged from the first pull, expected this early. Next re-check ~2026-07-29.
 - [ ] Watch for OAuth refresh-token expiry ~2026-07-19 (7-day Testing-mode cap) — if the search-console script starts failing auth, either publish the Google Cloud OAuth consent screen to "In production" or re-run `analytics/gsc_dashboard.py` locally to mint a fresh token. Still authenticating cleanly as of 2026-07-15.
+
+## Phase 0.5 — SaaS/GPU monetization follow-through
+
+- [x] Browser-harden ElevenLabs, Modal, and Fly labs; add the Pinecone-oriented
+  local vector-retrieval lab; publish three field notes and internal links. See
+  `SAAS-GPU-MONETIZATION.md` for evidence and exact boundaries.
+- [x] Activate the approved ElevenLabs PartnerStack destination and disclosure.
+- [ ] Pinecone: wait for Affiliate Partner approval, then add only the issued
+  destination URL and disclosure. Never request or commit a Pinecone API key or
+  invent a commission rate.
+- [ ] Modal: tailor/send the DevRel technical-review draft only after the owner
+  supplies non-secret sender metadata and a capped workload estimate. Deployment
+  remains a separate owner-run, spend-approved action.
+- [ ] Fly.io: technical-review request first. Do not imply a public grant program;
+  a deployment plan needs regions/resources, manual cost checks, cleanup date,
+  and explicit spend approval.
+- [ ] Buttondown remains owner-deferred; clean exports continue to unlock locally
+  without subscription. PCBWay Shared Projects remain tabled until a real board
+  design exists.
 
 ## Phase 1 — Developer-SEO field notes (highest-leverage content lever)
 
@@ -79,7 +102,7 @@ These don't need an audience — a single sale doesn't care about impression cou
 - [ ] Migrate legacy `makersportal.com/apps/*` to `*.makerportal.ai` subdomains + 302s.
 - [ ] AppSwitcher island integration in AuraLinter, Biquadia, etc. subdomains (import from hub card variant).
 - [ ] Verify light contrast for amber/orange/cyan icons in bright sun + low light (real device).
-- [ ] Font payload audit: Inter preload only if critical (currently preloads Plus Jakarta + Inter latin — check if Inter used critically).
+- [x] Font payload audit: removed unused Inter preload/bundle; retained self-hosted Plus Jakarta subset (`234daa5`).
 - [ ] Auto-generate iconDot via script (magick histogram -> apps.ts json) instead of manual.
 
 ## Done — reference (details in STATUS/DECISIONS)
@@ -103,4 +126,6 @@ These don't need an audience — a single sale doesn't care about impression cou
 - /advertise media kit upgraded: audience stats (11 apps, 6 pillars, 0 trackers pulled live from `apps.ts`/`trends.ts`), rate cards $300 note / $150 slot / $500 video, disclosure standards block — build passed, verified locally 2026-07-15
 - Search Console pipeline (`scripts/search-console/`) built + tested live 2026-07-15 — local-only by design (repo is public), reuses existing OAuth refresh token from `analytics/`, writes `analytics/reports/search-performance-latest.{json,md}` (gitignored). First real pull: 1 click / 3 impressions over trailing 28 days.
 - Backlog restructured 2026-07-15 into phased growth+revenue+engineering plan (this file) — replaces flat P0/P1/P2 to reflect traffic-first prioritization
-- Vercel Web Analytics shipped (Phase 0), MotionLink field note shipped + cross-linked (Phase 1), content-engine idea examined with argued recommendation in `MONETIZATION.md` P3 + `draft-post.mjs` skeleton (Phase 5, gated behind trigger conditions) — all 2026-07-15
+- Vercel Web Analytics was tried and removed on privacy review; MotionLink field
+  note shipped + cross-linked; content-engine idea remains gated behind real
+  shipped-app grounding and human review.

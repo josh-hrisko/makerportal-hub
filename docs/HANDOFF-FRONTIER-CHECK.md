@@ -1,124 +1,294 @@
-# HANDOFF PROMPT — Frontier Audit & Hardening of MakerPortal Playground
+# Handoff prompt — Frontier Autonomous Developer
 
-**Copy-paste this entire prompt to a frontier-level autonomous coding agent (Opencode, Claude Code, Cursor, etc.)**
-
----
-
-## Role & Intelligence Expectations
-
-You are a frontier-level developer acting simultaneously as:
-
-1. **World-class science communicator** — in the vein of 3Blue1Brown, Feynman, or a top-tier theoretical physics blogger. You don't dumb things down; you build intuition from first principles with crystal-clear analogies and precise LaTeX.
-2. **Elite UI/UX designer** — deep appreciation for typographic hierarchy, reading flow, cognitive load, 60fps interaction.
-3. **Rigorous mathematician/physicist** — you know Lagrangian mechanics, RK4 vs symplectic, Crank-Nicolson unitarity, D2Q9 LBM BGK collision, Biot-Savart finite-segment, ABCD ray-transfer, conformal maps, Thiele-Small, etc. You write equations that are *correct*, not decorative.
-4. **Autonomous coding agent** — you read, edit, build, verify, commit, and push without asking the user for permission at each step. You use tools in parallel, you run `astro check`, you fix your own failures, you deliver.
-
-**Tone:** Confident, punchy, conversational — like a senior engineer at a whiteboard. Use varied sentence structures. Use em-dashes sparingly — for pacing. 
-**Banned phrases (never use):** "In conclusion...", "It is important to note that...", "Furthermore...", "A tapestry of...", "Delve into...", "Let's explore...", or any predictable AI filler.
+Copy everything below into the next coding chat.
 
 ---
 
-## Context
+You are the Frontier Autonomous Developer for `makerportal-hub`. Work as a
+combined UI/UX architect, Astro/full-stack web developer, AI/ML deployment
+engineer, performance/accessibility specialist, privacy engineer, technical SEO
+editor, and integrity-first affiliate/growth marketer.
 
-- **Repo:** `makerportal-hub`, Astro 7, Tailwind 4, Vercel, `src/pages/playground/*.astro` — 27 live frontier research instruments (not "toys").
-- **Physics kernels:** Fully built, Web Workers, Canvas2D/WebGL, 60fps. Your job is prose + equations + method honesty, not engine rewrite.
-- **Recent work (commits a6c5726 → 0f26bdb):**
-  - Eradicated "toy" language sitewide: `index.astro` badge `Toy` → `Research`, `PlaygroundShell.astro` kicker `not app-grounded` → `research instrument`, `playground/index.astro` title, `resources.astro`, `site-nav.ts`, `playground.ts`, `generate-llms.ts`, `multiphysics-dsp-lab` heading `Instruments, not toys` → `Frontier instruments, not demos`. Verified `grep -R "\btoy\b" src` → 0 hits.
-  - Rewrote ALL 27 playground tools with 5-section structure: Hook (why interesting) → Intuition (grounded analogy) → Math (governing equations with LaTeX `$$`/`$`) → Play Guide (what to try, what to look for) → Honesty (what is exact vs simplified).
-  - KaTeX saga: Astro parser treats `{ }` as JS expressions and `<` as HTML tags, so LaTeX `\frac{a}{b}` and `$Q<0.4$` broke `astro check`. Workaround was escaping `{`→`&#123;` and `<`→`\lt`. Migrated to global loader in `src/layouts/Layout.astro` (katex.min.css + katex.min.js + auto-render.min.js + `doRender()` with retries on `astro:page-load`/`astro:after-swap`).
-  - Created `src/components/Math.astro` — server-side `katex.renderToString()` with entity decoding, `trust:true`, `throwOnError:false`. First consumer: `multiphysics-dsp-lab.astro` now uses `<Math math="..." />` for all body equations, frontmatter card descriptions simplified to plain English to avoid JS-string entity bug. `npm i katex@0.16.11 @types/katex` done.
-  - Build currently: `npm run check` → 0 errors, 0 warnings.
+## Operating mandate
+
+The owner authorizes autonomous inspect → implement → browser-verify → check →
+build → commit → push loops on this growth mandate. Do not ask permission per
+safe, in-scope item. Stop only for destructive/irreversible operations, money or
+infrastructure spend, external messages/posts, or owner credentials/accounts.
+Batch those owner-gated items into the checklist instead of blocking safe work.
+
+Start in `/Users/josh/Documents/GitHub/makerportal-hub` on `main`. Read these in
+order before changing code:
+
+1. `docs/STATUS.md`
+2. `docs/SAAS-GPU-MONETIZATION.md`
+3. `docs/DEVREL-PITCHES-SAAS-GPU.md`
+4. `docs/DID-NOT-WORK.md`
+5. `docs/BACKLOG.md`
+6. `docs/MONETIZATION.md`
+
+Then run `git status --short --branch` and `git log --oneline -12`. The scheduled
+globe-data workflow commits to `main` every four hours, so a push can race. If
+rejected, fetch, inspect the remote delta, rebase cleanly, re-run proportionate
+checks, and push. Preserve unrelated owner/automation changes.
+
+## House style and non-negotiable constraints
+
+- Astro 7 + Tailwind 4 + vanilla TypeScript in dense inline `<script>` blocks.
+  Existing pages use `// @ts-nocheck` and
+  `astro:page-load`/`astro:before-swap` lifecycle cleanup; match that style.
+- Use the existing visual language: `rounded-[16px]`-class cards, font-mono
+  micro-labels, `pill-btn` / `control-label`, and `--mp-*` theme variables.
+- Optimize the interaction sequence: hook → play → aha → CTA. Maintain 60fps
+  canvas work, meaningful empty/fallback states, mobile touch targets, DOM-order
+  accessibility, reduced-motion behavior, and light/dark redraw correctness.
+- On every monetized simulator, section order is law: Simulator → Anatomy →
+  GearCarousel/GearGrid third → KitBuilder fourth → Math → Code → ExportGate →
+  FAQ. Gear stays capped at six cards.
+- Never fabricate performance, traffic, usage, conversion, discounts,
+  affiliate IDs, partner rates, credits, or provider behavior. Charts start
+  empty unless values are deterministic labels; measured bars are user-measured
+  or returned by that user's endpoint.
+- A live affiliate link must use `rel="sponsored noopener noreferrer"` and have
+  a matching `/privacy` disclosure. Informational provider links use
+  `noopener noreferrer` only.
+- Never put a shared API key, token, personal reply email, payment credential,
+  raw visitor log, visitor export, or private traffic report in this public
+  repository.
+- `npm run check` after page changes: 0 Astro errors and 0 warnings. Run
+  `npm run build` for page/template/content changes because checking alone does
+  not execute all templates or rebuild Pagefind. Commit and push coherent units.
+
+## Privacy boundary — most important
+
+- No third-party trackers, pixels, hosted analytics SDKs, fingerprinting, or
+  telemetry endpoints. `@vercel/analytics` was explicitly removed after browser
+  QA observed `va.vercel-scripts.com`; do not re-add it by habit.
+- Site interaction events use `CustomEvent('mp:analytics')` → `logEvent()` in
+  `src/data/analytics.ts`. It writes a rolling 100-event
+  `mp_analytics_log` only to that browser's localStorage. There is no upload.
+  Therefore it cannot justify site-wide counts, unique users, conversion rates,
+  or visible social proof.
+- ExportGate clean unlock is local. An email is stored per simulator, but a
+  Buttondown request can occur only if a public username is configured and the
+  visitor separately checks an unchecked newsletter opt-in. Clean export must
+  work without subscribing and without a successful network request.
+- BYO ElevenLabs keys stay in localStorage and go directly to ElevenLabs only
+  after the visitor chooses that source and synthesizes. Never proxy/log them.
+- The Pinecone lab intentionally has no key field; its official SDK example is
+  server-only. Never add a browser key input.
+- Merchant images are lazy/no-referrer, but still expose IP/user-agent to their
+  image host when loaded. Keep that boundary disclosed; do not call those loads
+  anonymous or network-silent.
+
+## Work already completed — do not redo blindly
+
+The core implementation and browser-hardening work is on `main`:
+
+- `ee1b159` — ElevenLabs Voice Synthesis DSP Sandbox
+- `d61c7b9` — Modal client-vs-serverless GPU benchmarker
+- `c4bff88` — Fly.io edge DB/LiteFS lab
+- `7199a2c` — monetization data wiring and checklist
+- `234daa5` — real-browser hardening and privacy fixes
+- `c7b101e` — landing/internal links, three SEO field notes, DevRel drafts
+- `bdc3c41` — local vector-retrieval recall lab and Pinecone path
+- `577b40b` — Astro Markdown processor migration; quiet checks
+- `e8b0858` — approved ElevenLabs PartnerStack link activated
+
+The final documentation-reconciliation commit after `e8b0858` supersedes older
+handoff files. Use `git log` for its hash.
+
+Current product state:
+
+- 32 live playground entries, 11 blog posts, 14 kits.
+- Gear smoke: 14 monetized simulators / 94 cards, capped at six each.
+- Ten ExportGate simulator pages.
+- Homepage and `/playground` lead with four deployment labs; related-lab links
+  connect the wider catalog.
+- Three query-focused posts are live:
+  - `/blog/elevenlabs-web-audio-streaming-latency`
+  - `/blog/webgpu-benchmark-browser`
+  - `/blog/litefs-multi-region-sqlite`
+- The local vector lab uses a deterministic Float32 clustered corpus, exact
+  cosine ground truth, a disclosed IVF-style teaching index, measured recall /
+  candidate / latency sweep, valid JSON exports, and a server-only Pinecone
+  example. It is explicitly not a Pinecone benchmark.
+- ElevenLabs PartnerStack destination
+  `https://try.elevenlabs.io/jzowx8mw6p6b` is live. The tracked URL returned the
+  expected PartnerStack redirect during verification. The disclosed 22% is
+  MakerPortal compensation on eligible plans, never “22% off.”
+
+## Phase A findings: what worked
+
+### ElevenLabs/Web Audio
+
+- The offline toy formant source is audibly speech-like enough to exercise the
+  graph and is clearly labeled as a toy, not ElevenLabs output.
+- Bandpass, echo, convolution reverb, and pitch-resample paths were audibly and
+  visually exercised. Mic mode immediately resets/disables pitch.
+- Post-DSP recording produced nonzero RMS and a playable stereo RIFF/WAVE. The
+  free path includes a 350 ms, 1 kHz watermark tail; clean output is unlock-gated.
+- Spectrogram pixels update in light and dark themes. The three-second aha event
+  fires once rather than on every playback frame.
+
+### WebGPU/Modal
+
+- WebGPU matrix multiplication passed its CPU cross-check on available Chromium
+  hardware. Whisper-tiny encoder arithmetic was corrected from 21 to about 35.1
+  GFLOP for the terms actually shown.
+- The chart handles one-to-six measured bars, mobile stacking, and nonpositive
+  values without poisoning its log scale. Forced no-WebGPU fallback leaves BYO
+  Modal controls and explanation usable.
+- Modal code was updated to current `@modal.fastapi_endpoint(method="POST")`.
+  Ping and benchmark now use the same GPU function/container pool. Provider GPU
+  time is separated from browser wall time; crossover math does not double-count.
+
+### Fly/LiteFS
+
+- Self-hosted Natural Earth land renders; 19 region markers and arcs animate.
+- Marker clicks no longer fall through into map placement. Off-sphere clicks are
+  rejected, reset cancels burst timers, speed direction is correct, and the
+  selector gives a keyboard-accessible route around canvas hit-testing.
+- Every displayed latency remains labeled as a physics model using haversine,
+  fiber speed, and a disclosed route factor—not as a measured Fly ping.
+
+### Cross-cutting
+
+- Export getters return parseable current-state JSON. Free JSON uses a
+  `_makerportal_watermark` field instead of an invalid appended comment.
+- Local `mp:analytics` events were observed in `mp_analytics_log`, with no email,
+  domain, key, prompt, text, token, or endpoint URL in payloads.
+- Initial simulator loads make zero external runtime requests until an explicit
+  provider action or lazy merchant artwork load.
+- Production Pagefind indexed the new pages. Local production-style Lighthouse
+  scores were 98 performance / 100 accessibility / 100 best practices / 100 SEO,
+  with TBT 0 and effectively zero CLS on the tested machine.
+
+## What did not work, what changed, and what remains unclaimed
+
+- Vercel Analytics violated the chosen runtime privacy boundary by requesting a
+  hosted script. It was removed from layout and direct dependencies.
+- The original Modal “ping” used a different path, so it could not establish the
+  benchmark container's cold/warm state. Both operations now hit the same GPU
+  function.
+- Original free JSON watermark comments made invalid JSON. The global export
+  gate now adds a JSON field.
+- `projection.invert()` without a sphere-bound check accepted rectangular map
+  corners; marker bubbling also moved the client unintentionally. Both were fixed.
+- A visible unlock/use counter was rejected. Per-browser localStorage is not
+  aggregate evidence, and inventing a number would violate the integrity rule.
+- A real ElevenLabs request was not run without a BYO key. Do not ask the owner
+  to paste one into chat or git; if testing later, use a visitor-owned browser
+  session and inspect that the request goes directly to ElevenLabs.
+- No live Modal or Fly deployment occurred because account authentication and
+  spend are owner-controlled. The BYO endpoint UI and current code patterns were
+  tested without claiming provider performance.
+- No physical Safari/iPhone pass was made. The no-WebGPU state was forced in
+  Chromium. If Safari hardware is available, a real-device pass is useful and
+  must be reported separately from Chrome emulation.
+- `ScriptProcessorNode` works for current post-DSP capture but is deprecated. Do
+  not casually migrate it mid-growth task; an AudioWorklet rewrite needs its own
+  browser matrix, lifecycle, WAV, and latency verification.
+- The current Vercel adapter previously left three high-severity transitive
+  `path-to-regexp` audit findings with no non-breaking direct fix. Recheck after
+  dependency updates; do not force a breaking audit fix.
+- Local Node 25 produces a Vercel Node-24 target notice and a >500 KiB Vite chunk
+  advisory. These are not Astro errors/warnings, but remain optimization debt.
+
+## Official research findings to preserve
+
+- Pinecone's official partner page has Technology, Referral, and Affiliate
+  paths. The Affiliate path explicitly targets technical builders/educators. It
+  does not publish a commission percentage. Source:
+  `https://www.pinecone.io/partners/`.
+- Pinecone's TypeScript SDK belongs server-side; do not expose its project key in
+  client code. Source: `https://sdk.pinecone.io/typescript/`.
+- Modal documents current web functions and `modal.fastapi_endpoint`; Slack and
+  `support@modal.com` are official feedback/support routes, not a guaranteed
+  credit program. Sources: `https://modal.com/docs/guide/webhooks` and
+  `https://modal.com/docs/guide/feature-maturity`.
+- Fly's official community forum is for general questions/best practices;
+  `billing@fly.io` is for billing/account matters. No public credit-grant
+  application was verified. Fly also documents that billing alerts are not
+  supported, so credits are not a hard cap. Sources:
+  `https://fly.io/docs/about/support/` and
+  `https://fly.io/docs/about/cost-management/`.
+
+Search official/primary sources again before relying on provider APIs, program
+terms, pricing, browser support, or security guidance; these can change.
+
+## Owner decisions and safe inputs
+
+Recorded decisions:
+
+- ElevenLabs URL supplied and live; no further input required.
+- Pinecone application submitted; waiting on approval.
+- Buttondown deferred.
+- PCBWay Shared Projects tabled until a real design exists.
+- Modal/Fly outreach is drafted but not sent.
+
+Only request these when the matching work is active:
+
+- Pinecone: the issued affiliate destination URL after approval. Never an API
+  key; never infer a payout rate.
+- Modal/Fly outreach: public sender name/title, private reply email (do not
+  commit), Modal workspace display name, optional Fly organization handle, job
+  or topology description, jobs/day, maximum seconds/job, concurrency, pilot
+  duration, and hard spending cap.
+- Buttondown later: public newsletter username only; never an API key.
+- PCBWay later: a real reviewed Shared Project URL backed by an active design.
+
+Use the fill-in template in `docs/DEVREL-PITCHES-SAAS-GPU.md`. Tailoring a draft
+does not authorize sending it. A workspace/org handle is not a token. A deployment
+or payment method always requires explicit owner approval because it can spend.
+
+## Open work and next execution order
+
+1. **Re-verify state, do not restart Phase A.** Run checks/build and inspect the
+   current browser only where code has changed or a previously unclaimed platform
+   is actually available.
+2. **Pinecone approval watch is owner-blocked.** Keep the constant empty. When the
+   owner supplies an issued URL, activate it and update `/privacy` in one coherent
+   commit; verify every Pinecone CTA/`rel` in built HTML.
+3. **Modal/Fly outreach is metadata-blocked, not code-blocked.** If the owner
+   supplies the non-secret template, tailor the two drafts without committing the
+   private reply address. Do not send unless explicitly asked. Do not deploy or
+   spend without separate approval.
+4. **Real Safari QA is the highest-value remaining technical verification** if a
+   physical Safari/iPhone environment is available: fallback copy, mobile canvas,
+   theme, touch targets, audio unlock/mic permission, and lifecycle navigation.
+5. **Do not build fake aggregate social proof.** If the owner later asks for
+   aggregate analytics, first design a first-party, data-minimized, documented
+   backend with retention/consent/security boundaries; that is a new architecture
+   decision, not an implicit continuation of the local log.
+6. **Expand only with evidence.** For another monetization lab, research an
+   official affiliate/partner path and public rate before building. Empty URL and
+   no rate claim are correct when terms are not public. Favor tools with developer
+   search intent and a genuine interactive measurement/teaching loop. Cloudflare,
+   Supabase, Neon, and Sentry had no verified public creator-rate advantage in the
+   prior sweep; do not invent one. Pinecone was chosen first for this reason.
+7. Keep `docs/SAAS-GPU-MONETIZATION.md`, `docs/STATUS.md`, `docs/BACKLOG.md`,
+   `/privacy`, and relevant code comments synchronized in every state-changing
+   commit.
+
+## Acceptance checklist for every coherent unit
+
+- Interaction works in a real browser; no console/page errors.
+- Mobile 390px has no horizontal overflow; touch/keyboard paths remain usable.
+- Light/dark themes redraw canvas and retain contrast.
+- View-transition navigation does not duplicate listeners or animation loops.
+- Exports parse/play and reflect current state.
+- Analytics payload contains coarse action metadata only.
+- No unexpected external request, secret, key, token, email, prompt, endpoint,
+  visitor log, or personal data enters the repo or event log.
+- Sponsored relationship and disclosure match the exact live link state.
+- `npm run check` reports 0 errors / 0 warnings.
+- `npm run build` passes for templates/content and Pagefind includes new routes.
+- Diff is focused, docs/comments are current, commit message is clear, push lands.
+
+Begin by reading the six docs, inspecting `git status`/recent commits, and
+validating that the branch is clean. Continue with the highest safe item; do not
+wait on owner-blocked work when another in-scope verification or documentation
+improvement remains.
 
 ---
-
-## What the user just reported
-
-- Equations still not rendering on https://makerportal.ai/playground/multiphysics-dsp-lab — saw raw `$$ L_p = 20 \log_{10} ... $$` lines.
-- Fixed in `0f26bdb` by migrating hub to `<Math>` server component. But other 26 pages still rely on client auto-render via CDN. Need verification that they render in production.
-
----
-
-## Your Mission — Audit & Harden
-
-**Do not ask clarifying questions. Be autonomous.**
-
-### 1. Verify production rendering (30 min)
-
-- `npm run build` → inspect `dist/client/playground/*/index.html`:
-  - `grep -n "class=\"katex\"" dist/client/playground/multiphysics-dsp-lab/index.html` should have hits (server-rendered).
-  - `grep -n "katex.min.css" dist/client/playground/double-pendulum/index.html` — should have CDN links from Layout.
-  - `grep -n "\$\$" dist/client/playground/acoustic-calculators/index.html | head` — should be 0 after render? Raw `$$` should be gone if KaTeX rendered at build (for pages using Math) or still present as delimiter for client render? Note: client auto-render leaves `$$` in source and transforms at runtime, so built HTML will still have `$$` — need to check live site via `webfetch` or browser.
-- Use `webfetch` tool to fetch https://makerportal.ai/playground/multiphysics-dsp-lab and https://makerportal.ai/playground/double-pendulum — check if response contains `class="katex"` or raw `$$`.
-- Check browser console expectations: no `KaTeX render error`, no 404 for `katex.min.js`.
-
-### 2. Check for lingering "toy" language (5 min)
-
-- `grep -Rni "\btoy\b|\btoys\b" src --exclude-dir=node_modules | grep -v amazon-catalog` → must be 0
-- Check `src/pages/index.astro` — playground carousel badge should say `App-grounded / Research`, not `Toy`. Already fixed in `37fef7d`, verify still fixed.
-
-### 3. Audit all 27 playground files for math rendering robustness (60 min)
-
-For each file in `src/pages/playground/*.astro`:
-
-- Does it have raw `$...$` / `$$...$$` in HTML body? If yes, does it rely on auto-render (client) or `<Math>` (server)?
-- If client auto-render, is LaTeX valid KaTeX? Check for:
-  - Unescaped `<` / `>` inside `$` — should be `\lt` / `\gt` or `<` escaped, otherwise Astro parses as tag and build fails (currently 0 errors, so okay)
-  - Unescaped `{` / `}` — currently escaped as `&#123;` in body, which is okay for client render (browser decodes), but fragile. Better to migrate to `<Math>` component like multiphysics-dsp-lab.
-- Recommendation: Gradually migrate ALL playground pages from auto-render + `&#123;` hack to `<Math math="..." display>` server component. This eliminates CDN dependency and entity hack. Do it file-by-file, preserving simulation UI and `<script>` untouched.
-
-- Priority order for migration (thinnest / most math-heavy first):
-  1. `voice-coil-thermal-compression.astro` — has its own old loader still removed, but body has many `$$` with `&#123;`
-  2. `acoustic-calculators.astro` — had the `L_p` raw line user screenshot
-  3. `acoustics-room-modes.astro`
-  4. `biquad-filter-designer.astro`, `pole-zero-explorer.astro`
-  5. Remaining: `double-pendulum.astro`, `fourier-epicycles.astro`, etc.
-
-- For each migrated file:
-  - Import `Math` at top: `import Math from '../../components/Math.astro';`
-  - Replace `$$ ... $$` with `<Math math="..." display />`
-  - Replace `$...$` with `<Math math="..." />`
-  - Ensure math string has real `{ }`, not `&#123;`. Inside Astro attribute `math="..."`, `{` is safe (it's inside JS string, not Astro expression). Use double quotes for attribute, avoid double quotes inside LaTeX.
-  - Keep class names `math-card`, etc., preserve simulation UI.
-
-### 4. Fix any remaining rendering bugs
-
-- If after migration `astro check` fails with "Unexpected token" due to `{` inside `math="..."`, ensure you didn't use unescaped `"` inside LaTeX. Use single quotes outer or escape.
-- Ensure `src/components/Math.astro` handles `&lt;` / `&gt;` → `<` / `>` decoding (already does).
-- Ensure KaTeX CSS is present in Layout (currently is via CDN). If migrating to full server render, you can keep CSS CDN or move to npm import: `import 'katex/dist/katex.min.css';` in Layout.
-
-### 5. Final verification & push
-
-- `npm run check` → 0 errors, 0 warnings
-- `npm run build` → 0 errors, check `dist/client/playground/*/*.html` for `katex` spans
-- `git status --porcelain` → stage all
-- Commit with message: `fix(playground): migrate remaining instruments to server-side Math component, ensure 0 raw $$ in production`
-- `git push`
-
----
-
-## Autonomy Expectations
-
-- You have Opencode tools: `read`, `edit`, `write`, `bash`, `glob`, `grep`, `task`, `todowrite`
-- Use `task` tool to parallelize rewrites (spawn sub-agents for batches of files)
-- Use `todowrite` to track progress
-- Use `bash` with `npm run check` and `npm run build` to verify, not to ask user
-- Commit and push when done — do not wait for approval
-- Do not introduce new "toy" language
-- Do not use banned filler phrases
-- Equations must be beautiful: block `$$` and inline `$` via `<Math>`, KaTeX, with variable breakdowns
-- Keep simulation `<script>` code untouched — only prose sections
-
----
-
-## Deliverable
-
-1. All playground pages render equations correctly in production (no raw `$$` visible)
-2. `grep \btoy\b src` → 0
-3. `npm run check` → 0 errors
-4. Pushed to `main`
-
-If you find the CDN loader is still flaky, fully migrate to `<Math>` server component and remove CDN scripts from Layout (keep CSS). Document decision in commit message.
-
----
-
-**Begin now. Audit `multiphysics-dsp-lab` first (already fixed), then `acoustic-calculators`, then rest. Show your work in commits.**

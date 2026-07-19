@@ -38,9 +38,11 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   probe sweep, recall@k/candidate/latency table, local JSON export, and a
   server-only Pinecone TypeScript pattern. Explicitly not a Pinecone benchmark.
 - [x] `ELEVENLABS_PARTNER_URL` / `MODAL_REFERRAL_URL` / `FLY_REFERRAL_URL`
-  constants in `affiliate-links.ts` — ship **empty**; `buildSaasPartnerUrl()`
-  flips links from `rel="noopener noreferrer"` (informational) to
-  `rel="sponsored noopener noreferrer"` automatically when a real URL lands.
+  constants in `affiliate-links.ts`. ElevenLabs now contains the owner's
+  approved destination; Modal and Fly remain empty/informational because no
+  public affiliate program was verified. `buildSaasPartnerUrl()` flips only a
+  provider with a real URL from `rel="noopener noreferrer"` to
+  `rel="sponsored noopener noreferrer"`.
 - [x] `PINECONE_PARTNER_URL` follows the same empty-until-approved rule. The
   official public program page does not disclose a rate, so UI/docs state none.
 - [x] Kits: `voice-synth-workstation`, `modal-edge-bench-stack`,
@@ -84,7 +86,8 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   marker and map clicks are separated; off-sphere clicks are ignored; reset
   cancels in-flight burst timers; animation speed direction is correct; mobile
   map is 305 × 320 px; region selector provides a keyboard-accessible path.
-- [x] Production Pagefind index returns all three canonical simulator routes.
+- [x] Production Pagefind index returns all three original simulator routes; the
+  later vector-retrieval route is also indexed and was checked separately.
   Production-like gzip/cache Lighthouse runs score **98 performance / 100
   accessibility / 100 best practices / 100 SEO** on all three. LCP is 1.95 s,
   TBT is 0 ms, CLS is 0–0.00014, transfer is 165–278 KiB, scripts are 12–20
@@ -98,6 +101,20 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   code uses a high-contrast theme, and the ElevenLabs source select has a real
   label. Removed an unused Inter preload/font bundle; the retained Plus Jakarta
   subset is self-hosted.
+
+### Verification boundaries, not hidden failures
+
+- The offline ElevenLabs formant/DSP/recorder path was exercised. A real
+  ElevenLabs synthesis request was not made because no owner or shared API key
+  belongs in the test environment; the visitor BYO path remains direct to the
+  provider.
+- WebGPU passed in Chromium on available hardware. The no-WebGPU state was
+  forced and browser-tested, but a physical Safari/iPhone run was not claimed.
+- The Modal snippet was checked against current official docs and the BYO
+  endpoint UI was tested without a live endpoint. No Modal function was
+  deployed because that would require an owner account and could create spend.
+- Fly's map is an educational client-side model. No Fly app was deployed and no
+  displayed latency value is represented as a Fly measurement.
 
 ## Owner actions (blocked on human)
 
@@ -126,10 +143,14 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - ElevenLabs: no further input needed; approved PartnerStack destination is live.
 - Pinecone: the approved affiliate destination URL after acceptance (not a
   project API key). No URL or public rate is currently available.
-- Modal: no referral ID is expected; later, owner workspace credentials are
-  only needed for the owner-run AuraLinter deployment or credit-pitch follow-up.
-- Fly.io: no referral ID is expected; later, owner account contact is only
-  needed to send the grant pitch.
+- Modal: no referral ID is expected. For outreach, provide only a workspace
+  display name plus a capped workload estimate. Never paste a token here or
+  commit it; any later deployment authentication stays in the owner's local
+  Modal CLI/account environment.
+- Fly.io: no referral ID is expected. For outreach, provide only the public
+  organization handle and a capped topology/workload estimate. Never provide a
+  Fly access token; any deployment remains owner-run after explicit spend
+  approval.
 - Buttondown: the public username only, after the owner wants newsletter
   collection enabled.
 - No shared ElevenLabs, Pinecone, Modal, Fly.io, Amazon, or other API key is needed for
@@ -141,6 +162,16 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   source and date range.
 - PCBWay Shared Projects remain tabled until the owner has an active design with
   real KiCad/Gerber assets; do not create placeholder project URLs.
+
+### Owner decisions recorded 2026-07-19
+
+- ElevenLabs PartnerStack destination supplied and activated.
+- Pinecone Affiliate Partner application submitted; waiting on approval.
+- Buttondown setup deferred.
+- PCBWay Shared Projects tabled until a real design exists.
+- Modal/Fly outreach remains drafted, not sent. The next chat may tailor it from
+  non-secret owner metadata but must not send or deploy without an explicit
+  request and, for deployment, explicit spending approval.
 
 ## Phase B growth surfaces (2026-07-19)
 

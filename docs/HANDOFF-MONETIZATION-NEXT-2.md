@@ -1,5 +1,8 @@
 # Handoff: Frontier Simulator Monetization — Burndown + Extended Affiliate Viability Audit (Post PCBWay Referral Live + Aha-CTAs x4)
 
+> Historical as of 2026-07-19. Counts and blockers below predate the SaaS/GPU
+> expansion; use `SAAS-GPU-MONETIZATION.md` and `HANDOFF-FRONTIER-CHECK.md`.
+
 **Date:** 2026-07-19 (session continuation, post 807cb3f)  
 **Repo:** `makerportal-hub` `main`  
 **Previous handoff:** `docs/HANDOFF-MONETIZATION-NEXT.md` (2026-07-19 post GearGrid×10 + ExportGate×6) + this doc  

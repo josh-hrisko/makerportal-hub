@@ -29,3 +29,36 @@
 
 - **Lighthouse mobile simulation ≠ iPhone Safari** for blur/compositing.  
 - **Prod-like:** `npm run build` → serve `.vercel/output/static`.
+
+## Privacy / measurement
+
+- **`@vercel/analytics` did not meet this repo's zero-third-party-runtime
+  boundary.** Browser QA exposed a request to `va.vercel-scripts.com`; the
+  component and package were removed in `234daa5`. Do not re-add it (or another
+  hosted analytics SDK/pixel) without an explicit privacy-policy change.
+- **`mp_analytics_log` is not aggregate analytics.** It is a 100-event
+  per-browser localStorage log with no upload path. Turning its unlock/click
+  count into visible “people used this” social proof would be fabricated.
+- **A clean export must not imply newsletter consent.** The first ExportGate
+  draft could POST when Buttondown was configured. It now requires a separate,
+  unchecked opt-in; unlock/download works without the request.
+- **Hotlinked merchant artwork is not network-silent.** `no-referrer` prevents
+  referrer leakage, but the image host still sees IP/user-agent when a lazy card
+  enters range. This is disclosed on `/privacy`; do not call it zero-network.
+
+## SaaS / GPU labs
+
+- **Separate “ping” and GPU benchmark functions gave misleading cold/warm
+  comparisons.** Modal ping now POSTs to the same GPU function/container pool;
+  endpoint-observed compute time and browser wall time stay distinct.
+- **Prefilled benchmark bars are not acceptable evidence.** The Modal chart
+  starts empty and displays only browser measurements or values returned by the
+  visitor's endpoint. Nonpositive values must never enter a log scale.
+- **Free-form comments appended to JSON break the export.** JSON watermarks now
+  use a `_makerportal_watermark` field so both free and clean variants parse.
+- **`projection.invert()` alone is insufficient map hit-testing.** Clicks in a
+  rectangular canvas corner can fall outside the globe; reject points beyond
+  the projected sphere and separate marker clicks from map placement.
+- **Provider SDK snippets age quickly.** The Modal decorator was checked against
+  current `modal.fastapi_endpoint` docs on 2026-07-19. Re-check official docs
+  before future edits instead of trusting the handoff.

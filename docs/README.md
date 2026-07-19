@@ -2,14 +2,19 @@
 
 **Not a public site surface.** These files are for humans and coding agents working in this repo. They are not linked from the marketing site, sitemap, or `llms.txt`.
 
-Compressed 2026-07-15 — handoff prompts and verbose DONE history archived to `archive/`.
+Compressed 2026-07-15; reconciled after the SaaS/GPU expansion on 2026-07-19.
+Older handoffs remain historical. `HANDOFF-FRONTIER-CHECK.md` is the only current
+copy-paste continuation prompt.
 
 | Doc | Purpose | Status |
 |-----|---------|--------|
 | [STATUS.md](./STATUS.md) | **Start here** — single snapshot: 11 apps, theme, pipelines, monetization state, last verifications | Evergreen — update each session |
 | [BACKLOG.md](./BACKLOG.md) | Comprehensive phased plan (traffic visibility → content → distribution → backlinks → revenue → engineering) — no DONE history noise | Evergreen — check in + burn down each session |
 | [MONETIZATION.md](./MONETIZATION.md) | Shop/email/affiliate/trends stack, verified pricing, prioritized avenues, shop MVP plan | Evergreen — replaces handoff + dated strategy |
-| [DECISIONS.md](./DECISIONS.md) | ADR log D-001→D-017 — why we chose X, hard-won lessons (esp D-011..D-017) | Keep, append only |
+| [SAAS-GPU-MONETIZATION.md](./SAAS-GPU-MONETIZATION.md) | Browser evidence, SaaS/GPU growth state, privacy/integrity rules, exact owner blockers | Evergreen — source of truth for deployment labs |
+| [DEVREL-PITCHES-SAAS-GPU.md](./DEVREL-PITCHES-SAAS-GPU.md) | Owner-send Modal/Fly drafts, evidence gate, workload walkthrough | Active draft — contains no credentials and sends nothing |
+| [HANDOFF-FRONTIER-CHECK.md](./HANDOFF-FRONTIER-CHECK.md) | Copy-paste prompt for the next autonomous frontier developer | Current handoff — supersedes other `HANDOFF-*` files |
+| [DECISIONS.md](./DECISIONS.md) | ADR log D-001→D-023 — why we chose X and hard-won constraints | Keep, append only |
 | [THEME-SYSTEM.md](./THEME-SYSTEM.md) | Light default + hidden toggle + reading paper — tokens, QA checklist, a11y ratios | Keep — working per owner |
 | [RESEARCH-EMPIRE-IA.md](./RESEARCH-EMPIRE-IA.md) | Content empires, nav IA ≤7 items, blog patterns → what we shipped | Keep — working |
 | [DID-NOT-WORK.md](./DID-NOT-WORK.md) | Failed approaches (backdrop-filter iOS lag, blur ATF, slug as ground truth) | Keep — working |
@@ -23,7 +28,10 @@ Compressed 2026-07-15 — handoff prompts and verbose DONE history archived to `
 - Studio: San Francisco (never LA)
 - GitHub org: `https://github.com/makerportal` (not personal accounts)
 - No personal legal names on the public hub; team is **role-first** (`/team`)
-- Monetization: Amazon 50 picks (D-015/D-016), trends daily (D-017), Lemon Squeezy MoR + Buttondown (D-014)
+- Monetization: Amazon/SparkFun/PCBWay/ElevenLabs live paths, Pinecone pending,
+  Modal/Fly informational DevRel paths, Lemon Squeezy + Buttondown owner-deferred
+- Runtime privacy: no third-party analytics/pixels; `mp:analytics` stays in a
+  100-event per-browser localStorage log and is not aggregate evidence
 
 ## Before shipping
 
@@ -36,12 +44,14 @@ After trend/gear changes: check real rendered output (Playwright boundingBox) no
 
 ## Doc compression rationale (2026-07-15)
 
-Old set 11 files had 3 overlapping handoff prompts (light-mode, UX-search-nav, monetization) + dated strategy + verbose OPEN-ITEMS with full DONE P0 history. New set 8 active docs:
+The 2026-07-15 compression removed overlapping sources of truth. The 2026-07-19
+growth pass added focused SaaS/GPU state, outreach, and current-handoff docs:
 
 - STATUS.md replaces scattered state
 - BACKLOG.md replaces OPEN-ITEMS verbose history (history moved to STATUS + DECISIONS)
 - MONETIZATION.md replaces HANDOFF-MONETIZATION.md + MONETIZATION-STRATEGY-2026-07-15.md + shop notes in OPEN-ITEMS
 - archive/ holds old handoffs for reference but not source of truth
-- Kept THEME-SYSTEM, RESEARCH-EMPIRE-IA, DID-NOT-WORK, AFFILIATE-CANDIDATES as-is per owner (working)
+- HANDOFF-FRONTIER-CHECK is the only current execution prompt; other root-level
+  handoff files predate this state and should not override STATUS/BACKLOG
+- THEME-SYSTEM, RESEARCH-EMPIRE-IA, DID-NOT-WORK, and AFFILIATE-CANDIDATES remain focused working references
 - README updated to new index
-

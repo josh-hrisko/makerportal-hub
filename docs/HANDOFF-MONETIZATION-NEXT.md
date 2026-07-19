@@ -1,5 +1,8 @@
 # Handoff: Frontier Simulator Monetization — Next Burndown (Post GearGrid×10 + ExportGate×6)
 
+> Historical as of 2026-07-19. Counts and blockers below predate the SaaS/GPU
+> expansion; use `SAAS-GPU-MONETIZATION.md` and `HANDOFF-FRONTIER-CHECK.md`.
+
 **Date:** 2026-07-19 (post session 807cb3f)  
 **Repo:** `makerportal-hub` `main` (just pushed)  
 **Previous handoff:** `docs/HANDOFF-MONETIZATION-SIMS-CONTINUE.md` + brain `monetization_roadmap.md` (now updated)  

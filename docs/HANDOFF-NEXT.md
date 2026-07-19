@@ -1,5 +1,8 @@
 # HANDOFF: Landing Page Overhaul — Collapse Apps Grid, Add Content Carousels, Reorder Sections
 
+> Historical as of 2026-07-19. This brief was executed; use `STATUS.md`,
+> `BACKLOG.md`, and `HANDOFF-FRONTIER-CHECK.md` for current work.
+
 You are picking up `makerportal-hub` after a navigation overhaul and micro-animation polish pass. All pipeline tests and Astro checks are passing cleanly. Your mission is a **major landing page redesign** focused on information density, content diversity, and reducing scroll fatigue.
 
 ## Stack & Baseline
