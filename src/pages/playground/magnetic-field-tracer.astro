@@ -11,6 +11,10 @@ const gear = affiliateLinks
   .filter((link) => link.relatedTo?.includes('magnetic-field-tracer'))
   .map(resolveAffiliateLink)
   .sort((a, b) => b.id.localeCompare(a.id));
+
+const primaryHardware = gear.find((item) =>
+  ['Component', 'Sensor', 'Apparatus', 'Diagnostic', 'Kit', 'Interface', 'Audio'].includes(item.category)
+);
 const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
 
 const title = 'Magnetic Field Line Tracer — Biot–Savart + RK4 for Loops, Helmholtz Coils & Solenoids | MakerPortal';
@@ -175,6 +179,12 @@ export function traceFieldLine(
               </div>
               <p class="mt-2 font-mono text-[0.6rem] text-muted-text/70">&odot; current out of page &middot; &otimes; into page</p>
             </div>
+            {primaryHardware && (
+              <div class="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[0.72rem] text-muted-text">
+                <span class="font-medium tracking-tight">Hardware hook:</span>
+                <a href={primaryHardware.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-0.5 font-semibold text-brand-anchor hover:text-primary-text transition-colors">Get the {primaryHardware.label} ↗</a>
+              </div>
+            )}
           </div>
 
           <div class="min-w-0">
@@ -259,6 +269,35 @@ export function traceFieldLine(
         </div>
       </div>
     </section>
+
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Magnetostatics hardware · {gear.length} picks
+            </p>
+          </div>
+
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Magnetic-field sensing
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+
+          <GearCarousel gear={gear} />
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
 
     <section class="border-b border-border" aria-labelledby="math-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -411,35 +450,6 @@ export function traceFieldLine(
         </div>
       </div>
     </section>
-
-    {gear.length > 0 && (
-      <section class="border-b border-border" aria-labelledby="gear-title">
-        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-          <div class="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
-              <AffiliateDisclosure class="mt-3 max-w-2xl" />
-            </div>
-            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
-              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
-              Magnetostatics hardware · {gear.length} picks
-            </p>
-          </div>
-
-          <div class="mt-10 flex items-center gap-3">
-            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
-              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
-              Magnetic-field sensing
-              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
-            </h3>
-            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
-          </div>
-
-          <GearCarousel gear={gear} />
-          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
-        </div>
-      </section>
-    )}
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">

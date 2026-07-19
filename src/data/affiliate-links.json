@@ -49,8 +49,7 @@
     "category": "RFID",
     "relatedTo": [
       "blexar",
-      "ble-gatt-visualizer",
-      "quaternion-euler-converter"
+      "ble-gatt-visualizer"
     ]
   },
   {
@@ -170,9 +169,7 @@
     "note": "Individually-addressable LEDs used in BLExAR's Pico LED ring build.",
     "category": "LED",
     "relatedTo": [
-      "blexar",
-      "quaternion-euler-converter",
-      "ble-gatt-visualizer"
+      "blexar"
     ]
   },
   {
@@ -338,8 +335,7 @@
     "category": "Power",
     "relatedTo": [
       "blexar",
-      "biquadia",
-      "biquad-filter-designer"
+      "biquadia"
     ]
   },
   {
@@ -668,9 +664,7 @@
     "category": "Sensor",
     "relatedTo": [
       "quaternion-euler-converter",
-      "head-tracked-stereo-pan",
-      "biquad-filter-designer",
-      "pole-zero-explorer"
+      "head-tracked-stereo-pan"
     ],
     "pillars": [
       "ios-craft"
@@ -782,8 +776,8 @@
   },
   {
     "id": "oscilloscope-function-generator-kit",
-    "label": "Oscilloscope + Function Generator Kit (2-channel)",
-    "asin": "B0GJ3W7C8V",
+    "label": "FNIRSI 2C23T Oscilloscope + DDS Generator (2-channel)",
+    "asin": "B0CMT5WMFY",
     "note": "Feed a square wave into your scope and see its Fourier epicycles live — same harmonic decomposition (odd k only) this page animates as rotating vectors.",
     "category": "Kit",
     "relatedTo": [
@@ -808,9 +802,7 @@
     "note": "Green film renders flux lines from Biot-Savart superposition visible — lay it over a current loop and see the same dipole field this simulator traces via Runge-Kutta.",
     "category": "Tool",
     "relatedTo": [
-      "magnetic-field-tracer",
-      "acoustics-room-modes",
-      "acoustic-calculators"
+      "magnetic-field-tracer"
     ]
   },
   {
@@ -826,13 +818,11 @@
   {
     "id": "gaussmeter-teslameter-hall-effect",
     "label": "Gauss Meter Teslameter (Hall-Effect)",
-    "asin": "B0F8HJ71Q1",
+    "asin": "B0FKMWFV95",
     "note": "Measures B-field magnitude around loops/solenoids — hand-verify the Biot-Savart μ0/4π scaling this tracer computes before field-line integration.",
     "category": "Sensor",
     "relatedTo": [
       "magnetic-field-tracer",
-      "acoustics-room-modes",
-      "acoustic-calculators",
       "loudspeaker-enclosure-designer"
     ]
   },
@@ -863,15 +853,14 @@
     "note": "Actually a wind-tunnel-friendly flow-viz partner — pair with smoke tube to see boundary-layer separation and wake shedding your D2Q9 simulation traces numerically.",
     "category": "Apparatus",
     "relatedTo": [
-      "lattice-boltzmann-tunnel",
       "optics-bench"
     ]
   },
   {
     "id": "desktop-wind-tunnel-smoke",
-    "label": "Desktop Wind Tunnel Kit + Flow Visualization Smoke",
-    "asin": "B0FQVB7T2G",
-    "note": "Physical counterpart to this D2Q9 LBM solver — place cylinder or airfoil in the stream and compare real vortex shedding Strouhal frequency to the simulation's vorticity field.",
+    "label": "Windsible Desktop Wind Tunnel",
+    "asin": "B0FBWXKXCR",
+    "note": "Tabletop wind tunnel with flow-visualization streamlines — park a 1:64 model in the test section and compare the real wake against this page’s D2Q9 vorticity field and Strouhal estimate.",
     "category": "Kit",
     "relatedTo": [
       "lattice-boltzmann-tunnel"
@@ -904,11 +893,7 @@
     "note": "Handheld concave/convex lenses and ray box — build the same ABCD cascade (lens-gap-mirror) physically and verify the numerical ray fan traced here.",
     "category": "Kit",
     "relatedTo": [
-      "optics-bench",
-      "loudspeaker-enclosure-designer",
-      "loudspeaker-nonlinearity-lab",
-      "voice-coil-thermal-compression",
-      "magnetic-field-tracer"
+      "optics-bench"
     ]
   },
   {
@@ -953,15 +938,12 @@
   },
   {
     "id": "double-slit-quantum-eraser-kit",
-    "label": "Double-Slit Quantum Eraser Experiment Kit",
-    "asin": "B0CD2KKFQ8",
+    "label": "Young’s Double-Slit Interference Kit (Laser)",
+    "asin": "B0CJDX8Y9P",
     "note": "Physical demonstration of matter-wave interference underlying Schrödinger's equation — same wave-particle duality that makes tunneling through a classically forbidden barrier possible.",
     "category": "Kit",
     "relatedTo": [
-      "quantum-tunneling",
-      "chladni-cymatics",
-      "biquad-filter-designer",
-      "pole-zero-explorer"
+      "quantum-tunneling"
     ]
   },
   {
@@ -1093,7 +1075,7 @@
   {
     "id": "loudspeaker-design-cookbook-dickason",
     "label": "Loudspeaker Design Cookbook (Dickason, 7th)",
-    "asin": "1882580478",
+    "asin": "1882580338",
     "note": "Breakup modes, cone edge termination, and waveguide directivity index — chapters 7-9 explain the cone-breakup visualization and waveguide polar math this lab implements.",
     "category": "Book",
     "relatedTo": [
@@ -1156,8 +1138,8 @@
   },
   {
     "id": "flir-thermal-camera-ir-thermometer",
-    "label": "FLIR Thermal Camera iPhone Attachment",
-    "asin": "B0FT7YG22V",
+    "label": "FLIR ONE Thermal Camera (iOS, USB-C)",
+    "asin": "B0DPXX7P5M",
     "note": "IR camera imaging voice-coil heating ΔT = P * R_th — directly visualize the copper TCR and thermal compression curve this lab simulates.",
     "category": "Sensor",
     "relatedTo": [
@@ -1167,7 +1149,7 @@
   {
     "id": "k-type-thermocouple-meter",
     "label": "K-Type Thermocouple Thermometer (Dual Channel)",
-    "asin": "B07M6Q1P9D",
+    "asin": "B0DWSDQK5C",
     "note": "Probe voice-coil former temperature and log T_vc(t) — compare measured τ_thermal rise against this lab's first-order thermal RC model with ferrofluid cooling.",
     "category": "Tool",
     "relatedTo": [
@@ -1187,8 +1169,8 @@
   },
   {
     "id": "dsp-primer-proakis-manolakis",
-    "label": "Digital Signal Processing (Proakis & Manolakis, 5th)",
-    "asin": "0133354857",
+    "label": "Digital Signal Processing (Proakis & Manolakis, 4th)",
+    "asin": "0131873741",
     "note": "Chapter on biquad Direct Form II transposed and pole-zero placement — move poles in pole-zero explorer and hear Q/ω0 map to ring frequency as Proakis derives.",
     "category": "Book",
     "relatedTo": [
@@ -1202,14 +1184,13 @@
   },
   {
     "id": "teensy-4-audio-shield-dsp",
-    "label": "Teensy 4.0 + Audio Shield (DSP Dev Kit)",
-    "asin": "B0CP786N56",
-    "note": "600 MHz M7 with SGTL5000 codec — flash the DF2T biquad cascade from Biquadia's DSP core and hear the same filter your design exports here.",
+    "label": "Teensy 4.0 (PJRC, with headers)",
+    "asin": "B08259KDHY",
+    "note": "600 MHz M7 — flash the DF2T biquad cascade from Biquadia’s DSP core (pair with the Rev D audio shield for codec I/O) and hear the same filter your design exports here.",
     "category": "Microcontroller",
     "relatedTo": [
       "biquad-filter-designer",
-      "agentic-dsp-pipeline",
-      "cone-breakup"
+      "agentic-dsp-pipeline"
     ],
     "pillars": [
       "dsp-audio"
@@ -1245,9 +1226,9 @@
   },
   {
     "id": "orrery-solar-system-mechanical-model",
-    "label": "Orrery Mechanical Solar System Model (Brass)",
-    "asin": "B08MTLPZXM",
-    "note": "Brass gears showing Keplerian ellipses and Lagrange points — same Newtonian gravity μ/r² this N-body choreography integrates with symplectic Yoshida 4th order.",
+    "label": "TECHING Motorized Metal Orrery Kit (600+ parts)",
+    "asin": "B0GRMFGPY9",
+    "note": "600+ precision metal parts, motor-driven planets on brass gear trains — a buildable mechanical computer tracing the same Newtonian choreography this page integrates with symplectic Yoshida 4th order.",
     "category": "Model",
     "relatedTo": [
       "n-body-choreography",
@@ -1257,7 +1238,7 @@
   {
     "id": "orbital-mechanics-curtis",
     "label": "Orbital Mechanics for Engineering Students (Curtis, 4th)",
-    "asin": "008102133X",
+    "asin": "0128240253",
     "note": "Derives n-body equations, figure-eight choreography existence proof, and symplectic energy conservation — exactly the trajectory this page verifies stays bounded for 500 periods.",
     "category": "Book",
     "relatedTo": [
@@ -1310,7 +1291,7 @@
   {
     "id": "model-rocket-kit-estes-alpha",
     "label": "Estes Alpha III Model Rocket Kit",
-    "asin": "B0006G5W86",
+    "asin": "B003CT4B0G",
     "note": "Real rocket with 1g thrust-to-weight teaching proper acceleration — contrast with this page's constant 1g proper-acceleration hyperbolic motion where coordinate acceleration → 0 near c.",
     "category": "Kit",
     "relatedTo": [
@@ -1342,7 +1323,7 @@
   {
     "id": "iss-model-metal-earth-3d",
     "label": "Metal Earth ISS 3D Metal Model Kit",
-    "asin": "B08K22W778",
+    "asin": "B0B627NPRK",
     "note": "Steel ISS model — track the real ISS live on this globe's TLE orbit, then hold the model while it passes over your city at 7.66 km/s orbital velocity.",
     "category": "Model",
     "relatedTo": [
@@ -1352,7 +1333,7 @@
   {
     "id": "desktop-globe-illuminated-12inch",
     "label": "Illuminated Desktop World Globe (12 inch)",
-    "asin": "B09WDM4LBX",
+    "asin": "B0DK5YH9S7",
     "note": "Backlit globe with constellation overlay — compare its static terminator to this page's dynamically computed solar declination and real-time weather overlay across 16 cities.",
     "category": "Model",
     "relatedTo": [
@@ -1407,15 +1388,14 @@
     "note": "Wireshark BLE sniffer capturing over-the-air GATT transactions — see raw ATT Read/Write that become the CSV bytes this explorer frames.",
     "category": "Tool",
     "relatedTo": [
-      "ble-gatt-visualizer",
-      "quaternion-euler-converter"
+      "ble-gatt-visualizer"
     ]
   },
   {
     "id": "binaural-microphone-3dio-fs",
-    "label": "3Dio Free Space Binaural Microphone",
-    "asin": "B0FR957Y7K",
-    "note": "Dummy-head binaural mic capturing HRTF — spatial cues this head-tracked stereo panner approximates via ITD/ILD and quaternion yaw driving StereoPannerNode.",
+    "label": "BIMIMI Binaural Stereo Microphone",
+    "asin": "B0C6CNWHW1",
+    "note": "Binaural stereo mic capturing HRTF — the spatial cues this head-tracked panner approximates via ITD/ILD and quaternion yaw driving StereoPannerNode.",
     "category": "Microphone",
     "relatedTo": [
       "head-tracked-stereo-pan",
@@ -1426,19 +1406,9 @@
     ]
   },
   {
-    "id": "roland-cs10em-binaural-mic",
-    "label": "Roland CS-10EM Binaural Microphones",
-    "asin": "B0CN493YHF",
-    "note": "In-ear binaural mics for personal HRTF — record your own pinna response then compare panning when you rotate the virtual head using gyroscope yaw.",
-    "category": "Microphone",
-    "relatedTo": [
-      "head-tracked-stereo-pan"
-    ]
-  },
-  {
     "id": "spatial-audio-roginska-geluso-book",
     "label": "Immersive Sound: The Art and Science of Binaural and Multi-Channel Audio (Roginska/Geluso)",
-    "asin": "1138900005",
+    "asin": "1138900001",
     "note": "Derives HRTF, ITD = d/c sinθ, and head-tracking compensation — the exact panning law this playground interpolates as you drag yaw.",
     "category": "Book",
     "relatedTo": [
@@ -1490,22 +1460,9 @@
   {
     "id": "coral-usb-accelerator-edge-tpu",
     "label": "Coral USB Accelerator (Edge TPU)",
-    "asin": "B07J65M2W8",
+    "asin": "B07R53D12W",
     "note": "USB Edge TPU for int8 quantized nets — run the same quantized CoreML model sized here and see why int8 cuts RAM bandwidth but needs per-channel scales.",
     "category": "Accelerator",
-    "relatedTo": [
-      "coreml-model-size-calculator"
-    ],
-    "pillars": [
-      "on-device-ai"
-    ]
-  },
-  {
-    "id": "efficient-deep-learning-textbook-menghani",
-    "label": "Efficient Deep Learning (Menghani)",
-    "asin": "1098111295",
-    "note": "Covers fp16, int8, int4 quantization schemes and Huffman overhead — formulas this calculator implements to compute exact on-device footprint without throughput guesswork.",
-    "category": "Book",
     "relatedTo": [
       "coreml-model-size-calculator"
     ],
@@ -1569,8 +1526,7 @@
     "note": "Dense foam damping axial modes — place at pressure antinodes displayed in room-mode visualizer's 3D pressure field.",
     "category": "Tool",
     "relatedTo": [
-      "acoustics-room-modes",
-      "cone-breakup"
+      "acoustics-room-modes"
     ]
   },
   {
@@ -1625,7 +1581,7 @@
   {
     "id": "nrf52840-micro-dev-dongle-geeekpi",
     "label": "GeeekPi nRF52840 Micro Dev Kit USB Dongle",
-    "asin": "B07MJ12XLG",
+    "asin": "B0D5YKKBMZ",
     "note": "nRF52840 dongle acting as BLE sniffer — captures ATT MTU and GATT notifications that become CSV rows this BLE visualizer frames.",
     "category": "Microcontroller",
     "relatedTo": [

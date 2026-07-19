@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T03:25:52.522Z",
+  "generatedAt": "2026-07-19T04:27:48.077Z",
   "items": {
     "1098107969": {
       "title": "Designing Machine Learning Systems: An Iterative Process for Production-Ready Applications",
@@ -47,6 +47,14 @@
       "price": "$68.11",
       "currency": "USD"
     },
+    "1138900001": {
+      "title": "Immersive Sound: The Art and Science of Binaural and Multi-Channel Audio (Audio Engineering Society Presents)",
+      "image": "https://m.media-amazon.com/images/I/41hCwnOzm5L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1138900001?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$71.89",
+      "currency": "USD"
+    },
     "1260473597": {
       "title": "Master Handbook of Acoustics, Seventh Edition",
       "image": "https://m.media-amazon.com/images/I/415lG3x5LVL._SL500_.jpg",
@@ -87,6 +95,16 @@
       "features": [],
       "detailPageURL": "https://www.amazon.com/dp/1882580176?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
       "price": "$44.48",
+      "currency": "USD"
+    },
+    "1882580338": {
+      "title": "Loudspeaker Design Cookbook",
+      "image": "https://m.media-amazon.com/images/I/41weUI59p9L._SL500_.jpg",
+      "features": [
+        "Out of print Edition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/1882580338?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$39.95",
       "currency": "USD"
     },
     "3319446479": {
@@ -755,7 +773,7 @@
         "256-BIT AES ENCRYPTION(4) – helps keep private files secure with password protection."
       ],
       "detailPageURL": "https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$251.38",
+      "price": "$250.99",
       "currency": "USD"
     },
     "B0DM8QJRN6": {
@@ -863,18 +881,18 @@
       "price": "$95.34",
       "currency": "USD"
     },
-    "B0GJ3W7C8V": {
-      "title": "Physics Optics Experiment Kit STEM Physics Set for Light Refraction/Reflection, Convex Lens, Pinhole Imaging & Light Primary Colors Exploration School & Home Hands-On Educational Tool",
-      "image": "https://m.media-amazon.com/images/I/51OIYfCCONL._SL500_.jpg",
+    "B0CMT5WMFY": {
+      "title": "FNIRSI 2C23T 3 in 1 Handheld Oscilloscope Multimeter DDS Generator, 2 Channels, 10MHz Bandwidth, 50MSa/s Sampling Rate, 10000 Counts, Voltage, Current, Capacitor, Resistor, Diode Test",
+      "image": "https://m.media-amazon.com/images/I/51TdYa2oUXL._SL500_.jpg",
       "features": [
-        "Diverse Optical Experiments: Top-Tier STEM Physics Kit This all-inclusive physics optics kit is a great addition to STEM learning curricula, letting you easily do core optical experiments—perfect for hands-on STEM education. It covers basics like plane mirror reflection (key for STEM physics) to complex ones: diffuse reflection, convex/concave mirror reflection, light refraction, convex lens refraction, triangular refraction, plus fun STEM experiments (convex lens imaging, pinhole imaging, light’s three primary colors). Ideal for working at home, school labs, or institutions— a versatile STEM learning tool.",
-        "Master Refraction & Reflection: Intuitive STEM Tools As a core STEM physics tool, this kit clearly shows light refraction and reflection—critical for STEM education. Watch light bend when moving between media (a key STEM physics lesson) and reflect off surfaces, all through hands-on 操作 that fits STEM learning methods. No complex lectures: students learn abstract physics via experiments (a mark of good STEM education), boosting efficiency and passion for STEM subjects. A must-have for teaching/learning refraction/reflection through STEM.",
-        "Quality & User-Friendly: Built for STEM Experiment Success Made to meet STEM education standards, this kit has 3 bright, adjustable light sources (for clear experiment results—vital for STEM experiments). The 60cm integrated optical bench needs no assembly—save time for STEM exploration. Acrylic prisms/lenses offer great light transmittance, are safe, durable, and shatterproof—perfect for STEM classrooms or home STEM learning. Great for schools (STEM teaching aids), parents (at-home STEM), or institutions—guarantees good experiment results.",
-        "All-in-One Components: No Extra Purchases for STEM Optics This kit has everything for STEM optics experiments—no extra buys needed, ideal for STEM education providers. Included: integrated optical bench, simulated eyeball card , multi-hole plate, water lens/stand, three-line/three-primary-color light sources (color-theory STEM experiments), lenses (F10cm/F5cm convex, F-10cm concave), F-shaped light source, shield, imaging screen, 2 electronic candles, 3 plane mirrors (reflection STEM activities), periscope, water boxes, vision lenses, white screen, reflection box, gauge, syringe, STEM-aligned manual, and storage box (no batteries).",
-        "Great After-Sales: Shop Confidently for STEM Tools We offer only top-quality STEM education products, including this optics kit (enhances STEM learning). If you have issues (equipment faults, STEM experiment questions) or it doesn’t meet expectations, contact us. Our team (familiar with STEM teaching tools) solves problems in 24 hours—no disruption to STEM goals. Your satisfaction matters—buy this STEM experiment kit with confidence, knowing it supports impactful STEM physics education."
+        "【2 channel handheld oscilloscope】 10 MHz bandwidth, real-time sampling rate 50 MSa/s, record depth 32 kb, max measurement voltage 400 V, automatic measurement function, 200 mv/div-10 v/div vertical sensitivity, support waveform image storage and export",
+        "【Multimeter Mode】4-digit 10000 Counts. AC Voltage: 0-750 V, DC Voltage: 0-999.9 V, DC/AC Current: 0-9.999 A, Resistance: 0-99.99 MΩ, Capacitance: 0-99.99 mF, Diode, Continuity Measurement. An multi-function meter for professionals, schools, hobbyists",
+        "【Signal Generator】The maximum waveform output frequency can reach 2MHz and a step of 1Hz, and can output seven waveforms including sine, square, triangle, full, half, noise, and DC",
+        "【Hardware Design】The Oscilloscope adopts FPGA+MCU+ADC hardware architecture, built-in high-voltage protection module, adopts 2.8'' HD LCD display, built-in 3000mAh rechargeable battery, standby time up to 6 H",
+        "【Save function】one-click save, screening function. You can upload the saved image by connecting to PC via data cable. You can easily compare the waveforms by displaying the reference waveform and the measured waveform on the same screen"
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B0GJ3W7C8V?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$49.99",
+      "detailPageURL": "https://www.amazon.com/dp/B0CMT5WMFY?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$71.99",
       "currency": "USD"
     },
     "B0BCFM83XB": {
@@ -905,18 +923,18 @@
       "price": "$11.99",
       "currency": "USD"
     },
-    "B0F8HJ71Q1": {
-      "title": "AplysiaTech Magnetic Field Viewing Film 4\"x4\", Magnetic Flux Display, Magnet Pattern Detector, Scientific Project Teaching, Reusable and Automatic Recovery,Magnetic Field Viewer - 1Pack",
-      "image": "https://m.media-amazon.com/images/I/31J3v9vLIUL._SL500_.jpg",
+    "B0FKMWFV95": {
+      "title": "AEGTEST 8035 DC Gauss Meter, Telescopic Hall Sensor, Rechargeable Tesla Meter 0–2500 mT, Magnetometer with Data Logging and Alarm, Magnetic Field Strength Meter, ±5% General Accuracy for Daily Use",
+      "image": "https://m.media-amazon.com/images/I/410ZkHUmDWL._SL500_.jpg",
       "features": [
-        "Magnetic Field Display: Brown magnetic nanoparticles film is used to show magnetic field, clearly showing the patterns of magnetic field lines of magnets. Different colors represent different magnetic field intensity Unique Design: The magnetic field paper is made of plastic film that contains a ferromagnetic slurry of fine nickel, and the frame outside can fix and protect the film",
-        "Widely Used in Daily: Ideal for observing all kinds of magnets such as SmCo, AlNiCo, Neodymium and Flexible Magnets. Clearly view magnetic field in objects. Magnetic clasp on your door, the speaker on your phone, or concealed buckle of the handbag",
-        "Wonderful Tool for Study: Just put magnetic field viewing film on little things, discover and analyze magnetic fields, and open your mind to calculate the value of the magnetic field, even if change the magnetic pattern",
-        "Unique Design: The magnetic field paper is made of plastic film that contains a ferromagnetic slurry of fine nickel, and the frame outside can fix and protect the film",
-        "Reusable and Automatic Recovery: Our magnetic field viewer is reusable and automatic recovery after use, just place it on object surface to observe magnetic field"
+        "5% Basic Precision Measurement: The 8035 Gaussmeter features a telescopic probe with ±5% accuracy and a rotatable screen for easy one-handed operation. It measures magnetic field strength (Gs/mT) and identifies magnetic polarity (N/S), suitable for DC magnetic fields from 0 to 2500 mT. Suitable for general magnetic field detection, equipment maintenance, and basic magnetic analysis. Probe size: 1.85 × 0.20 × 0.04 in",
+        "Alarm, Data Storage & Calibration: Tesla Meter features audible and visual alarms that alert when the measurement exceeds predefined thresholds. It also has data hold and storage functions, automatically recording maximum values for easy tracking and review of key measurements. Furthermore, the device supports both manual and automatic zero calibration to ensure accuracy and ease of use in various testing environments",
+        "Dual Modes for Industrial Efficiency: Magnetometer offers two specialized modes for industrial applications. The QC test mode quickly checks if the magnetic field strength meets set standards, making it perfect for quality control, magnetic material screening, and product testing. The counting and speed measurement mode detects magnetic field changes in magnets, allowing dynamic counting and speed measurement, ideal for motor testing and equipment maintenance",
+        "User-Friendly Design: Magnetic field meter features a built-in 750mAh rechargeable battery that provides up to 16 hours of continuous use, reducing the need for frequent battery replacements. It also comes with a TFT color display that supports multiple data views, ensuring clear and bright readings",
+        "You will receive: 8035 DC Gauss meter, Hall probe, storage case, Type-C charging cable, and user manual. The device is factory-calibrated and has passed calibration tests by internationally recognized institutions. It complies with industry standards and is widely used for measuring the magnetic fields of permanent magnets, DC motors, magnetic separators, speakers, residual magnetism after part processing, medical equipment, and educational experiment"
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B0F8HJ71Q1?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$21.99",
+      "detailPageURL": "https://www.amazon.com/dp/B0FKMWFV95?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$72.19",
       "currency": "USD"
     },
     "0521663962": {
@@ -926,7 +944,7 @@
         "Used Book in Good Condition"
       ],
       "detailPageURL": "https://www.amazon.com/dp/0521663962?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$79.00",
+      "price": "$78.83",
       "currency": "USD"
     },
     "B00CMR9078": {
@@ -943,18 +961,19 @@
       "price": "$213.49",
       "currency": "USD"
     },
-    "B0FQVB7T2G": {
-      "title": "Physics Optics Experiment Kit for Lab - Light Refraction/Reflection, Convex Lens, Pinhole Imaging & Light Primary Colors Exploration Science Educational Set for Hands-On Learning",
-      "image": "https://m.media-amazon.com/images/I/51rKb8td7+L._SL500_.jpg",
+    "B0FBWXKXCR": {
+      "title": "FUN-TECH-LAB Windsible, Desktop Wind Tunnel, for 1:64 Diecast Car Models, Miniature Wind Simulation, Display Stand, for Collectors and Hobbyists",
+      "image": "https://m.media-amazon.com/images/I/21kK6MDb6KL._SL500_.jpg",
       "features": [
-        "Diverse Optical Experiments: Top-Tier STEM Physics Kit This all-inclusive physics optics kit is a great addition to STEM learning curricula, letting you easily do core optical experiments—perfect for hands-on STEM education. It covers basics like plane mirror reflection to complex ones: diffuse reflection, convex/concave mirror reflection, light refraction, convex lens refraction, triangular refraction, plus fun STEM experiments (convex lens imaging, pinhole imaging, light’s three primary colors). It works at home, labs, or institutions— a versatile STEM learning tool.",
-        "Master Refraction & Reflection: Intuitive STEM Tools As a core STEM physics tool, this kit clearly shows light refraction and reflection—critical for STEM education. Watch light bend when moving between media (a key STEM physics lesson) and reflect off surfaces, all through hands-on that fits STEM learning methods. No complex lectures: learn abstract physics via experiments (a mark of good STEM education), boosting efficiency and passion for STEM subjects. A must-have for teaching/learning refraction/reflection through STEM.",
-        "Quality & User-Friendly: Built for STEM Experiment Success Made to meet STEM education standards, this kit has 3 bright, adjustable light sources (for clear experiment results—vital for STEM experiments). The 60cm integrated optical bench needs no assembly—save time for STEM exploration. Acrylic prisms/lenses offer great light transmittance, are safe, durable, and shatterproof—perfect for STEM learning. Great for STEM teaching aids, parents (at-home STEM), or institutions—guarantees good experiment results.",
-        "All-in-One STEM Optics Kit: Ideal for STEM education providers, this kit includes everything for optics experiments—ready to use, no extra buys required. Components: Integrated optical bench, simulated eyeball card , multi-hole plate, water lens with stand, three-line/three-primary-color light sources , lenses (F10cm/F5cm convex, F-10cm concave), F-shaped light source, shield, imaging screen, 2 electronic candles, 3 plane mirrors , periscope, water boxes, vision lenses, white screen, reflection box, gauge, syringe, manual, and storage box. All essentials for STEM optics learning in one kit.",
-        "Great After-Sales: Shop Confidently for STEM Tools We offer only top-quality STEM education products, including this optics kit (enhances STEM learning). If you have issues (equipment faults, STEM experiment questions) or it doesn’t meet expectations, contact us. Our team (familiar with STEM teaching tools) solves problems in 24 hours—no disruption to STEM goals. Your satisfaction matters—buy this STEM experiment kit with confidence, knowing it supports impactful STEM physics education."
+        "Designed for 1:64 Diecast Cars: perfectly sized for 1:64 scale vehicles, Windsible brings dynamic airflow effects to your model display setup.",
+        "Miniature Wind Simulation System: features a precision fan that creates realistic wind movement, enhancing the realism and excitement of your collection.",
+        "Adjustable Wind and Fog Settings: customize wind speed and fog density using the interactive knob and display screen, simulating realistic driving conditions in miniature scale.",
+        "Interactive Knob and Real-Time Display: adjust wind speed and fog density using a physical knob with real-time feedback shown on the built-in display screen.",
+        "Customizable Lighting Effects: simulates car taillights with adjustable brightness, plus optional lighting in the test area that can be turned on or off.",
+        "Built for Collectors and Hobbyists: crafted with high-quality materials and quiet operation, Windsible is an ideal display tool for car enthusiasts of all levels."
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B0FQVB7T2G?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$49.99",
+      "detailPageURL": "https://www.amazon.com/dp/B0FBWXKXCR?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$299.00",
       "currency": "USD"
     },
     "0133977226": {
@@ -1001,19 +1020,18 @@
       "price": "$56.35",
       "currency": "USD"
     },
-    "B0CD2KKFQ8": {
-      "title": "EXBEPE Physics Optics Experiment Set Prisms Convex Lens Triple Laser Refraction School Light Refraction Reflection Learning Educational Science Kits",
-      "image": "https://m.media-amazon.com/images/I/41uvXTUzshL._SL500_.jpg",
+    "B0CJDX8Y9P": {
+      "title": "Young's Double-Slit Experiment, Single Slit, with Holder Observation Board Red Light Source, Optics Elements, Optical Physical Experiment Kit, Interference Diffraction Grating Sheet 50 * 50mm",
+      "image": "https://m.media-amazon.com/images/I/31xcRf3gbKL._SL500_.jpg",
       "features": [
-        "【Optical refraction and reflection experiments】plane mirror reflection, diffuse reflection, convex mirror reflection, concave mirror reflection, refraction of light, convex lens refraction, lens refraction, trigonometry refraction",
-        "【Children learn to master the physical optics of refraction and reflection knowledge easily】the physical optics experiment set can clearly show the light from a medium into another medium, the direction of propagation changes, so that the light at the junction of different media deflection phenomenon, and light propagation to different substances, in the demarcation plane to change the direction of propagation and return to the original phenomenon in the material",
-        "【Quality Manufacturing】Three way laser source, bright and clear light, the angle of light can be freely adjusted. Prism lens is made of acrylic, very good light transmission, refraction effect is very obvious",
-        "【Included】1 Double Convex Lens, 1 Single Concave Lens, 1 Acrylic Glass Block, 1 Single Convex Lens, 1 Double Concave Lens, 1 Triangular Prism, 1 Three Way Linear Light Source, 1 Multi-functional Reflector, 1 Color Box, 1 360°Angle Diagram，",
-        "【Tips】This three-beam light source can be adjusted to change the direction of the light through the three small holes in the top to make the light sources parallel.without battery（You need to configure it yourself）",
-        "【Sincere Service】We only provide high quality products, If you encounter any problems or the product not meet your expectations,you can contact us directly,we will solve it for you within 24 hours,your satisfaction is our ultimate pursuit!"
+        "Optics Elements for Interference Diffraction Optical Physical Experiment.",
+        "Suitable for elementary and junior high school students, who are prepared for physics by understanding the interference and diffraction of light in advance.",
+        "This kit is used in class to illustrate the phenomenon of light interference and stimulate children's curiosity.",
+        "This film is made of PET material, please do not use high power laser to avoid damage to the film.",
+        "Properly increasing the distance between the observation plate and the film can make the diffraction phenomenon more obvious."
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B0CD2KKFQ8?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$18.99",
+      "detailPageURL": "https://www.amazon.com/dp/B0CJDX8Y9P?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$25.98",
       "currency": "USD"
     },
     "0070006571": {
@@ -1122,7 +1140,7 @@
         "Includes its own unique calibration response graph"
       ],
       "detailPageURL": "https://www.amazon.com/dp/B002KI8X40?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$81.08",
+      "price": "$81.22",
       "currency": "USD"
     },
     "B000HT4RSA": {
@@ -1181,18 +1199,33 @@
       "price": "$28.99",
       "currency": "USD"
     },
-    "B0FT7YG22V": {
-      "title": "JOGEPEYO Graduation Gifts for Him,Ferrofluid Speaker Music Mate,Gift for Gamer.Walnut Wood,Gaming Room Decor,symbiosis in a Bottle,Magnetic Fluid Toys,Desktop Decorations, Gifts.（unvoiced）",
-      "image": "https://m.media-amazon.com/images/I/41-VPQZfYzL._SL500_.jpg",
+    "B0DPXX7P5M": {
+      "title": "Flir One - Thermal Imaging Camera for iOS Smartphones (iPhone 15 and Newer w/USB-C), 240x180 Super Resolution (80x60 Native IR)",
+      "image": "https://m.media-amazon.com/images/I/412VPFOoq9L._SL500_.jpg",
       "features": [
-        "【DESIGN INSPIRATION】: The Ferrofluid Sound Visualizer merges magnetic fluid dynamics with top-tier audio visualization, turning sound waves into mesmerizing dynamic patterns. It’s a perfect blend of STEM fun, art, and innovation—ideal for science fans, art lovers, and anyone wanting unique, conversation-starting decor.",
-        "【PRODUCT MATERIAL】: Crafted with a genuine walnut wood shell, this sound visualizer outperforms alternatives made with low-quality faux wood. It features high-transparency glass, non-toxic nano iron powder, and pure water for safe, reliable use. Equipped with a built-in MIC and white LED backlight, it supports wireless operation and comes with a rechargeable internal battery that delivers up to 8 hours of continuous use on a full charge.",
-        "【INTERACTIVE & CREATIVE PLAY​】:The magnetic fluid reacts not only to sound vibrations but also to the included magnets. You can manually manipulate it to craft your own creative displays, adding a fun and personalized touch.",
-        "【THOUGHTFUL GIFTING KIT】: Meticulously crafted with attention to every detail, this set includes a sleek, durable gift bag and an elegant minimalist greeting card. It takes the hassle out of gift prep while adding a refined touch—perfect for anniversaries or any moment you want your gift to make a memorable impression.",
-        "【NOTE​​】:Does not contain a speaker and will not make a sound. Pressure-Relief Bubble Design: A small visible brown bubble balances internal pressure. It rises to the top when upright and is part of the normal structure. Avoid high-temperature environments.​"
+        "COMPATIBILITY: Infrared camera plugs directly into phone charging port and connects with iphones with USB-C (iphone 15 and newer)",
+        "SUPER RESOLUTION: Vivid IR technology upscales the image to 240x180 from 80x60 for greater detail and clarity. Flir MSX technology merges thermal and visual images to enhance details in real time.",
+        "THERMAL INSPECTION GUIDES: Within the Flir One app is a step-by-step inspection guide to help you address typical faults easily and perform accurate home inspections. Find air leaks, moisture buildup, and more",
+        "ACCURACY: Measures temperature within ±3°C or ±5% when the unit is within 15 °C – 35 °C and the scene is within 5 °C – 120 °C",
+        "JOBSITE TOUGH: Built to take the abuse that working on a jobsite dishes out every day, rated to take a drop from 1.5 meters and is built to last",
+        "USES: Commercial Grade thermal imager ideal for a wide variety of applications including home inspection, automotive, chemical, plastics and machinery industries"
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B0FT7YG22V?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$69.99",
+      "detailPageURL": "https://www.amazon.com/dp/B0DPXX7P5M?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$214.00",
+      "currency": "USD"
+    },
+    "B0DWSDQK5C": {
+      "title": "JuviPerpric Digital K Type Thermocouple Thermometer, Dual Channel Thermocouple Tester(-238~3212℉) with 2 Temperature Clamp and 2 Wired Thermocouple Probes",
+      "image": "https://m.media-amazon.com/images/I/51cH+pHx8eL._SL500_.jpg",
+      "features": [
+        "【FUNCTIONAL DESIGN】Thermocouple thermometer is equipped with HOLD, MAX, MIN, AVG functions, automatic power-off, dual screen display of T1/T2 and its combination values, as well as 2 mode combinations (T1/T2, T1-T2)",
+        "【COMPATIBILITY】Thermocouple meter supports K/J/T/E/R/S/N type thermocouple measurement. Digital thermocouple thermometer features dual K-Type channels, allowing to compare the temperature difference between two samples",
+        "【HIGH ACCURACY】The main unit measuring range is: -150~1767°C (-238~3212°F); wired thermocouple can measure from -50 - 300°C(- 58~572°F );temperature clamp can measure from -40°C to 200°C (-40°F to 392°F)",
+        "【CONVENIENT DESIGN】HVAC thermometer has a large backlit LCD screen to ensure clear readings in low light conditions. Battery-powered, easy to operate, °C/°F selectable, with electrical compensation function",
+        "【WIDELY USED】Dual channel thermometer can directly measure the surface temperature of the object to be measured. Widely used for measuring liquids, vapors and solid objects such as fish tanks, pools, furnaces, pottery, molten metals and other industrial applications"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0DWSDQK5C?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$38.99",
       "currency": "USD"
     },
     "0073398128": {
@@ -1205,22 +1238,26 @@
       "price": "$68.25",
       "currency": "USD"
     },
-    "0133354857": {
-      "title": "Fundamentals of Communication Systems",
-      "image": "https://m.media-amazon.com/images/I/51jPcJzB24L._SL500_.jpg",
+    "0131873741": {
+      "title": "Digital Signal Processing",
+      "image": "https://m.media-amazon.com/images/I/51EpA83N0pL._SL500_.jpg",
       "features": [],
-      "detailPageURL": "https://www.amazon.com/dp/0133354857?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$238.99",
+      "detailPageURL": "https://www.amazon.com/dp/0131873741?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$92.57",
       "currency": "USD"
     },
-    "B0CP786N56": {
-      "title": "GY-BNO055 9DOF 9-axis BNO055 Absolute Orientation Breakout Board Sensor Module Angle Gyroscope Module IIC Serial for",
-      "image": "https://m.media-amazon.com/images/I/41Wx9xhuewL._SL500_.jpg",
+    "B08259KDHY": {
+      "title": "Teensy 4.0 (Headers)",
+      "image": "https://m.media-amazon.com/images/I/41MZTjkOrkL._SL500_.jpg",
       "features": [
-        "GY-BNO055 9DOF 9-axis BNO055 Absolute Orientation Breakout Board Sensor Module Angle Gyroscope Module IIC Serial for"
+        "Features am ARM Cortex-M7 processor at 600MHz with a NXP iMXRT1062 chip: a true real-time microcontroller platform",
+        "Dual-issue superscaler processor: Can execute two instructions per clock cycle",
+        "Tightly Coupled Memory: allows fast single cycle access to memory using a pair of 64 bit wide buses",
+        "Provides a power shut-off feature: By connecting a pushbutton to the On/Off pin, the 3.3V power supply can be completely disabled by holding the button for 5 seconds, & turned back on by a brief button press",
+        "The same size and shape as Teensy 3.2: Retains compatibility with most of the pin functions. Pre soldered header pins"
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B0CP786N56?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$19.67",
+      "detailPageURL": "https://www.amazon.com/dp/B08259KDHY?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$26.80",
       "currency": "USD"
     },
     "0470665998": {
@@ -1243,11 +1280,27 @@
       "price": "$43.68",
       "currency": "USD"
     },
-    "008102133X": {
-      "title": "Orbital Mechanics for Engineering Students (Aerospace Engineering)",
-      "image": "https://m.media-amazon.com/images/I/51A-q6ZKQFL._SL500_.jpg",
+    "B0GRMFGPY9": {
+      "title": "Motorized Metal Solar System Model Kit, 600+ Precision Parts Mechanical Orrery with LED Sun, STEM Astronomy Engineering Building Kit for Adults, Planetary Gear Planetarium Desk Display",
+      "image": "https://m.media-amazon.com/images/I/515HkvPS97L._SL500_.jpg",
+      "features": [
+        "Build Your Own Mechanical Solar System： Experience the satisfaction of assembling your own working solar system. With over 600 numbered parts, this hands-on build reveals the fascinating mechanics behind planetary motion and precision gear engineering.",
+        "Premium All-Metal Construction： Crafted from anodized aluminum alloy, stainless steel, and brass, this model features over 600 precision-machined components. The multi-stage finishing process ensures durability, refined metallic texture, and a premium mechanical aesthetic.",
+        "Motorized Planetary Motion with LED Sun： A quiet electric motor powers the planetary gear system, allowing eight planets to orbit around a glowing LED sun. The smooth gear transmission creates a mesmerizing astronomical display.",
+        "STEM Learning Meets Mechanical Art： Combining astronomy, physics, and mechanical engineering, this solar system model provides an engaging STEM learning experience while showcasing the beauty of precision mechanical design.",
+        "Premium Desk Display & Collector Gift Measuring 14.37 × 14.37 × 9.92 inches, this mechanical orrery becomes a striking centerpiece for offices, studios, or study rooms—well suited for science enthusiasts, engineers, and collectors."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0GRMFGPY9?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$399.00",
+      "currency": "USD"
+    },
+    "0128240253": {
+      "title": "Orbital Mechanics for Engineering Students: Revised Reprint (Aerospace Engineering)",
+      "image": "https://m.media-amazon.com/images/I/51RGRu6+krL._SL500_.jpg",
       "features": [],
-      "detailPageURL": "https://www.amazon.com/dp/008102133X?tag=engineersport-20&linkCode=ogi&th=1&psc=1"
+      "detailPageURL": "https://www.amazon.com/dp/0128240253?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$74.01",
+      "currency": "USD"
     },
     "B07Y5S5YWR": {
       "title": "CERROPI Large Newtons Cradle Pendulum with 7 Balls, Physics Perpetual Motion Desk Toys for Office, Calm Down Fidgets, 50+ Sec Swingtime (Beech Base)",
@@ -1295,6 +1348,25 @@
       "price": "$399.98",
       "currency": "USD"
     },
+    "B003CT4B0G": {
+      "title": "Estes 1427 Alpha III Rocket-Building Kit, Beginner Flying-Rocket Model Kit for Ages 10+, Includes Launch Pad and Controller",
+      "image": "https://m.media-amazon.com/images/I/51WK+JqeRVL._SL500_.jpg",
+      "features": [
+        "BEGINNER MODEL ROCKET LAUNCH SET: The Estes Alpha III launch set lets kids ages 10+ and hobbyists easily build and launch this iconic model rocket. The model rocket kit includes rocket parts, engine mount, decals, a parachute, a launch pad system, and instructions. For blastoff, you’ll need Estes rocket engines, Starters, Recovery Wadding, and 4 high-quality 1.5-volt AA alkaline batteries (not included).",
+        "SOARS UP TO 1,150 FT.: Our Alpha III model rocket is designed for first-time STEM kit builders and climbs up to a projected altitude of 1,150 ft. (351 m). It’s compatible with 1/2A6-2, A8-3, A8-5, B4-4, B6-4, B6-6, C6-5, or C6-7 Estes rocket engines (sold separately).",
+        "READY TO ASSEMBLE: Rocket building sparks creativity and a love for science and outer space! This beginner Alpha III model kit is easily put together with 1 hour of preparation and includes decals. It comes with a Porta-Pad II Launch Pad and Electron Beam Launch Controller for an unforgettable blastoff for first-time rocketeers.",
+        "SAFETY FIRST, FUN ALWAYS: Our rockets are designed to be used with the NAR (National Association of Rocketry) model-rocket safety code. Always ensure you have an appropriate launch site, stand back at least 15 ft., insert the safety key, issue a countdown, and then you can let your rocket fly!",
+        "ESTES EDUCATION: Since 1958, Estes has created educational rocket kits designed for an unforgettable launch experience. As a family-owned, US-based company, we offer exciting and engaging STEM products for all interests, skills, and power levels.",
+        "Easy to assemble",
+        "Almost ready to fly",
+        "An Estes classic",
+        "Launch system included (Launchpad colors may vary)",
+        "Flies over 1100'"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B003CT4B0G?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$24.99",
+      "currency": "USD"
+    },
     "048641714X": {
       "title": "Relativity: The Special and General Theory (Dover Books on Physics)",
       "image": "https://m.media-amazon.com/images/I/4126d8JT2JL._SL500_.jpg",
@@ -1313,18 +1385,31 @@
       "price": "$57.75",
       "currency": "USD"
     },
-    "B09WDM4LBX": {
-      "title": "Qianwei 3D Solar System Model Crystal Ball Astronomy Gifts Men Space Decor",
-      "image": "https://m.media-amazon.com/images/I/31EdZg0k6HL._SL500_.jpg",
+    "B0B627NPRK": {
+      "title": "Metal Earth Fascinations Premium Series International Space Station 3D Metal Model Kit Bundle with Tweezers",
+      "image": "https://m.media-amazon.com/images/I/41-MImtzemL._SL500_.jpg",
       "features": [
-        "3d Solar System: Made of K9 Crystal, making the Crystal Ball More Transparent and Glossier. Astronomy Gifts Planets Model Engraved with 3d Laser Technology, distinct and stereoscopic, the Crystal Ball will not Fade Forever.",
-        "Science Astronomy Gifts: Solar System Crystal Ball Model is a good way for Home Decor, a very good gift for friends man teachers.",
-        "Colorful Led Lighting Base: 6 Light Modes, Allowing The Solar System Model To Present Various Colors, Such As Color Slow Flashing Light, Color Quick Flashing Light, Constant White Red Blue Green Red Light.",
-        "Astronomy Gifts: Ideal Gifts Kit, Adults, Teachers, Astronomy Enthusiasts, Boyfriend, Parents, etc. During Birthday, Christmas Day, New Year, Valentine's Day, Mother's Day, Father's Day, Wedding, Graduation, Anniversary",
-        "PACKAGE INCLUDE: 1x Crystal Ball ( 80mm / 3.15inch ), 1x USB Cable, 1x Beautiful Gift Box, 1x LED Light Base ( 2.67x2.67x1.18 inch ). ( Please note: No batteries provided by the seller )."
+        "UNASSEMBLED HOBBY MODEL KIT – with easy to follow instructions. Ideal for ages 14 and up.",
+        "NO GLUE OR SOLDER NEEDED – Parts can be easily clipped from the metal sheets. Bundle includes tweezers, which are recommended for bending and twisting the connection tabs.",
+        "PREMIUM SERIES INTERNATIONAL SPACE STATION - 3 Sheet Model with a challenging difficulty level. Once assembled, dimensions are 7.75 L x 5.76 W x 4.53 H inches.",
+        "FROM STEEL SHEETS TO 3D – Pop out the pieces and connect using tabs and holes. Includes illustrated instructions.",
+        "HIGHLY DETAILED ETCHED MODEL – Display your 3D model once completed - collect and build them all."
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B09WDM4LBX?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$35.99",
+      "detailPageURL": "https://www.amazon.com/dp/B0B627NPRK?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$28.95",
+      "currency": "USD"
+    },
+    "B0DK5YH9S7": {
+      "title": "Replogle Ready to Assemble Illuminated World 12\" Diameter Globe, USA Cartography, Modern Acrylic Stand and Blue Ocean Globe Ball. Easy to assemble globe that shows both Political and Vegetative information including political borders and provincial borders, major ocean currents, detailed lakes, rivers, tributaries and canals. (Illuminated)",
+      "image": "https://m.media-amazon.com/images/I/51lJ1JZ6XYL._SL500_.jpg",
+      "features": [
+        "DESKTOP OFFICE PIECE— Perfect for home office or work office, living room or bedroom, this globe is a nice addition for all the explorers and travel lovers out there.",
+        "EASY TO ASSEMBLE -easily snap pieces together by using instructions provided with each globe",
+        "INCLUDED- 2 half-shells, semi meridian, base, time dial and easy to use instruction sheet",
+        "POLITICAL and VEGETATIVE MAP shows political borders and provincial borders, major ocean currents, detailed lakes, rivers, tributaries and canals"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0DK5YH9S7?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$39.99",
       "currency": "USD"
     },
     "B002U21ZZK": {
@@ -1392,34 +1477,16 @@
       "price": "$21.98",
       "currency": "USD"
     },
-    "B0FR957Y7K": {
-      "title": "MAONO PD200W Hybrid Wireless Podcast Microphone for PC, Dynamic XLR USB Mic with Desktop Stand, Software, Noise Cancellation, for Vocal Recording, Streaming, Content Creation, Home Studio, Voiceover",
-      "image": "https://m.media-amazon.com/images/I/31diAKutdVL._SL500_.jpg",
+    "B0C6CNWHW1": {
+      "title": "Bit Trade One BIMIMI - Binaural Stereo Microphone Easy BINAURAL Recording/ASMR/Podcast/Recording/Streaming / W7.2×H1.9×D2.6 inches/ADBMM",
+      "image": "https://m.media-amazon.com/images/I/31LLxYEmrCL._SL500_.jpg",
       "features": [
-        "Cut the Cables, Free to Pod - Dynamic microphone MAONO PD200W hybrid enjoy 3 ways for broadcast audio: go wireless for maximum freedom, USB for easy plug-and-play on phone, tablet, or computer, or XLR for a pro-level stable setup with audio interfaces",
-        "Simple Setup, Studio-Level Sounds - With a premium 30mm dynamic capsule and cardioid pickup, the mic delivers studio-quality vocal reproduction for podcasting, streaming, and vocal recording. It achieves an ultra-clean 82dB signal-to-noise ratio and handles up to 128dB SPL without distortion",
-        "Two Voices, One Perfect Conversation - PD200W supports a single receiver to connect two wireless desktop mics for duo podcasts or interviews. Records each mic to its own track so you can edit with precision, and keep every conversation crystal clear. The device also captures audio and video in perfect sync directly on the camera, eliminating the need for post-production alignment. (Note: Camera/Lightning accessories are sold separately.)",
-        "Focus on Voice, Not Noise - Built for No-worries Recording even without a soundproof booth. Cardioid microphone design and advanced three-stage noise cancellation ensures your voice remains rich and focused, effectively minimizing background noise and room echo for broadcast-ready clarity",
-        "Personalize Your Sound with MaonoLink - Take full command of your audio directly from your PC or smartphone through the MaonoLink app. Access 4 master-tuned preset modes to instantly adapt to different scenarios, while the powerful app enables precise adjustments to key parameters like EQ and reverb for a personalized sound profile",
-        "Long-Lasting Power, Limitless Creativity - Great ideas shouldn’t stop for low battery or bad signal. Record anywhere with a stable 60m wireless range and up to 60 hours of battery life (RGB off). Customize the RGB lighting for added flair or turn it off for a sleek look",
-        "Complete Creator Kit, Perfect Gift Choice - Everything you need to start creating is right in the box—Wireless/USB/XLR microphone x1, Desktop stand x1, USB-C to USB-A&C cable x1, Type-C receiver x1, Type-C adapter cable x1, User Manual x1"
+        "Comes with an artificial ear that reproduces the inside of the ear!",
+        "Only three cables you need to connect.",
+        "Easily Make ASMR Sound for Podcast/Streaming/Recording."
       ],
-      "detailPageURL": "https://www.amazon.com/dp/B0FR957Y7K?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$99.99",
-      "currency": "USD"
-    },
-    "B0CN493YHF": {
-      "title": "MAONO XLR/USB Dynamic Microphone Kit, RGB Podcast Mic with Software, Mute, Gain Knob, Volume Control, Boom Arm for Streaming, Gaming, Voice-Over, Recording-PD200XS Black",
-      "image": "https://m.media-amazon.com/images/I/41zhJ6oJ7PL._SL500_.jpg",
-      "features": [
-        "Superior Sound Quality: Capture crystal-clear audio with PD200X USB dynamic microphone. The built-in dynamic mic capsule helps you to capture deep lows, delicate highs, and crisp mid-tones. Ultra-wide frequency response of 40Hz-16kHz presents a warm and smooth sound. Cardioid polar pattern reduces unwanted background noise and highlights vocals in gaming and streaming. Designed to deliver exceptional performance for podcasting, streaming, and recording",
-        "Advanced Software Control: MAONO Link software takes your audio customization to the next level, allowing you to adjust various parameters and optimize your sound effortlessly setting the perfect vocal tone. And you can turn on/off the RGB light or switch in 9 different colors, also supports EQ, limiter, and compressor adjustment in USB mode. (Software features are only available in USB mode)",
-        "Versatile Usage: The PD200X streaming microphone is equipped with USB and XLR dual interfaces. Everything is in your control, Plug-and-play when you are recording with a desktop or a laptop by plugging the 8.2ft USB cable directly. XLR analog output is for connecting to all professional interfaces, mixers, or portable PA systems when podcasting in your studio. Ideal for a wide range of applications, including podcasting, voiceovers, gaming, YouTube videos, music recording, and more",
-        "Easy to Use: The podcast microphone has a 2-in-1 smart knob, to adjust the mic gain and headphone volume. And one-click mute key with an LED indicator helps you to instantly mute the mic. The microphone is equipped with a 3.5mm headphone jack, which enables full recording and monitoring at the same time as desired by recording professionals. MAONO PD200XS podcast microphone kit equips a sturdy and adjustable microphone boom arm, allowing you to position it at the perfect angle for optimal sound capture",
-        "Premium-Grade Accessories: The PD200X dynamic microphone is crafted with high-quality materials, higher standard microphone materials, and craftsmanship to protect the microphone's internal structure ensuring durability and exceptional performance. Making it an ideal choice for professional recording, podcasting, and studio use. What's in The Box: Dynamic Microphone*1, Shock Mount*1, 2.5m USB-C to USB-A/C Cable*1, 5/8'' to 3/8'' Adapter*1, microphone boom arm*1, User Manual*1 (NOTE: XLR CABLE NOT INCLUDED)"
-      ],
-      "detailPageURL": "https://www.amazon.com/dp/B0CN493YHF?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$71.99",
+      "detailPageURL": "https://www.amazon.com/dp/B0C6CNWHW1?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$180.00",
       "currency": "USD"
     },
     "B0G4VH17L9": {
@@ -1445,6 +1512,20 @@
       "price": "$383.99",
       "currency": "USD"
     },
+    "B07R53D12W": {
+      "title": "Google Coral USB Edge TPU ML Accelerator coprocessor for Raspberry Pi and Other Embedded Single Board Computers",
+      "image": "https://m.media-amazon.com/images/I/31epvVOPpwL._SL500_.jpg",
+      "features": [
+        "Specifications: Arm 32-bit Cortex-M0+ microprocessor (MCU): up to 32 MHz max 16 KB flash memory with ECC 2 KB RAM connections: USB 3.1 (Gen 1) port and cable (SuperSpeed, 5Gb/s transfer speed)",
+        "Features: Google Edge TPU ML acceleration coprocessor, USB 3.0 Type-C female, supports Debian Linux to host CPU, models are built with TensorFlow Supports MobileNet and Inception architectures through custom architectures are possible. Compatible with Google Cloud",
+        "Specifications: Arm 32-bit Cortex-M0+ Microprocessor (MCU): Up to 32 MHz max 16 KB Flash memory with ECC 2 KB RAM Connections: USB 3.1 (gen 1) port and cable (SuperSpeed, 5Gb/s transfer speed)",
+        "Features: Google Edge TPU ML accelerator coprocessor, USB 3.0 Type-C socket, Supports Debian Linux on host CPU, Models are built using TensorFlow. Fully supports MobileNet and Inception architectures through custom architectures are possible. Compatible with Google Cloud.",
+        "Features: Google Edge TPU ML accelerator coprocessor, USB 3.0 Type-C socket, Supports Debian Linux on host CPU, Models are built using TensorFlow. Full supports MobileNet and Inception architectures through custom architectures are possible. Compatible with Google Cloud."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B07R53D12W?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$129.99",
+      "currency": "USD"
+    },
     "B0BZJTQ5YP": {
       "title": "NVIDIA Jetson Orin Nano Super Developer Kit",
       "image": "https://m.media-amazon.com/images/I/21OqzbXMrzL._SL500_.jpg",
@@ -1464,7 +1545,7 @@
       "image": "https://m.media-amazon.com/images/I/41qUGYVuSvL._SL500_.jpg",
       "features": [],
       "detailPageURL": "https://www.amazon.com/dp/0387983740?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$99.94",
+      "price": "$100.39",
       "currency": "USD"
     },
     "B0CFQSH4DN": {
@@ -1568,6 +1649,20 @@
       ],
       "detailPageURL": "https://www.amazon.com/dp/B09Y94MGRZ?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
       "price": "$259.99",
+      "currency": "USD"
+    },
+    "B0D5YKKBMZ": {
+      "title": "GeeekPi nRF52840 MDK USB Dongle w/Case Development Platform",
+      "image": "https://m.media-amazon.com/images/I/312ZZZmOaNL._SL500_.jpg",
+      "features": [
+        "nRF52840 MDK USB Dongle is a small and low-cost development platform enabled by the nRF52840 multiprotocol SoC in a convenient USB Dongle form factor.",
+        "The design features a programmable user button, RGB LED, up to 12 GPIOs and 2.4G Chip antenna on board. It can be used as a low-cost Bluetooth5/Thread/802.15.4/ANT/2.4GHz multiprotocol node or development board. Alternatively the USB Dongle can be used as a Network Co-Processor(NCP) with a simple connection to a PC or other USB enabled device.",
+        "It's shipped with the UF2 Bootloader, supports nRF Connect SDK, which integrates the Zephyr RTOS, protocol stacks, samples, hardware drivers and much more. The dongle can work as a Bluetooth Low Energy and IEEE 802.15.4 packet sniffer with Wireshark, and has PCBA and w/Case options to meet various scenarios.",
+        "Dimensions & Weight: 2.0\" x 0.83\" x 0.3\" (50.8mm x 21.1mm x 7.6mm), 6.0g (0.21oz)",
+        "Package Includes 1x nRF52840 MDK USB Dongle w/ Case"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0D5YKKBMZ?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$24.99",
       "currency": "USD"
     },
     "0471358320": {

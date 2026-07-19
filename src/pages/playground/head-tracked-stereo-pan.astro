@@ -12,6 +12,10 @@ const gear = affiliateLinks
   .map(resolveAffiliateLink)
   .sort((a, b) => (a.id === 'airpods-pro-3' ? -1 : b.id === 'airpods-pro-3' ? 1 : 0));
 
+const primaryHardware = gear.find((item) =>
+  ['Component', 'Sensor', 'Apparatus', 'Diagnostic', 'Kit', 'Interface', 'Audio'].includes(item.category)
+);
+
 const title = 'Head-Tracked Stereo Pan — Rotate a virtual head, hear the pan move | MakerPortal';
 const description = 'Combines the quaternion yaw output with a live StereoPannerNode demo — spatial audio and head tracking in one research-grade instrument, same math as MotionLink.';
 const canonical = new URL('/playground/head-tracked-stereo-pan', Astro.site);
@@ -156,6 +160,12 @@ const faqSchema = {
                 <p class="mt-1 text-[0.75rem]">Source at (1, 0, 0) world = in front of head at 0° yaw. Listener at origin, orientation from quaternion.</p>
                 <pre id="pos-out" class="mt-2 text-[0.72rem]">yaw 0° → pan 0</pre>
               </div>
+              {primaryHardware && (
+                <div class="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[0.72rem] text-muted-text">
+                  <span class="font-medium tracking-tight">Hardware hook:</span>
+                  <a href={primaryHardware.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-0.5 font-semibold text-brand-anchor hover:text-primary-text transition-colors">Get the {primaryHardware.label} ↗</a>
+                </div>
+              )}
             </div>
 
             <div class="mt-6 grid grid-cols-1 gap-4">
@@ -339,22 +349,6 @@ const faqSchema = {
       </div>
     </section>
 
-    <section class="border-b border-border" aria-labelledby="gotchas-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
-        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Listener up vector is not optional</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Web Audio defaults the listener up vector to (0,1,0) — Y-up. If you tilt your head (pitch or roll), forward alone is not enough: the up vector must also rotate. Without it, the HRTF panner produces elevation errors. The up vector comes from the +Z column of the same rotation matrix: up = [2(xy − wz), 1 − 2(x² + z²), 2(yz + wx)]. MotionLink sets both fwd and up from the same quaternion.</p>
-          </div>
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">KEMAR HRTF is not your head</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The Web Audio HRTF dataset is based on KEMAR mannequin measurements — a single generic head. Front/back confusions at ±30° are expected because generic HRTFs have blurry pinna notches compared to your personal ears. Professional spatial audio systems use individualized HRTFs measured in an anechoic chamber. For head-tracking demos and music spatialization, the generic set works well enough — the interaural timing cues that dominate azimuth perception are consistent across heads.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -381,6 +375,22 @@ const faqSchema = {
         </div>
       </section>
     )}
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Listener up vector is not optional</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Web Audio defaults the listener up vector to (0,1,0) — Y-up. If you tilt your head (pitch or roll), forward alone is not enough: the up vector must also rotate. Without it, the HRTF panner produces elevation errors. The up vector comes from the +Z column of the same rotation matrix: up = [2(xy − wz), 1 − 2(x² + z²), 2(yz + wx)]. MotionLink sets both fwd and up from the same quaternion.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">KEMAR HRTF is not your head</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">The Web Audio HRTF dataset is based on KEMAR mannequin measurements — a single generic head. Front/back confusions at ±30° are expected because generic HRTFs have blurry pinna notches compared to your personal ears. Professional spatial audio systems use individualized HRTFs measured in an anechoic chamber. For head-tracking demos and music spatialization, the generic set works well enough — the interaural timing cues that dominate azimuth perception are consistent across heads.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">

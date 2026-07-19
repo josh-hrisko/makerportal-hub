@@ -12,6 +12,10 @@ const gear = affiliateLinks
   .map(resolveAffiliateLink)
   .sort((a, b) => (a.category === 'Book' ? 1 : b.category === 'Book' ? -1 : 0));
 
+const primaryHardware = gear.find((item) =>
+  ['Component', 'Sensor', 'Apparatus', 'Diagnostic', 'Kit', 'Interface', 'Audio'].includes(item.category)
+);
+
 const title = 'Agentic DSP Pipeline — Record → Retrieve → Generate → Verify → Iterate | MakerPortal';
 const description = 'A clickable walk through AuraLinter’s real multi-agent loop: RAG retrieval over DSP textbooks, LangGraph codegen, and clang++ verification of the generated C++ kernel.';
 const canonical = new URL('/playground/agentic-dsp-pipeline', Astro.site);
@@ -123,6 +127,12 @@ const faqSchema = {
               <p class="font-semibold">AuraLinter 5 nodes</p>
               <p class="mt-1">• recorder (speech→text, WebAudio) → • retriever (Chroma over 1200 DSP chunks) → • generator (Claude/Metal codegen) → • verifier (clang++ -O2 + unit tests) → • summarizer + iterate on fail. Edges conditional on verify PASS/FAIL. This playground simulates that loop client-side (no real LLM, deterministic mock).</p>
             </div>
+            {primaryHardware && (
+              <div class="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[0.72rem] text-muted-text">
+                <span class="font-medium tracking-tight">Hardware hook:</span>
+                <a href={primaryHardware.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-0.5 font-semibold text-brand-anchor hover:text-primary-text transition-colors">Get the {primaryHardware.label} ↗</a>
+              </div>
+            )}
           </div>
 
           <div class="rounded-[16px] border border-border bg-card-bg p-5">
@@ -208,22 +218,6 @@ const faqSchema = {
       </div>
     </section>
 
-    <section class="border-b border-border" aria-labelledby="gotchas-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
-        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Temperature 0.2, not 0</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Temperature 0 gives deterministic output but sometimes gets stuck — it repeats the same wrong formula after a FAIL. Temperature 0.2 adds just enough noise to try a 63-tap filter after a 64-tap failure, while still mostly copying retrieved text. Above 0.4, the model starts inventing nonsense like <code>biquad = butterworth(4)</code> wholesale. We tuned this across 200 DSP tasks.</p>
-          </div>
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Retrieval threshold matters</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Setting the retrieval threshold too low (0.5) allows irrelevant chunks into the prompt, confusing the generator. Too high (0.95) and you get zero hits for novel filter designs. 0.78 was chosen empirically: it passes the exact RBJ eq number for known designs and returns nothing for unknown ones, letting the agent fall back to general DSP knowledge with a confidence warning.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -250,6 +244,22 @@ const faqSchema = {
         </div>
       </section>
     )}
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Temperature 0.2, not 0</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Temperature 0 gives deterministic output but sometimes gets stuck — it repeats the same wrong formula after a FAIL. Temperature 0.2 adds just enough noise to try a 63-tap filter after a 64-tap failure, while still mostly copying retrieved text. Above 0.4, the model starts inventing nonsense like <code>biquad = butterworth(4)</code> wholesale. We tuned this across 200 DSP tasks.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Retrieval threshold matters</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Setting the retrieval threshold too low (0.5) allows irrelevant chunks into the prompt, confusing the generator. Too high (0.95) and you get zero hits for novel filter designs. 0.78 was chosen empirically: it passes the exact RBJ eq number for known designs and returns nothing for unknown ones, letting the agent fall back to general DSP knowledge with a confidence warning.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">

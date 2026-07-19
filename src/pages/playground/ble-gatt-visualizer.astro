@@ -12,6 +12,10 @@ const gear = affiliateLinks
   .map(resolveAffiliateLink)
   .sort((a, b) => (a.category === 'Microcontroller' ? -1 : b.category === 'Microcontroller' ? 1 : 0));
 
+const primaryHardware = gear.find((item) =>
+  ['Component', 'Sensor', 'Apparatus', 'Diagnostic', 'Kit', 'Interface', 'Audio'].includes(item.category)
+);
+
 const title = 'BLE GATT / CSV Frame Visualizer — How raw bytes become a row | MakerPortal';
 const description = 'Interactive look at the HM-10/nRF52 UART bridge BLExAR talks to — services, characteristics, and the byte-level framing behind CSV export. See GATT hierarchy, UART fragmentation, and CSV parsing live.';
 const canonical = new URL('/playground/ble-gatt-visualizer', Astro.site);
@@ -150,6 +154,12 @@ const faqSchema = {
               <p class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-muted-text">Reassembly buffer (lineBuffer)</p>
               <pre id="buffer-out" class="mt-2 min-h-[60px] rounded-[10px] border border-border bg-canvas p-3 font-mono text-[0.72rem]"></pre>
             </div>
+            {primaryHardware && (
+              <div class="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[0.72rem] text-muted-text">
+                <span class="font-medium tracking-tight">Hardware hook:</span>
+                <a href={primaryHardware.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-0.5 font-semibold text-brand-anchor hover:text-primary-text transition-colors">Get the {primaryHardware.label} ↗</a>
+              </div>
+            )}
           </div>
 
           <!-- CSV -->
@@ -328,22 +338,6 @@ const faqSchema = {
       </div>
     </section>
 
-    <section class="border-b border-border" aria-labelledby="gotchas-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
-        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">writeWithoutResponse is really fire-and-forget</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Unlike BLE indications, notifications have no application-layer acknowledgment. If the radio drops a packet due to interference or distance, that row is simply lost — no retry, no warning. BLExAR detects loss indirectly via timestamp gaps. For critical sensor data, timestamp column + gap detection is your only safeguard.</p>
-          </div>
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">iOS background BLE scanning limit</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">With bluetooth-central background mode enabled, iOS stops scan after ~10 seconds in the background. If you put the app in the background while peripherals are advertising, new discoveries fail until foreground. However, an already-active connection continues receiving notifications in the background — CSV logging keeps working even when the phone is locked.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -370,6 +364,22 @@ const faqSchema = {
         </div>
       </section>
     )}
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">writeWithoutResponse is really fire-and-forget</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Unlike BLE indications, notifications have no application-layer acknowledgment. If the radio drops a packet due to interference or distance, that row is simply lost — no retry, no warning. BLExAR detects loss indirectly via timestamp gaps. For critical sensor data, timestamp column + gap detection is your only safeguard.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">iOS background BLE scanning limit</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">With bluetooth-central background mode enabled, iOS stops scan after ~10 seconds in the background. If you put the app in the background while peripherals are advertising, new discoveries fail until foreground. However, an already-active connection continues receiving notifications in the background — CSV logging keeps working even when the phone is locked.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">

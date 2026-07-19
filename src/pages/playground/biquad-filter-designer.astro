@@ -12,6 +12,10 @@ const gear = affiliateLinks
   .map(resolveAffiliateLink)
   .sort((a, b) => (a.category === 'Audio interface' ? -1 : b.category === 'Audio interface' ? 1 : 0));
 
+const primaryHardware = gear.find((item) =>
+  ['Component', 'Sensor', 'Apparatus', 'Diagnostic', 'Kit', 'Interface', 'Audio'].includes(item.category)
+);
+
 const title = 'Biquad Filter Designer — Hear a cascade, not just see a curve | MakerPortal';
 const description = 'Design a cascade of biquad filters with live Web Audio preview, magnitude + phase plots, and exact Direct Form II Transposed code — the real DSP core from Biquadia.';
 const canonical = new URL('/playground/biquad-filter-designer', Astro.site);
@@ -141,6 +145,12 @@ const faqSchema = {
               <pre id="coeff-out" class="mt-3 max-h-[280px] overflow-auto whitespace-pre-wrap text-[0.72rem] leading-[1.5]"></pre>
             </div>
           </div>
+          {primaryHardware && (
+            <div class="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[0.72rem] text-muted-text">
+              <span class="font-medium tracking-tight">Hardware hook:</span>
+              <a href={primaryHardware.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-0.5 font-semibold text-brand-anchor hover:text-primary-text transition-colors">Get the {primaryHardware.label} ↗</a>
+            </div>
+          )}
         </div>
 
         <div class="mt-10 rounded-[20px] border border-border bg-card-bg p-5 sm:p-6">
@@ -229,22 +239,6 @@ const faqSchema = {
       </div>
     </section>
 
-    <section class="border-b border-border" aria-labelledby="gotchas-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
-        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">RBJ α inversion</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">LLMs love writing <Math math="\alpha = Q \sin w_0" /> (inverted). The correct formula is <Math math="\alpha = \sin w_0 / (2Q)" />. A high-Q filter with inverted α shifts the cutoff by an octave and changes the shape entirely. This page uses the real RBJ — check the α line in the script if you are porting it to your own codebase.</p>
-          </div>
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Cascade phase pile-up</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Each biquad adds its phase shift to the total. Four stages can easily exceed ±360° of total phase at Nyquist. That is not a bug — it is real group delay. If you stack four high-Q peaking filters, you will hear audible pre-ringing on transients. Phase-wrapping the plot to ±180° hides this, but your ears and an oscilloscope will not be fooled.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -271,6 +265,22 @@ const faqSchema = {
         </div>
       </section>
     )}
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">RBJ α inversion</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">LLMs love writing <Math math="\alpha = Q \sin w_0" /> (inverted). The correct formula is <Math math="\alpha = \sin w_0 / (2Q)" />. A high-Q filter with inverted α shifts the cutoff by an octave and changes the shape entirely. This page uses the real RBJ — check the α line in the script if you are porting it to your own codebase.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Cascade phase pile-up</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">Each biquad adds its phase shift to the total. Four stages can easily exceed ±360° of total phase at Nyquist. That is not a bug — it is real group delay. If you stack four high-Q peaking filters, you will hear audible pre-ringing on transients. Phase-wrapping the plot to ±180° hides this, but your ears and an oscilloscope will not be fooled.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">

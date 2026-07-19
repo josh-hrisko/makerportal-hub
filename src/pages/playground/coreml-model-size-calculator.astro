@@ -11,6 +11,10 @@ const gear = affiliateLinks
   .map(resolveAffiliateLink)
   .sort((a, b) => (a.id === 'book-hands-on-ml' ? -1 : b.id === 'book-hands-on-ml' ? 1 : 0));
 
+const primaryHardware = gear.find((item) =>
+  ['Component', 'Sensor', 'Apparatus', 'Diagnostic', 'Kit', 'Interface', 'Audio'].includes(item.category)
+);
+
 const title = 'CoreML Model Size & Quantization Calculator — Exact on-device footprint | MakerPortal';
 const description = 'Deterministic byte-size math across fp32/fp16/int8/int4 quantization — the exact arithmetic behind an on-device model’s real footprint, no throughput guesswork, same checks Notiary uses before shipping.';
 const canonical = new URL('/playground/coreml-model-size-calculator', Astro.site);
@@ -135,6 +139,12 @@ import Math from '../../components/Math.astro';
             </div>
 
             <div class="mt-6 flex gap-2"><button id="calc" class="rounded-full bg-primary-text px-5 py-2 text-[0.82rem] font-bold text-canvas">Recalculate</button><button id="export-json" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.75rem]">Export JSON</button></div>
+            {primaryHardware && (
+              <div class="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[0.72rem] text-muted-text">
+                <span class="font-medium tracking-tight">Hardware hook:</span>
+                <a href={primaryHardware.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-0.5 font-semibold text-brand-anchor hover:text-primary-text transition-colors">Get the {primaryHardware.label} ↗</a>
+              </div>
+            )}
           </div>
 
           <div>
@@ -304,22 +314,6 @@ Compression ratio = fp32Size / quantizedSize</pre>
       </div>
     </section>
 
-    <section class="border-b border-border" aria-labelledby="gotchas-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
-        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">KV-cache is missing from this calculator</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">For transformer-based models, the key-value cache grows during generation: <Math math="2 \times \text{layers} \times \text{seq\_len} \times \text{hidden\_dim} \times \text{bpe\_kv}" />. At 32 layers, seq 4096, hidden 960, FP16 — that\'s 241 MB of KV cache alone, exceeding the weight footprint. This calculator intentionally omits KV-cache because it\'s runtime-dependent (grows with each generated token) and belongs in a separate memory budget, not the static model size.</p>
-          </div>
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Palettization ≠ true INT4</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">CoreML\'s weight palettization (iOS 17+) compresses weights further on disk by mapping clusters of weight values to a lookup table, making INT4 appear like 0.35 B/param on disk. But at inference time, weights are decompressed back to FP16 in DRAM — the ANE operates on 2-byte values. So your 180 MB on-disk INT4 model could use 360 MB in DRAM plus decompression latency. FileManager reports the on-disk size; Instruments shows the true DRAM cost.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -346,6 +340,22 @@ Compression ratio = fp32Size / quantizedSize</pre>
         </div>
       </section>
     )}
+
+    <section class="border-b border-border" aria-labelledby="gotchas-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="gotchas-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Two gotchas worth knowing</h2>
+        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">KV-cache is missing from this calculator</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">For transformer-based models, the key-value cache grows during generation: <Math math="2 \times \text{layers} \times \text{seq\_len} \times \text{hidden\_dim} \times \text{bpe\_kv}" />. At 32 layers, seq 4096, hidden 960, FP16 — that\'s 241 MB of KV cache alone, exceeding the weight footprint. This calculator intentionally omits KV-cache because it\'s runtime-dependent (grows with each generated token) and belongs in a separate memory budget, not the static model size.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-primary-cta">Palettization ≠ true INT4</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">CoreML\'s weight palettization (iOS 17+) compresses weights further on disk by mapping clusters of weight values to a lookup table, making INT4 appear like 0.35 B/param on disk. But at inference time, weights are decompressed back to FP16 in DRAM — the ANE operates on 2-byte values. So your 180 MB on-disk INT4 model could use 360 MB in DRAM plus decompression latency. FileManager reports the on-disk size; Instruments shows the true DRAM cost.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
