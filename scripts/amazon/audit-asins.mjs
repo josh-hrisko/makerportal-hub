@@ -35,6 +35,10 @@ const SIMS = new Set([
   'antenna-em-sandbox',
   'verilog-live-sculptor',
   'webgpu-pinn-studio',
+  'elevenlabs-dsp-sandbox',
+  'modal-gpu-benchmarker',
+  'fly-edge-db-lab',
+  'vector-retrieval-recall-lab',
 ]);
 
 const STOP = new Set([

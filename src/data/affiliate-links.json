@@ -341,7 +341,8 @@
       "itria",
       "coreml-model-size-calculator",
       "webgpu-pinn-studio",
-      "modal-gpu-benchmarker"
+      "modal-gpu-benchmarker",
+      "vector-retrieval-recall-lab"
     ],
     "pillars": [
       "on-device-ai"
@@ -356,7 +357,8 @@
     "relatedTo": [
       "itria",
       "coreml-model-size-calculator",
-      "webgpu-pinn-studio"
+      "webgpu-pinn-studio",
+      "vector-retrieval-recall-lab"
     ],
     "pillars": [
       "on-device-ai"
@@ -453,7 +455,8 @@
     "category": "Accelerator",
     "relatedTo": [
       "coreml-model-size-calculator",
-      "modal-gpu-benchmarker"
+      "modal-gpu-benchmarker",
+      "vector-retrieval-recall-lab"
     ],
     "pillars": [
       "on-device-ai"
@@ -1545,7 +1548,8 @@
     "category": "Storage",
     "relatedTo": [
       "modal-gpu-benchmarker",
-      "fly-edge-db-lab"
+      "fly-edge-db-lab",
+      "vector-retrieval-recall-lab"
     ]
   },
   {
@@ -1673,7 +1677,8 @@
     "image": "https://www.sparkfun.com/media/catalog/product/cache/6b78ac9ed927a3c2db42a3c84dab4ce5/N/V/NVIDIA-JetsonOrin-3QTR-Front-Left-_1_.jpg",
     "relatedTo": [
       "slam-odometry-arena",
-      "webgpu-pinn-studio"
+      "webgpu-pinn-studio",
+      "vector-retrieval-recall-lab"
     ],
     "pillars": [
       "on-device-ai",
@@ -1766,7 +1771,8 @@
       "webgpu-pinn-studio",
       "blexar",
       "modal-gpu-benchmarker",
-      "fly-edge-db-lab"
+      "fly-edge-db-lab",
+      "vector-retrieval-recall-lab"
     ],
     "pillars": [
       "ios-craft",

@@ -12,7 +12,7 @@ readingTime: "5 min read"
 
 ## The verifier is a compiler, not a vibe check
 
-The generator node doesn't write C++ from a blank prompt. Retrieval runs first — a vector store of roughly 1200 chunks pulled from the RBJ Cookbook, Oppenheim's *Discrete-Time Signal Processing*, Smith's DSP guide, and Biquadia's own Metal kernels — and the generation prompt is constrained to output Direct-Form-II-Transposed C++ with normalized coefficients and an explicit stability invariant. Then it actually gets checked:
+The generator node doesn't write C++ from a blank prompt. Retrieval runs first against a versioned corpus drawn from the RBJ Cookbook, Oppenheim's *Discrete-Time Signal Processing*, Smith's DSP guide, and Biquadia's own Metal kernels. Corpus size, embedding model, top-k, and threshold are backend configuration—not public benchmark claims. The generation prompt is constrained to output Direct-Form-II-Transposed C++ with normalized coefficients and an explicit stability invariant. Then it actually gets checked:
 
 ```
 $ clang++ -O2 -std=c++20 -I./dsp -c biquad.cpp -o biquad.o
@@ -23,7 +23,7 @@ $ ./verify_biquad --freq 1000 --q 0.707 --fs 48000
 → kernel accepted
 ```
 
-That verification step exists because it catches a real, specific failure mode: asked to derive a biquad coefficient set unsupervised, an LLM alone will confidently produce `alpha = Q * sin(w0)` — inverted from the correct `alpha = sin(w0) / (2*Q)`. It reads as plausible C++. It compiles. It's wrong. Grounding the generator in retrieved RBJ formulas cuts that down significantly, but the actual backstop is the harness: a wrong coefficient shows up as the wrong -3dB point or an unstable pole radius, not as a subjective code-review judgment call.
+That verification step exists because it catches a specific failure mode: a generated biquad can use `alpha = Q * sin(w0)`—inverted from the correct `alpha = sin(w0) / (2*Q)`. It reads as plausible C++. It compiles. It's wrong. Retrieval gives the model relevant source material but does not prove the result; the actual backstop is the harness, where a wrong coefficient shows up as the wrong -3dB point or an unstable pole radius rather than a subjective code-review judgment call.
 
 ## The loop earns its name on the case that fails first
 
@@ -34,4 +34,4 @@ Lowpass and peaking filters pass on the first attempt — the retrieval is stron
 - **This is the one MakerPortal app that isn't fully on-device, and that's disclosed rather than hidden.** Recorded audio is staged temporarily server-side and the agent's trace streams back over SSE — the codegen and retrieval steps need more than a phone can currently run. No analytics SDKs, no cookies, and the backend is optionally self-hostable, but this is a real, named exception to the rest of the studio's on-device-first posture, not something folded quietly into marketing copy.
 - **The retrieval corpus includes the studio's own shipped code, not just textbooks.** Biquadia's Metal kernels are indexed alongside RBJ/Oppenheim/Smith, so a generated kernel has to be consistent with what AuraLinter's sibling app already ships — not just correct in isolation against a textbook formula.
 
-Want to click through the actual loop instead of reading about it? The [agentic DSP pipeline step-through](/playground/agentic-dsp-pipeline) runs all three scenarios above — lowpass, peaking, and the Hilbert filter that needs a second attempt — with the same retrieval hits, generated code, and verification logs. The [DSP snippet pack](/shop) in the shop packages real kernels from both AuraLinter's loop and Biquadia together, for anyone who wants the code directly.
+Want to click through the control flow instead of reading about it? The [agentic DSP pipeline step-through](/playground/agentic-dsp-pipeline) renders disclosed deterministic fixtures for the lowpass, peaking, and Hilbert scenarios; it does not claim to run the production model, vector database, or compiler in your browser. The [Vector Retrieval Recall Lab](/playground/vector-retrieval-recall-lab) isolates the retrieval tradeoff with measured local recall, while the [DSP snippet pack](/shop) packages kernels for anyone who wants the code directly.

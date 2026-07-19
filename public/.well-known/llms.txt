@@ -106,6 +106,7 @@ Browser-native mathematical and physical simulations: [makerportal.ai/playground
 - [Voice Synthesis DSP Sandbox](https://www.makerportal.ai/playground/elevenlabs-dsp-sandbox): Text-to-speech through a live Web Audio DSP rack (Independent research instrument)
 - [Client vs Serverless GPU Benchmarker](https://www.makerportal.ai/playground/modal-gpu-benchmarker): Your GPU vs a cloud GPU, measured — never estimated (Independent research instrument)
 - [Edge DB Sync Lab](https://www.makerportal.ai/playground/fly-edge-db-lab): Place replicas on a world map, watch reads beat writes (Independent research instrument)
+- [Vector Retrieval Recall Lab](https://www.makerportal.ai/playground/vector-retrieval-recall-lab): Measure the candidates you skip—and the neighbors you lose (Independent research instrument)
 - [RF & Microwave Circuit Bench](https://www.makerportal.ai/playground/rf-microwave-bench): S-parameters live on a Smith Chart, hum to pure tone at 50Ω (Independent research instrument)
 
 ## Trending Signals

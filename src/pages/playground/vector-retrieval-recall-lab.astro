@@ -1,0 +1,395 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import GearCarousel from '../../components/GearCarousel.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import KitBuilder from '../../components/KitBuilder.astro';
+import ExportGate from '../../components/ExportGate.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink, PINECONE_PARTNER_URL, buildSaasPartnerUrl } from '../../data/affiliate-links';
+import { kitForSimulator } from '../../data/kits';
+
+const SIM = 'vector-retrieval-recall-lab';
+const gear = affiliateLinks
+  .filter((link) => link.relatedTo?.includes(SIM))
+  .map(resolveAffiliateLink)
+  .slice(0, 6);
+const kit = kitForSimulator(SIM);
+const pinecone = buildSaasPartnerUrl(PINECONE_PARTNER_URL, 'https://www.pinecone.io/');
+
+const title = 'Vector Search Recall & Latency Lab — measured in your browser | MakerPortal';
+const description = 'Generate a deterministic vector corpus locally and measure exact cosine search against a disclosed IVF-style index. Sweep probe count to see real recall@k, candidates, build time, and browser query latency.';
+const canonical = new URL(`/playground/${SIM}`, Astro.site);
+
+const faqs = [
+  {
+    q: 'Does this page benchmark Pinecone?',
+    a: 'No. It benchmarks JavaScript running against a synthetic corpus generated in this browser. The coarse index is a disclosed teaching implementation, not Pinecone internals. Use the server-side code pattern on this page and measure your own deployed index before making a capacity or vendor decision.',
+  },
+  {
+    q: 'What does recall@k mean here?',
+    a: 'For each query, the page computes the exact cosine top-k over every eligible vector. Recall@k is the fraction of those exact neighbor IDs also returned by the coarse search. The displayed value is averaged across the current query batch.',
+  },
+  {
+    q: 'Why can approximate search be slower on a small corpus?',
+    a: 'Centroid scoring, bucket selection, and non-contiguous memory access have fixed costs. When the corpus is small—or when many clusters are probed—a sequential exact scan can win. The lab reports that result instead of forcing a speedup narrative.',
+  },
+  {
+    q: 'Does any vector, query, result, or device identifier leave the page?',
+    a: 'No. Corpus generation, indexing, search, charts, and export happen locally. First-party analytics record only coarse actions such as starting a sweep or opening the provider link, in a 100-event localStorage ring buffer. The page has no Pinecone key field because the official SDK belongs on a server, not in browser code.',
+  },
+  {
+    q: 'Is the Pinecone link sponsored?',
+    a: 'Not today. Pinecone publishes an affiliate application for technical builders and educators, but no public commission rate. MakerPortal keeps the partner URL empty until approval; if a tracked URL is added later, the link automatically receives rel="sponsored" and the site disclosure applies.',
+  },
+];
+
+const webAppSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Vector Retrieval Recall Lab',
+  url: canonical.toString(),
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any modern browser',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Vector Retrieval Recall Lab', item: canonical.toString() },
+  ],
+};
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.q,
+    acceptedAnswer: { '@type': 'Answer', text: faq.a },
+  })),
+};
+
+const pineconeTs = `import { Pinecone } from '@pinecone-database/pinecone';
+
+// Server-only environment variables. Never bundle this key into browser JS.
+const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
+const model = await pc.describeIndex(process.env.PINECONE_INDEX!);
+const docs = pc.index({ host: model.host }).namespace('docs');
+
+export async function nearest(
+  vector: number[],
+  category?: string,
+) {
+  return docs.query({
+    vector,
+    topK: 10,
+    includeValues: false,
+    includeMetadata: true,
+    filter: category ? { category: { $eq: category } } : undefined,
+  });
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(webAppSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Vector Retrieval Recall Lab"
+    lead="Generate a deterministic clustered corpus in this browser. Exact cosine search establishes ground truth; a disclosed IVF-style coarse index skips candidates. Sweep probe count and measure the recall you keep, the work you avoid, and the latency your device actually sees."
+    pillarHint="on-device-ai"
+    isGrounded={false}
+  >
+    <!-- 1 · SIMULATOR -->
+    <section id="vector-lab" class="border-b border-border" aria-labelledby="simulator-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="section-kicker">Simulator · Local measurements only</p>
+            <h2 id="simulator-title" class="mt-2 text-[clamp(1.45rem,3vw,2rem)] font-[650] tracking-[-0.04em] text-primary-text">Recall is what the shortcut costs.</h2>
+            <p class="mt-2 max-w-3xl text-[0.88rem] leading-[1.65] text-muted-text">Every row below is computed after you press run. Changing any control clears the measurements; the chart never carries estimates forward.</p>
+          </div>
+          <span class="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-primary-text">No network requests</span>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[330px_minmax(0,1fr)]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4 sm:p-5">
+            <h3 class="text-[1rem] font-semibold text-primary-text">Corpus + search budget</h3>
+            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <label class="control-label" for="vr-count"><span>Vectors</span>
+                <select id="vr-count" class="tool-control">
+                  <option value="3000">3,000</option>
+                  <option value="6000" selected>6,000</option>
+                  <option value="12000">12,000</option>
+                  <option value="24000">24,000</option>
+                </select>
+              </label>
+              <label class="control-label" for="vr-dim"><span>Dimensions</span>
+                <select id="vr-dim" class="tool-control">
+                  <option value="32">32</option>
+                  <option value="64" selected>64</option>
+                  <option value="128">128</option>
+                </select>
+              </label>
+              <label class="control-label" for="vr-clusters"><span>Coarse clusters</span>
+                <select id="vr-clusters" class="tool-control">
+                  <option value="8">8</option>
+                  <option value="16" selected>16</option>
+                  <option value="32">32</option>
+                </select>
+              </label>
+              <label class="control-label" for="vr-topk"><span>Neighbors k</span>
+                <select id="vr-topk" class="tool-control">
+                  <option value="5">5</option>
+                  <option value="10" selected>10</option>
+                  <option value="20">20</option>
+                </select>
+              </label>
+              <label class="control-label" for="vr-filter"><span>Metadata eligible</span>
+                <select id="vr-filter" class="tool-control">
+                  <option value="10">100%</option>
+                  <option value="5">50%</option>
+                  <option value="2" selected>20%</option>
+                </select>
+              </label>
+              <label class="control-label" for="vr-seed"><span>Deterministic seed</span>
+                <input id="vr-seed" type="number" min="1" max="999999" step="1" value="1337" class="tool-control" />
+              </label>
+            </div>
+            <button id="vr-run" type="button" class="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary-text px-5 py-2.5 text-[0.86rem] font-bold text-canvas hover:opacity-90 disabled:cursor-wait disabled:opacity-50">Generate + run measured sweep</button>
+            <button id="vr-reset" type="button" class="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-border bg-elevated px-4 py-2.5 text-[0.78rem] font-semibold text-primary-text hover:border-[var(--mp-border-strong)]">Clear measurements</button>
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.68rem] leading-[1.6]">
+              <div class="flex justify-between gap-3"><span class="text-muted-text">Status</span><span id="vr-status" class="text-right text-primary-text" aria-live="polite">Waiting for a run</span></div>
+              <div class="flex justify-between gap-3"><span class="text-muted-text">Corpus bytes</span><span id="vr-bytes">—</span></div>
+              <div class="flex justify-between gap-3"><span class="text-muted-text">Eligible vectors</span><span id="vr-eligible">—</span></div>
+              <div class="flex justify-between gap-3"><span class="text-muted-text">Build time</span><span id="vr-build">—</span></div>
+              <div class="flex justify-between gap-3"><span class="text-muted-text">Query batch</span><span>8 deterministic</span></div>
+            </div>
+            <p class="mt-3 text-[0.68rem] leading-[1.5] text-muted-text">The seed makes corpus values repeatable, not timings. Browser scheduling, CPU state, JIT warm-up, and power mode still affect milliseconds.</p>
+          </div>
+
+          <div class="min-w-0 rounded-[16px] border border-border bg-card-bg p-4 sm:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-[1rem] font-semibold text-primary-text">Measured probe sweep</h3>
+                <p class="mt-1 text-[0.72rem] text-muted-text">Bars: approximate latency · dashed: exact baseline · line: recall@k</p>
+              </div>
+              <span id="vr-best" class="rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted-text">No measurements</span>
+            </div>
+            <canvas id="vr-chart" width="1000" height="360" class="mt-4 block h-[340px] w-full rounded-[12px] border border-border bg-canvas sm:h-[360px]" role="img" aria-label="Vector retrieval measurements are empty until a sweep runs."></canvas>
+            <div class="mt-4 overflow-x-auto rounded-[12px] border border-border">
+              <table class="w-full min-w-[620px] border-collapse text-left font-mono text-[0.68rem]">
+                <caption class="sr-only">Measured exact and approximate vector-search results</caption>
+                <thead class="bg-elevated text-muted-text">
+                  <tr><th class="px-3 py-2">Probes</th><th class="px-3 py-2">Candidates</th><th class="px-3 py-2">Exact ms/q</th><th class="px-3 py-2">Approx ms/q</th><th class="px-3 py-2">Recall@k</th><th class="px-3 py-2">Measured ratio</th></tr>
+                </thead>
+                <tbody id="vr-rows" class="divide-y divide-border text-primary-text">
+                  <tr><td colspan="6" class="px-3 py-5 text-center text-muted-text">Run a sweep to populate measured rows.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · ANATOMY -->
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <p class="section-kicker">Anatomy · What this establishes</p>
+        <h2 id="anatomy-title" class="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Ground truth first, shortcut second.</h2>
+        <div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <article class="rounded-[16px] border border-border bg-card-bg p-5"><span class="font-mono text-[0.62rem] text-primary-cta">01 · CORPUS</span><h3 class="mt-3 font-semibold text-primary-text">Clustered, normalized vectors</h3><p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">A seeded generator creates normalized Float32 vectors around random centroids. Metadata buckets provide a visible filter-selectivity control. The bytes readout counts vector storage only.</p></article>
+          <article class="rounded-[16px] border border-border bg-card-bg p-5"><span class="font-mono text-[0.62rem] text-primary-cta">02 · EXACT</span><h3 class="mt-3 font-semibold text-primary-text">Every eligible dot product</h3><p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">Exact cosine scans every vector allowed by the metadata predicate, maintains the top-k IDs, and becomes the recall reference. It is timed after one unreported warm-up query.</p></article>
+          <article class="rounded-[16px] border border-border bg-card-bg p-5"><span class="font-mono text-[0.62rem] text-primary-cta">03 · COARSE</span><h3 class="mt-3 font-semibold text-primary-text">Probe selected buckets</h3><p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">The teaching index scores cluster centroids, opens the requested number of buckets, and evaluates only those candidates. It resembles an IVF coarse quantizer but makes no claim about a provider's internal index.</p></article>
+          <article class="rounded-[16px] border border-border bg-card-bg p-5"><span class="font-mono text-[0.62rem] text-primary-cta">04 · COMPARE</span><h3 class="mt-3 font-semibold text-primary-text">Eight-query batch</h3><p class="mt-2 text-[0.82rem] leading-[1.6] text-muted-text">Recall, candidate count, and per-query latency are averaged across eight deterministic queries. A speed ratio appears only from the two measured clocks; a slower shortcut stays slower on screen.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · GEAR -->
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><p class="section-kicker">Gear · Third section</p><h2 id="gear-title" class="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Build a repeatable local retrieval bench</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+            <span class="font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-text">{gear.length} audited picks</span>
+          </div>
+          <GearCarousel gear={gear} />
+        </div>
+      </section>
+    )}
+
+    <!-- 4 · KIT BUILDER -->
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <p class="section-kicker">Kit Builder · Fourth section</p>
+          <h2 id="kit-title" class="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Local vector-search test stack</h2>
+          <p class="mt-3 max-w-2xl text-[0.9rem] leading-[1.65] text-muted-text">Use a fixed corpus snapshot and hardware power mode when comparing software changes. Prices come from the audited catalog cache; optional items stay visibly excluded until selected.</p>
+          <div class="mt-8"><KitBuilder kit={kit} /></div>
+        </div>
+      </section>
+    )}
+
+    <!-- 5 · MATH -->
+    <section class="border-b border-border" aria-labelledby="math-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <p class="section-kicker">Math · Disclosed model</p>
+        <h2 id="math-title" class="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Four quantities, no mystery score.</h2>
+        <div class="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="math-card"><p class="math-label">Cosine similarity (vectors normalized here)</p><Math math="s(\mathbf{q},\mathbf{x})=\frac{\mathbf{q}\cdot\mathbf{x}}{\lVert\mathbf{q}\rVert_2\lVert\mathbf{x}\rVert_2}=\mathbf{q}\cdot\mathbf{x}" display /><p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">Normalization moves the magnitude work to corpus construction. Each query score is then a d-element dot product.</p></div>
+          <div class="math-card"><p class="math-label">Recall at k</p><Math math="\operatorname{recall@k}=\frac{|N_k^{\mathrm{exact}}\cap N_k^{\mathrm{approx}}|}{k}" display /><p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">The lab averages this fraction over eight queries. It does not treat the coarse result's own score as proof of retrieval quality.</p></div>
+          <div class="math-card"><p class="math-label">Measured candidate fraction</p><Math math="\rho=\frac{C_{\mathrm{probed,eligible}}}{N_{\mathrm{eligible}}}" display /><p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">A smaller ρ means fewer dot products. It does not guarantee lower wall time because centroid ranking and bucket traversal add fixed work.</p></div>
+          <div class="math-card"><p class="math-label">Dense vector storage floor</p><Math math="B_{\mathrm{vectors}}=N\,d\,4\ \mathrm{bytes}\quad(\text{Float32})" display /><p class="mt-3 text-[0.78rem] leading-[1.6] text-muted-text">This is only the raw vector array. IDs, metadata, index structures, replicas, caches, and provider billing are intentionally excluded.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · CODE -->
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <p class="section-kicker">Code · Provider boundary</p>
+        <h2 id="code-title" class="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Keep the Pinecone key on your server.</h2>
+        <p class="mt-3 max-w-3xl text-[0.88rem] leading-[1.65] text-muted-text">The <a href="https://sdk.pinecone.io/typescript/" target="_blank" rel="noopener noreferrer" class="text-brand-anchor underline underline-offset-2">official TypeScript SDK documentation</a> explicitly targets server-side use; bundling it into a browser can expose project keys. This current pattern resolves the index host, scopes a namespace, omits returned vector values, and applies metadata filtering. Measure the deployed request end to end. <a href={pinecone.url} target="_blank" rel={pinecone.rel} data-pinecone-cta class="text-brand-anchor underline underline-offset-2">Explore Pinecone ↗</a></p>
+        <div class="mt-6 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]"><Code code={pineconeTs} lang="ts" theme="github-dark-high-contrast" /></div>
+        <div class="mt-5 rounded-[14px] border border-border bg-elevated/40 p-4 text-[0.78rem] leading-[1.6] text-muted-text"><strong class="text-primary-text">Commercial integrity:</strong> Pinecone's <a href="https://www.pinecone.io/partners/" target="_blank" rel="noopener noreferrer" class="text-brand-anchor underline underline-offset-2">official partner page</a> currently publishes referral and affiliate applications, including a path for technical educators, but no public commission rate. The account link is informational until MakerPortal receives an approved partner URL; no discount or payout is implied.</div>
+      </div>
+    </section>
+
+    <div id="vr-aha" class="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-4 right-4 z-[60] hidden max-w-[400px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] sm:bottom-6 sm:left-auto sm:right-6">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-primary-text">Measured tradeoff · Aha moment</p>
+      <p id="vr-aha-copy" class="mt-1 text-[0.9rem] font-semibold leading-[1.4] text-primary-text"></p>
+      <p class="mt-1 text-[0.76rem] leading-[1.5] text-muted-text">Production indexes add distributed storage, filtering, concurrency, and operational behavior. Take the measurement discipline with you—not this toy index.</p>
+      <div class="mt-3 flex flex-wrap gap-2"><a href={pinecone.url} target="_blank" rel={pinecone.rel} data-pinecone-cta class="pointer-events-auto inline-flex min-h-10 items-center rounded-full bg-primary-text px-4 py-2 text-[0.8rem] font-semibold text-canvas">Explore Pinecone ↗</a><button id="vr-aha-dismiss" type="button" class="pointer-events-auto min-h-10 rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text">Dismiss</button></div>
+    </div>
+
+    <!-- 7 · EXPORT -->
+    <ExportGate simulator={SIM} fileName="vector-retrieval-measurements.json" mimeType="application/json" fileExtension="json" title="Export the measured recall envelope" description="Download the corpus configuration, build time, exact baseline, and every measured probe row. The export contains no vectors, query values, key, endpoint, email, or device fingerprint." />
+
+    <!-- 8 · FAQ -->
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((faq) => (
+            <details class="group py-4"><summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-[0.96rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">{faq.q}<span class="text-muted-text transition-transform group-open:rotate-180" aria-hidden="true">⌄</span></summary><p class="mt-3 max-w-3xl text-[0.86rem] leading-[1.65] text-muted-text">{faq.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+  .control-label{display:grid;grid-template-columns:1fr auto;align-items:center;gap:.5rem;font-family:var(--font-mono);font-size:.68rem;color:var(--mp-muted)}
+  .tool-control{min-height:2.75rem;max-width:10rem;border:1px solid var(--mp-border);border-radius:.6rem;background:var(--mp-canvas);padding:.45rem .65rem;color:var(--mp-text);font-family:var(--font-mono);font-size:.72rem}
+  @media(max-width:639px){.tool-control{max-width:11rem;width:100%}}
+</style>
+
+<script>
+// @ts-nocheck
+function initVectorRetrievalLab(){
+  const root=document.getElementById('vector-lab');
+  if(!root || root.dataset.init==='true') return;
+  root.dataset.init='true';
+  const $=(id)=>document.getElementById(id);
+  const controls=['vr-count','vr-dim','vr-clusters','vr-topk','vr-filter','vr-seed'].map($);
+  const runBtn=$('vr-run'), resetBtn=$('vr-reset'), status=$('vr-status');
+  const bytesOut=$('vr-bytes'), eligibleOut=$('vr-eligible'), buildOut=$('vr-build'), bestOut=$('vr-best');
+  const chart=$('vr-chart'), rows=$('vr-rows'), aha=$('vr-aha'), ahaCopy=$('vr-aha-copy'), dismiss=$('vr-aha-dismiss');
+  let report=null, runToken=0, running=false, ahaFired=false;
+
+  const fmtBytes=(n)=>n>=1048576?`${(n/1048576).toFixed(2)} MiB`:`${(n/1024).toFixed(1)} KiB`;
+  const fmtMs=(n)=>n<1?`${(n*1000).toFixed(0)} µs`:`${n.toFixed(2)} ms`;
+  const nextFrame=()=>new Promise((resolve)=>requestAnimationFrame(resolve));
+  const config=()=>({
+    vectors:Number($('vr-count').value), dimensions:Number($('vr-dim').value), clusters:Number($('vr-clusters').value),
+    topK:Number($('vr-topk').value), filterBuckets:Number($('vr-filter').value), seed:Number($('vr-seed').value)||1337, queries:8,
+  });
+  function rngFrom(seed){let s=seed>>>0;return()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+  function normal(rng){const u=Math.max(1e-9,rng()),v=Math.max(1e-9,rng());return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+  function normalize(array,offset,d){let sum=0;for(let j=0;j<d;j++){const v=array[offset+j];sum+=v*v}const inv=1/Math.sqrt(sum||1);for(let j=0;j<d;j++)array[offset+j]*=inv}
+  function dot(a,ao,b,bo,d){let sum=0;for(let j=0;j<d;j++)sum+=a[ao+j]*b[bo+j];return sum}
+  function pushTop(top,id,score,k){let p=top.length;while(p>0&&top[p-1].score<score)p--;if(p<k){top.splice(p,0,{id,score});if(top.length>k)top.pop()}}
+
+  function buildCorpus(cfg){
+    const start=performance.now(), rng=rngFrom(cfg.seed), centroids=new Float32Array(cfg.clusters*cfg.dimensions);
+    for(let c=0;c<cfg.clusters;c++){const o=c*cfg.dimensions;for(let j=0;j<cfg.dimensions;j++)centroids[o+j]=normal(rng);normalize(centroids,o,cfg.dimensions)}
+    const vectors=new Float32Array(cfg.vectors*cfg.dimensions), metadata=new Uint8Array(cfg.vectors), buckets=Array.from({length:cfg.clusters},()=>[]);
+    for(let i=0;i<cfg.vectors;i++){
+      const c=i%cfg.clusters,o=i*cfg.dimensions,co=c*cfg.dimensions;
+      for(let j=0;j<cfg.dimensions;j++)vectors[o+j]=centroids[co+j]+normal(rng)*0.24;
+      normalize(vectors,o,cfg.dimensions);metadata[i]=(i*7+c*3)%10;buckets[c].push(i);
+    }
+    const queries=new Float32Array(cfg.queries*cfg.dimensions);
+    for(let qi=0;qi<cfg.queries;qi++){const c=(qi*5+1)%cfg.clusters,o=qi*cfg.dimensions,co=c*cfg.dimensions;for(let j=0;j<cfg.dimensions;j++)queries[o+j]=centroids[co+j]+normal(rng)*0.12;normalize(queries,o,cfg.dimensions)}
+    return{vectors,metadata,buckets,centroids,queries,buildMs:performance.now()-start};
+  }
+  function exactSearch(data,cfg,qi){
+    const top=[],qo=qi*cfg.dimensions;
+    for(let id=0;id<cfg.vectors;id++){if(data.metadata[id]>=cfg.filterBuckets)continue;pushTop(top,id,dot(data.queries,qo,data.vectors,id*cfg.dimensions,cfg.dimensions),cfg.topK)}
+    return top;
+  }
+  function coarseSearch(data,cfg,qi,probes){
+    const qo=qi*cfg.dimensions, ranked=[];
+    for(let c=0;c<cfg.clusters;c++)ranked.push({c,score:dot(data.queries,qo,data.centroids,c*cfg.dimensions,cfg.dimensions)});
+    ranked.sort((a,b)=>b.score-a.score);const top=[], selected=ranked.slice(0,probes), candidateIds=[];
+    for(const row of selected)for(const id of data.buckets[row.c])if(data.metadata[id]<cfg.filterBuckets)candidateIds.push(id);
+    for(const id of candidateIds)pushTop(top,id,dot(data.queries,qo,data.vectors,id*cfg.dimensions,cfg.dimensions),cfg.topK);
+    return{top,candidates:candidateIds.length};
+  }
+  function recall(exact,approx,k){const ids=new Set(exact.map((x)=>x.id));let hit=0;for(const row of approx)if(ids.has(row.id))hit++;return hit/k}
+  function probeSteps(clusters){return[...new Set([1,2,4,8,16,clusters].filter((v)=>v<=clusters))].sort((a,b)=>a-b)}
+
+  function theme(){const s=getComputedStyle(document.documentElement);return{bg:s.getPropertyValue('--mp-canvas').trim()||'#111',text:s.getPropertyValue('--mp-text').trim()||'#eee',muted:s.getPropertyValue('--mp-muted').trim()||'#888',border:s.getPropertyValue('--mp-border').trim()||'#555',cta:s.getPropertyValue('--mp-cta').trim()||'#a78bfa',anchor:s.getPropertyValue('--mp-anchor').trim()||'#34d399'}}
+  function draw(){
+    const rect=chart.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2),w=Math.max(300,Math.round(rect.width||800)),h=Math.max(300,Math.round(rect.height||360));
+    chart.width=w*dpr;chart.height=h*dpr;const ctx=chart.getContext('2d');ctx.scale(dpr,dpr);const c=theme();ctx.fillStyle=c.bg;ctx.fillRect(0,0,w,h);
+    if(!report?.rows?.length){ctx.fillStyle=c.muted;ctx.font='12px ui-monospace, monospace';ctx.textAlign='center';ctx.fillText('Measured chart is empty — run a sweep.',w/2,h/2);return}
+    const pad={l:55,r:50,t:28,b:48},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,maxLatency=Math.max(report.exactMs,...report.rows.map((r)=>r.approxMs),0.001)*1.18;
+    ctx.font='10px ui-monospace, monospace';ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){const y=pad.t+ph*i/4;ctx.strokeStyle=c.border;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillStyle=c.muted;ctx.textAlign='right';ctx.fillText(`${(maxLatency*(1-i/4)).toFixed(maxLatency<1?2:1)} ms`,pad.l-7,y+3);ctx.textAlign='left';ctx.fillText(`${Math.round((1-i/4)*100)}%`,w-pad.r+7,y+3)}
+    const step=pw/report.rows.length,barW=Math.min(42,step*.48);
+    ctx.setLineDash([5,4]);const exactY=pad.t+ph*(1-report.exactMs/maxLatency);ctx.strokeStyle=c.anchor;ctx.beginPath();ctx.moveTo(pad.l,exactY);ctx.lineTo(w-pad.r,exactY);ctx.stroke();ctx.setLineDash([]);
+    const points=[];report.rows.forEach((r,i)=>{const x=pad.l+step*(i+.5),barH=ph*r.approxMs/maxLatency;ctx.fillStyle=c.cta;ctx.globalAlpha=.78;ctx.fillRect(x-barW/2,pad.t+ph-barH,barW,barH);ctx.globalAlpha=1;points.push([x,pad.t+ph*(1-r.recall)]);ctx.fillStyle=c.text;ctx.textAlign='center';ctx.fillText(`${r.probes}`,x,h-25)});
+    ctx.strokeStyle=c.anchor;ctx.lineWidth=2;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();for(const[x,y]of points){ctx.fillStyle=c.anchor;ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill()}
+    ctx.fillStyle=c.muted;ctx.textAlign='center';ctx.fillText('coarse clusters probed',pad.l+pw/2,h-7);ctx.save();ctx.translate(12,pad.t+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('measured ms / query',0,0);ctx.restore();
+  }
+  function render(){
+    if(!report){rows.innerHTML='<tr><td colspan="6" class="px-3 py-5 text-center text-muted-text">Run a sweep to populate measured rows.</td></tr>';bestOut.textContent='No measurements';chart.setAttribute('aria-label','Vector retrieval measurements are empty until a sweep runs.');draw();return}
+    rows.innerHTML=report.rows.map((r)=>`<tr><td class="px-3 py-2">${r.probes}</td><td class="px-3 py-2">${Math.round(r.candidates).toLocaleString()} (${(r.candidateFraction*100).toFixed(1)}%)</td><td class="px-3 py-2">${r.exactMs.toFixed(3)}</td><td class="px-3 py-2">${r.approxMs.toFixed(3)}</td><td class="px-3 py-2">${(r.recall*100).toFixed(1)}%</td><td class="px-3 py-2">${r.speedRatio.toFixed(2)}×</td></tr>`).join('');
+    const acceptable=report.rows.filter((r)=>r.recall>=.9).sort((a,b)=>a.approxMs-b.approxMs),best=acceptable[0]||report.rows.reduce((a,b)=>b.recall>a.recall?b:a);
+    bestOut.textContent=acceptable.length?`${best.probes} probes · ${(best.recall*100).toFixed(0)}% recall`:`Best observed · ${(best.recall*100).toFixed(0)}% recall`;
+    chart.setAttribute('aria-label',`Measured vector search chart. Exact search averaged ${report.exactMs.toFixed(3)} milliseconds per query. ${report.rows.length} approximate probe configurations were measured; best observed recall was ${Math.max(...report.rows.map((r)=>r.recall))*100} percent.`);draw();
+  }
+  function clear(){runToken++;report=null;status.textContent='Waiting for a run';bytesOut.textContent=eligibleOut.textContent=buildOut.textContent='—';runBtn.disabled=false;runBtn.textContent='Generate + run measured sweep';running=false;aha.classList.add('hidden');render();registerExport()}
+  async function run(){
+    if(running)return;running=true;const token=++runToken;runBtn.disabled=true;runBtn.textContent='Generating corpus…';status.textContent='Generating corpus';report=null;render();await nextFrame();
+    const cfg=config(),data=buildCorpus(cfg);if(token!==runToken)return;bytesOut.textContent=fmtBytes(data.vectors.byteLength);buildOut.textContent=fmtMs(data.buildMs);const eligible=data.metadata.reduce((n,v)=>n+(v<cfg.filterBuckets?1:0),0);eligibleOut.textContent=eligible.toLocaleString();
+    status.textContent='Warming exact search';runBtn.textContent='Measuring exact baseline…';await nextFrame();exactSearch(data,cfg,0);
+    const t0=performance.now(),exact=[];for(let qi=0;qi<cfg.queries;qi++)exact.push(exactSearch(data,cfg,qi));const exactMs=(performance.now()-t0)/cfg.queries;
+    const measured=[];for(const probes of probeSteps(cfg.clusters)){if(token!==runToken)return;status.textContent=`Measuring ${probes} probe${probes===1?'':'s'}`;runBtn.textContent=`Measuring ${probes}/${cfg.clusters} clusters…`;await nextFrame();if(token!==runToken)return;coarseSearch(data,cfg,0,probes);const start=performance.now();let recallSum=0,candidateSum=0;for(let qi=0;qi<cfg.queries;qi++){const out=coarseSearch(data,cfg,qi,probes);recallSum+=recall(exact[qi],out.top,cfg.topK);candidateSum+=out.candidates}const approxMs=(performance.now()-start)/cfg.queries,candidates=candidateSum/cfg.queries;measured.push({probes,candidates,candidateFraction:eligible?candidates/eligible:0,exactMs,approxMs,recall:recallSum/cfg.queries,speedRatio:approxMs>0?exactMs/approxMs:0})}
+    report={simulator:'vector-retrieval-recall-lab',method:'Exact cosine baseline versus disclosed IVF-style coarse-cluster teaching index',generatedAt:new Date().toISOString(),configuration:cfg,vectorStorageBytes:data.vectors.byteLength,eligibleVectors:eligible,buildMs:data.buildMs,exactMs,rows:measured,limitations:['Synthetic clustered Float32 corpus','JavaScript CPU timing includes browser scheduling and JIT effects','Not a Pinecone benchmark and not representative of any provider internal index']};
+    status.textContent='Sweep complete';runBtn.disabled=false;runBtn.textContent='Run a fresh measured sweep';running=false;render();registerExport();
+    try{window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'vector_retrieval_sweep_complete',sim:'vector-retrieval-recall-lab'}}))}catch{}
+    if(!ahaFired){const acceptable=measured.filter((r)=>r.recall>=.9).sort((a,b)=>a.approxMs-b.approxMs),best=acceptable[0]||measured.reduce((a,b)=>b.recall>a.recall?b:a);ahaCopy.textContent=acceptable.length?`${best.probes} probes kept ${(best.recall*100).toFixed(1)}% recall while scoring ${(best.candidateFraction*100).toFixed(1)}% of eligible vectors; the measured time ratio was ${best.speedRatio.toFixed(2)}×.`:`This corpus needed more probes to reach 90% recall. The shortcut did not earn a success claim.`;aha.classList.remove('hidden');ahaFired=true}
+  }
+  function registerExport(){if(window.MPExportGate)window.MPExportGate.register('vector-retrieval-recall-lab',()=>JSON.stringify(report||{simulator:'vector-retrieval-recall-lab',measured:false,message:'Run a sweep before treating this export as benchmark evidence.'},null,2))}
+  controls.forEach((control)=>control.addEventListener('change',clear));runBtn.addEventListener('click',run);resetBtn.addEventListener('click',clear);dismiss.addEventListener('click',()=>aha.classList.add('hidden'));
+  document.querySelectorAll('[data-pinecone-cta]').forEach((link)=>link.addEventListener('click',()=>{try{window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'saas_partner_click',partner:'pinecone',sim:'vector-retrieval-recall-lab'}}))}catch{}}));
+  const resize=()=>draw(),observer=new MutationObserver(draw);window.addEventListener('resize',resize,{passive:true});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});registerExport();requestAnimationFrame(()=>{registerExport();draw()});
+  window.__mpVectorLabCleanup=()=>{runToken++;window.removeEventListener('resize',resize);observer.disconnect();root.dataset.init='false'};
+}
+document.addEventListener('astro:page-load',initVectorRetrievalLab);
+document.addEventListener('astro:before-swap',()=>window.__mpVectorLabCleanup?.());
+if(document.readyState!=='loading')initVectorRetrievalLab();else document.addEventListener('DOMContentLoaded',initVectorRetrievalLab,{once:true});
+</script>

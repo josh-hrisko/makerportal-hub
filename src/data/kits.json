@@ -179,5 +179,19 @@
       { "linkId": "raspberry-pi-4-4gb-kit", "qty": 1, "optional": true },
       { "linkId": "sandisk-16gb-microsd", "qty": 2, "optional": true }
     ]
+  },
+  {
+    "id": "vector-retrieval-edge-stack",
+    "simulator": "vector-retrieval-recall-lab",
+    "title": "Local vector-search test stack",
+    "blurb": "Jetson or Pi for repeatable local retrieval tests, SSD for corpus snapshots, and two practical ML systems references. Measure your own workload before choosing managed capacity.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "sf-jetson-orin-nano", "qty": 1 },
+      { "linkId": "sandisk-extreme-ssd-1tb", "qty": 1 },
+      { "linkId": "book-designing-ml-systems", "qty": 1 },
+      { "linkId": "sf-raspberry-pi-5-8gb", "qty": 1, "optional": true },
+      { "linkId": "book-hands-on-ml", "qty": 1, "optional": true }
+    ]
   }
 ]

@@ -25,7 +25,7 @@ const remainingApps = apps.filter((a) => !featuredTitles.includes(a.title));
 
 // --- Playground showcase: newest deployment labs first, then proven visual hooks ---
 const livePlaygroundEntries = playground.filter((entry) => entry.status === 'live');
-const playgroundSlugs = ['modal-gpu-benchmarker', 'elevenlabs-dsp-sandbox', 'fly-edge-db-lab', 'fourier-epicycles', 'optics-bench', 'globe'];
+const playgroundSlugs = ['modal-gpu-benchmarker', 'elevenlabs-dsp-sandbox', 'fly-edge-db-lab', 'vector-retrieval-recall-lab', 'fourier-epicycles', 'optics-bench'];
 const playgroundPicks = playgroundSlugs
   .map((slug) => playground.find((p) => p.slug === slug))
   .filter((p) => p && p.status === 'live') as typeof playground;

@@ -331,6 +331,16 @@ export const playground: PlaygroundEntry[] = [
     status: 'live',
   },
   {
+    slug: 'vector-retrieval-recall-lab',
+    title: 'Vector Retrieval Recall Lab',
+    tagline: 'Measure the candidates you skip—and the neighbors you lose',
+    description:
+      'Generate a deterministic clustered vector corpus in your browser, compare exact cosine search with a disclosed IVF-style coarse index, and measure recall@k, candidate count, build time, and query latency across probe counts. All results come from this session; no corpus, query, or device fingerprint leaves the page.',
+    pillarHint: 'on-device-ai',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
     slug: 'rf-microwave-bench',
     title: 'RF & Microwave Circuit Bench',
     tagline: 'S-parameters live on a Smith Chart, hum to pure tone at 50Ω',
@@ -357,14 +367,15 @@ export function plannedPlayground(): PlaygroundEntry[] {
  */
 const relatedSlugs: Record<string, string[]> = {
   'elevenlabs-dsp-sandbox': ['biquad-filter-designer', 'head-tracked-stereo-pan', 'modal-gpu-benchmarker'],
-  'modal-gpu-benchmarker': ['webgpu-pinn-studio', 'agentic-dsp-pipeline', 'fly-edge-db-lab'],
+  'modal-gpu-benchmarker': ['webgpu-pinn-studio', 'vector-retrieval-recall-lab', 'agentic-dsp-pipeline'],
   'fly-edge-db-lab': ['globe', 'rtos-scheduler', 'modal-gpu-benchmarker'],
+  'vector-retrieval-recall-lab': ['agentic-dsp-pipeline', 'coreml-model-size-calculator', 'modal-gpu-benchmarker'],
   'biquad-filter-designer': ['elevenlabs-dsp-sandbox', 'agentic-dsp-pipeline', 'head-tracked-stereo-pan'],
   'head-tracked-stereo-pan': ['elevenlabs-dsp-sandbox', 'biquad-filter-designer', 'quaternion-euler-converter'],
-  'agentic-dsp-pipeline': ['modal-gpu-benchmarker', 'elevenlabs-dsp-sandbox', 'biquad-filter-designer'],
+  'agentic-dsp-pipeline': ['vector-retrieval-recall-lab', 'modal-gpu-benchmarker', 'elevenlabs-dsp-sandbox'],
   'fourier-epicycles': ['elevenlabs-dsp-sandbox', 'biquad-filter-designer', 'chladni-cymatics'],
   'webgpu-pinn-studio': ['modal-gpu-benchmarker', 'coreml-model-size-calculator', 'pid-flight-arena'],
-  'coreml-model-size-calculator': ['modal-gpu-benchmarker', 'webgpu-pinn-studio', 'agentic-dsp-pipeline'],
+  'coreml-model-size-calculator': ['vector-retrieval-recall-lab', 'modal-gpu-benchmarker', 'webgpu-pinn-studio'],
   'slam-odometry-arena': ['fly-edge-db-lab', 'modal-gpu-benchmarker', 'pid-flight-arena'],
   'pid-flight-arena': ['modal-gpu-benchmarker', 'webgpu-pinn-studio', 'slam-odometry-arena'],
   globe: ['fly-edge-db-lab', 'n-body-choreography', 'relativistic-spaceflight'],

@@ -51,10 +51,14 @@ export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exis
  *
  * - ElevenLabs: PartnerStack, 22% recurring 12 mo (commission to us, NOT a
  *   user-facing discount — never phrase it as "22% off" in UI copy).
+ * - Pinecone: official creator/educator affiliate application exists, but the
+ *   public page does not disclose a rate. Keep empty until MakerPortal is
+ *   accepted and receives its own URL; never state a commission percentage.
  * - Modal / Fly.io: no public affiliate program — permanently informational;
  *   monetized via DevRel credit-grant pitches instead.
  */
 export const ELEVENLABS_PARTNER_URL: string = ''; // PartnerStack link — owner to fill on approval
+export const PINECONE_PARTNER_URL: string = ''; // official affiliate application; owner to fill only after approval
 export const MODAL_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
 export const FLY_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
 

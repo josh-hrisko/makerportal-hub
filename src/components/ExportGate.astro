@@ -226,6 +226,10 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
     function buildContent(sim, watermark) {
       const getters = getGetters();
       const fn = getters[sim];
+      const panel = document.querySelector(`.export-gate[data-sim="${sim}"]`);
+      const fileName = panel?.getAttribute('data-file') || '';
+      const mime = panel?.getAttribute('data-mime') || '';
+      const isJson = mime.includes('json') || fileName.toLowerCase().endsWith('.json');
       let content = '';
       if (typeof fn === 'function') {
         try {
@@ -237,8 +241,27 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
       if (!content) {
         content = `// ${sim} export — ${new Date().toISOString()}\n// Tuning exported from makerportal.ai/playground/${sim}\n// Getter not yet registered — placeholder content\n`;
       }
+      // JSON cannot carry a comment footer. Preserve a valid document on both
+      // paths by inserting the free-path disclosure as data instead.
+      if (isJson) {
+        let parsed;
+        try {
+          parsed = JSON.parse(content);
+        } catch {
+          parsed = {
+            exportError: 'The simulator export getter returned invalid JSON.',
+            raw: content,
+          };
+        }
+        if (watermark) {
+          const disclosure = `Free export from makerportal.ai/playground/${sim} — unlock the clean export to remove this field.`;
+          parsed = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? { ...parsed, _makerportal_watermark: disclosure }
+            : { data: parsed, _makerportal_watermark: disclosure };
+        }
+        return JSON.stringify(parsed, null, 2) + '\n';
+      }
       if (watermark) {
-        const panel = document.querySelector(`.export-gate[data-sim="${sim}"]`);
         const wm = panel?.getAttribute('data-watermark') || `\n# makerportal.ai ${sim}`;
         content = content.trimEnd() + '\n' + wm + '\n';
       }

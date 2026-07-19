@@ -441,6 +441,15 @@ Detailed specifications of mathematical and physical simulations available insid
 - **Description:** A multi-region SQLite/LiteFS replication simulator: place a primary and read replicas at real Fly.io regions on a world map, click anywhere to fire client transactions, and watch read queries return from the nearest replica while writes forward to the primary — with speed-of-light-in-fiber latency math disclosed in full.
 
 
+### Vector Retrieval Recall Lab
+- **Slug / Route:** /playground/vector-retrieval-recall-lab
+- **Tagline:** Measure the candidates you skip—and the neighbors you lose
+- **Pillar Hint:** on-device-ai
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Generate a deterministic clustered vector corpus in your browser, compare exact cosine search with a disclosed IVF-style coarse index, and measure recall@k, candidate count, build time, and query latency across probe counts. All results come from this session; no corpus, query, or device fingerprint leaves the page.
+
+
 ### RF & Microwave Circuit Bench
 - **Slug / Route:** /playground/rf-microwave-bench
 - **Tagline:** S-parameters live on a Smith Chart, hum to pure tone at 50Ω

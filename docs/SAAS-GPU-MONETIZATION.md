@@ -12,11 +12,13 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 1. **Cash engine — ElevenLabs** (PartnerStack, 22% recurring 12 mo on
    Starter/Creator/Pro/Scale). Note: 22% is *our commission*, not a user
    discount — UI copy must never say "22% off".
-2. **Credit engine — Modal + Fly.io** (no public affiliate programs; links
+2. **Pending cash engine — Pinecone** publishes an affiliate application for
+   technical builders and educators, but no public commission rate. The link
+   stays informational until MakerPortal is accepted and receives its own URL.
+3. **Credit engine — Modal + Fly.io** (no public affiliate programs; links
    stay informational). Monetized by pitching DevRel teams for compute /
-   hosting credit grants using the playgrounds as evidence of reach +
-   integration quality. Target: $1k–$10k Modal compute for AuraLinter's
-   verification backend; Fly.io credits for edge hosting.
+   hosting credit grants using the playgrounds as evidence of integration
+   quality. Any request must be derived from a reviewed workload and hard cap.
 
 ## Shipped (2026-07-19)
 
@@ -31,14 +33,21 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - [x] `/playground/fly-edge-db-lab` — d3-geo world map, 19 real Fly
   regions, LiteFS read-local / write-forward animation, disclosed
   physics latency model, litefs.yml + fly-replay middleware code.
+- [x] `/playground/vector-retrieval-recall-lab` — deterministic local Float32
+  corpus, exact cosine ground truth, disclosed IVF-style coarse search, measured
+  probe sweep, recall@k/candidate/latency table, local JSON export, and a
+  server-only Pinecone TypeScript pattern. Explicitly not a Pinecone benchmark.
 - [x] `ELEVENLABS_PARTNER_URL` / `MODAL_REFERRAL_URL` / `FLY_REFERRAL_URL`
   constants in `affiliate-links.ts` — ship **empty**; `buildSaasPartnerUrl()`
   flips links from `rel="noopener noreferrer"` (informational) to
   `rel="sponsored noopener noreferrer"` automatically when a real URL lands.
+- [x] `PINECONE_PARTNER_URL` follows the same empty-until-approved rule. The
+  official public program page does not disclose a rate, so UI/docs state none.
 - [x] Kits: `voice-synth-workstation`, `modal-edge-bench-stack`,
-  `fly-edge-lab-stack` (13 kits total). Gear tags ×6 per sim from existing
+  `fly-edge-lab-stack`, `vector-retrieval-edge-stack` (14 kits total). Gear
+  tags ×6 per sim from existing
   audited ASINs. Sims added to `smoke-sim-gear.mjs`.
-- [x] Strict layout on all three: Simulator → Anatomy → GearCarousel →
+- [x] Strict layout on all four monetization labs: Simulator → Anatomy → GearCarousel →
   KitBuilder → Math → Code → ExportGate → FAQ. Analytics: `aha_moment`,
   `aha_cta_click`, `export_download`, `export_gate_unlock`.
 
@@ -100,6 +109,10 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - [ ] **Buttondown username** — only needed when the owner is ready to collect
   explicit newsletter opt-ins. Set `PUBLIC_BUTTONDOWN_USERNAME`; clean export
   remains local and works without it. Do not provide a Buttondown API key.
+- [ ] **Pinecone affiliate application** — apply through the Affiliate Partner
+  path at https://www.pinecone.io/partners/. On approval, paste only the issued
+  destination URL into `PINECONE_PARTNER_URL` and add Pinecone to `/privacy` in
+  the same PR. Do not infer or publish a commission rate from a third-party list.
 - [ ] **Modal DevRel credit pitch** — owner sends the reviewed draft in
   `docs/DEVREL-PITCHES-SAAS-GPU.md` through the official community Slack or
   `support@modal.com` routing path. Fill in a capped pilot estimate first; do
@@ -113,13 +126,15 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 
 - ElevenLabs: the approved PartnerStack destination URL (not an API key and
   not a fabricated partner ID).
+- Pinecone: the approved affiliate destination URL after acceptance (not a
+  project API key). No URL or public rate is currently available.
 - Modal: no referral ID is expected; later, owner workspace credentials are
   only needed for the owner-run AuraLinter deployment or credit-pitch follow-up.
 - Fly.io: no referral ID is expected; later, owner account contact is only
   needed to send the grant pitch.
 - Buttondown: the public username only, after the owner wants newsletter
   collection enabled.
-- No shared ElevenLabs, Modal, Fly.io, Amazon, or other API key is needed for
+- No shared ElevenLabs, Pinecone, Modal, Fly.io, Amazon, or other API key is needed for
   these static pages. Visitor BYO keys/tokens remain in their own localStorage
   and are sent only to the provider endpoint they explicitly invoke.
 - To send the pitch drafts: owner name/role/reply address, Modal workspace and
@@ -131,8 +146,8 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 
 - [x] Homepage now features the Modal, ElevenLabs, and Fly labs first and derives
   the live-lab count from the registry instead of the stale hard-coded “18”.
-- [x] `/playground` leads with a dedicated three-card deployment-labs row, keeps
-  the full catalog below it, and emits a 31-item `CollectionPage` / `ItemList`.
+- [x] `/playground` leads with a dedicated four-card deployment-labs row, keeps
+  the full catalog below it, and emits a 32-item `CollectionPage` / `ItemList`.
 - [x] `PlaygroundShell` derives field-note CTAs from the registry and adds three
   editorially related instruments. Twelve relevant existing labs explicitly
   link into the SaaS/GPU funnels; same-pillar fallback covers the rest.
@@ -149,6 +164,18 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - [x] Rejected a visible aggregate “social proof” count for now. The local
   `mp_analytics_log` cannot represent site-wide use; displaying one would require
   a first-party aggregate backend or fabrication.
+- [x] Affiliate-program ROI research: Pinecone is the only candidate in the
+  current Supabase / Neon / Cloudflare / vector DB / Sentry sweep with an
+  official creator-educator affiliate application. Neon cash referrals are
+  limited to accepted open-source projects; Supabase and Cloudflare publish
+  broader partner programs; no official public Sentry creator rate was found.
+- [x] Vector lab browser QA: default and maximum corpus sweeps complete without
+  console errors or overflow; reset cancels in-flight work; light/dark canvas
+  redraw works; initial load makes zero external requests; free and clean JSON
+  exports both parse (the free watermark is now a JSON field); lifecycle
+  navigation does not duplicate handlers. Mobile Lighthouse: 98 performance /
+  100 accessibility / 100 best practices / 100 SEO, TBT 0 ms, CLS 0.
+- [x] Gear smoke now covers 14 monetized simulators and 94 rendered gear cards.
 
 ## Follow-ups (agent-executable later)
 

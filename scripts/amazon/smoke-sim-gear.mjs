@@ -25,6 +25,7 @@ const SIMS = [
   'elevenlabs-dsp-sandbox',
   'modal-gpu-benchmarker',
   'fly-edge-db-lab',
+  'vector-retrieval-recall-lab',
 ];
 
 const STOP = new Set([
