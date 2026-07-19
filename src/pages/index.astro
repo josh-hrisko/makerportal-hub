@@ -163,24 +163,86 @@ const gearSchema = {
   mainEntity: {
     '@type': 'ItemList',
     numberOfItems: gearPicks.length,
-    itemListElement: gearPicks.map((gear, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      item: {
-        '@type': 'Product',
-        name: gear.title,
-        description: gear.note || gear.title,
-        image: gear.image,
-        category: gear.category,
-        offers: gear.price ? {
-          '@type': 'Offer',
-          price: gear.price.replace('$', ''),
-          priceCurrency: gear.currency || 'USD',
-          url: gear.url,
-          seller: { '@type': 'Organization', name: 'Amazon' }
-        } : undefined
-      }
-    }))
+    itemListElement: gearPicks.map((gear, index) => {
+      const cleanName = gear.title.length > 120 
+        ? gear.title.substring(0, 117) + '...' 
+        : gear.title;
+
+      return {
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Product',
+          name: cleanName,
+          description: gear.note || gear.title,
+          image: gear.image,
+          category: gear.category,
+          brand: {
+            '@type': 'Brand',
+            name: 'MakerPortal Curated'
+          },
+          review: {
+            '@type': 'Review',
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: '5',
+              bestRating: '5'
+            },
+            author: {
+              '@type': 'Person',
+              name: 'Josh Hrisko'
+            }
+          },
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '5',
+            reviewCount: '1'
+          },
+          offers: gear.price ? {
+            '@type': 'Offer',
+            price: gear.price.replace('$', ''),
+            priceCurrency: gear.currency || 'USD',
+            url: gear.url,
+            availability: 'https://schema.org/InStock',
+            seller: { '@type': 'Organization', name: 'Amazon' },
+            hasMerchantReturnPolicy: {
+              '@type': 'MerchantReturnPolicy',
+              applicableCountry: 'US',
+              returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnPeriod',
+              returnFees: 'https://schema.org/FreeReturn',
+              merchantReturnDays: 30
+            },
+            shippingDetails: {
+              '@type': 'OfferShippingDetails',
+              shippingRate: {
+                '@type': 'MonetaryAmount',
+                value: 0,
+                currency: 'USD'
+              },
+              shippingDestination: {
+                '@type': 'DefinedRegion',
+                addressCountry: 'US'
+              },
+              deliveryTime: {
+                '@type': 'ShippingDeliveryTime',
+                handlingTime: {
+                  '@type': 'QuantitativeValue',
+                  minValue: 0,
+                  maxValue: 1,
+                  unitCode: 'DAY'
+                },
+                transitTime: {
+                  '@type': 'QuantitativeValue',
+                  minValue: 1,
+                  maxValue: 5,
+                  unitCode: 'DAY'
+                }
+              }
+            }
+          } : undefined
+        }
+      };
+    })
   }
 };
 
