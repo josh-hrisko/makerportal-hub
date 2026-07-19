@@ -317,8 +317,8 @@ export function rectangularBarrierTransmission(
       </section>
     )}
 
-    <section aria-labelledby="method-title">
-      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+    <section class="border-b border-border" aria-labelledby="method-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
         <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
           We solve <Math math="i\frac{\partial\psi}{\partial t} = \bigl(-\frac{1}{2}\frac{\partial^2}{\partial x^2} + V\bigr)\psi" /> in natural units (<Math math="\hbar = m = 1" />) on a uniform grid. Crank–Nicolson advances <Math math="(I + i\frac{\Delta t}{2}H)\psi^{n+1} = (I - i\frac{\Delta t}{2}H)\psi^n" /> — the Cayley approximation to the exact propagator <Math math="e^{-iH\Delta t}" />. Because that operator is unitary, <Math math="\int|\psi|^2 dx" /> is conserved to machine precision; each step is a tridiagonal complex solve via the Thomas algorithm. A thin imaginary (absorbing) potential at the domain edges soaks up outgoing amplitude so the walls do not reflect it back.

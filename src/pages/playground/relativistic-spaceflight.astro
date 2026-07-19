@@ -159,28 +159,6 @@ const faqSchema = {
       </div>
     </section>
 
-    <section aria-labelledby="method-title">
-      <div class="mx-auto max-w-[62rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
-        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
-          With rapidity φ = a·τ/c accumulated over ship proper time τ, the exact relations are β = tanh φ, γ = cosh φ, Earth time t = (c/a)·sinh φ, and distance x = (c²/a)·(cosh φ − 1). A flip-and-burn trip accelerates for the first half of the coordinate distance and decelerates for the second, arriving at rest. The forward CMB temperature is the 2.725 K monopole times the relativistic Doppler factor √((1+β)/(1−β)); its peak wavelength follows from Wien's law.
-        </p>
-        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-semibold text-primary-text">What is exact</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">The special-relativistic kinematics — hyperbolic worldline, time dilation, length contraction, and Doppler shift — are closed-form and exact for a point ship in flat spacetime under constant proper acceleration.</p>
-          </div>
-          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-semibold text-primary-text">What it ignores</p>
-            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">No general relativity (no gravity wells, no cosmological expansion — so the Gly-scale trip is a flat-spacetime idealization), no fuel or energy budget (the real thing is prohibitive), and no cosmic evolution of the background over the journey.</p>
-          </div>
-        </div>
-        <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
-          The kinematics live in <code class="text-primary-cta">src/lib/relativity.ts</code>, unit-tested against the hyperbolic identity (a·t/c)² − (a·x/c² + 1)² = −1, the β→c asymptote, and the known 4.24 ly / 1g flip-and-burn result (~3.6 ship-years, ~5.9 Earth-years).
-        </p>
-      </div>
-    </section>
-
     <section class="border-b border-border" aria-labelledby="anatomy-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Anatomy of the flight console</h2>
@@ -199,7 +177,7 @@ const faqSchema = {
               </li>
               <li class="flex gap-3">
                 <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">03</span>
-                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">CMB Doppler shift.</strong> The forward CMB temperature is T = T₀ × √((1+β)/(1−β)), the relativistic Doppler factor. At β = 0.99, the factor is ~14.1 → T ≈ 38 K ahead. Peak wavelength follows Wien\'s law: λ_peak = 2.898 × 10⁻³ / T K·m. The script reads CMB_TEMPERATURE = 2.725 K from the relativity.ts library constant.</p>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">CMB Doppler shift.</strong> The forward CMB temperature is T = T₀ × √((1+β)/(1−β)), the relativistic Doppler factor. At β = 0.99, the factor is ~14.1 → T ≈ 38 K ahead. Peak wavelength follows Wien's law: λ_peak = 2.898 × 10⁻³ / T K·m. The script reads CMB_TEMPERATURE = 2.725 K from the relativity.ts library constant.</p>
               </li>
             </ol>
             <div class="mt-6 math-card">
@@ -217,7 +195,7 @@ const faqSchema = {
               </li>
               <li class="flex gap-3">
                 <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">04</span>
-                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Line of simultaneity.</strong> A dashed CTA-colored line with slope β intersects the worldline at the current ship position. Points on this line are simultaneous in the ship\'s instantaneous rest frame. At high β, the line tilts dramatically — the ship\'s "now" slices through Earth time at a steep angle, which is why the twin paradox works.</p>
+                <p class="text-[0.88rem] leading-[1.65] text-muted-text"><strong class="text-primary-text">Line of simultaneity.</strong> A dashed CTA-colored line with slope β intersects the worldline at the current ship position. Points on this line are simultaneous in the ship's instantaneous rest frame. At high β, the line tilts dramatically — the ship's "now" slices through Earth time at a steep angle, which is why the twin paradox works.</p>
               </li>
               <li class="flex gap-3">
                 <span class="font-mono text-[0.72rem] font-semibold text-primary-cta">05</span>
@@ -257,6 +235,28 @@ const faqSchema = {
         </div>
       </section>
     )}
+
+    <section class="border-b border-border" aria-labelledby="method-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="method-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Method &amp; limitations</h2>
+        <p class="mt-4 max-w-2xl text-[0.92rem] leading-[1.7] text-muted-text">
+          With rapidity φ = a·τ/c accumulated over ship proper time τ, the exact relations are β = tanh φ, γ = cosh φ, Earth time t = (c/a)·sinh φ, and distance x = (c²/a)·(cosh φ − 1). A flip-and-burn trip accelerates for the first half of the coordinate distance and decelerates for the second, arriving at rest. The forward CMB temperature is the 2.725 K monopole times the relativistic Doppler factor √((1+β)/(1−β)); its peak wavelength follows from Wien's law.
+        </p>
+        <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What is exact</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">The special-relativistic kinematics — hyperbolic worldline, time dilation, length contraction, and Doppler shift — are closed-form and exact for a point ship in flat spacetime under constant proper acceleration.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-semibold text-primary-text">What it ignores</p>
+            <p class="mt-2 text-[0.88rem] leading-[1.65] text-muted-text">No general relativity (no gravity wells, no cosmological expansion — so the Gly-scale trip is a flat-spacetime idealization), no fuel or energy budget (the real thing is prohibitive), and no cosmic evolution of the background over the journey.</p>
+          </div>
+        </div>
+        <p class="mt-6 text-[0.82rem] leading-[1.6] text-muted-text/80">
+          The kinematics live in <code class="text-primary-cta">src/lib/relativity.ts</code>, unit-tested against the hyperbolic identity (a·t/c)² − (a·x/c² + 1)² = −1, the β→c asymptote, and the known 4.24 ly / 1g flip-and-burn result (~3.6 ship-years, ~5.9 Earth-years).
+        </p>
+      </div>
+    </section>
 
     <section class="border-b border-border" aria-labelledby="gotchas-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -343,7 +343,23 @@ const trip = flipAndBurn(a, d);
         </div>
       </div>
     </section>
-  
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
 
   </PlaygroundShell>
 </Layout>
