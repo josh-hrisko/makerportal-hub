@@ -62,3 +62,8 @@
 - **Provider SDK snippets age quickly.** The Modal decorator was checked against
   current `modal.fastapi_endpoint` docs on 2026-07-19. Re-check official docs
   before future edits instead of trusting the handoff.
+- **Credit-grant / free-token DevRel path rejected 2026-07-19.** Owner wants
+  established stable affiliate programs only (PartnerStack, Pinecone Affiliate).
+  No Modal/Fly free compute token pitches, no billing-alert-less pilot with
+  spend risk. Labs remain educational, not monetized. `DEVREL-PITCHES-SAAS-GPU.md`
+  is marked deprecated so future agents do not re-open.

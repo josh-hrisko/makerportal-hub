@@ -365,6 +365,13 @@ Note: MPU9250 (`mpu9250-imu`) and Arduino Uno R3 (`elegoo-arduino-uno-r3`) were 
   design exists. Add it with `merchant: pcbway`, no ASIN, then update privacy
   and monetization docs. JLCPCB stays deferred until the owner supplies terms.
 
+### SaaS — stable affiliates only (owner decision 2026-07-19)
+
+- **ElevenLabs PartnerStack:** LIVE — `https://try.elevenlabs.io/jzowx8mw6p6b`, 22% recurring commission (to us, not customer discount). Stable, approved.
+- **Pinecone Affiliate Partner:** PENDING — application submitted via https://www.pinecone.io/partners/. No public rate published. Stable affiliate path per official partner page (Technology / Referral / Affiliate — Affiliate targets technical builders/educators). Keep empty until approved URL arrives. Never commit API key.
+- **Rejected — Modal, Fly.io, Supabase, Neon, Cloudflare, Sentry:** No verified public affiliate program with stable commission. Prior sweep considered DevRel credit-grant / free-token path for Modal/Fly — owner explicitly rejected 2026-07-19. Labs remain educational only (`modal-gpu-benchmarker`, `fly-edge-db-lab`). Do not pursue credit grants, do not tailor outreach, do not request workspace/org handles. Future agents must not re-open credit-engine path without explicit owner reversal. PartnerStack + Pinecone are the only approved SaaS affiliate avenues.
+- **Rule:** Only established, stable affiliate programs with public terms and persistent destination URLs. No free-token / credit-grant / ephemeral promo programs.
+
 ### Next steps
 1. Copy each numbered line into Amazon search / SiteStripe to find the real listing and generate the link.
 2. Paste the result on that item's Affiliate link line — a bare ASIN is fine.

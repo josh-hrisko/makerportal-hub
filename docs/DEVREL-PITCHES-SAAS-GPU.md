@@ -1,11 +1,19 @@
-# Modal + Fly.io DevRel pitch kit
+# Modal + Fly.io DevRel pitch kit — DEPRECATED per owner 2026-07-19
 
-Owner-send drafts for the SaaS/GPU playground program. These are deliberately
-written without audience-size, cost-savings, conversion, or performance claims.
-Add a number only when it comes from a named, reproducible source.
+> **Owner decision 2026-07-19: DO NOT PURSUE.** MakerPortal wants established,
+> stable affiliate programs only (PartnerStack, Pinecone Affiliate Partner).
+> No credit-grant / free-token / DevRel credit programs. Modal and Fly labs
+> remain live as educational instruments, not monetized. This file is archived
+> for reference only so future agents do not re-open the path. Do not tailor
+> or send these drafts without explicit reversal.
+
+Original drafts below were deliberately written without audience-size,
+cost-savings, conversion, or performance claims. Add a number only when it
+comes from a named, reproducible source.
 
 Contact paths were rechecked against official provider documentation on
-2026-07-19. This repo contains drafts only; nothing has been sent.
+2026-07-19. Nothing was ever sent. This remains the case as of the 2026-07-19
+stable-affiliate-only decision.
 
 ## Evidence and privacy gate before sending
 

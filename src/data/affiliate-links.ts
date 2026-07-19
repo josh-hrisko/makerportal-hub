@@ -49,18 +49,25 @@ export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exis
  * no "sponsored"); a verified destination flips only that provider to
  * rel="sponsored noopener noreferrer" via buildSaasPartnerUrl.
  *
+ * Owner decision 2026-07-19: stable affiliate programs only. No credit-grant/
+ * free-token DevRel pitches. ElevenLabs (PartnerStack) and Pinecone Affiliate
+ * Partner are approved stable paths. Modal/Fly labs remain live as educational
+ * instruments only (WebGPU/Fly region visuals), not monetized; their URLs stay
+ * empty/informational permanently unless a verified public affiliate program
+ * appears (not a credit grant).
+ *
  * - ElevenLabs: PartnerStack, 22% recurring 12 mo (commission to us, NOT a
  *   user-facing discount — never phrase it as "22% off" in UI copy).
  * - Pinecone: official creator/educator affiliate application exists, but the
  *   public page does not disclose a rate. Keep empty until MakerPortal is
  *   accepted and receives its own URL; never state a commission percentage.
- * - Modal / Fly.io: no public affiliate program — permanently informational;
- *   monetized via DevRel credit-grant pitches instead.
+ * - Modal / Fly.io: educational only — no public affiliate program, no credit
+ *   pursuit. Owner explicitly rejected free-token credit engine.
  */
 export const ELEVENLABS_PARTNER_URL: string = 'https://try.elevenlabs.io/jzowx8mw6p6b'; // approved PartnerStack destination
 export const PINECONE_PARTNER_URL: string = ''; // approval pending; accept only the issued destination URL, never an API key
-export const MODAL_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
-export const FLY_REFERRAL_URL: string = ''; // no public program; keep '' unless one appears
+export const MODAL_REFERRAL_URL: string = ''; // educational only — stable affiliates only per owner 2026-07-19
+export const FLY_REFERRAL_URL: string = ''; // educational only — stable affiliates only per owner 2026-07-19
 
 export function buildSaasPartnerUrl(
   partnerUrl: string,

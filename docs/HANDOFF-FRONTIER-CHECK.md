@@ -217,32 +217,32 @@ Current product state:
 Search official/primary sources again before relying on provider APIs, program
 terms, pricing, browser support, or security guidance; these can change.
 
-## Owner decisions and safe inputs
+## Owner decisions and safe inputs — updated 2026-07-19
 
-Recorded decisions:
+Recorded decisions (final):
 
-- ElevenLabs URL supplied and live; no further input required.
-- Pinecone application submitted; waiting on approval.
+- ElevenLabs PartnerStack URL live; no further input required. Stable affiliate.
+- Pinecone Affiliate Partner application submitted; waiting on approval. Stable affiliate path per official partner page.
 - Buttondown deferred.
 - PCBWay Shared Projects tabled until a real design exists.
-- Modal/Fly outreach is drafted but not sent.
+- **Modal/Fly credit-grant / DevRel outreach REJECTED 2026-07-19** — owner wants
+  established stable affiliate programs only (PartnerStack, Pinecone Affiliate).
+  No free-token / credit-grant / free compute programs. Labs remain educational.
+  `DEVREL-PITCHES-SAAS-GPU.md` is deprecated/archived. Do not tailor or send.
 
 Only request these when the matching work is active:
 
 - Pinecone: the issued affiliate destination URL after approval. Never an API
   key; never infer a payout rate.
-- Modal/Fly outreach: public sender name/title, private reply email (do not
-  commit), Modal workspace display name, optional Fly organization handle, job
-  or topology description, jobs/day, maximum seconds/job, concurrency, pilot
-  duration, and hard spending cap.
 - Buttondown later: public newsletter username only; never an API key.
 - PCBWay later: a real reviewed Shared Project URL backed by an active design.
+- Modal/Fly: no inputs needed — path deprecated per 2026-07-19 decision. Do not
+  request workspace display name, org handle, workload estimate, spending cap.
 
-Use the fill-in template in `docs/DEVREL-PITCHES-SAAS-GPU.md`. Tailoring a draft
-does not authorize sending it. A workspace/org handle is not a token. A deployment
-or payment method always requires explicit owner approval because it can spend.
+Previous fill-in template in `DEVREL-PITCHES-SAAS-GPU.md` is now deprecated;
+do not use it unless owner explicitly reverses stable-affiliate-only decision.
 
-## Open work and next execution order
+## Open work and next execution order — updated 2026-07-19 stable-affiliate-only
 
 1. **Re-verify state, do not restart Phase A.** Run checks/build and inspect the
    current browser only where code has changed or a previously unclaimed platform
@@ -250,10 +250,10 @@ or payment method always requires explicit owner approval because it can spend.
 2. **Pinecone approval watch is owner-blocked.** Keep the constant empty. When the
    owner supplies an issued URL, activate it and update `/privacy` in one coherent
    commit; verify every Pinecone CTA/`rel` in built HTML.
-3. **Modal/Fly outreach is metadata-blocked, not code-blocked.** If the owner
-   supplies the non-secret template, tailor the two drafts without committing the
-   private reply address. Do not send unless explicitly asked. Do not deploy or
-   spend without separate approval.
+3. **Modal/Fly outreach is DEPRECATED, not blocked.** Owner rejected 2026-07-19.
+   Labs (`modal-gpu-benchmarker`, `fly-edge-db-lab`) stay live as educational
+   instruments with informational links only. Do not tailor, send, or deploy.
+   Future agents must not re-open without explicit reversal.
 4. **Real Safari QA is the highest-value remaining technical verification** if a
    physical Safari/iPhone environment is available: fallback copy, mobile canvas,
    theme, touch targets, audio unlock/mic permission, and lifecycle navigation.
@@ -261,15 +261,16 @@ or payment method always requires explicit owner approval because it can spend.
    aggregate analytics, first design a first-party, data-minimized, documented
    backend with retention/consent/security boundaries; that is a new architecture
    decision, not an implicit continuation of the local log.
-6. **Expand only with evidence.** For another monetization lab, research an
-   official affiliate/partner path and public rate before building. Empty URL and
-   no rate claim are correct when terms are not public. Favor tools with developer
-   search intent and a genuine interactive measurement/teaching loop. Cloudflare,
-   Supabase, Neon, and Sentry had no verified public creator-rate advantage in the
-   prior sweep; do not invent one. Pinecone was chosen first for this reason.
+6. **Expand only with stable affiliate evidence.** For another monetization lab,
+   research an official affiliate/partner program with public terms and persistent
+   URL (PartnerStack-style). No credit-grant / free-token programs. Favor tools
+   with developer search intent and genuine interactive measurement. Cloudflare,
+   Supabase, Neon, Sentry had no verified public creator-rate advantage; do not
+   invent one. Pinecone + ElevenLabs are the only approved SaaS affiliate
+   avenues. Document rejection in DID-NOT-WORK so future agents don't loop.
 7. Keep `docs/SAAS-GPU-MONETIZATION.md`, `docs/STATUS.md`, `docs/BACKLOG.md`,
    `/privacy`, and relevant code comments synchronized in every state-changing
-   commit.
+   commit. All now reflect stable-affiliate-only decision.
 
 ## Acceptance checklist for every coherent unit
 

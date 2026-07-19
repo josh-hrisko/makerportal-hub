@@ -15,7 +15,7 @@ Restructured 2026-07-15 evening around a single growth thesis: **site was indexe
 - [x] Recurring: re-run `node --env-file=.env scripts/search-console/build-report.mjs` every 1-2 weeks, log the delta in `STATUS.md` Traffic section. Output stays local (`analytics/reports/`, gitignored) — never commit real numbers, this repo is public. **Re-run 2026-07-15:** still 1 click / 3 impressions (window 2026-06-15..2026-07-13) — unchanged from the first pull, expected this early. Next re-check ~2026-07-29.
 - [ ] Watch for OAuth refresh-token expiry ~2026-07-19 (7-day Testing-mode cap) — if the search-console script starts failing auth, either publish the Google Cloud OAuth consent screen to "In production" or re-run `analytics/gsc_dashboard.py` locally to mint a fresh token. Still authenticating cleanly as of 2026-07-15.
 
-## Phase 0.5 — SaaS/GPU monetization follow-through
+## Phase 0.5 — SaaS/GPU monetization follow-through — stable affiliates only (2026-07-19)
 
 - [x] Browser-harden ElevenLabs, Modal, and Fly labs; add the Pinecone-oriented
   local vector-retrieval lab; publish three field notes and internal links. See
@@ -24,12 +24,11 @@ Restructured 2026-07-15 evening around a single growth thesis: **site was indexe
 - [ ] Pinecone: wait for Affiliate Partner approval, then add only the issued
   destination URL and disclosure. Never request or commit a Pinecone API key or
   invent a commission rate.
-- [ ] Modal: tailor/send the DevRel technical-review draft only after the owner
-  supplies non-secret sender metadata and a capped workload estimate. Deployment
-  remains a separate owner-run, spend-approved action.
-- [ ] Fly.io: technical-review request first. Do not imply a public grant program;
-  a deployment plan needs regions/resources, manual cost checks, cleanup date,
-  and explicit spend approval.
+- [x] **Owner decision 2026-07-19: reject Modal/Fly credit-grant path** — Modal and
+  Fly labs remain live as educational instruments only (WebGPU matmul, Fly region
+  map). No DevRel technical-review pitch, no credit inquiry, no deployment plan.
+  Owner wants established stable affiliate programs only (PartnerStack, Pinecone
+  Affiliate). `DEVREL-PITCHES-SAAS-GPU.md` is deprecated/archived. Do not re-open.
 - [ ] Buttondown remains owner-deferred; clean exports continue to unlock locally
   without subscription. PCBWay Shared Projects remain tabled until a real board
   design exists.

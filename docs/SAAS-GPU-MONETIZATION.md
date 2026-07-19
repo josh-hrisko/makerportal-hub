@@ -1,24 +1,28 @@
-# SaaS / GPU Cloud Monetization — dual-engine strategy
+# SaaS / GPU Cloud Monetization — stable-affiliate-only strategy
 
 Companion to `MONETIZATION.md` (evergreen stack). This doc tracks the
-SaaS/GPU-cloud expansion: converting developer traffic into (a) direct
-affiliate cash and (b) operational credit grants that offset AuraLinter's
-infra costs. Same hard constraints as everywhere: no fabricated numbers, no
-fake affiliate IDs, no tracking pixels, telemetry via first-party
+SaaS/GPU-cloud expansion. **Owner decision 2026-07-19: stable, established
+affiliate programs only (PartnerStack and similar). No credit-grant / free-token
+DevRel programs.** ElevenLabs (PartnerStack) and Pinecone Affiliate Partner are
+the only approved SaaS paths. Modal and Fly labs remain live as educational
+instruments, not monetized. Same hard constraints as everywhere: no fabricated
+numbers, no fake affiliate IDs, no tracking pixels, telemetry via first-party
 `mp:analytics` only.
 
-## The two engines
+## The engines — owner-filtered
 
-1. **Cash engine — ElevenLabs** (PartnerStack, 22% recurring 12 mo on
+1. **Live cash engine — ElevenLabs** (PartnerStack, 22% recurring 12 mo on
    Starter/Creator/Pro/Scale). Note: 22% is *our commission*, not a user
    discount — UI copy must never say "22% off".
 2. **Pending cash engine — Pinecone** publishes an affiliate application for
    technical builders and educators, but no public commission rate. The link
    stays informational until MakerPortal is accepted and receives its own URL.
-3. **Credit engine — Modal + Fly.io** (no public affiliate programs; links
-   stay informational). Monetized by pitching DevRel teams for compute /
-   hosting credit grants using the playgrounds as evidence of integration
-   quality. Any request must be derived from a reviewed workload and hard cap.
+3. **Rejected credit engine — Modal + Fly.io** — owner explicitly rejected
+   2026-07-19. No public affiliate program exists; DevRel credit-grant / free-token
+   pitches are out of scope. Labs stay educational only, with informational links
+   (`rel="noopener noreferrer"`). Do not pursue, tailor, or send credit pitches.
+   Keep code/comments in `affiliate-links.ts` and docs synchronized with this
+   decision so future agents do not re-open the path.
 
 ## Shipped (2026-07-19)
 
@@ -129,37 +133,27 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   the Affiliate Partner path at https://www.pinecone.io/partners/. On approval, paste only the issued
   destination URL into `PINECONE_PARTNER_URL` and add Pinecone to `/privacy` in
   the same PR. Do not infer or publish a commission rate from a third-party list.
-- [ ] **Modal DevRel credit pitch** — owner sends the reviewed draft in
-  `docs/DEVREL-PITCHES-SAAS-GPU.md` through the official community Slack or
-  `support@modal.com` routing path. Fill in a capped pilot estimate first; do
-  not invent a traffic number or paste visitor data.
-- [ ] **Fly.io technical review / credit inquiry** — owner posts the reviewed
-  draft to the official community forum or sends it to a real Fly team contact.
-  Current official docs do not expose a public grant application, so the draft
-  asks for the correct contact instead of claiming a program exists.
+- [x] **Modal DevRel credit pitch — REJECTED per owner 2026-07-19** — owner wants
+  established stable affiliate programs only; free-token / credit-grant DevRel
+  pitches are out of scope. Drafts remain archived in `DEVREL-PITCHES-SAAS-GPU.md`
+  for reference only, marked deprecated. Do not tailor or send.
+- [x] **Fly.io technical review / credit inquiry — REJECTED per owner 2026-07-19**
+  — same rationale as Modal. Educational lab stays live, informational links only.
 
 ### Exact owner inputs still needed
 
 - ElevenLabs: no further input needed; approved PartnerStack destination is live.
 - Pinecone: the approved affiliate destination URL after acceptance (not a
   project API key). No URL or public rate is currently available.
-- Modal: no referral ID is expected. For outreach, provide only a workspace
-  display name plus a capped workload estimate. Never paste a token here or
-  commit it; any later deployment authentication stays in the owner's local
-  Modal CLI/account environment.
-- Fly.io: no referral ID is expected. For outreach, provide only the public
-  organization handle and a capped topology/workload estimate. Never provide a
-  Fly access token; any deployment remains owner-run after explicit spend
-  approval.
+- Modal / Fly.io: no inputs needed — credit-engine path rejected 2026-07-19.
+  Labs remain educational (WebGPU matmul, Fly region map), no affiliate or credit
+  pursuit. If a verified public affiliate program (not credits) appears later,
+  re-evaluate under stable-affiliate rule.
 - Buttondown: the public username only, after the owner wants newsletter
   collection enabled.
-- No shared ElevenLabs, Pinecone, Modal, Fly.io, Amazon, or other API key is needed for
-  these static pages. Visitor BYO keys/tokens remain in their own localStorage
-  and are sent only to the provider endpoint they explicitly invoke.
-- To send the pitch drafts: owner name/role/reply address, Modal workspace and
-  Fly organization handles (not credentials), and a reviewed workload estimate
-  with a hard spending cap. Optional aggregate traffic evidence must include a
-  source and date range.
+- No shared ElevenLabs, Pinecone, Amazon, or other API key is needed for these
+  static pages. Visitor BYO keys/tokens remain in their own localStorage and are
+  sent only to the provider endpoint they explicitly invoke.
 - PCBWay Shared Projects remain tabled until the owner has an active design with
   real KiCad/Gerber assets; do not create placeholder project URLs.
 
@@ -169,9 +163,10 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - Pinecone Affiliate Partner application submitted; waiting on approval.
 - Buttondown setup deferred.
 - PCBWay Shared Projects tabled until a real design exists.
-- Modal/Fly outreach remains drafted, not sent. The next chat may tailor it from
-  non-secret owner metadata but must not send or deploy without an explicit
-  request and, for deployment, explicit spending approval.
+- Modal/Fly credit-engine outreach explicitly rejected by owner 2026-07-19:
+  only established stable affiliate programs (PartnerStack, Pinecone Affiliate)
+  are in scope. No free-token / credit-grant DevRel programs. Future agents must
+  not re-open this path without explicit reversal.
 
 ## Phase B growth surfaces (2026-07-19)
 
@@ -210,9 +205,11 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 
 ## Follow-ups (agent-executable later)
 
-- [ ] Once a real Modal deployment for AuraLinter exists, consider a shared
-  demo endpoint with rate limiting (needs a backend secret — currently
-  rejected by design; BYO-endpoint only).
+- [x] **Owner decision 2026-07-19: reject credit-grant / free-token programs.**
+  Once a real Modal deployment for AuraLinter exists, keep it BYO-endpoint only.
+  No shared demo endpoint with rate limiting, no credit pitch, no spend — owner
+  wants stable affiliate programs only (PartnerStack, Pinecone Affiliate).
+  Future agents: do not re-propose Modal/Fly credit grants.
 - [x] Playwright pass over the three sims (canvas + toast + gate flows).
 
 ## Integrity guardrails carried through

@@ -17,14 +17,14 @@ this document conflicts with a generated-data commit.
   self-hosted Plus Jakarta, high-contrast code, 44px-class mobile controls where
   practical, keyboard paths for dense canvas interactions.
 
-## SaaS / GPU growth engine
+## SaaS / GPU growth engine — stable-affiliate-only (owner decision 2026-07-19)
 
-Four deployment-oriented labs are live:
+Four deployment-oriented labs are live (2 monetized, 2 educational):
 
-1. `/playground/elevenlabs-dsp-sandbox`
-2. `/playground/modal-gpu-benchmarker`
-3. `/playground/fly-edge-db-lab`
-4. `/playground/vector-retrieval-recall-lab`
+1. `/playground/elevenlabs-dsp-sandbox` — monetized via PartnerStack
+2. `/playground/vector-retrieval-recall-lab` — pending Pinecone Affiliate (server-only pattern)
+3. `/playground/modal-gpu-benchmarker` — educational only, no affiliate/credit pursuit
+4. `/playground/fly-edge-db-lab` — educational only, no affiliate/credit pursuit
 
 Browser audit, measured boundaries, Lighthouse results, owner blockers, and
 provider-specific integrity rules are in `SAAS-GPU-MONETIZATION.md`.
@@ -36,9 +36,11 @@ Current commercial state:
   MakerPortal's eligible commission, never a customer discount.
 - Pinecone Affiliate Partner application is pending. The partner constant stays
   empty, and no public commission rate is claimed.
-- Modal and Fly links are informational. No verified public affiliate program
-  or grant application is claimed; owner-ready technical-review drafts live in
-  `DEVREL-PITCHES-SAAS-GPU.md`.
+- Modal and Fly links are informational/educational only. Owner explicitly
+  rejected 2026-07-19 the free-token / credit-grant / DevRel outreach path.
+  No verified public affiliate program exists; archived drafts in
+  `DEVREL-PITCHES-SAAS-GPU.md` are deprecated and must not be tailored or sent.
+  Future agents must not re-open this path.
 - PCBWay generic referral is live. PCBWay Shared Projects are tabled until a
   real board design exists. JLCPCB and Buttondown remain owner-deferred.
 - Fourteen kits are live. Gear smoke covers 14 monetized simulators / 94 cards,
@@ -104,38 +106,35 @@ rejected push; inspect the remote commit before resolving any overlap.
   100 accessibility / 100 best practices / 100 SEO; the vector lab matched it.
   TBT was 0 ms and CLS was 0–0.00014. Treat these as local test-machine results,
   not population-wide performance data.
-- Reconciled build: 85 generated HTML files, 84 Pagefind pages, and 16,838
-  indexed words (2026-07-19 frontier check after cross-link pass; previous
-  16,834 → 16,838 reflects three added resource cross-links, no template change).
+- Reconciled build: 85 generated HTML files, 84 Pagefind pages, and 16,842
+  indexed words (2026-07-19 stable-affiliate-only decision; 16,834 → 16,838
+  cross-links, 16,842 after docs/privacy sync to reject credit grants).
   Re-run the commands below before trusting these counts after new
   templates/content.
 
 ## Known residual risks
 
-- A live Modal deployment, live Fly deployment, real ElevenLabs BYO request, and
-  physical Safari/iPhone pass remain intentionally unclaimed.
+- A real ElevenLabs BYO request and physical Safari/iPhone pass remain
+  intentionally unclaimed. Modal/Fly deployments are out of scope per owner
+  stable-affiliate-only decision 2026-07-19.
 - `npm audit` previously reported three high-severity transitive
   `path-to-regexp` findings through the current Vercel adapter. No non-breaking
   direct fix was available; recheck when the adapter updates, do not use a
   forced breaking audit fix casually.
 - Build output on local Node 25 notes that the Vercel runtime targets Node 24 and
   warns about a >500 KiB Vite chunk. Astro type/check output remains clean.
-- Fly currently documents no billing alerts. Any future pilot needs explicit
-  resource bounds, manual cost review, end date, cleanup, and owner-approved
-  spend regardless of credits.
 
 ## Owner inputs still needed
 
-- **Now:** none for ElevenLabs.
+- **Now:** none for ElevenLabs. Modal/Fly credit path rejected — no inputs needed.
 - **When approved:** Pinecone-issued affiliate destination URL only; never an
-  API key.
-- **If tailoring outreach:** public sender name/title, private reply email,
-  Modal workspace display name, optional Fly organization handle, bounded
-  workload/topology, duration, concurrency, and hard spending cap.
+  API key. ElevenLabs, Pinecone via PartnerStack are the only approved SaaS affiliate
+  avenues; no free-token / credit-grant programs.
 - **Deferred:** Buttondown public username; PCBWay Shared Project URL after a
   real design; Lemon Squeezy product URLs after real archives/account setup.
 - Never request provider tokens, payment credentials, raw visitor data, email
-  lists, or secrets for a public-repo change.
+  lists, or secrets for a public-repo change. Never request Modal workspace
+  name / Fly org handle for credit pitches — path is deprecated.
 
 ## Required pre-commit verification
 
