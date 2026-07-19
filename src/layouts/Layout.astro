@@ -300,67 +300,76 @@ const organizationSchema = {
                   <svg aria-hidden="true" viewBox="0 0 12 12" class="size-2.5 opacity-50"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
                   {active && <span aria-hidden="true" class="absolute inset-x-3.5 -bottom-[0.9rem] h-[2px] bg-primary-text rounded-t-full"></span>}
                 </button>
-                <div
-                  id={`mega-${item.id}`}
-                  data-mega-panel
-                  class="invisible absolute left-1/2 top-[calc(100%+1.1rem)] z-[70] w-[min(92vw,42rem)] -translate-x-1/2 translate-y-1 scale-[0.98] opacity-0 transition-[opacity,transform,visibility] duration-150"
-                  hidden
-                >
-                  <div class="surface-card overflow-hidden rounded-[22px] border p-5 shadow-xl">
-                    <div class:list={['grid gap-6', item.featured ? 'sm:grid-cols-[1fr_0.85fr]' : '']}>
-                      <div class:list={['grid gap-5', (item.columns?.length ?? 0) > 1 ? 'sm:grid-cols-2' : '']}>
-                        {item.columns?.map((col) => (
-                          <div class={col.links.length > 6 ? 'sm:col-span-2 lg:col-span-1' : ''}>
-                            <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">{col.title} {col.links.length > 6 ? `· ${col.links.length}` : ''}</p>
-                            <ul class:list={['mt-3 space-y-1', col.links.length > 6 ? 'grid grid-cols-1 gap-1 sm:grid-cols-2 sm:space-y-0' : '']} role="list">
-                              {col.links.map((link) => {
-                                const childActive = isActive(link.href);
-                                return (
-                                  <li>
-                                    <a
-                                      {...linkAttrs(link.href, link.external)}
-                                      class:list={[
-                                        'group block rounded-xl px-2.5 py-2 transition-colors border border-transparent',
-                                        childActive ? 'bg-elevated/80 border-border/40' : 'hover:bg-elevated/85'
-                                      ]}
-                                    >
-                                      <span class:list={[
-                                        'flex items-center gap-2 text-[0.9rem] transition-colors',
-                                        childActive ? 'font-semibold text-primary-cta' : 'font-medium text-primary-text group-hover:text-primary-cta'
-                                      ]}>
-                                        {link.label}
-                                        {link.external && <span class="text-[0.7rem] text-muted-text">↗</span>}
-                                        {link.badge && <span class="rounded-full bg-primary-cta/15 px-1.5 py-0.5 font-mono text-[0.6rem] font-medium uppercase tracking-wider text-primary-cta">{link.badge}</span>}
-                                      </span>
-                                      {link.description && <span class="mt-0.5 block text-[0.75rem] text-muted-text">{link.description}</span>}
-                                    </a>
-                                  </li>
-                                );
-                              })}
-                            </ul>
+                {(() => {
+                  const hasMany = item.columns?.some((c) => c.links.length > 6);
+                  const panelWidth = hasMany ? 'w-[min(94vw,52rem)]' : 'w-[min(92vw,42rem)]';
+                  return (
+                    <div
+                      id={`mega-${item.id}`}
+                      data-mega-panel
+                      class:list={['invisible absolute left-1/2 top-[calc(100%+1.1rem)] z-[70] -translate-x-1/2 translate-y-1 scale-[0.98] opacity-0 transition-[opacity,transform,visibility] duration-150', panelWidth]}
+                      hidden
+                    >
+                      <div class="surface-card overflow-hidden rounded-[22px] border p-5 shadow-xl">
+                        <div class:list={['grid gap-6', item.featured ? (hasMany ? 'lg:grid-cols-[1.15fr_0.85fr]' : 'sm:grid-cols-[1fr_0.85fr]') : '']}>
+                          <div class:list={['grid gap-6', (item.columns?.length ?? 0) > 1 ? 'sm:grid-cols-2' : '']}>
+                            {item.columns?.map((col) => {
+                              const isMany = col.links.length > 6;
+                              return (
+                                <div class:list={[isMany ? 'sm:col-span-2' : '']}>
+                                  <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">{col.title} {isMany ? `· ${col.links.length}` : ''}</p>
+                                  <ul class:list={['mt-3', isMany ? 'grid grid-cols-1 gap-1.5 sm:grid-cols-2' : 'space-y-1']} role="list">
+                                    {col.links.map((link) => {
+                                      const childActive = isActive(link.href);
+                                      return (
+                                        <li>
+                                          <a
+                                            {...linkAttrs(link.href, link.external)}
+                                            class:list={[
+                                              'group block rounded-xl px-2.5 py-2 transition-colors border border-transparent',
+                                              childActive ? 'bg-elevated/80 border-border/40' : 'hover:bg-elevated/85'
+                                            ]}
+                                          >
+                                            <span class:list={[
+                                              'flex items-center gap-2 text-[0.9rem] transition-colors',
+                                              childActive ? 'font-semibold text-primary-cta' : 'font-medium text-primary-text group-hover:text-primary-cta'
+                                            ]}>
+                                              {link.label}
+                                              {link.external && <span class="text-[0.7rem] text-muted-text">↗</span>}
+                                              {link.badge && <span class="rounded-full bg-primary-cta/15 px-1.5 py-0.5 font-mono text-[0.6rem] font-medium uppercase tracking-wider text-primary-cta">{link.badge}</span>}
+                                            </span>
+                                            {link.description && <span class="mt-0.5 block text-[0.75rem] text-muted-text">{link.description}</span>}
+                                          </a>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              );
+                            })}
                           </div>
-                        ))}
+                          {item.featured && (
+                            <a href={item.featured.href} class="flex flex-col justify-between rounded-2xl border border-border bg-canvas p-4 transition-colors hover:border-brand-anchor/30">
+                              <div>
+                                <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-primary-cta">{item.featured.kicker}</p>
+                                <p class="mt-2 text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">{item.featured.title}</p>
+                                <p class="mt-2 text-[0.8rem] leading-[1.55] text-muted-text">{item.featured.description}</p>
+                              </div>
+                              <span class="mt-4 text-[0.8rem] font-semibold text-brand-anchor">{item.featured.cta}</span>
+                            </a>
+                          )}
+                        </div>
+                        <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                          <a href={item.href} class="text-[0.8rem] font-medium text-muted-text hover:text-primary-text">All {item.label.toLowerCase()} →</a>
+                          <a href="/contact" class="text-[0.75rem] font-medium text-muted-text hover:text-primary-text">Contact</a>
+                        </div>
                       </div>
-                      {item.featured && (
-                        <a href={item.featured.href} class="flex flex-col justify-between rounded-2xl border border-border bg-canvas p-4 transition-colors hover:border-brand-anchor/30">
-                          <div>
-                            <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-primary-cta">{item.featured.kicker}</p>
-                            <p class="mt-2 text-[1.05rem] font-semibold tracking-[-0.02em] text-primary-text">{item.featured.title}</p>
-                            <p class="mt-2 text-[0.8rem] leading-[1.55] text-muted-text">{item.featured.description}</p>
-                          </div>
-                          <span class="mt-4 text-[0.8rem] font-semibold text-brand-anchor">{item.featured.cta}</span>
-                        </a>
-                      )}
                     </div>
-                    <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
-                      <a href={item.href} class="text-[0.8rem] font-medium text-muted-text hover:text-primary-text">All {item.label.toLowerCase()} →</a>
-                      <a href="/contact" class="text-[0.75rem] font-medium text-muted-text hover:text-primary-text">Contact</a>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             );
-          })}
+           })}
         </div>
 
         <div class="flex items-center gap-1 md:gap-2">

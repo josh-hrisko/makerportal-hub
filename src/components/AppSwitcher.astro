@@ -109,7 +109,12 @@ const internalCount = total - externalCount;
       </a>
     </div>
 
-    <div class="flex flex-wrap gap-1.5">
+    <div class:list={[
+      'grid gap-2',
+      displayList.length > 6
+        ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
+        : 'grid-cols-2 sm:flex sm:flex-wrap'
+    ]}>
       {displayList.map((app) => {
         const isCurrent = app.title === current;
         const dot = app.iconDot;
@@ -117,28 +122,29 @@ const internalCount = total - externalCount;
           <a
             href={isCurrent ? '/apps' : app.url}
             class:list={[
-              'group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.78rem] font-medium transition-all',
+              'group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.78rem] font-medium transition-colors',
+              'min-w-0 w-full sm:w-auto justify-start',
               isCurrent
                 ? 'border-border bg-elevated text-primary-text font-semibold ring-1 ring-border'
-                : 'border-border bg-elevated/50 text-muted-text hover:border-[var(--mp-border-strong)] hover:bg-elevated hover:text-primary-text hover:-translate-y-[0.5px]',
+                : 'border-border bg-card-bg text-muted-text hover:border-[var(--mp-border-strong)] hover:bg-elevated hover:text-primary-text',
             ]}
             aria-current={isCurrent ? 'page' : undefined}
             title={`${app.title} — ${app.tagline}${app.external ? ' (legacy bridge)' : ''}`}
           >
             <span
-              class="icon-dot size-1.5 shrink-0 rounded-full transition-transform group-hover:scale-110"
+              class="icon-dot size-1.5 shrink-0 rounded-full"
               style={dot ? `--dot-light:${dot.light}; --dot-dark:${dot.dark}; background-color: var(--dot-light);` : ''}
               aria-hidden="true"
             ></span>
-            <span class="tracking-[-0.01em]">{app.title}</span>
+            <span class="tracking-[-0.01em] truncate">{app.title}</span>
             {showLegacyBadge && app.external && (
-              <span class="ml-0.5 rounded-full bg-canvas px-1.5 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">Legacy</span>
+              <span class="ml-auto sm:ml-0.5 shrink-0 rounded-full bg-elevated px-1.5 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">Legacy</span>
             )}
           </a>
         );
       })}
       {displayList.length < total && (
-        <span class="inline-flex items-center gap-1 rounded-full border border-dashed border-border bg-transparent px-2.5 py-1 font-mono text-[0.68rem] text-muted-text/70">
+        <span class="inline-flex items-center gap-1 rounded-full border border-dashed border-border bg-transparent px-3 py-1.5 font-mono text-[0.68rem] text-muted-text/70">
           +{total - displayList.length} more
         </span>
       )}

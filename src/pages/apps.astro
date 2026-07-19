@@ -116,16 +116,16 @@ const breadcrumbSchema = {
 
       <div class="mt-12 rounded-[20px] border border-border bg-elevated/60 px-5 py-5 sm:px-6">
         <p class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-text">Product hosts • inter-app navigation</p>
-        <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[0.9rem]">
+        <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 text-[0.9rem]">
           {apps.map((app) => (
-            <li class="inline-flex items-center gap-1.5">
+            <li class="flex items-center gap-1.5 min-w-0 rounded-full border border-border/40 bg-card-bg/60 px-3 py-1.5 transition-colors hover:border-border hover:bg-card-bg">
               <a
                 href={app.url}
-                class="font-medium text-muted-text transition-colors hover:text-primary-text"
+                class="flex items-center gap-1 min-w-0 font-medium text-muted-text transition-colors hover:text-primary-text"
               >
-                {app.title} <span class="text-muted-text/60">↗</span>
+                <span class="truncate">{app.title}</span> <span class="shrink-0 text-muted-text/60">↗</span>
               </a>
-              {app.external && <span class="rounded-full bg-card-bg px-1.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Legacy</span>}
+              {app.external && <span class="ml-auto shrink-0 rounded-full bg-elevated px-1.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Legacy</span>}
             </li>
           ))}
         </ul>
