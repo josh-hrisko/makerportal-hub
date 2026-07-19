@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T16:48:42.856Z",
+  "generatedAt": "2026-07-19T01:41:39.000Z",
   "items": {
     "1098107969": {
       "title": "Designing Machine Learning Systems: An Iterative Process for Production-Ready Applications",
@@ -21,6 +21,80 @@
       ],
       "detailPageURL": "https://www.amazon.com/dp/1098125975?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
       "price": "$49.50",
+      "currency": "USD"
+    },
+    "1107189632": {
+      "title": "Introduction to Quantum Mechanics",
+      "image": "https://m.media-amazon.com/images/I/413A2jsL8UL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1107189632?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$49.99",
+      "currency": "USD"
+    },
+    "1108420419": {
+      "title": "Introduction to Electrodynamics",
+      "image": "https://m.media-amazon.com/images/I/31OJGkzGJ2L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1108420419?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$49.18",
+      "currency": "USD"
+    },
+    "1108422411": {
+      "title": "Modern Quantum Mechanics",
+      "image": "https://m.media-amazon.com/images/I/418MduyuI+L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1108422411?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$68.11",
+      "currency": "USD"
+    },
+    "1260473597": {
+      "title": "Master Handbook of Acoustics, Seventh Edition",
+      "image": "https://m.media-amazon.com/images/I/415lG3x5LVL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1260473597?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$43.15",
+      "currency": "USD"
+    },
+    "1292096934": {
+      "title": "Optics Global Edition",
+      "image": "https://m.media-amazon.com/images/I/41G2MMs1ewL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1292096934?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$53.90",
+      "currency": "USD"
+    },
+    "1492052043": {
+      "title": "TinyML: Machine Learning with TensorFlow Lite on Arduino and Ultra-Low-Power Microcontrollers",
+      "image": "https://m.media-amazon.com/images/I/41z9i5l2MkL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1492052043?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$29.69",
+      "currency": "USD"
+    },
+    "1568817231": {
+      "title": "3D Math Primer for Graphics and Game Development",
+      "image": "https://m.media-amazon.com/images/I/417WSwUZQgL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/1568817231?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$132.47",
+      "currency": "USD"
+    },
+    "1882580176": {
+      "title": "Testing Loudspeakers",
+      "image": "https://m.media-amazon.com/images/I/316bC19HJLL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/1882580176?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$44.48",
+      "currency": "USD"
+    },
+    "3319446479": {
+      "title": "The Lattice Boltzmann Method: Principles and Practice (Graduate Texts in Physics)",
+      "image": "https://m.media-amazon.com/images/I/41++y50oN8L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/3319446479?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$57.87",
       "currency": "USD"
     },
     "B01EWOE0UU": {
@@ -637,7 +711,7 @@
         "Supplied with foam windshield and shock mount"
       ],
       "detailPageURL": "https://www.amazon.com/dp/B00B0YPAYQ?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$294.00",
+      "price": "$299.99",
       "currency": "USD"
     },
     "B0FQFB8FMG": {
@@ -681,7 +755,7 @@
         "256-BIT AES ENCRYPTION(4) – helps keep private files secure with password protection."
       ],
       "detailPageURL": "https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
-      "price": "$251.38",
+      "price": "$250.99",
       "currency": "USD"
     },
     "B0DM8QJRN6": {
@@ -696,6 +770,854 @@
       ],
       "detailPageURL": "https://www.amazon.com/dp/B0DM8QJRN6?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
       "price": "$38.99",
+      "currency": "USD"
+    },
+    "B017PEIGIG": {
+      "title": "Adafruit 9-DOF Absolute Orientation IMU Fusion Breakout - BNO055",
+      "image": "https://m.media-amazon.com/images/I/31zqCtQc3hL._SL500_.jpg",
+      "features": [
+        "Meaningful sensor data in minutes with Bosch's smart BNO055 smart 9-ODF sensor",
+        "Data output over I2C",
+        "Absolute orientation, angular velocity, acceleration, magnetic field strength, linear acceleration, gravity, temperature",
+        "Easy to use Adafruit tutorials",
+        "Easy soldering of header pins required"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B017PEIGIG?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$39.07",
+      "currency": "USD"
+    },
+    "B0G6Y9VTPT": {
+      "title": "Precision Metal Gyroscope Toy Rainbow Anti Gravity Spinner - Educational Physics Toys & Gyroscope for Adults Illusion, Balance Desk Fidget for Office, Cool Science Gadgets for Adults & Teens",
+      "image": "https://m.media-amazon.com/images/I/41BY4jm2dGL._SL500_.jpg",
+      "features": [
+        "【FASCINATING RAINBOW VISUAL EFFECT】 Unlike ordinary single-color models, this perpetual motion desk toy features a stunning electroplated iridescent finish. When rotating at high speed, it creates a mesmerizing spectrum of colors, making it one of the most eye-catching toys for grown ups for your workspace.",
+        "【PREMIUM METAL ANTI-GRAVITY PHYSICS】 Crafted with a durable metal frame and stainless steel shaft, this precision instrument defies gravity through the conservation of angular momentum. It serves as an excellent educational tool for STEM learning and ranks high among classic science gifts for adults to spark curiosity in mechanics.",
+        "【EFFECTIVE STRESS RELIEF & FOCUS】 More than just a toy, this gyroscope adult as high-quality fidget toys adults can use to relieve anxiety. The rhythmic spinning and focus required to balance it on a fingertip or stand provide a mental break, similar to the calming effect of a newtons cradle pendulum.",
+        "【CHALLENGING SKILL-BASED PLAY】 Please note that slight vibration at startup is normal due to the high initial speed (approx. 8000 RPM). Mastering this mechanical device requires patience; wrap the rope tightly and pull swiftly. It is not battery-operated but a mechanical wonder that rewards practice, perfect for fans of desk toys.",
+        "【PERFECT GIFT FOR SCIENCE LOVERS】 Packaged elegantly, this forever spin top makes for exceptional science gifts for adults, engineers, teachers, and teenagers. It’s a sophisticated conversation starter and a timeless piece of interactive art that looks great on any executive desk or display shelf.",
+        "【YOUR SMILE IS OUR PRIORITY】 We pour our hearts into crafting these science gadgets, but we know the long journey to your doorstep can sometimes be unpredictable. If your new toy arrives with even the slightest imperfection, or if you simply aren't feeling the magic, please reach out to us immediately. We treat our customers like family and promise a personalized solution within 24 hours. We don't just want to sell you a product; we aim to bring a spark of joy to your day and use your feedback to build a better experience for everyone."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0G6Y9VTPT?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$9.98",
+      "currency": "USD"
+    },
+    "0367026503": {
+      "title": "Nonlinear Dynamics and Chaos",
+      "image": "https://m.media-amazon.com/images/I/41WAl+aPgGL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0367026503?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$77.11",
+      "currency": "USD"
+    },
+    "0143113453": {
+      "title": "Chaos: Making a New Science",
+      "image": "https://m.media-amazon.com/images/I/41gSdt7RO-L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0143113453?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$12.75",
+      "currency": "USD"
+    },
+    "B0H1S45YLM": {
+      "title": "Kinetic Energy Sculpture Chaos Pendulum Desk Decor, Double Oloid Physics Art Decor for Office",
+      "image": "https://m.media-amazon.com/images/I/211BWPFg3HL._SL500_.jpg",
+      "features": [
+        "1.Mesmerizing Kinetic Desk Sculpture – Featuring a dynamic double pendulum motion, this kinetic art sculpture creates a captivating visual display that enhances the atmosphere of offices, studios, bookshelves, and modern workspaces.",
+        "2.Battery Powered Motion Display – The sculpture is powered by 4 AA batteries (not included), providing smooth and continuous movement for an eye-catching desktop decoration without complicated setup.",
+        "3.Modern Physics-Inspired Design – Combining artistic balance with motion-inspired engineering, this elegant desk accessory adds a sophisticated scientific and contemporary touch to home or office decor.",
+        "4.Relaxing and Engaging Office Decor – The flowing pendulum movement delivers a calming visual experience that helps create a more enjoyable and relaxing workspace environment during work or study sessions.",
+        "5.Unique Gift for Professionals and Art Enthusiasts – An excellent decorative gift for coworkers, engineers, designers, science enthusiasts, and anyone who appreciates kinetic sculptures, modern desk decor, and conversation-starting office accessories."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0H1S45YLM?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$45.98",
+      "currency": "USD"
+    },
+    "0201657023": {
+      "title": "Classical Mechanics",
+      "image": "https://m.media-amazon.com/images/I/31acJAp1w9L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0201657023?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$220.49",
+      "currency": "USD"
+    },
+    "0192868926": {
+      "title": "Visual Complex Analysis: 25th Anniversary Edition",
+      "image": "https://m.media-amazon.com/images/I/41NE2BxK48L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0192868926?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$54.49",
+      "currency": "USD"
+    },
+    "0138147574": {
+      "title": "Signals and Systems (Prentice-hall Signal Processing Series)",
+      "image": "https://m.media-amazon.com/images/I/41tImfdW-EL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0138147574?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$275.45",
+      "currency": "USD"
+    },
+    "0137027419": {
+      "title": "Understanding Digital Signal Processing",
+      "image": "https://m.media-amazon.com/images/I/41W1r77WlHL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0137027419?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$95.34",
+      "currency": "USD"
+    },
+    "B0GJ3W7C8V": {
+      "title": "Physics Optics Experiment Kit STEM Physics Set for Light Refraction/Reflection, Convex Lens, Pinhole Imaging & Light Primary Colors Exploration School & Home Hands-On Educational Tool",
+      "image": "https://m.media-amazon.com/images/I/51OIYfCCONL._SL500_.jpg",
+      "features": [
+        "Diverse Optical Experiments: Top-Tier STEM Physics Kit This all-inclusive physics optics kit is a great addition to STEM learning curricula, letting you easily do core optical experiments—perfect for hands-on STEM education. It covers basics like plane mirror reflection (key for STEM physics) to complex ones: diffuse reflection, convex/concave mirror reflection, light refraction, convex lens refraction, triangular refraction, plus fun STEM experiments (convex lens imaging, pinhole imaging, light’s three primary colors). Ideal for working at home, school labs, or institutions— a versatile STEM learning tool.",
+        "Master Refraction & Reflection: Intuitive STEM Tools As a core STEM physics tool, this kit clearly shows light refraction and reflection—critical for STEM education. Watch light bend when moving between media (a key STEM physics lesson) and reflect off surfaces, all through hands-on 操作 that fits STEM learning methods. No complex lectures: students learn abstract physics via experiments (a mark of good STEM education), boosting efficiency and passion for STEM subjects. A must-have for teaching/learning refraction/reflection through STEM.",
+        "Quality & User-Friendly: Built for STEM Experiment Success Made to meet STEM education standards, this kit has 3 bright, adjustable light sources (for clear experiment results—vital for STEM experiments). The 60cm integrated optical bench needs no assembly—save time for STEM exploration. Acrylic prisms/lenses offer great light transmittance, are safe, durable, and shatterproof—perfect for STEM classrooms or home STEM learning. Great for schools (STEM teaching aids), parents (at-home STEM), or institutions—guarantees good experiment results.",
+        "All-in-One Components: No Extra Purchases for STEM Optics This kit has everything for STEM optics experiments—no extra buys needed, ideal for STEM education providers. Included: integrated optical bench, simulated eyeball card , multi-hole plate, water lens/stand, three-line/three-primary-color light sources (color-theory STEM experiments), lenses (F10cm/F5cm convex, F-10cm concave), F-shaped light source, shield, imaging screen, 2 electronic candles, 3 plane mirrors (reflection STEM activities), periscope, water boxes, vision lenses, white screen, reflection box, gauge, syringe, STEM-aligned manual, and storage box (no batteries).",
+        "Great After-Sales: Shop Confidently for STEM Tools We offer only top-quality STEM education products, including this optics kit (enhances STEM learning). If you have issues (equipment faults, STEM experiment questions) or it doesn’t meet expectations, contact us. Our team (familiar with STEM teaching tools) solves problems in 24 hours—no disruption to STEM goals. Your satisfaction matters—buy this STEM experiment kit with confidence, knowing it supports impactful STEM physics education."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0GJ3W7C8V?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$49.99",
+      "currency": "USD"
+    },
+    "B0BCFM83XB": {
+      "title": "Magnetic Field Viewing Film, Magnetic Field Viewer, 4 x 4 Inch",
+      "image": "https://m.media-amazon.com/images/I/41lVyigU6GL._SL500_.jpg",
+      "features": [
+        "Magnetic Field Display: Brown magnetic nanoparticles film is used to show magnetic field, clearly showing the patterns of magnetic field lines of magnets. Different colors represent different magnetic field intensity",
+        "Unique Design: The magnetic field paper is made of plastic film that contains a ferromagnetic slurry of fine nickel, and the frame outside can fix and protect the film",
+        "Widely Used in Daily: Ideal for observing all kinds of magnets such as SmCo, AlNiCo, Neodymium and Flexible Magnets. Clearly view magnetic field in objects. Magnetic clasp on your door, the speaker on your phone, or concealed buckle of the handbag",
+        "Wonderful Tool for Study: Just put magnetic field viewing film on little things, discover and analyze magnetic fields, and open your mind to calculate the value of the magnetic field, even if change the magnetic pattern",
+        "Reusable and Automatic Recovery: Our magnetic field viewer is reusable and automatic recovery after use, just place it on object surface to observe magnetic field"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0BCFM83XB?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$18.01",
+      "currency": "USD"
+    },
+    "B000UV6ZPS": {
+      "title": "Green Magnetic Viewing Film 4x6 | Cool Magnets Science Kit | Magnetic Field Detector & Visual Aid for Physics Education | Ideal for Research & Magnetism Demonstrations",
+      "image": "https://m.media-amazon.com/images/I/315zl-oYbpL._SL500_.jpg",
+      "features": [
+        "Optimal Size and Visibility: The film measures 4x6 inches, providing a substantial viewing area. Its vibrant green color enhances the visibility of magnetic field lines, making it easier to observe and understand magnetic interactions.",
+        "Versatile Educational and Professional Use: This tool is ideal for a wide range of applications. It's beneficial for educators teaching magnetism, students learning physics, engineers involved in magnetic field research, and hobbyists experimenting with magnetic projects.",
+        "User-Friendly and Instant Results: Easy to use, simply place this film over any magnet or magnetic field source. It provides an immediate visual representation of magnetic forces, revealing intricate patterns and lines that are otherwise invisible. The film will hold the image of the last magnetic field for later analysis. To reset, swipe a flat magnet slightly above the film back and forth multiple times.",
+        "High-Quality, Durable Material: Constructed from responsive, high-quality materials specifically designed to react to magnetic fields. This durability ensures long-term use and consistent reliability in a variety of settings.",
+        "Valuable Educational Resource: An excellent addition to classrooms, laboratories, and educational workshops. This film is a practical tool for demonstrating and teaching about magnetic field lines, properties, and the fundamental principles of magnetism."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B000UV6ZPS?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$11.99",
+      "currency": "USD"
+    },
+    "B0F8HJ71Q1": {
+      "title": "AplysiaTech Magnetic Field Viewing Film 4\"x4\", Magnetic Flux Display, Magnet Pattern Detector, Scientific Project Teaching, Reusable and Automatic Recovery,Magnetic Field Viewer - 1Pack",
+      "image": "https://m.media-amazon.com/images/I/31J3v9vLIUL._SL500_.jpg",
+      "features": [
+        "Magnetic Field Display: Brown magnetic nanoparticles film is used to show magnetic field, clearly showing the patterns of magnetic field lines of magnets. Different colors represent different magnetic field intensity Unique Design: The magnetic field paper is made of plastic film that contains a ferromagnetic slurry of fine nickel, and the frame outside can fix and protect the film",
+        "Widely Used in Daily: Ideal for observing all kinds of magnets such as SmCo, AlNiCo, Neodymium and Flexible Magnets. Clearly view magnetic field in objects. Magnetic clasp on your door, the speaker on your phone, or concealed buckle of the handbag",
+        "Wonderful Tool for Study: Just put magnetic field viewing film on little things, discover and analyze magnetic fields, and open your mind to calculate the value of the magnetic field, even if change the magnetic pattern",
+        "Unique Design: The magnetic field paper is made of plastic film that contains a ferromagnetic slurry of fine nickel, and the frame outside can fix and protect the film",
+        "Reusable and Automatic Recovery: Our magnetic field viewer is reusable and automatic recovery after use, just place it on object surface to observe magnetic field"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0F8HJ71Q1?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$21.99",
+      "currency": "USD"
+    },
+    "0521663962": {
+      "title": "An Introduction to Fluid Dynamics (Cambridge Mathematical Library)",
+      "image": "https://m.media-amazon.com/images/I/4124IWh3-TL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0521663962?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$73.77",
+      "currency": "USD"
+    },
+    "B00CMR9078": {
+      "title": "Eisco - Complete Optical Bench and Attachment Set with 40 Pieces and 20 Lab Activities for Optics Experiments",
+      "image": "https://m.media-amazon.com/images/I/31PmhDy1BvL._SL500_.jpg",
+      "features": [
+        "COMPLETE OPTICAL BENCH KIT || Fully comprehensive optics set with 40 components designed for a full year of optical coursework.",
+        "INCLUDES 20 LAB ACTIVITIES || Features experiments on diffraction, reflection, refraction, Snell’s Law, color mixing, and lens applications.",
+        "DURABLE & ORGANIZED STORAGE || Made of aluminum with ABS plastic brackets and includes a plastic storage bin with foam cutouts for organization.",
+        "SAFETY & HANDLING INSTRUCTIONS || Lamp casing gets hot; use the plastic holder for adjustments and avoid prolonged use.",
+        "EXPERIMENT MANUAL AVAILABLE || A detailed user manual with step-by-step instructions and activity sheets available upon request in PDF format."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B00CMR9078?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$213.49",
+      "currency": "USD"
+    },
+    "B0FQVB7T2G": {
+      "title": "Physics Optics Experiment Kit for Lab - Light Refraction/Reflection, Convex Lens, Pinhole Imaging & Light Primary Colors Exploration Science Educational Set for Hands-On Learning",
+      "image": "https://m.media-amazon.com/images/I/51rKb8td7+L._SL500_.jpg",
+      "features": [
+        "Diverse Optical Experiments: Top-Tier STEM Physics Kit This all-inclusive physics optics kit is a great addition to STEM learning curricula, letting you easily do core optical experiments—perfect for hands-on STEM education. It covers basics like plane mirror reflection to complex ones: diffuse reflection, convex/concave mirror reflection, light refraction, convex lens refraction, triangular refraction, plus fun STEM experiments (convex lens imaging, pinhole imaging, light’s three primary colors). It works at home, labs, or institutions— a versatile STEM learning tool.",
+        "Master Refraction & Reflection: Intuitive STEM Tools As a core STEM physics tool, this kit clearly shows light refraction and reflection—critical for STEM education. Watch light bend when moving between media (a key STEM physics lesson) and reflect off surfaces, all through hands-on that fits STEM learning methods. No complex lectures: learn abstract physics via experiments (a mark of good STEM education), boosting efficiency and passion for STEM subjects. A must-have for teaching/learning refraction/reflection through STEM.",
+        "Quality & User-Friendly: Built for STEM Experiment Success Made to meet STEM education standards, this kit has 3 bright, adjustable light sources (for clear experiment results—vital for STEM experiments). The 60cm integrated optical bench needs no assembly—save time for STEM exploration. Acrylic prisms/lenses offer great light transmittance, are safe, durable, and shatterproof—perfect for STEM learning. Great for STEM teaching aids, parents (at-home STEM), or institutions—guarantees good experiment results.",
+        "All-in-One STEM Optics Kit: Ideal for STEM education providers, this kit includes everything for optics experiments—ready to use, no extra buys required. Components: Integrated optical bench, simulated eyeball card , multi-hole plate, water lens with stand, three-line/three-primary-color light sources , lenses (F10cm/F5cm convex, F-10cm concave), F-shaped light source, shield, imaging screen, 2 electronic candles, 3 plane mirrors , periscope, water boxes, vision lenses, white screen, reflection box, gauge, syringe, manual, and storage box. All essentials for STEM optics learning in one kit.",
+        "Great After-Sales: Shop Confidently for STEM Tools We offer only top-quality STEM education products, including this optics kit (enhances STEM learning). If you have issues (equipment faults, STEM experiment questions) or it doesn’t meet expectations, contact us. Our team (familiar with STEM teaching tools) solves problems in 24 hours—no disruption to STEM goals. Your satisfaction matters—buy this STEM experiment kit with confidence, knowing it supports impactful STEM physics education."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0FQVB7T2G?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$49.99",
+      "currency": "USD"
+    },
+    "0133977226": {
+      "title": "Optics",
+      "image": "https://m.media-amazon.com/images/I/31GasHBZppL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0133977226?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$237.22",
+      "currency": "USD"
+    },
+    "B0CW64YL6D": {
+      "title": "GeRRiT Physical Optical Equipment Set Science Classroom Optics Kit Concave Convex Lens Optical Bench Attachment Set Complete Optical Teaching Equipment Physical Imaging Equipment for Laboratory",
+      "image": "https://m.media-amazon.com/images/I/31V-qwHumeL._SL500_.jpg",
+      "features": [
+        "Concave/Convex Lens Optical Experiment Bench - This physical optical bench is a set of physical imaging experimental equipment for and beginners.",
+        "Physical Imaging Teaching Equipment - Optical experiment set can stimulate imagination, cultivate learning and understanding of scientific knowledge, and are suitable for school teaching, learning, and demonstration.",
+        "Improve Learning Interes - This complete optical bench can enhance hands-on ability and improve their learning interest.",
+        "Safe to Use - The optical equipment set is made of plastic and glass, safe to use.",
+        "Easy to Assemble - The physical optical experiment set is easy to assemble and disassemble, making teaching the classroom fun."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CW64YL6D?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$41.99",
+      "currency": "USD"
+    },
+    "B0CKNN2B78": {
+      "title": "DKULMN Physical Optics Experimental Equipment, Concave-Convex Lens and Large Optical Bench,Optical Bench Set,Complete Teaching Equipment",
+      "image": "https://m.media-amazon.com/images/I/41qmiAuZGLL._SL500_.jpg",
+      "features": [
+        "[First choice for teaching]: very suitable for teachers, home schools and young scientists. It is an ideal choice for teachers, home schools and young scientists.",
+        "[Covered content]: small hole imaging/light reflection/light refraction/lens imaging method/direct light/light three primary colors/concave-convex lens imaging method, etc. A scale is marked on the guide rail to facilitate observation and summary of the rules.",
+        "[Optical bench kit]: scales are marked on the guide rail to facilitate viewing and summarizing the rules. It is not only a set of physics teaching experiment equipment, but also a gift for children's scientific exploration.",
+        "[Scope of application]: various equipment packages for junior high school and high school physics laboratories.",
+        "[Lightweight]: The length of the guide rail of this product is 96 cm, which is lighter than the traditional optical platform."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CKNN2B78?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$89.70",
+      "currency": "USD"
+    },
+    "0306447908": {
+      "title": "Principles of Quantum Mechanics, 2nd Edition",
+      "image": "https://m.media-amazon.com/images/I/41DDN560wuL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0306447908?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$56.35",
+      "currency": "USD"
+    },
+    "B0CD2KKFQ8": {
+      "title": "EXBEPE Physics Optics Experiment Set Prisms Convex Lens Triple Laser Refraction School Light Refraction Reflection Learning Educational Science Kits",
+      "image": "https://m.media-amazon.com/images/I/41uvXTUzshL._SL500_.jpg",
+      "features": [
+        "【Optical refraction and reflection experiments】plane mirror reflection, diffuse reflection, convex mirror reflection, concave mirror reflection, refraction of light, convex lens refraction, lens refraction, trigonometry refraction",
+        "【Children learn to master the physical optics of refraction and reflection knowledge easily】the physical optics experiment set can clearly show the light from a medium into another medium, the direction of propagation changes, so that the light at the junction of different media deflection phenomenon, and light propagation to different substances, in the demarcation plane to change the direction of propagation and return to the original phenomenon in the material",
+        "【Quality Manufacturing】Three way laser source, bright and clear light, the angle of light can be freely adjusted. Prism lens is made of acrylic, very good light transmission, refraction effect is very obvious",
+        "【Included】1 Double Convex Lens, 1 Single Concave Lens, 1 Acrylic Glass Block, 1 Single Convex Lens, 1 Double Concave Lens, 1 Triangular Prism, 1 Three Way Linear Light Source, 1 Multi-functional Reflector, 1 Color Box, 1 360°Angle Diagram，",
+        "【Tips】This three-beam light source can be adjusted to change the direction of the light through the three small holes in the top to make the light sources parallel.without battery（You need to configure it yourself）",
+        "【Sincere Service】We only provide high quality products, If you encounter any problems or the product not meet your expectations,you can contact us directly,we will solve it for you within 24 hours,your satisfaction is our ultimate pursuit!"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CD2KKFQ8?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$18.99",
+      "currency": "USD"
+    },
+    "0070006571": {
+      "title": "Complex Analysis",
+      "image": "https://m.media-amazon.com/images/I/31vxeAgNboL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0070006571?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$116.92",
+      "currency": "USD"
+    },
+    "0073383171": {
+      "title": "Complex Variables and Applications (Brown and Churchill)",
+      "image": "https://m.media-amazon.com/images/I/41AijQjuo2L._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0073383171?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$212.48",
+      "currency": "USD"
+    },
+    "0691203709": {
+      "title": "Visual Differential Geometry and Forms: A Mathematical Drama in Five Acts",
+      "image": "https://m.media-amazon.com/images/I/51i+sagiRlL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0691203709?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$31.63",
+      "currency": "USD"
+    },
+    "B0BJMHCL6P": {
+      "title": "GSC International WVGENKIT Standing Wave Demonstration Kit for Physical Science",
+      "image": "https://m.media-amazon.com/images/I/31fJAQdRRQL._SL500_.jpg",
+      "features": [
+        "This standing wave generation kit has all the necessary components to explore standing waves. Kit includes: 1 Variable frequency generator 1 Spool of string 1 Support Stand 1 Steel rod 1 Power cord 1 Chladni Plate 1 Vibration generator 2 Connector cords 5 Weights 1 Fastening piece 1 Boss head clamp 1 Frictionless-pulley with clamp 1 Pan",
+        "Study Standing Waves: Demonstrate standing waves, wave phenomena, harmonic motion, and resonance with this educational science kit – perfect for physics classrooms and labs.",
+        "Hands-On Learning: Engages students with interactive physics experiments, helping them visualize sound waves, frequencies, and wave patterns for a deeper understanding of wave phenomena.",
+        "Durable & Classroom-Ready: Built for repeated use in physics classrooms, science labs, and educational demonstrations – ideal for teachers, educators, and students.",
+        "STEM Education Tool: Supports physics demonstrations, laboratory experiments, and hands-on learning, making complex wave concepts easier to understand in science and engineering studies."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0BJMHCL6P?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$279.56",
+      "currency": "USD"
+    },
+    "B005LY3NZY": {
+      "title": "3B Scientific U56006 Metal Square Chladni Plate, 7\" Length x 7\" Width",
+      "image": "https://m.media-amazon.com/images/I/31I4XoBdsQL._SL500_.jpg",
+      "features": [
+        "Metal plate for generating acoustically excited figures in media such as fine dry sand as in the experiment by Chladni",
+        "To be used in conjunction with vibration generator",
+        "Comes with 4-mm plug for mounting to vibration generator",
+        "Base is not included",
+        "Measures 7\" length by 7\" width"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B005LY3NZY?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$31.75",
+      "currency": "USD"
+    },
+    "B0FWX6LDSD": {
+      "title": "MJDHS Professional Ernst Chladni Vibration Generator, Chladni Pattern, and Visual Sound Wave are Classic Experimental Tools in The Field of Acoustics and Vibration(30hz-20khz, 30w)(Size:6.5in/6.5in)",
+      "image": "https://m.media-amazon.com/images/I/31GeUEVnm9L._SL500_.jpg",
+      "features": [
+        "Operating Frequency Range: 30Hz–20kHz",
+        "Optimized: Generates clear, stable Chladni patterns at subsonic vibration thresholds of 15 Hz.",
+        "Easy to Integrate: Compatible with most amplifiers and signal generators.",
+        "Applications: An essential tool for acoustic research, physics education, and interactive science exhibits.",
+        "Rugged: Robust construction ensures long-term use in laboratories or public spaces."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0FWX6LDSD?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$136.62",
+      "currency": "USD"
+    },
+    "B000239E6Q": {
+      "title": "Toysmith Euler’s Disk Desk Toys Office Adults - Create Hypnotic Light Refraction Sound Display - Science Decor Home And Workspace - Kinetic Motion Physics Models Kids 8+",
+      "image": "https://m.media-amazon.com/images/I/51WA9MMAsiL._SL500_.jpg",
+      "features": [
+        "Versatile Desk Décor: Chrome-plated spinning disc functions as desk toys and kinetic display, producing a soft sonic hum with visual motion effect; includes interchangeable foils for customizable presentation; ideal for focus, relaxation, and workspace styling.",
+        "STEM Educational Toy: This eulers disk physics toy demonstrates motion, friction, and balance through hands-on interaction, helping visualize scientific concepts; suitable for learners, hobbyists, and anyone interested in engaging physics models.",
+        "Complete Set: Includes multiple spinning discs, mirrored base, and visual elements for experimentation; this eulers disc with mirror setup enhances visibility while supporting exploration of perpetual motion concepts and kinetic energy behavior.",
+        "Great Science Gift: Designed as science toys adults and kids can enjoy, this interactive model supports curiosity and learning; also works as office desk decor adults, offering both educational value and engaging visual appeal.",
+        "Compact & Functional Design: Precision-crafted spinning disc with mirror base creates smooth movement and visual effects; this eulers disc physics toy highlights principles like light refraction, making it suitable for desks, classrooms, and home use."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B000239E6Q?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$44.99",
+      "currency": "USD"
+    },
+    "B00N4Q25R8": {
+      "title": "miniDSP UMIK-1 USB Measurement Calibrated Microphone",
+      "image": "https://m.media-amazon.com/images/I/31v6VctxREL._SL500_.jpg",
+      "features": [
+        "Unique calibration file for each product with sensitivity (SPL monitoring), Frequency",
+        "Plug&Play driverless installation for Windows, Mac, Linux and iDevices",
+        "Compatible with all acoustic software inc Dirac Live, REW, Smaart. Compatible with Ipad + CameraKit",
+        "Mini tripod, USB cable, windscreen included in sturdy padded transport case"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B00N4Q25R8?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$139.98",
+      "currency": "USD"
+    },
+    "B002KI8X40": {
+      "title": "Dayton Audio EMM-6 Precision Omnidirectional Electret Condenser Microphone for Room Acoustic Analyzers and Audio Measurement Systems, Calibration Data File with Response Graph Included",
+      "image": "https://m.media-amazon.com/images/I/31z+1snsFjL._SL500_.jpg",
+      "features": [
+        "Perfect for use with room acoustic analyzers and audio measurement systems",
+        "Low noise FET input reduces low-frequency distortion",
+        "Includes stand mount, foam windscreen, and transport case",
+        "High-quality components and rugged construction",
+        "Includes its own unique calibration response graph"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B002KI8X40?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$80.93",
+      "currency": "USD"
+    },
+    "B000HT4RSA": {
+      "title": "BEHRINGER ECM8000",
+      "image": "https://m.media-amazon.com/images/I/217MRfEDiaL._SL500_.jpg",
+      "features": [
+        "Ultra-linear condenser microphone for measurement and recording application",
+        "Perfectly suited for room equalization application plus high-resolution studio recording and live applications",
+        "Exceptionally flat frequency response and ultra-high sound resolution",
+        "Evenly weighted, true omnidirectional pattern",
+        "Works with phantom power from +15 to +48 V"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B000HT4RSA?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$25.90",
+      "currency": "USD"
+    },
+    "B00HE8OS9A": {
+      "title": "Dayton Audio UMM-6 USB Measurement Microphone",
+      "image": "https://m.media-amazon.com/images/I/41ue5n3lX3L._SL500_.jpg",
+      "features": [
+        "Precision condenser microphone for critical measurement and recording applications",
+        "Connects to your PC or Mac via USB port",
+        "True omnidirectional pattern and calibrated flat frequency response",
+        "Rugged construction with high-quality components",
+        "Compact design; includes sturdy carrying case with foam insert"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B00HE8OS9A?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$79.99",
+      "currency": "USD"
+    },
+    "B0BG3GCD47": {
+      "title": "Ferrofluid Magnetic Display – Science Education Magnetism Kit – Interactive Liquid Metal Physics Demonstration – Executive Desk Décor with Neodymium Magnets – STEM Learning Tool",
+      "image": "https://m.media-amazon.com/images/I/415pJY3P8GL._SL500_.jpg",
+      "features": [
+        "ADVANCED SCIENCE EDUCATION ITEM: Experience the captivating behavior of magnetic fluid with this interactive magnetism kit. It provides a visual and tactile demonstration of magnetic fields, making it an essential educational instrument for learning about fluid dynamics and applied physics.",
+        "INTERACTIVE STEM DEMONSTRATION: This ferrofluid visualizer showcases the dynamic properties of liquid metal. When exposed to the provided neodymium magnets, the fluid reacts instantly, shifting and forming intricate spikes that turn abstract scientific concepts into an observable, hands-on experience.",
+        "PROFESSIONAL SCIENTIFIC DISPLAY: Serving as more than just a functional educational item, this hermetically sealed glass display makes an excellent conversation piece for any laboratory, classroom, or executive workspace, sparking curiosity and discussion about electromagnetism.",
+        "COMPLETE MAGNETISM KIT: Includes the sealed ferrofluid display and the powerful neodymium magnets required to manipulate the liquid. It is fully prepared for immediate use in scientific demonstrations, requiring no additional setup or fluid transfers.",
+        "SECURE AND DURABLE DESIGN: Housed in high-quality, tempered glass to ensure safe handling during educational demonstrations. The robust construction keeps the magnetic fluid securely contained while providing crystal-clear visibility for detailed observation of magnetic phenomena."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0BG3GCD47?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$21.98",
+      "currency": "USD"
+    },
+    "B008H40LG4": {
+      "title": "CMS MAGNETICS - (2oz Kit) Ferrofluid Science Experiment Kit for Education in Magnetism - Includes: 2 Fluid Ounce (59mL) Bottle of Ferrofluid, Gloves, Pipette, Petri Dishes",
+      "image": "https://m.media-amazon.com/images/I/41xo9G5aYJL._SL500_.jpg",
+      "features": [
+        "Basic Ferrofluid Kit Includes: 2 fluid ounce bottle of educational grade ferrofluid (FerroTec EFH1), a set of disposable gloves, 1 pipette, a set of petri dishes",
+        "EDUCATION - These ferrofluids are specifically designed for use in education and research. They feature magnetic properties that make it easier to visualize the magnetic patterns. They're also great for DIY science projects and other thought provoking science experiments. When not in use, please store away in the ferrofluid bottle sealed tight. Long exposure to air may dry the fluid and reduce it's potency to perform visual displays.",
+        "STEM LEARNING - Explore the science of magnetism by visually seeing the magnetic field through the use of ferrofluid.",
+        "PREPARATION - As fun as they are to experiment with, ferrofluid can get really messy! Please be mindful of what you wear and provide a protective layer over the area where you will experiment on. If you get some on your skin, please wash continuously with hand soap and stay clear of your eyes. Our educational kits comes with a few basics to help manage the mess and maximize your fun! Detailed step by step guide on how to use ferrofluid and manage the mess, below.",
+        "APPLICATIONS - EFH1 model is used for education in magnetism, visual art displays, visual music displays, visual technology displays in clocks, watches, and even ferrofluid dancing in non-permanent magnetic speakers. The endless possibilities for ferrofluid applications is only limited by your imagination. This model is not to be used as a cooling system for audio speaker systems."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B008H40LG4?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$28.99",
+      "currency": "USD"
+    },
+    "B0FT7YG22V": {
+      "title": "JOGEPEYO Graduation Gifts for Him,Ferrofluid Speaker Music Mate,Gift for Gamer.Walnut Wood,Gaming Room Decor,symbiosis in a Bottle,Magnetic Fluid Toys,Desktop Decorations, Gifts.（unvoiced）",
+      "image": "https://m.media-amazon.com/images/I/41-VPQZfYzL._SL500_.jpg",
+      "features": [
+        "【DESIGN INSPIRATION】: The Ferrofluid Sound Visualizer merges magnetic fluid dynamics with top-tier audio visualization, turning sound waves into mesmerizing dynamic patterns. It’s a perfect blend of STEM fun, art, and innovation—ideal for science fans, art lovers, and anyone wanting unique, conversation-starting decor.",
+        "【PRODUCT MATERIAL】: Crafted with a genuine walnut wood shell, this sound visualizer outperforms alternatives made with low-quality faux wood. It features high-transparency glass, non-toxic nano iron powder, and pure water for safe, reliable use. Equipped with a built-in MIC and white LED backlight, it supports wireless operation and comes with a rechargeable internal battery that delivers up to 8 hours of continuous use on a full charge.",
+        "【INTERACTIVE & CREATIVE PLAY​】:The magnetic fluid reacts not only to sound vibrations but also to the included magnets. You can manually manipulate it to craft your own creative displays, adding a fun and personalized touch.",
+        "【THOUGHTFUL GIFTING KIT】: Meticulously crafted with attention to every detail, this set includes a sleek, durable gift bag and an elegant minimalist greeting card. It takes the hassle out of gift prep while adding a refined touch—perfect for anniversaries or any moment you want your gift to make a memorable impression.",
+        "【NOTE​​】:Does not contain a speaker and will not make a sound. Pressure-Relief Bubble Design: A small visible brown bubble balances internal pressure. It rises to the top when upright and is part of the normal structure. Avoid high-temperature environments.​"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0FT7YG22V?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$69.99",
+      "currency": "USD"
+    },
+    "0073398128": {
+      "title": "Heat and Mass Transfer: Fundamentals & Applications",
+      "image": "https://m.media-amazon.com/images/I/51scJmF9DkL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0073398128?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$68.25",
+      "currency": "USD"
+    },
+    "0133354857": {
+      "title": "Fundamentals of Communication Systems",
+      "image": "https://m.media-amazon.com/images/I/51jPcJzB24L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0133354857?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$238.99",
+      "currency": "USD"
+    },
+    "B0CP786N56": {
+      "title": "GY-BNO055 9DOF 9-axis BNO055 Absolute Orientation Breakout Board Sensor Module Angle Gyroscope Module IIC Serial for",
+      "image": "https://m.media-amazon.com/images/I/41Wx9xhuewL._SL500_.jpg",
+      "features": [
+        "GY-BNO055 9DOF 9-axis BNO055 Absolute Orientation Breakout Board Sensor Module Angle Gyroscope Module IIC Serial for"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CP786N56?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$19.67",
+      "currency": "USD"
+    },
+    "0470665998": {
+      "title": "DAFX: Digital Audio Effects",
+      "image": "https://m.media-amazon.com/images/I/41z+HLlwPUL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0470665998?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$99.12",
+      "currency": "USD"
+    },
+    "0966017633": {
+      "title": "The Scientist & Engineer's Guide to Digital Signal Processing",
+      "image": "https://m.media-amazon.com/images/I/411SFStP3kL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0966017633?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$43.69",
+      "currency": "USD"
+    },
+    "008102133X": {
+      "title": "Orbital Mechanics for Engineering Students (Aerospace Engineering)",
+      "image": "https://m.media-amazon.com/images/I/51A-q6ZKQFL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/008102133X?tag=engineersport-20&linkCode=ogi&th=1&psc=1"
+    },
+    "B07Y5S5YWR": {
+      "title": "CERROPI Large Newtons Cradle Pendulum with 7 Balls, Physics Perpetual Motion Desk Toys for Office, Calm Down Fidgets, 50+ Sec Swingtime (Beech Base)",
+      "image": "https://m.media-amazon.com/images/I/319zWx66qoL._SL500_.jpg",
+      "features": [
+        "SCIENTIFIC DESIGN：CERROPI newton's cradle adopt scientific design,keep the pendulum balls perfectly lined up,make it possible to swing 50s+. Perfect demonstration of the scientific law of momentum conservation and energy conservation",
+        "SUPERIOR QUALITY：Our newtons cradle made of 8mm chromed metal steel bar, 20mm steel Ball,high-impact nylon, ultra-thin nano technology provide extremely durable oscillatory support, durable for long time use.",
+        "WIDE APPLICATION：This newton balls can be used as office desk gadgets toys to relieve stress; as teaching aid,teaching science intuitively; as toys for family activities, to inspire your child's creativity",
+        "EXQUISITE PACKEGING：We use individual wrapping paper to protect each ball and secure it in foam shockproof material,Perfect for Christmas gifts, Thanksgiving gifts, birthday gifts,Mother's Day gift,Father's Day gift,Valentine's Day gift etc.",
+        "WARRANTY & NOTICE：1 YEAR warranty, If any piece breaks we send replacement balls, strings and plug to you. Messages reply within 12 hours. NOTE: clean the ball thoroughly before using for the longer swing time,one extra ball and a silky soft cleaning cloth are included in the package"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B07Y5S5YWR?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$39.99",
+      "currency": "USD"
+    },
+    "0521121531": {
+      "title": "Gravitational N-Body Simulations: Tools and Algorithms (Cambridge Monographs on Mathematical Physics)",
+      "image": "https://m.media-amazon.com/images/I/31M822y7OAS._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0521121531?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$86.00",
+      "currency": "USD"
+    },
+    "0716723271": {
+      "title": "Spacetime Physics",
+      "image": "https://m.media-amazon.com/images/I/51GNNzxN3BL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0716723271?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$71.00",
+      "currency": "USD"
+    },
+    "B08GNXNPR6": {
+      "title": "LEGO 92176 Ideas NASA Apollo Saturn V Space Rocket and Vehicles, Spaceship Collectors Building Set with Display Stand [Amazon Exclusive], 14+ years",
+      "image": "https://m.media-amazon.com/images/I/51vgBr1Yl0L._SL500_.jpg",
+      "features": [
+        "Features a 1m high, approx. 1: 110 scale, exact model of the NASA Apollo Saturn V with 5 modules in iconic black & white checkered patterns",
+        "It consists of connected 3-stages rockets, Service & Command modules (CSM), a unit holding the lunar module inside and a Launch Escape System",
+        "There is a moon landing site with a display of 4 astronauts nano-figures and a USA flag, and a separate scene featuring the splashdown",
+        "A detailed build, with an interior that holds it all together using some mind-blowing SNOT techniques, it is accurate and true to original",
+        "It looks stunning on display with details from the textured F-1 rocket engines at the base to the 'Q-ball' at the tip of the launch escape tower.Smooth curved slopes contrast with the texture of grills, and with printed red bricks and pearl-grey thrusters it makes a piece-of-art display.Space-based building set includes a booklet about the manned Apollo Moon missions and the fan designers of this set"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B08GNXNPR6?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$399.98",
+      "currency": "USD"
+    },
+    "048641714X": {
+      "title": "Relativity: The Special and General Theory (Dover Books on Physics)",
+      "image": "https://m.media-amazon.com/images/I/4126d8JT2JL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/048641714X?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$6.23",
+      "currency": "USD"
+    },
+    "354067280X": {
+      "title": "Satellite Orbits: Models, Methods and Applications",
+      "image": "https://m.media-amazon.com/images/I/41AWa4c90pL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/354067280X?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$57.75",
+      "currency": "USD"
+    },
+    "B07PBD4P2L": {
+      "title": "ASURION 3 Year Desktop Protection Plan ($350 - $399.99)",
+      "image": "https://m.media-amazon.com/images/I/41xG8Yh0rlL._SL500_.jpg",
+      "features": [
+        "No Additional Cost: You pay nothing for repairs – parts, labor, and shipping included.",
+        "Coverage: Plan starts on the date of purchase. Malfunctions covered after the manufacturer's warranty. Power surges covered from day one. Real experts are available 24/7 to help with set-up, connectivity issues, troubleshooting and much more.",
+        "Easy Claims Process: File a claim anytime online or by phone. Most claims approved within minutes. If we can’t repair it, we’ll send you an Amazon e-gift card for the purchase price of your covered product or replace it.",
+        "Product Eligibility: Plan must be purchased with a product or within 30 days of the product purchase. Pre-existing conditions are not covered.",
+        "Terms & Details: More information about this protection plan is available within the “Product guides and documents” section. Simply click “User Guide” for more info. Terms & Conditions will be available in Your Orders on Amazon. Asurion will also email your plan confirmation with Terms & Conditions to the address associated with your Amazon account within 24 hours of purchase."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B07PBD4P2L?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$48.99",
+      "currency": "USD"
+    },
+    "B09WDM4LBX": {
+      "title": "Qianwei 3D Solar System Model Crystal Ball Astronomy Gifts Men Space Decor",
+      "image": "https://m.media-amazon.com/images/I/31EdZg0k6HL._SL500_.jpg",
+      "features": [
+        "3d Solar System: Made of K9 Crystal, making the Crystal Ball More Transparent and Glossier. Astronomy Gifts Planets Model Engraved with 3d Laser Technology, distinct and stereoscopic, the Crystal Ball will not Fade Forever.",
+        "Science Astronomy Gifts: Solar System Crystal Ball Model is a good way for Home Decor, a very good gift for friends man teachers.",
+        "Colorful Led Lighting Base: 6 Light Modes, Allowing The Solar System Model To Present Various Colors, Such As Color Slow Flashing Light, Color Quick Flashing Light, Constant White Red Blue Green Red Light.",
+        "Astronomy Gifts: Ideal Gifts Kit, Adults, Teachers, Astronomy Enthusiasts, Boyfriend, Parents, etc. During Birthday, Christmas Day, New Year, Valentine's Day, Mother's Day, Father's Day, Wedding, Graduation, Anniversary",
+        "PACKAGE INCLUDE: 1x Crystal Ball ( 80mm / 3.15inch ), 1x USB Cable, 1x Beautiful Gift Box, 1x LED Light Base ( 2.67x2.67x1.18 inch ). ( Please note: No batteries provided by the seller )."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B09WDM4LBX?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$35.99",
+      "currency": "USD"
+    },
+    "B002U21ZZK": {
+      "title": "MOVA Self Rotating Globe, Earth with Clouds Classic (4.5\")",
+      "image": "https://m.media-amazon.com/images/I/41rDBm9X1TL._SL500_.jpg",
+      "features": [
+        "Rotates Using Light, Not Batteries - Powered by ambient light and the Earth’s magnetic field, this globe spins smoothly and silently—no cords, batteries, or noise.",
+        "Designed with NASA-Inspired Earth Imagery - Earth with Clouds design captures our planet in lifelike detail without borders or labels—ideal for relaxed, meditative viewing.",
+        "Premium Build with Seamless Motion - Encased in dual-layer acrylic with non-toxic fluid inside, the globe rotates continuously in a low-friction, free-floating environment.",
+        "Compact Yet Eye-Catching - Measures 4.5\" across—about the size of a softball—and stands 7\" tall with the included clear 3-pronged base. Fits on desks, bookshelves, or nightstands.",
+        "Perfect Gift for Space Enthusiasts and Thinkers - A hit with educators, travelers, tech lovers, and collectors—this globe sparks curiosity, conversation, and admiration wherever it spins.",
+        "A Favorite Among the Visionary - From design studios to executive desks, MOVA Globes are found in the spaces of artists, thinkers, and forward-looking minds.",
+        "Care Tips for Smooth Spinning – Keep your MOVA Globe in a comfortable room environment — not too hot, not too cold, and avoid damp or overly dry spaces. Place it away from direct sunlight and strong magnets. Soft indoor lighting is all it needs to rotate. Have questions? We're here to help!"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B002U21ZZK?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$249.00",
+      "currency": "USD"
+    },
+    "B0FCVM4DQZ": {
+      "title": "NRF52840-DK EVAL Board for NRF52840 nRF52840 - Transceiver; 802.15.4 (Thread, Zigbee®), ANT, Bluetooth® 5.x (BLE) 2.4GHz Evaluation Board",
+      "image": "https://m.media-amazon.com/images/I/41000m8HJYL._SL500_.jpg",
+      "features": [
+        "CONNECTIVITY: Features Bluetooth",
+        ", Thread, Zigbee, ANT, and 802.15.4 protocols operating on 2.4GHz frequency band for versatile wireless applications",
+        "DEVELOPMENT PLATFORM: Complete evaluation board designed for nRF52840 SoC development and testing with comprehensive debugging capabilities",
+        "WIRELESS TRANSCEIVER: Integrated nRF52840 transceiver enables multi-protocol wireless communication for IoT and embedded system development",
+        "COMPATIBILITY: Supports multiple wireless standards making it ideal for smart home, industrial automation, and connected device applications"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0FCVM4DQZ?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$98.99",
+      "currency": "USD"
+    },
+    "B0CNTVW44H": {
+      "title": "Arduino Nano 33 BLE Rev2 [ABX00071] - nRF52840 Microcontroller, Bluetooth Low Energy (BLE), MicroPython Support, Small Form Factor, 3.3V for IoT & Wireless Projects",
+      "image": "https://m.media-amazon.com/images/I/4184x4XJkyL._SL500_.jpg",
+      "features": [
+        "Powerful nRF52840 Chip: The Arduino Nano 33 BLE Rev2 is powered by the nRF52840 microcontroller, which integrates a Cortex-M4 processor running at 64 MHz. This gives you efficient, high-performance computing power with support for advanced Bluetooth Low Energy (BLE) communication and low-power applications.",
+        "Bluetooth Low Energy (BLE): Designed for wireless applications, the Nano 33 BLE Rev2 offers Bluetooth Low Energy (BLE), enabling efficient and reliable wireless communication with a wide range of BLE-enabled devices. Whether you're building smart home products, health monitors, or remote control systems, this board ensures low-latency and energy-efficient wireless connectivity.",
+        "MicroPython Support: For rapid prototyping and easier programming, the Nano 33 BLE Rev2 supports MicroPython, a powerful and easy-to-learn language for embedded systems. With MicroPython, you can write and test code interactively, simplifying development and reducing time to market for your projects.",
+        "Compact & Versatile Design: With its small form factor, the Nano 33 BLE Rev2 is perfect for space-constrained applications like wearables, sensors, or portable devices. Despite its size, it offers a full suite of I/O capabilities, including digital/analog pins, PWM, I2C, and SPI for easy integration with external sensors, actuators, and other devices.",
+        "3.3V Operating Voltage: The board operates at a 3.3V voltage level, making it ideal for low-power, energy-efficient designs. This voltage range ensures compatibility with a wide variety of sensors and modules, while reducing power consumption for extended battery life in portable and wireless applications."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CNTVW44H?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$24.20",
+      "currency": "USD"
+    },
+    "013288836X": {
+      "title": "Bluetooth Low Energy: The Developer's Handbook",
+      "image": "https://m.media-amazon.com/images/I/31ZAtLz1ZvL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/013288836X?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$40.22",
+      "currency": "USD"
+    },
+    "B0F2J95GDR": {
+      "title": "NRF52840-DONGLE Micro Dev Kit USB PCA10059",
+      "image": "https://m.media-amazon.com/images/I/51Bp4VdQEBL._SL500_.jpg",
+      "features": [
+        "The nRF52840 Micro Dev Kit USB Dongle is a small and low-cost development platform enabled by the nRF52840 multi-protocol SoC in a convenient USB dongle form factor.",
+        "The nRF52840 Micro Dev Kit USB Dongle features a programmable user button, RGB LED, up to 12 GPIOs and 2.4G Chip antenna on board.",
+        "Package Includes: 1x nRF52840 Micro Dev Kit USB Dongle",
+        "The Manufacturer for this device is Original"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0F2J95GDR?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$21.98",
+      "currency": "USD"
+    },
+    "B0FR957Y7K": {
+      "title": "MAONO PD200W Hybrid Wireless Podcast Microphone for PC, Dynamic XLR USB Mic with Desktop Stand, Software, Noise Cancellation, for Vocal Recording, Streaming, Content Creation, Home Studio, Voiceover",
+      "image": "https://m.media-amazon.com/images/I/31diAKutdVL._SL500_.jpg",
+      "features": [
+        "Cut the Cables, Free to Pod - Dynamic microphone MAONO PD200W hybrid enjoy 3 ways for broadcast audio: go wireless for maximum freedom, USB for easy plug-and-play on phone, tablet, or computer, or XLR for a pro-level stable setup with audio interfaces",
+        "Simple Setup, Studio-Level Sounds - With a premium 30mm dynamic capsule and cardioid pickup, the mic delivers studio-quality vocal reproduction for podcasting, streaming, and vocal recording. It achieves an ultra-clean 82dB signal-to-noise ratio and handles up to 128dB SPL without distortion",
+        "Two Voices, One Perfect Conversation - PD200W supports a single receiver to connect two wireless desktop mics for duo podcasts or interviews. Records each mic to its own track so you can edit with precision, and keep every conversation crystal clear. The device also captures audio and video in perfect sync directly on the camera, eliminating the need for post-production alignment. (Note: Camera/Lightning accessories are sold separately.)",
+        "Focus on Voice, Not Noise - Built for No-worries Recording even without a soundproof booth. Cardioid microphone design and advanced three-stage noise cancellation ensures your voice remains rich and focused, effectively minimizing background noise and room echo for broadcast-ready clarity",
+        "Personalize Your Sound with MaonoLink - Take full command of your audio directly from your PC or smartphone through the MaonoLink app. Access 4 master-tuned preset modes to instantly adapt to different scenarios, while the powerful app enables precise adjustments to key parameters like EQ and reverb for a personalized sound profile",
+        "Long-Lasting Power, Limitless Creativity - Great ideas shouldn’t stop for low battery or bad signal. Record anywhere with a stable 60m wireless range and up to 60 hours of battery life (RGB off). Customize the RGB lighting for added flair or turn it off for a sleek look",
+        "Complete Creator Kit, Perfect Gift Choice - Everything you need to start creating is right in the box—Wireless/USB/XLR microphone x1, Desktop stand x1, USB-C to USB-A&C cable x1, Type-C receiver x1, Type-C adapter cable x1, User Manual x1"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0FR957Y7K?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$99.99",
+      "currency": "USD"
+    },
+    "B0CN493YHF": {
+      "title": "MAONO XLR/USB Dynamic Microphone Kit, RGB Podcast Mic with Software, Mute, Gain Knob, Volume Control, Boom Arm for Streaming, Gaming, Voice-Over, Recording-PD200XS Black",
+      "image": "https://m.media-amazon.com/images/I/41zhJ6oJ7PL._SL500_.jpg",
+      "features": [
+        "Superior Sound Quality: Capture crystal-clear audio with PD200X USB dynamic microphone. The built-in dynamic mic capsule helps you to capture deep lows, delicate highs, and crisp mid-tones. Ultra-wide frequency response of 40Hz-16kHz presents a warm and smooth sound. Cardioid polar pattern reduces unwanted background noise and highlights vocals in gaming and streaming. Designed to deliver exceptional performance for podcasting, streaming, and recording",
+        "Advanced Software Control: MAONO Link software takes your audio customization to the next level, allowing you to adjust various parameters and optimize your sound effortlessly setting the perfect vocal tone. And you can turn on/off the RGB light or switch in 9 different colors, also supports EQ, limiter, and compressor adjustment in USB mode. (Software features are only available in USB mode)",
+        "Versatile Usage: The PD200X streaming microphone is equipped with USB and XLR dual interfaces. Everything is in your control, Plug-and-play when you are recording with a desktop or a laptop by plugging the 8.2ft USB cable directly. XLR analog output is for connecting to all professional interfaces, mixers, or portable PA systems when podcasting in your studio. Ideal for a wide range of applications, including podcasting, voiceovers, gaming, YouTube videos, music recording, and more",
+        "Easy to Use: The podcast microphone has a 2-in-1 smart knob, to adjust the mic gain and headphone volume. And one-click mute key with an LED indicator helps you to instantly mute the mic. The microphone is equipped with a 3.5mm headphone jack, which enables full recording and monitoring at the same time as desired by recording professionals. MAONO PD200XS podcast microphone kit equips a sturdy and adjustable microphone boom arm, allowing you to position it at the perfect angle for optimal sound capture",
+        "Premium-Grade Accessories: The PD200X dynamic microphone is crafted with high-quality materials, higher standard microphone materials, and craftsmanship to protect the microphone's internal structure ensuring durability and exceptional performance. Making it an ideal choice for professional recording, podcasting, and studio use. What's in The Box: Dynamic Microphone*1, Shock Mount*1, 2.5m USB-C to USB-A/C Cable*1, 5/8'' to 3/8'' Adapter*1, microphone boom arm*1, User Manual*1 (NOTE: XLR CABLE NOT INCLUDED)"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CN493YHF?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$71.99",
+      "currency": "USD"
+    },
+    "B0G4VH17L9": {
+      "title": "BNO055 9-DOF Breakout Sensor",
+      "image": "https://m.media-amazon.com/images/I/51bzrpardpL._SL500_.jpg",
+      "features": [
+        "BNO055 9-DOF Breakout sensor"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0G4VH17L9?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$32.00",
+      "currency": "USD"
+    },
+    "B084DSDDLT": {
+      "title": "NVIDIA Jetson Nano Developer Kit (945-13450-0000-100)",
+      "image": "https://m.media-amazon.com/images/I/31LLw3RsL7L._SL500_.jpg",
+      "features": [
+        "The NVIDIA Jetson Nano Developer Kit delivers the compute performance to run modern AI workloads at unprecedented size, power, and cost. Developers, learners, and makers can now run AI frameworks and models for applications like image classification, object detection, segmentation, and speech processing.",
+        "The developer kit can be powered by micro-USB and comes with extensive I/Os, ranging from GPIO to CSI. This makes it simple for developers to connect a diverse set of new sensors to enable a variety of AI applications. And it is incredibly power-efficient, consuming as little as 5 watts.",
+        "Jetson Nano is also supported by NVIDIA JetPack, which includes a board support package (BSP), Linux OS, NVIDIA CUDA, cuDNN, and TensorRT software libraries for deep learning, computer vision, GPU computing, multimedia processing, and much more. The software is even available using an easy-to-flash SD card image, making it fast and easy to get started.",
+        "The same JetPack SDK is used across the entire NVIDIA Jetson family of products and is fully compatible with NVIDIA’s world-leading AI platform for training and deploying AI software. This proven software stack reduces complexity and overall effort for developers."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B084DSDDLT?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$383.99",
+      "currency": "USD"
+    },
+    "B0BZJTQ5YP": {
+      "title": "NVIDIA Jetson Orin Nano Super Developer Kit",
+      "image": "https://m.media-amazon.com/images/I/21OqzbXMrzL._SL500_.jpg",
+      "features": [
+        "The NVIDIA Jetson Orin Nano Developer Kit sets a new standard for creating entry-level AI-powered robots, smart drones, and intelligent cameras,and simplifies getting started with the Jetson Orin Nano series. Compact design, lots of connectors and up to 40 TOPS of AI performance make this developer kit perfect for transforming your visionary concepts into reality. With up to 80X the performance of Jetson Nano, it can run all modern AI models, including transformer and advanced robotics models.",
+        "The developer kit comprises a Jetson Orin Nano 8GB module and a reference carrier board that can accommodate all Orin Nano and Orin NX modules, providing an ideal platform for prototyping your next-gen edge AI product. The Jetson Orin Nano 8GB module features an Ampere GPU and a 6-core ARM CPU, enabling multiple concurrent AI application pipelines and high-performance inference. The carrier board boasts a wide array of connectors, including two MIPI CSI connectors supporting camera modules with up to 4-lanes, allowing higher resolution and frame rate than before.",
+        "Jetson runs the NVIDIA AI software stack, with available use-case-specific application frameworks, including NVIDIA Isaac for robotics, DeepStream for vision AI, and Riva for conversational AI. You can save significant time with NVIDIA Omniverse Replicator for synthetic data generation (SDG), and with NVIDIA TAO Toolkit for fine-tuning pretrained AI models from the NGC catalog.",
+        "Ecosystem partners offer additional AI and system software, developer tools, and custom software development. They can also help with cameras and other sensors, as well as carrier boards and design services for your product.",
+        "Jetson Orin modules are unmatched in performance and efficiency for robots and other autonomous machines, and give you the flexibility to create the next generation of AI solutions with the latest NVIDIA technology. Together with the world-standard NVIDIA AI software stack and an ecosystem of services and products, your road to market has never been faster."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0BZJTQ5YP?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$434.97",
+      "currency": "USD"
+    },
+    "0387983740": {
+      "title": "The Physics of Musical Instruments",
+      "image": "https://m.media-amazon.com/images/I/41qUGYVuSvL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0387983740?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$99.44",
+      "currency": "USD"
+    },
+    "B0CFQSH4DN": {
+      "title": "Focusound 24 Packs Acoustic Foam Panels Pyramid 2\" X 12\" X 12\", Soundproofing Foam Noise Cancelling Foam with 120 PCS Double-Side adhesive",
+      "image": "https://m.media-amazon.com/images/I/41cEi99sutL._SL500_.jpg",
+      "features": [
+        "Without Damaging Your Wall: Our acoustic foam panles are equipped with 120 PCS double side adhesive tape which can be easily washed. It is easily removable and will not damage your walls or surfaces, tear off without leaving any traces.",
+        "Noise Reduction: Overall Noise Reduction Coefficient (NRC): 0.65. The wedge surface of -6 grooves increases the contact area with sound waves, and the sound absorption effect is better than other shapes of surfaces. Will help reduce sounds and allow you to practice any musical instrument, watch movies, play games or listen to music without disturbing anyone.",
+        "High Density 25Kg/ : Our acoustic foam are made from a non-toxic, fireproof and high-density polyurethane material. Passed the environmental protection, is a safe and reliable product. Note: Our acoustic foam is compression transportation, has to be placed in a ventilated place waiting for 2 days to return to normal size.",
+        "Wide Application: For professional acoustic control, sound absorption and reverberation reduction. Suitable for your studio or office, home/recording studios, vocal booths, control rooms, home theaters, professional movie theaters, concert halls, and more. Ideal for both home studio and professional use.",
+        "Easy to Install: Our acoustic foam panle can be used as acoustic cover for walls, ceilings and doors. One wedge needs 5 pieces of tape. Each tile is 1 square foot of 2 inch thick acoustic wedge."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CFQSH4DN?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$39.98",
+      "currency": "USD"
+    },
+    "B0832DPMYR": {
+      "title": "Focusound 50 Pack Acoustic Foam Panels 1\" x 12\" x 12\" Sound Proof Foam Panles Soundproofing Noise Cancelling Wedge Panels for Home Office Recoding Studio with 300PCS Double-Side Adhesive",
+      "image": "https://m.media-amazon.com/images/I/41lhVXT5DdL._SL500_.jpg",
+      "features": [
+        "Soundproofing - Acoustic foam panels triangular grooves structure for better noise absorption, helps to reduce and absorb unwanted echoes, waves, reverb and flutter echoes for better recording effect.",
+        "Upgraded Accessory - Additional 300pcs strong double-side adhesive tape is included for free, which helps you finish the installation better and protect your walls from damage. Can be removed easily.",
+        "Quick Recovery - If this high-density foam doesn't return to shape, please soak it in water for a few minutes and dry in the air to recover the shape in 24 to 48 hours.",
+        "Wide Applications - Suitably used not only for spot treating sound on walls in your studio and office but also for use in recording studios, vocal booths, control rooms.",
+        "Professional Safe - With strong fire resistance and good air permeability, the acoustic foam panels can stop burning to prevent hidden fire hazards. Also, non-toxic materials won't do harm to your body while everyday use."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0832DPMYR?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$35.99",
+      "currency": "USD"
+    },
+    "B0GQ9TK7MN": {
+      "title": "Focusound Acoustic Panels 24 Pack 2\"x12\"x12\" with 120 PCS Double-Side Adhesive - Sound Proof Pyramid Foam for Walls, Home Studio Noise Absorption & Echo Control Kit",
+      "image": "https://m.media-amazon.com/images/I/41aFhdH0phL._SL500_.jpg",
+      "features": [
+        "STRESS-FREE INSTALL: NO HOLES, NO RESIDUE! - Install & Remove Stress-Free​​ with 120 reusable adhesive squares – cleans off instantly without sticky residue. Perfect for rented apartments, studios, or painted walls where drilling isn’t allowed. ​​Say goodbye to security deposits!",
+        "PYRAMID GROOVES ABSORB 30% DEEPER! - Our ​​6-edge pyramid grooves​​ absorb sound waves 30% deeper than flat panels – critical for eliminating ​​voice echoes in podcasts​​, guitar amps buzzing, or game streaming reverb. ​​Record crisp vocals or enjoy movie nights without distracting “tin can” acoustics!",
+        "HIGH DENSITY 25KG/M³ - Our acoustic foam are made from a non-toxic, fireproof and high-density polyurethane material. Passed the environmental protection, is a safe and reliable product. Note: Our acoustic foam is compression transportation, has to be placed in a ventilated place waiting for 2 days to return to normal size.",
+        "TOP - GRADE ACOUSTIC FOAM PANELS - Made of premium acoustic foam, they effectively absorb sound. The foam is durable, long - lasting, and has built - in fire resistance, meeting industry fire safety standards.NRC (Noise Reduction Coefficient) rating of approximately 0.80 - 0.90.",
+        "WIDE APPLICATION - For professional acoustic control, sound absorption and reverberation reduction. Suitable for your studio or office, home/recording studios, vocal booths, control rooms, home theaters, professional movie theaters, concert halls, and more. Ideal for both home studio and professional use."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0GQ9TK7MN?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$27.98",
+      "currency": "USD"
+    },
+    "B0D7YDWYL2": {
+      "title": "Dayton Audio EMM-6 Precision Omnidirectional Electret Condenser Microphone for Room Acoustic Analyzers and Audio Measurement Systems, Calibration Data File with Response Graph Included",
+      "image": "https://m.media-amazon.com/images/I/21uRwcw-oUL._SL500_.jpg",
+      "features": [
+        "Unparalleled precision: Experience the ultimate in accuracy with the Dayton Audio EMM-6 electret microphone, designed to deliver consistent, high-quality measurements for a wide range of applications, making it an indispensable tool for audiophiles.",
+        "Premium measurement performance: The EMM-6 boasts superior sound measurement capabilities, ensuring you can fine-tune your home theater or studio with confidence. Its precise frequency response measurements and room acoustics analysis elevate your audio experience to new heights.",
+        "Capture sound from every angle: Featuring an omnidirectional polar pattern, the EMM-6 effortlessly records sound from all directions, making it the perfect choice for diverse audio applications such as sound reinforcement, room calibration, and acoustic analysis.",
+        "Calibrated for excellence: Each EMM-6 calibration microphone is individually calibrated, guaranteeing remarkable accuracy across the entire frequency range. This level of precision is crucial for optimizing your audio system and creating the perfect listening environment.",
+        "Backed By Our Famous Risk-Free Purchase - Not only does your Dayton Audio EMM-6 come with an exclusive 5-year warranty, but you’ll get our comprehensive spec guide",
+        "All-in-one solution: The comprehensive Dayton Audio EMM-6 package includes a detailed calibration file, foam windscreen, 1/4\"-20 threaded microphone stand adapter, and a robust carrying case for secure transportation and storage. This complete solution blends accuracy, quality, and convenience, ensuring you have everything you need for exceptional audio measurements."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0D7YDWYL2?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$59.98",
+      "currency": "USD"
+    },
+    "B00ADR2E68": {
+      "title": "Dayton Audio UMM-6 USB Measurement Microphone",
+      "image": "https://m.media-amazon.com/images/I/31tXt04SpsL._SL500_.jpg",
+      "features": [
+        "Precision condenser microphone for critical measurement and recording applications",
+        "Connects to your PC or Mac via USB port",
+        "True omnidirectional pattern with calibrated flat frequency response",
+        "Rugged construction with high-quality components",
+        "Compact design; includes sturdy carrying case with foam insert"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B00ADR2E68?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$118.98",
+      "currency": "USD"
+    },
+    "B0CMV914QV": {
+      "title": "Dayton Audio iMM-6C Calibrated Measurement USB-C Microphone for iPhone, iPad Tablet and Android,Black",
+      "image": "https://m.media-amazon.com/images/I/318Fvq7qCZL._SL500_.jpg",
+      "features": [
+        "Precision condenser microphone for critical measurement",
+        "For use with any smartphone or tablet with a USB-C port",
+        "True omnidirectional pattern with calibrated flat frequency response",
+        "Headphone/Line Out pass-through jack for test signals or listening",
+        "Kickstand feature elevates and angles device and microphone capsule",
+        "Rugged construction with high-quality components"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CMV914QV?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$49.98",
+      "currency": "USD"
+    },
+    "B09Y94MGRZ": {
+      "title": "Jetson Nano Developer Kit 16G eMMC onboard for AI Machine Learning (4GB RAM 16GB eMMC)",
+      "image": "https://m.media-amazon.com/images/I/41NRej044wL._SL500_.jpg",
+      "features": [
+        "[Note] Jetson Nano 4GB SUB Kit Nano is a highly consistent developer kit based on official Jetson nano 4GB core module, the only difference is that WayPonDEV Jetson Nano 4GB SUB Kit Nano comes with 16G-eMMC memory，which can boot the board without a TF card. And it also has a TF card slot, you can use USB3.0 U disk to expand the memory. This is the \"Jetson Nano 4GB SUB Kit Nano\", this is not the \"Jetson Orin Nano Super Developer Kit\" !",
+        "The WayPonDev Jetson Nano SUB Kit Nano delivers the compute performance to run modern AI workloads at unprecedented size, power, and cost. Developers, learners, and makers can now run AI frameworks and models for applications like image classification, object detection, segmentation, and speech processing.",
+        "The developer kit can be powered by micro-USB and comes with extensive I/Os, ranging from GPIO to CSI. This makes it simple for developers to connect a diverse set of new sensors to enable a variety of AI applications. It’s incredibly power-efficient, consuming as little as 5 watts.",
+        "Jetson Nano Sub Kit Nano is also supported by JetPack, which includes a board support package (BSP), Linux OS, N-VI-DI-A CUDA, cuDNN, and TensorRT software libraries for deep learning, computer vision, GPU computing, multimedia processing, and much more.The software is even available using an easy-to-flash SD card image, making it fast and easy to get started.",
+        "The same JetPack SDK is used across the entire Jetson family of products and is fully compatible with world-leading AI platform for training and deploying AI software. This proven software stack reduces complexity and overall effort for developers.",
+        "Out of the box: The factory eMMC has built-in jetpack466 dtb; it is supported right out of the box. Please note: The current Jetson Nano 4GB Sub kit nano Developer Kit latest dtb is jetpack466, which is also the final version of the dtb it will work with. It does not support the latest dtb SDK from N-vi-dia official.",
+        "Do Not Upgrade: Upgrading will cause some jetpack versions to be inconsistent, and the boot information on the eMMC may not match that on the sd card, resulting in errors or failure to boot the device. SUB Kit Nano also supports jetpack461, jetpack451, jetpack4.4, jetpack4.6 sdcard dtb.",
+        "In the Box: 1 x Jetson Nano Module with Cooling Fan and Reference Carrier Board (SUB Kit Nano). You can click ''WayPonDEV'' and ask a question."
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B09Y94MGRZ?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$259.99",
+      "currency": "USD"
+    },
+    "0471358320": {
+      "title": "Fundamentals of Photonics",
+      "image": "https://m.media-amazon.com/images/I/51uNS6pm5rL._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0471358320?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$193.79",
+      "currency": "USD"
+    },
+    "0521642221": {
+      "title": "Principles of Optics: Electromagnetic Theory of Propagation, Interference and Diffraction of Light",
+      "image": "https://m.media-amazon.com/images/I/41mTVCqppCL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0521642221?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$59.75",
+      "currency": "USD"
+    },
+    "0521598869": {
+      "title": "Turbulent Flows",
+      "image": "https://m.media-amazon.com/images/I/412iW5+TjFL._SL500_.jpg",
+      "features": [
+        "Used Book in Good Condition"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/0521598869?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$73.94",
+      "currency": "USD"
+    },
+    "0073398276": {
+      "title": "Fluid Mechanics",
+      "image": "https://m.media-amazon.com/images/I/51iG0ShGd3L._SL500_.jpg",
+      "features": [],
+      "detailPageURL": "https://www.amazon.com/dp/0073398276?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$85.18",
       "currency": "USD"
     }
   }
