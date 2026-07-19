@@ -414,6 +414,33 @@ Detailed specifications of mathematical and physical simulations available insid
 - **Description:** Execute preemptive RMS/EDF scheduling with mutex priority inheritance and nested ISRs. Gantt timeline paints task states, blocking and jitter highlighted, and dissonant audio tension builds with deadline misses and lock-ups.
 
 
+### Voice Synthesis DSP Sandbox
+- **Slug / Route:** /playground/elevenlabs-dsp-sandbox
+- **Tagline:** Text-to-speech through a live Web Audio DSP rack
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Synthesize a voice — a built-in formant demo voice, your microphone, or your own ElevenLabs API key — and push it through a real Web Audio DSP chain: bandpass filtering, feedback echo, RT60-controlled convolution reverb, and pitch resampling, with a live waveform + spectrogram analyzer and gated clean-WAV export.
+
+
+### Client vs Serverless GPU Benchmarker
+- **Slug / Route:** /playground/modal-gpu-benchmarker
+- **Tagline:** Your GPU vs a cloud GPU, measured — never estimated
+- **Pillar Hint:** on-device-ai
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Run real WebGPU compute workloads shaped like Whisper-tiny inference on your own device, then race them against a serverless GPU endpoint you deploy on Modal with the provided script. Every number on the chart is measured on your hardware or your endpoint — nothing is fabricated.
+
+
+### Edge DB Sync Lab
+- **Slug / Route:** /playground/fly-edge-db-lab
+- **Tagline:** Place replicas on a world map, watch reads beat writes
+- **Pillar Hint:** privacy-arch
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** A multi-region SQLite/LiteFS replication simulator: place a primary and read replicas at real Fly.io regions on a world map, click anywhere to fire client transactions, and watch read queries return from the nearest replica while writes forward to the primary — with speed-of-light-in-fiber latency math disclosed in full.
+
+
 ### RF & Microwave Circuit Bench
 - **Slug / Route:** /playground/rf-microwave-bench
 - **Tagline:** S-parameters live on a Smith Chart, hum to pure tone at 50Ω
@@ -427,52 +454,51 @@ Detailed specifications of mathematical and physical simulations available insid
 
 ## Trending Technical Signals — Latest Scan
 
-Daily scored technical scan items (Date: 2026-07-18):
+Daily scored technical scan items (Date: 2026-07-19):
 
-### 1. Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)
-- **Score:** 18
-- **URL:** https://github.com/sushilk1991/velora
+### 1. wispr – Privacy-first voice dictation for macOS — powered by on-device Whisper AI. No cloud, no tracking.
+- **Score:** 33
+- **URL:** https://github.com/sebsto/wispr
 - **Domain:** github.com
-- **Primary Source:** hackernews
+- **Primary Source:** github
+- **Tags:** on-device-ai, ios-craft, privacy-arch
+- **Corroborated Sources:** bluesky, github
+
+
+### 2. EnviousWispr – Free, sub-second on-device AI dictation for macOS. Dual engines (Whisper + Parakeet) on Apple Silicon. Optional AI polis
+- **Score:** 24
+- **URL:** https://github.com/saurabhav88/EnviousWispr
+- **Domain:** github.com
+- **Primary Source:** github
+- **Tags:** on-device-ai, metal-ane
+- **Corroborated Sources:** github
+
+
+### 3. imp – From-scratch C++/CUDA inference engine for the NVIDIA RTX 5090 (sm_120a) — the best single-GPU backend for agentic AI: t
+- **Score:** 24
+- **URL:** https://github.com/kekzl/imp
+- **Domain:** github.com
+- **Primary Source:** github
+- **Tags:** on-device-ai, local-llm
+- **Corroborated Sources:** github
+
+
+### 4. kernel-ai-assistant – Jandal AI — Local-first Android AI assistant with on-device LLM inference, semantic memory, and extensible skill framewo
+- **Score:** 24
+- **URL:** https://github.com/NickMonrad/kernel-ai-assistant
+- **Domain:** github.com
+- **Primary Source:** github
 - **Tags:** on-device-ai, local-llm, privacy-arch
-- **Corroborated Sources:** hackernews
+- **Corroborated Sources:** github
 
 
-### 2. "The SwiftUI Way" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: 
-nilcoalescing.com/blog/TheSwif..
-- **Score:** 17
-- **URL:** https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f
-- **Domain:** nilcoalescing.com
-- **Primary Source:** bluesky
-- **Tags:** ios-craft
-- **Corroborated Sources:** bluesky
-
-
-### 3. Prompt submitted to cloud even when using local LLM by default
-- **Score:** 12
-- **URL:** https://github.com/anomalyco/opencode/issues/15854
+### 5. ETOS-LLM-Studio – A native LLM client for iOS & Apple Watch. Run local GGUF models offline via llama.cpp, or connect to OpenAI/Claude/Gemi
+- **Score:** 24
+- **URL:** https://github.com/Eric-Terminal/ETOS-LLM-Studio
 - **Domain:** github.com
-- **Primary Source:** hackernews
-- **Tags:** local-llm
-- **Corroborated Sources:** hackernews
-
-
-### 4. A sandbox for running real jailbreak techniques against local LLMs
-- **Score:** 12
-- **URL:** https://github.com/joshfischer1108/jailbreak-lab
-- **Domain:** github.com
-- **Primary Source:** hackernews
-- **Tags:** local-llm
-- **Corroborated Sources:** hackernews
-
-
-### 5. Experiments with On-device AI — What building on Gemini Nano actually teaches you
-- **Score:** 12
-- **URL:** https://dev.to/mohanvenkatakrishnan/experiments-with-on-device-ai-what-building-on-gemini-nano-actually-teaches-you-5deo
-- **Domain:** dev.to
-- **Primary Source:** devto
-- **Tags:** on-device-ai
-- **Corroborated Sources:** devto
+- **Primary Source:** github
+- **Tags:** local-llm, ios-craft
+- **Corroborated Sources:** github
 
 
 ---

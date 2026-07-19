@@ -87,6 +87,9 @@ function badgeClass(m: string, original?: boolean): string {
                   width="480"
                   height="360"
                   loading="lazy"
+                  decoding="async"
+                  fetchpriority="low"
+                  referrerpolicy="no-referrer"
                   class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
                 />
               ) : (
@@ -117,7 +120,7 @@ function badgeClass(m: string, original?: boolean): string {
         ))}
       </div>
       <div class="mt-6 flex flex-wrap items-center gap-3 text-[0.78rem] text-muted-text">
-        <span>More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></span>
+        <span>More gear: <a href="/resources#gear" class="text-brand-anchor underline underline-offset-2 hover:text-primary-text">full Gear list →</a></span>
         {overflow > 0 && (
           <span class="font-mono text-[0.7rem]">+{overflow} more items curated — see /resources for complete BOM.</span>
         )}
@@ -160,4 +163,3 @@ function badgeClass(m: string, original?: boolean): string {
   bindGear();
   document.addEventListener('astro:page-load', bindGear);
 </script>
-

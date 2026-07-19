@@ -112,15 +112,19 @@ proxy:
           <div class="rounded-[16px] border border-border bg-card-bg p-4">
             <h3 class="font-semibold text-[0.95rem]">Topology & traffic</h3>
             <p class="mt-1 text-[0.72rem] leading-[1.5] text-muted-text">Click a region marker to apply the selected action; click open ocean/land to fire a client transaction from that point.</p>
-            <div class="mt-3 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Click action">
-              <button data-act="primary" class="act-btn is-active">👑 Set primary</button>
-              <button data-act="replica" class="act-btn">± Toggle replica</button>
-              <button data-act="read" class="act-btn">⇢ Fire read</button>
-              <button data-act="write" class="act-btn">✎ Fire write</button>
+            <div class="mt-3 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Map action">
+              <button type="button" role="radio" aria-checked="true" data-act="primary" class="act-btn is-active">👑 Set primary</button>
+              <button type="button" role="radio" aria-checked="false" data-act="replica" class="act-btn">± Toggle replica</button>
+              <button type="button" role="radio" aria-checked="false" data-act="read" class="act-btn">⇢ Fire read</button>
+              <button type="button" role="radio" aria-checked="false" data-act="write" class="act-btn">✎ Fire write</button>
+            </div>
+            <div class="mt-2 grid grid-cols-[1fr_auto] gap-1.5">
+              <select id="region-target" aria-label="Region target" class="min-w-0 rounded-[10px] border border-border bg-canvas px-2.5 py-2 font-mono text-[0.7rem]"></select>
+              <button id="btn-apply-region" type="button" class="act-btn">Apply at region</button>
             </div>
             <div class="mt-3 flex flex-wrap gap-2">
-              <button id="btn-burst" class="pill-btn">Burst: 12 mixed clients</button>
-              <button id="btn-reset" class="pill-btn">Reset topology</button>
+              <button id="btn-burst" type="button" class="pill-btn">Burst: 12 mixed clients</button>
+              <button id="btn-reset" type="button" class="pill-btn">Reset topology</button>
             </div>
             <label class="control-label mt-4"><span>Write fraction in burst</span><output id="out-wf">25%</output><input id="sl-wf" type="range" min="0" max="100" step="5" value="25" /></label>
             <label class="control-label"><span>Animation speed</span><output id="out-speed">40×</output><input id="sl-speed" type="range" min="5" max="120" step="5" value="40" /></label>
@@ -140,8 +144,11 @@ proxy:
 
           <div class="min-w-0">
             <div class="rounded-[16px] border border-border bg-card-bg p-4">
-              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">World map — real Fly.io region locations · Natural Earth geometry, self-hosted</p>
-              <canvas id="map-canvas" width="1040" height="520" class="mt-3 block w-full cursor-crosshair rounded-[10px] border border-border bg-canvas"></canvas>
+              <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">
+                <p>World map — real Fly.io region locations · Natural Earth geometry, self-hosted</p>
+                <span id="map-data-state" aria-live="polite" class="text-[0.58rem]">loading land…</span>
+              </div>
+              <canvas id="map-canvas" width="1040" height="520" role="img" aria-label="Interactive Fly region map. Use the region selector for a keyboard-accessible alternative." class="mt-3 block h-[320px] w-full cursor-crosshair touch-manipulation rounded-[10px] border border-border bg-canvas sm:h-auto">Interactive Fly region topology map. Use the region selector and Apply at region button above for keyboard access.</canvas>
               <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <p class="font-mono text-[0.62rem] text-muted-text"><span class="text-amber-500">●</span> primary · <span class="text-emerald-500">●</span> replica · <span class="opacity-50">●</span> unused region · <span class="text-sky-400">●</span> read path · <span class="text-rose-400">●</span> write forward</p>
                 <SimSponsorChip />
@@ -149,7 +156,7 @@ proxy:
             </div>
             <div class="mt-4 rounded-[16px] border border-border bg-card-bg p-4">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Read vs write latency — last 40 transactions (model)</p>
-              <canvas id="hist-canvas" width="1040" height="150" class="mt-3 block w-full rounded-[10px] border border-border bg-canvas"></canvas>
+              <canvas id="hist-canvas" width="1040" height="150" role="img" aria-label="Latency bars for the last 40 modeled transactions" class="mt-3 block h-[160px] w-full rounded-[10px] border border-border bg-canvas sm:h-auto">Latency history for the last 40 modeled transactions.</canvas>
             </div>
           </div>
         </div>
@@ -218,7 +225,7 @@ proxy:
             <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
           </div>
           <GearCarousel gear={gear} />
-          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor underline underline-offset-2 hover:text-primary-text">the full Gear list →</a></p>
         </div>
       </section>
     )}
@@ -268,15 +275,15 @@ proxy:
     <section class="border-b border-border" aria-labelledby="code-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
         <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Production pattern — write forwarding in ~10 lines</h2>
-        <p class="mt-3 max-w-2xl text-[0.92rem] text-muted-text">The middleware that turns the simulation into a running system, plus a replica-safe <code>litefs.yml</code>. <a href={fly.url} target="_blank" rel={fly.rel} class="text-brand-anchor">Fly.io ↗</a> runs LiteFS as a first-class pattern; the same code works anywhere FUSE does.</p>
+        <p class="mt-3 max-w-2xl text-[0.92rem] text-muted-text">The middleware that turns the simulation into a running system, plus a replica-safe <code>litefs.yml</code>. <a href={fly.url} target="_blank" rel={fly.rel} class="text-brand-anchor underline underline-offset-2">Fly.io ↗</a> runs LiteFS as a first-class pattern; the same code works anywhere FUSE does.</p>
         <div class="mt-5 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
-          <Code code={middlewareTS} lang="ts" theme="github-dark" />
+          <Code code={middlewareTS} lang="ts" theme="github-dark-high-contrast" />
         </div>
       </div>
     </section>
 
     <!-- Aha toast -->
-    <div id="fl-aha-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+    <div id="fl-aha-toast" class="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-4 right-4 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] sm:bottom-6 sm:left-auto sm:right-6">
       <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Edge advantage · Aha moment</p>
       <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text" id="fl-aha-text">Local reads just beat the write path 4× in the model.</p>
       <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">That gap is the whole LiteFS pitch — replicate reads to the edge, keep one writer.</p>
@@ -323,6 +330,7 @@ proxy:
   .act-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 16%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
   .control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
   .control-label input[type=range]{grid-column:1/-1;accent-color:var(--mp-cta)}
+  @media (max-width:639px){.pill-btn,.act-btn{min-height:44px}}
 </style>
 
 <script>
@@ -335,7 +343,12 @@ function initEdgeLab(){
   const histC=document.getElementById('hist-canvas');
   const mCtx=mapC.getContext('2d'), hCtx=histC.getContext('2d');
   const dpr=Math.min(devicePixelRatio||1,2);
-  [mapC,histC].forEach(c=>{const W=c.width,H=c.height;c.width=W*dpr;c.height=H*dpr;c.style.width='100%';c.getContext('2d').scale(dpr,dpr);c._w=W;c._h=H;});
+  [mapC,histC].forEach(c=>{
+    const rect=c.getBoundingClientRect();
+    const W=Math.max(280,Math.round(rect.width||c.width)), H=Math.max(120,Math.round(rect.height||c.height));
+    c.width=W*dpr; c.height=H*dpr; c.style.width='100%';
+    c.getContext('2d').scale(dpr,dpr); c._w=W; c._h=H;
+  });
 
   const $=id=>document.getElementById(id);
   const SIM='fly-edge-db-lab';
@@ -364,6 +377,10 @@ function initEdgeLab(){
   ];
   const state={ primary:'iad', replicas:new Set(['ams','sin','syd']), action:'primary',
     log:[], anims:[], count:0 };
+  const regionTarget=$('region-target');
+  for(const r of REGIONS){
+    const option=document.createElement('option'); option.value=r.id; option.textContent=`${r.id} · ${r.name}`; regionTarget.appendChild(option);
+  }
 
   // ---- latency model (disclosed in Math section) ----
   const FIBER_KMS=299792.458/1.468; // km/s in silica
@@ -385,8 +402,13 @@ function initEdgeLab(){
   // ---- map ----
   const projection=d3.geoNaturalEarth1().fitSize([mapC._w,mapC._h],{type:'Sphere'});
   const path=d3.geoPath(projection,mCtx);
+  const hitCanvas=document.createElement('canvas'); hitCanvas.width=mapC._w; hitCanvas.height=mapC._h;
+  const hitCtx=hitCanvas.getContext('2d'), hitPath=d3.geoPath(projection,hitCtx);
+  hitCtx.beginPath(); hitPath({type:'Sphere'});
   let land=null;
-  fetch('/data/world-land-110m.json').then(r=>r.json()).then(j=>{ land=j; }).catch(()=>{});
+  fetch('/data/world-land-110m.json').then(r=>{if(!r.ok)throw new Error(String(r.status));return r.json();}).then(j=>{
+    land=j; $('map-data-state').textContent='land ready'; drawMap();
+  }).catch(()=>{ $('map-data-state').textContent='land unavailable · regions still work'; drawMap(); });
 
   function drawMap(){
     const W=mapC._w,H=mapC._h;
@@ -413,6 +435,7 @@ function initEdgeLab(){
     const now=performance.now();
     state.anims=state.anims.filter(a=>now<a.t1);
     for(const a of state.anims){
+      if(now<a.t0) continue;
       const f=Math.min(1,(now-a.t0)/(a.t1-a.t0));
       const interp=d3.geoInterpolate(a.from,a.to);
       const seg=Math.floor(f*40);
@@ -460,13 +483,22 @@ function initEdgeLab(){
   }
 
   let raf=0;
-  function loop(){ raf=requestAnimationFrame(loop); drawMap(); }
-  loop();
+  function loop(){
+    raf=0; drawMap();
+    if(state.anims.length) raf=requestAnimationFrame(loop);
+  }
+  function scheduleDraw(){ if(!raf) raf=requestAnimationFrame(loop); }
+  drawMap();
+  const themeObserver=new MutationObserver(()=>{ drawMap(); drawHist(); });
+  themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
   // ---- interactions ----
   document.querySelectorAll('.act-btn').forEach(b=>b.addEventListener('click',()=>{
+    if(!b.dataset.act) return;
     document.querySelectorAll('.act-btn').forEach(x=>x.classList.remove('is-active'));
+    document.querySelectorAll('.act-btn[data-act]').forEach(x=>x.setAttribute('aria-checked','false'));
     b.classList.add('is-active'); state.action=b.dataset.act;
+    b.setAttribute('aria-checked','true');
   }));
 
   function updReadouts(){
@@ -494,9 +526,10 @@ function initEdgeLab(){
 
   function speed(){ return parseInt($('sl-speed').value,10); }
   function animate(from,to,ms,color,delay){
-    const dur=Math.max(180, ms/1000*1000*speed()/40*8);
+    const dur=Math.max(180, ms*8*(40/speed()));
     const t0=performance.now()+(delay||0);
     state.anims.push({from:[from.lon,from.lat],to:[to.lon,to.lat],t0,t1:t0+dur,color});
+    scheduleDraw();
     return dur;
   }
 
@@ -521,6 +554,22 @@ function initEdgeLab(){
     updReadouts(); drawHist(); maybeAha(tx);
   }
 
+  function applyAtRegion(hit){
+    if(state.action==='primary'){
+      state.replicas.delete(hit.id); state.primary=hit.id; updReadouts(); drawMap(); return;
+    }
+    if(state.action==='replica'){
+      if(hit.id!==state.primary) state.replicas.has(hit.id)?state.replicas.delete(hit.id):state.replicas.add(hit.id);
+      updReadouts(); drawMap(); return;
+    }
+    fireTx(hit,state.action==='write'?'write':'read');
+  }
+
+  $('btn-apply-region').addEventListener('click',()=>{
+    const hit=REGIONS.find(r=>r.id===regionTarget.value);
+    if(hit) applyAtRegion(hit);
+  });
+
   mapC.addEventListener('click',e=>{
     const rect=mapC.getBoundingClientRect();
     const x=(e.clientX-rect.left)*(mapC._w/rect.width), y=(e.clientY-rect.top)*(mapC._h/rect.height);
@@ -531,13 +580,10 @@ function initEdgeLab(){
       const d=Math.hypot(p[0]-x,p[1]-y);
       if(d<14 && d<hd){ hd=d; hit=r; }
     }
-    if(hit && (state.action==='primary'||state.action==='replica')){
-      if(state.action==='primary'){ state.replicas.delete(hit.id); state.primary=hit.id; }
-      else if(hit.id!==state.primary){ state.replicas.has(hit.id)? state.replicas.delete(hit.id) : state.replicas.add(hit.id); }
-      updReadouts(); return;
-    }
+    if(hit){ applyAtRegion(hit); return; }
+    if(!hitCtx.isPointInPath(x,y)) return;
     const ll=projection.invert? projection.invert([x,y]) : null;
-    if(!ll || !isFinite(ll[0])) return;
+    if(!ll || !isFinite(ll[0]) || !isFinite(ll[1])) return;
     const pt={lat:ll[1],lon:ll[0]};
     if(state.action==='read'||state.action==='write'){ fireTx(pt,state.action); }
     else { fireTx(pt,'read'); } // topology modes: empty-map click still demos a read
@@ -545,20 +591,23 @@ function initEdgeLab(){
 
   $('sl-wf').addEventListener('input',()=>$('out-wf').textContent=$('sl-wf').value+'%');
   $('sl-speed').addEventListener('input',()=>$('out-speed').textContent=$('sl-speed').value+'×');
+  const burstTimers=[];
   $('btn-burst').addEventListener('click',()=>{
     const wf=parseInt($('sl-wf').value,10)/100;
     for(let i=0;i<12;i++){
-      setTimeout(()=>{
+      burstTimers.push(setTimeout(()=>{
         const pt={lat:(Math.random()*140-60),lon:(Math.random()*360-180)};
         fireTx(pt, Math.random()<wf?'write':'read');
-      }, i*260);
+      }, i*260));
     }
   });
   $('btn-reset').addEventListener('click',()=>{
+    burstTimers.splice(0).forEach(clearTimeout);
     state.primary='iad'; state.replicas=new Set(['ams','sin','syd']);
     state.log=[]; state.count=0; state.anims=[]; aha.lastWrite=null;
+    $('fl-aha-toast').classList.add('hidden');
     $('ro-read').textContent='—'; $('ro-write').textContent='—';
-    updReadouts(); drawHist();
+    updReadouts(); drawHist(); drawMap();
   });
   updReadouts(); drawHist();
 
@@ -585,7 +634,7 @@ function initEdgeLab(){
     document.addEventListener('astro:page-load',reg);
   }catch{}
 
-  document.addEventListener('astro:before-swap',()=>{ cancelAnimationFrame(raf); },{once:true});
+  document.addEventListener('astro:before-swap',()=>{ cancelAnimationFrame(raf); burstTimers.splice(0).forEach(clearTimeout); themeObserver.disconnect(); },{once:true});
 }
 document.addEventListener('astro:page-load', initEdgeLab);
 initEdgeLab();

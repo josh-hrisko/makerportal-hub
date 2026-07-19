@@ -6,21 +6,14 @@ import SideNav from '../components/SideNav.astro';
 import { footerColumns, primaryNav, socials } from '../data/site-nav';
 import { apps } from '../data/apps';
 import { ClientRouter } from 'astro:transitions';
-import Analytics from '@vercel/analytics/astro';
 import '../styles/global.css';
-// @ts-ignore – fontsource side-effect import has no types
-import '@fontsource-variable/plus-jakarta-sans';
-// @ts-ignore
-import '@fontsource-variable/inter';
-// Resolved, hashed URLs for the primary (latin) subset woff2 files — used below to
-// (a) preload the exact critical font asset (fixes chained-request / LCP path) and
-// (b) re-declare the latin @font-face with font-display:optional instead of the
+// Resolved, hashed URL for the primary (latin) subset woff2 file — used below to
+// preload the exact critical font asset and re-declare the latin @font-face with
+// font-display:optional instead of the
 //     fontsource default `swap`, so a late font swap can never reflow the hero text
 //     and regress CLS (root cause of the 0.667 CLS regression).
 // @ts-ignore – vite `?url` suffix has no types
 import plusJakartaLatinUrl from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
-// @ts-ignore
-import interLatinUrl from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 interface Props {
   title?: string;
@@ -226,12 +219,9 @@ const organizationSchema = {
         }
       })();
     </script>
-    <!-- Self-hosted variable fonts via fontsource - no render-blocking CDN.
-         Preload the primary (latin) subset so the browser fetches it immediately,
-         shortening the critical request chain instead of discovering it only after
-         CSS parses. -->
+    <!-- Self-hosted variable font via fontsource — no render-blocking CDN. Preload
+         the one primary subset so it does not add a chained discovery round trip. -->
     <link rel="preload" as="font" type="font/woff2" href={plusJakartaLatinUrl} crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href={interLatinUrl} crossorigin />
     <style set:html={`
       @font-face {
         font-family: 'Plus Jakarta Sans Variable';
@@ -240,14 +230,6 @@ const organizationSchema = {
         font-weight: 200 800;
         src: url(${plusJakartaLatinUrl}) format('woff2-variations');
         unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-      }
-      @font-face {
-        font-family: 'Inter Variable';
-        font-style: normal;
-        font-display: optional;
-        font-weight: 100 900;
-        src: url(${interLatinUrl}) format('woff2-variations');
-        unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
       }
     `} />
     <SeoMeta title={title} description={description} canonical={canonical} noindex={noindex} type={type} publishedTime={publishedTime} modifiedTime={modifiedTime} />
@@ -259,7 +241,6 @@ const organizationSchema = {
     <!-- Agentic browsing meta -->
     <meta name="ai:publisher" content="MakerPortal – San Francisco" />
     <meta name="ai:content-type" content="technology, iOS development, on-device AI, agentic DSP, transparent hybrid architecture" />
-    <Analytics />
   </head>
   <body class="flex min-h-screen flex-col overflow-x-clip bg-canvas font-sans text-primary-text antialiased selection:bg-primary-cta selection:text-white" data-reading-path={isReadingPath ? 'true' : 'false'}>
     <a href="#main-content" class="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-brand-anchor px-4 py-2.5 font-semibold text-canvas shadow-lg transition-transform duration-300 focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Skip to main content</a>

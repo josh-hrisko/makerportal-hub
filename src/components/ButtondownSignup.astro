@@ -94,7 +94,7 @@ const formAction = hasUsername ? `https://buttondown.com/api/emails/embed-subscr
 
           // Analytics — first-party only
           try {
-            window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'newsletter_subscribe', source, email_domain: email.split('@')[1] } }));
+            window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'newsletter_subscribe', source } }));
           } catch {}
 
           // Store optionally for ExportGate cross-pollination

@@ -42,6 +42,54 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   KitBuilder → Math → Code → ExportGate → FAQ. Analytics: `aha_moment`,
   `aha_cta_click`, `export_download`, `export_gate_unlock`.
 
+## Phase A browser audit (2026-07-19)
+
+- [x] Real Chromium pass on all three pages: zero page/console errors, zero
+  horizontal overflow at 390 px, ExportGate getters return parseable JSON, and
+  all tested `mp:analytics` events land in the local rolling log.
+- [x] Privacy network audit: removed the Vercel Analytics runtime after the
+  browser exposed a request to `va.vercel-scripts.com`. Initial simulator loads
+  now make zero external requests. Lazy merchant product artwork is marked
+  `referrerpolicy="no-referrer"` and is disclosed in `/privacy`; it can still
+  reveal IP/user-agent to the image host when a card approaches the viewport.
+  ExportGate only contacts Buttondown after a separate unchecked newsletter
+  opt-in; analytics payloads omit email/domain, keys, tokens, text, and endpoint
+  URLs.
+- [x] ElevenLabs lab: built-in formant output recorded at nonzero post-DSP RMS;
+  post-DSP ScriptProcessor capture produced a valid stereo RIFF/WAVE with a
+  350 ms 1 kHz watermark tail; spectrogram had live color data in light and
+  dark themes; aha logged once; mic selection disables/reset pitch immediately.
+- [x] GPU lab: WebGPU matmul passed its CPU cross-check on hardware. The
+  no-WebGPU fallback leaves the Modal controls usable, the chart stacks into a
+  legible 305 × 340 px mobile canvas, and zero/negative cold-start deltas can no
+  longer poison the log scale. Corrected Whisper-tiny encoder arithmetic from
+  21 GFLOP to ≈35.1 GFLOP for the stated terms.
+- [x] Modal deploy snippet checked against the current official
+  [`modal.fastapi_endpoint`](https://modal.com/docs/sdk/py/latest/modal.fastapi_endpoint)
+  and [Web Functions](https://modal.com/docs/guide/webhooks) documentation.
+  Ping now POSTs to the same GPU function/container pool as the benchmark;
+  benchmark wall time is no longer mislabeled as network RTT or double-counted
+  in the crossover. A live deploy was intentionally not attempted because it
+  requires the owner's Modal workspace/payment credentials.
+- [x] Fly lab: Natural Earth land reports ready; arcs/read-write flows run;
+  marker and map clicks are separated; off-sphere clicks are ignored; reset
+  cancels in-flight burst timers; animation speed direction is correct; mobile
+  map is 305 × 320 px; region selector provides a keyboard-accessible path.
+- [x] Production Pagefind index returns all three canonical simulator routes.
+  Production-like gzip/cache Lighthouse runs score **98 performance / 100
+  accessibility / 100 best practices / 100 SEO** on all three. LCP is 1.95 s,
+  TBT is 0 ms, CLS is 0–0.00014, transfer is 165–278 KiB, scripts are 12–20
+  KiB, and fonts are 69 KiB. FCP displays at the 1.8 s budget boundary; the raw
+  simulated value varies 1–2 ms over 1800 ms, so this is recorded as measurement
+  resolution rather than silently claimed as an exact numeric pass. All other
+  timing, size, and third-party-count thresholds in `lighthouse-budget.json`
+  pass.
+- [x] Shared accessibility hardening: gear cards now have one full-card target,
+  excluded kit rows keep AA contrast, inline links have non-color affordances,
+  code uses a high-contrast theme, and the ElevenLabs source select has a real
+  label. Removed an unused Inter preload/font bundle; the retained Plus Jakarta
+  subset is self-hosted.
+
 ## Owner actions (blocked on human)
 
 - [ ] **ElevenLabs PartnerStack application** — apply at
@@ -49,6 +97,9 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
   into `ELEVENLABS_PARTNER_URL` in `src/data/affiliate-links.ts`; pages and
   the SimSponsorChip flip to sponsored automatically. Update `/privacy`
   affiliates list in the same PR.
+- [ ] **Buttondown username** — only needed when the owner is ready to collect
+  explicit newsletter opt-ins. Set `PUBLIC_BUTTONDOWN_USERNAME`; clean export
+  remains local and works without it. Do not provide a Buttondown API key.
 - [ ] **Modal DevRel credit pitch** — email devrel/community@modal.com (or
   Slack community) once the benchmarker has ~2–4 weeks of traffic data from
   `mp_analytics_log` (aha/export counts, no PII). Pitch: the page teaches
@@ -61,6 +112,20 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - [ ] Decide whether the ElevenLabs sandbox warrants a field-note blog post
   (SEO: "elevenlabs web audio streaming latency").
 
+### Exact owner inputs still needed
+
+- ElevenLabs: the approved PartnerStack destination URL (not an API key and
+  not a fabricated partner ID).
+- Modal: no referral ID is expected; later, owner workspace credentials are
+  only needed for the owner-run AuraLinter deployment or credit-pitch follow-up.
+- Fly.io: no referral ID is expected; later, owner account contact is only
+  needed to send the grant pitch.
+- Buttondown: the public username only, after the owner wants newsletter
+  collection enabled.
+- No shared ElevenLabs, Modal, Fly.io, Amazon, or other API key is needed for
+  these static pages. Visitor BYO keys/tokens remain in their own localStorage
+  and are sent only to the provider endpoint they explicitly invoke.
+
 ## Follow-ups (agent-executable later)
 
 - [ ] Wire the three sims into any "newest playgrounds" surfaces on the
@@ -68,7 +133,7 @@ fake affiliate IDs, no tracking pixels, telemetry via first-party
 - [ ] Once a real Modal deployment for AuraLinter exists, consider a shared
   demo endpoint with rate limiting (needs a backend secret — currently
   rejected by design; BYO-endpoint only).
-- [ ] Playwright pass over the three sims (canvas + toast + gate flows).
+- [x] Playwright pass over the three sims (canvas + toast + gate flows).
 
 ## Integrity guardrails carried through
 

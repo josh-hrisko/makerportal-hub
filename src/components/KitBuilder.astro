@@ -159,10 +159,11 @@ const ctaUrl = kit.items.find((i) => !i.optional)?.link.url ?? kit.items[0]?.lin
         }
 
         if (lineEl) {
-          lineEl.textContent = included && unit != null ? format(unit * qty) : included ? '—' : '—';
-          lineEl.style.opacity = included ? '1' : '0.4';
+          lineEl.textContent = included && unit != null ? format(unit * qty) : included ? '—' : 'Not included';
         }
-        row.style.opacity = included ? '1' : '0.55';
+        // Keep excluded rows at accessible contrast; the checkbox and line-total copy
+        // communicate state without making the product text illegible.
+        row.dataset.included = included ? '1' : '0';
       }
 
       const totalStr = format(ok ? sum : null);

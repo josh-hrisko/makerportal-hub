@@ -27,7 +27,15 @@ const { gear } = Astro.props;
     <div class="carousel-wrap -mx-5 sm:mx-0">
       <div class="carousel-track" aria-label="Gear picks" role="list">
         {gear.map((item, index) => (
-          <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[220px] flex-col overflow-hidden rounded-[20px] border bg-card-bg sm:w-[250px] carousel-stagger" style={`--stagger-index: ${index}`}>
+          <a
+            href={item.url}
+            target="_blank"
+            rel="sponsored noopener noreferrer"
+            role="listitem"
+            aria-label={`${item.title} — view product listing`}
+            class="snap-card hub-card surface-card group relative flex w-[220px] flex-col overflow-hidden rounded-[20px] border bg-card-bg sm:w-[250px] carousel-stagger"
+            style={`--stagger-index: ${index}`}
+          >
             <div class="relative aspect-square w-full overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-4 sm:p-5 shimmer-placeholder">
               {item.image ? (
                 <img 
@@ -37,6 +45,8 @@ const { gear } = Astro.props;
                   height={250} 
                   loading="lazy" 
                   decoding="async" 
+                  fetchpriority="low"
+                  referrerpolicy="no-referrer"
                   onload="this.parentElement.classList.remove('shimmer-placeholder')" 
                   class="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.03] drop-shadow-[0_8px_16px_rgba(0,0,0,0.08)]" 
                 />
@@ -56,7 +66,7 @@ const { gear } = Astro.props;
             </div>
             <div class="flex flex-1 flex-col p-4">
               <h3 class="line-clamp-2 text-[0.88rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text transition-colors group-hover:text-primary-cta">
-                <a href={item.url} target="_blank" rel="noopener noreferrer sponsored">{item.title}</a>
+                {item.title}
               </h3>
               <p class="mt-2 line-clamp-3 text-[0.76rem] leading-[1.5] text-muted-text/80">{item.note}</p>
               
@@ -78,11 +88,11 @@ const { gear } = Astro.props;
                   {item.price ? (
                     <span class="text-[0.85rem] font-bold tracking-tight text-primary-text">{item.price} <span class="font-mono text-[0.58rem] font-normal text-muted-text">{item.currency}</span></span>
                   ) : <span class="text-[0.7rem] text-muted-text">Amazon</span>}
-                  <a href={item.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-1 rounded-full bg-primary-text px-2.5 py-1 text-[0.68rem] font-semibold text-canvas transition-opacity hover:opacity-90">View ↗</a>
+                  <span class="inline-flex min-h-6 items-center gap-1 rounded-full bg-primary-text px-2.5 py-1 text-[0.68rem] font-semibold text-canvas transition-opacity group-hover:opacity-90">View ↗</span>
                 </div>
               </div>
             </div>
-          </article>
+          </a>
         ))}
       </div>
     </div>

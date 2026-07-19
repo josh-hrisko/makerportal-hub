@@ -118,7 +118,7 @@ export function streamTTS(text: string, apiKey: string) {
         <h2 id="sandbox-title" class="sr-only">Voice synthesis sandbox</h2>
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
           <div class="rounded-[16px] border border-border bg-card-bg p-4">
-            <h3 class="font-semibold text-[0.95rem]">Voice source</h3>
+            <label for="src-mode" class="block font-semibold text-[0.95rem]">Voice source</label>
             <select id="src-mode" class="mt-2 w-full rounded-[10px] border border-border bg-canvas px-3 py-2 font-mono text-[0.75rem]">
               <option value="demo">Demo formant voice (built-in, offline)</option>
               <option value="eleven">ElevenLabs API (your key)</option>
@@ -141,13 +141,13 @@ export function streamTTS(text: string, apiKey: string) {
                 </select>
                 <button id="btn-load-voices" class="pill-btn shrink-0">Load voices</button>
               </div>
-              <p class="text-[0.62rem] leading-[1.45] text-muted-text">Key is stored only in <code>localStorage.mp_elevenlabs_key</code> and sent only to <code>api.elevenlabs.io</code> — never to this site. <a href={eleven.url} target="_blank" rel={eleven.rel} class="text-brand-anchor">Get a key at ElevenLabs ↗</a></p>
+              <p class="text-[0.62rem] leading-[1.45] text-muted-text">Key is stored only in <code>localStorage.mp_elevenlabs_key</code> and sent only to <code>api.elevenlabs.io</code> — never to this site. <a href={eleven.url} target="_blank" rel={eleven.rel} class="text-brand-anchor underline underline-offset-2">Get a key at ElevenLabs ↗</a></p>
             </div>
 
             <div class="mt-3 flex flex-wrap items-center gap-2">
-              <button id="btn-synth" class="rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas hover:opacity-90">Synthesize</button>
-              <button id="btn-play" class="rounded-full border border-border bg-elevated px-4 py-2 text-[0.8rem] font-semibold" disabled>Play</button>
-              <span id="synth-state" class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text/70">idle</span>
+              <button id="btn-synth" class="min-h-11 rounded-full bg-primary-text px-5 py-2 text-[0.85rem] font-bold text-canvas hover:opacity-90">Synthesize</button>
+              <button id="btn-play" class="min-h-11 rounded-full border border-border bg-elevated px-4 py-2 text-[0.8rem] font-semibold" disabled>Play</button>
+              <span id="synth-state" class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">idle</span>
             </div>
 
             <div class="mt-4 border-t border-border pt-3">
@@ -168,21 +168,21 @@ export function streamTTS(text: string, apiKey: string) {
               <div class="flex justify-between"><span>API TTFB (measured)</span><span id="ro-ttfb">—</span></div>
               <div class="flex justify-between"><span>API total (measured)</span><span id="ro-total">—</span></div>
               <div class="flex justify-between"><span>Peak level</span><span id="ro-peak">—</span></div>
-              <div class="flex justify-between"><span>Clipping</span><span id="ro-clip" class="text-emerald-600">clean</span></div>
+              <div class="flex justify-between"><span>Clipping</span><span id="ro-clip" class="font-semibold text-emerald-700 dark:text-emerald-400">clean</span></div>
             </div>
           </div>
 
           <div class="min-w-0 space-y-4">
             <div class="rounded-[16px] border border-border bg-card-bg p-4">
               <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Waveform — post-DSP</p>
-              <canvas id="wave-canvas" width="900" height="150" class="mt-3 block w-full rounded-[10px] border border-border bg-canvas"></canvas>
+              <canvas id="wave-canvas" width="900" height="150" class="mt-3 block h-[100px] w-full rounded-[10px] border border-border bg-canvas sm:h-auto"></canvas>
               <p class="mt-4 font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Spectrogram — 0–8 kHz, scrolling</p>
-              <canvas id="spec-canvas" width="900" height="220" class="mt-3 block w-full rounded-[10px] border border-border bg-canvas"></canvas>
+              <canvas id="spec-canvas" width="900" height="220" class="mt-3 block h-[180px] w-full rounded-[10px] border border-border bg-canvas sm:h-auto"></canvas>
               <div class="mt-3 flex flex-wrap items-center gap-2">
                 <button id="btn-rec" class="pill-btn">● Record output</button>
                 <button id="btn-wav-free" class="pill-btn" disabled>↓ WAV (watermark tone)</button>
                 <button id="btn-wav-clean" class="pill-btn" disabled>↓ WAV clean (unlock below)</button>
-                <span id="rec-state" class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text/70">not recording</span>
+                <span id="rec-state" class="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted-text">not recording</span>
               </div>
               <div class="mt-3">
                 {eleven.isAffiliate ? (
@@ -267,7 +267,7 @@ export function streamTTS(text: string, apiKey: string) {
             <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
           </div>
           <GearCarousel gear={gear} />
-          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor underline underline-offset-2 hover:text-primary-text">the full Gear list →</a></p>
         </div>
       </section>
     )}
@@ -327,13 +327,13 @@ export function streamTTS(text: string, apiKey: string) {
         <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Production streaming code — WebSocket → sample-accurate scheduling</h2>
         <p class="mt-3 max-w-2xl text-[0.92rem] text-muted-text">Complete TypeScript for the streaming pipeline in the Anatomy diagram. Drop your voice ID and key in; the scheduler works for any chunked-PCM source, not just ElevenLabs.</p>
         <div class="mt-5 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.76rem]">
-          <Code code={streamTS} lang="ts" theme="github-dark" />
+          <Code code={streamTS} lang="ts" theme="github-dark-high-contrast" />
         </div>
       </div>
     </section>
 
     <!-- Aha toast -->
-    <div id="el-aha-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+    <div id="el-aha-toast" class="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-4 right-4 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] sm:bottom-6 sm:left-auto sm:right-6">
       <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Stable chain · Aha moment</p>
       <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text">Crystal clear synthesis — 3 s of clean playback through your DSP chain.</p>
       <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">Deploy this exact voice pipeline in your app with the streaming scheduler below.</p>
@@ -380,6 +380,7 @@ export function streamTTS(text: string, apiKey: string) {
   .pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
   .control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
   .control-label input[type=range]{grid-column:1/-1;accent-color:var(--mp-cta)}
+  @media (max-width:639px){.pill-btn{min-height:44px}}
 </style>
 
 <script>
@@ -390,7 +391,12 @@ function initVoiceSandbox(){
   const specC=document.getElementById('spec-canvas');
   const wCtx=waveC.getContext('2d'), sCtx=specC.getContext('2d');
   const dpr=Math.min(devicePixelRatio||1,2);
-  [waveC,specC].forEach(c=>{const W=c.width,H=c.height;c.width=W*dpr;c.height=H*dpr;c.style.width='100%';c.getContext('2d').scale(dpr,dpr);c._w=W;c._h=H;});
+  [waveC,specC].forEach(c=>{
+    const rect=c.getBoundingClientRect();
+    const W=Math.max(280,Math.round(rect.width||c.width)), H=Math.max(80,Math.round(rect.height||c.height));
+    c.width=W*dpr; c.height=H*dpr; c.style.width='100%';
+    c.getContext('2d').scale(dpr,dpr); c._w=W; c._h=H;
+  });
 
   const $=id=>document.getElementById(id);
   const srcMode=$('src-mode'), ttsText=$('tts-text'), elevenPanel=$('eleven-panel'), keyInput=$('eleven-key'), voiceSel=$('eleven-voice');
@@ -403,14 +409,26 @@ function initVoiceSandbox(){
 
   try{ keyInput.value=localStorage.getItem('mp_elevenlabs_key')||''; }catch{}
   keyInput.addEventListener('change',()=>{ try{ localStorage.setItem('mp_elevenlabs_key', keyInput.value.trim()); }catch{} });
-  srcMode.addEventListener('change',()=>{ elevenPanel.classList.toggle('hidden', srcMode.value!=='eleven'); btnSynth.textContent = srcMode.value==='mic' ? 'Start mic' : 'Synthesize'; });
+  srcMode.addEventListener('change',syncSourceMode);
 
   // ---------- audio graph ----------
   let ctx=null, inputGain=null, bandpass=null, dryGain=null, delayNode=null, fbGain=null, echoGain=null, convolver=null, wetGain=null, master=null, analyser=null, recTap=null;
   let currentBuffer=null, activeSrc=null, micStream=null, playing=false;
 
+  function syncSourceMode(){
+    const isMic=srcMode.value==='mic';
+    if(playing || micStream) stopSource();
+    elevenPanel.classList.toggle('hidden', srcMode.value!=='eleven');
+    btnSynth.textContent=isMic?'Start mic':'Synthesize';
+    sl.pitch.disabled=isMic;
+    if(isMic){ sl.pitch.value='0'; out.pitch.textContent='0'; }
+    btnPlay.disabled=isMic || !currentBuffer;
+    synthState.textContent=isMic?'mic ready':'idle';
+    applyParams();
+  }
+
   function ensureGraph(){
-    if(ctx) return ctx;
+    if(ctx){ startDraw(); return ctx; }
     ctx=new (window.AudioContext||window.webkitAudioContext)();
     inputGain=ctx.createGain();
     bandpass=ctx.createBiquadFilter(); bandpass.type='bandpass';
@@ -436,6 +454,7 @@ function initVoiceSandbox(){
     applyParams();
     ro.base.textContent=((ctx.baseLatency||0)*1000).toFixed(1)+' ms';
     ro.out.textContent=ctx.outputLatency? (ctx.outputLatency*1000).toFixed(1)+' ms' : 'n/a';
+    startDraw();
     return ctx;
   }
 
@@ -604,6 +623,7 @@ function initVoiceSandbox(){
   let recording=false, recChunksL=[], recChunksR=[];
   btnRec.addEventListener('click',()=>{
     ensureGraph();
+    ctx.resume();
     recording=!recording;
     if(recording){ recChunksL=[]; recChunksR=[]; btnRec.classList.add('is-active'); btnRec.textContent='■ Stop recording'; recState.textContent='recording…'; btnWavFree.disabled=true; btnWavClean.disabled=true; }
     else{
@@ -665,15 +685,20 @@ function initVoiceSandbox(){
   const aha={stable:0,shown:false};
   const timeData=new Uint8Array(2048), freqData=new Uint8Array(1024);
   let specX=0, lastT=performance.now(), raf=0;
+  function startDraw(){ if(!raf) raf=requestAnimationFrame(draw); }
   function dspEngaged(){
     return parseFloat(sl.fb.value)>0.05 || parseFloat(sl.wet.value)>0.05 || parseFloat(sl.q.value)>0.8;
   }
   function draw(){
-    raf=requestAnimationFrame(draw);
+    raf=0;
     const now=performance.now(), dt=(now-lastT)/1000; lastT=now;
-    const W=waveC._w,H=waveC._h;
+    const W=waveC._w,H=waveC._h,SW=specC._w,SH=specC._h;
     const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0d1117';
-    if(!analyser){ wCtx.fillStyle=bg; wCtx.fillRect(0,0,W,H); return; }
+    if(!analyser){
+      wCtx.fillStyle=bg; wCtx.fillRect(0,0,W,H);
+      sCtx.fillStyle=bg; sCtx.fillRect(0,0,SW,SH);
+      return;
+    }
     analyser.getByteTimeDomainData(timeData);
     wCtx.fillStyle=bg; wCtx.fillRect(0,0,W,H);
     wCtx.strokeStyle='rgba(128,128,140,0.25)'; wCtx.beginPath(); wCtx.moveTo(0,H/2); wCtx.lineTo(W,H/2); wCtx.stroke();
@@ -691,7 +716,6 @@ function initVoiceSandbox(){
     ro.clip.className=clipped?'text-red-500 font-bold':'text-emerald-600';
     // spectrogram column
     analyser.getByteFrequencyData(freqData);
-    const SW=specC._w,SH=specC._h;
     const nyq=(ctx?ctx.sampleRate:44100)/2, maxBin=Math.floor(8000/nyq*freqData.length);
     for(let y=0;y<SH;y++){
       const bin=Math.floor((1-y/SH)*maxBin);
@@ -702,7 +726,7 @@ function initVoiceSandbox(){
     specX=(specX+2)%SW;
     sCtx.fillStyle='rgba(255,255,255,0.35)'; sCtx.fillRect(specX,0,1,SH);
     // aha: >3s active, DSP engaged, no clipping
-    if(playing && peak>0.02 && !clipped && dspEngaged()){
+    if(playing && !clipped && dspEngaged()){
       aha.stable+=dt;
       if(aha.stable>3 && !aha.shown){
         aha.shown=true;
@@ -710,9 +734,12 @@ function initVoiceSandbox(){
         if(toast){ toast.classList.remove('hidden'); }
         try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_moment',sim:SIM,metric:'stable_dsp_playback',seconds:3}})); }catch{}
       }
-    } else if(clipped){ aha.stable=0; }
+    } else { aha.stable=0; }
+    raf=requestAnimationFrame(draw);
   }
   draw();
+  const themeObserver=new MutationObserver(()=>{ if(!analyser) draw(); });
+  themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   document.getElementById('el-aha-cta')?.addEventListener('click',()=>{
     try{ window.dispatchEvent(new CustomEvent('mp:analytics',{detail:{event:'aha_cta_click',sim:SIM,partner:'elevenlabs'}})); }catch{}
   });
@@ -754,6 +781,7 @@ function initVoiceSandbox(){
 
   document.addEventListener('astro:before-swap',()=>{
     cancelAnimationFrame(raf); stopSource();
+    themeObserver.disconnect();
     try{ctx?.close();}catch{}
   },{once:true});
 }

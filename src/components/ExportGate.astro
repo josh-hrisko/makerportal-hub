@@ -7,7 +7,7 @@
  *
  * Privacy-first, telemetry-free:
  * - Email stored only in localStorage mp_export_email_{sim} + unlock flag
- * - Optional server-side POST to Buttondown if BUTTONDOWN_USERNAME configured
+ * - Optional Buttondown POST only after an explicit, unchecked newsletter opt-in
  * - Tag = sim id for segmentation, no tracking pixels (D-014)
  * - Analytics via privacy-safe first-party CustomEvent mp:analytics
  *
@@ -94,6 +94,11 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
           </div>
 
           <div class="flex flex-wrap gap-2">
+            <label class="flex items-start gap-2.5 rounded-[10px] border border-border bg-canvas/70 px-3 py-2.5 text-[0.72rem] leading-[1.45] text-muted-text">
+              <input type="checkbox" class="newsletter-opt-in mt-0.5 size-4 shrink-0 accent-[var(--mp-cta)]" data-sim={simulator} />
+              <span>Also subscribe to occasional MakerPortal field notes. Optional and unchecked by default; clean export works either way.</span>
+            </label>
+
             <button
               type="button"
               data-variant="free"
@@ -145,7 +150,7 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
             </button>
 
             <p class="text-[0.68rem] leading-[1.45] text-muted-text">
-              Soft gate — no hard paywall, no Clerk. We email you the BOM + kit list (if you opt into newsletter). Unsubscribe anytime. RSS at <a href="/rss.xml" class="text-brand-anchor">/rss.xml</a>.
+              Soft gate — no hard paywall, no Clerk. Email stays local unless you explicitly check the newsletter box. Unsubscribe anytime. RSS at <a href="/rss.xml" class="text-brand-anchor underline underline-offset-2">/rss.xml</a>.
             </p>
 
             <div id={`export-gate-status-${simulator}`} class="hidden rounded-[10px] border border-border bg-canvas px-3 py-2 font-mono text-[0.7rem] leading-[1.4]"></div>
@@ -295,6 +300,7 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
       if (!sim) return;
 
       const emailInput = panel.querySelector('.export-email-input');
+      const newsletterOptIn = panel.querySelector('.newsletter-opt-in');
       const unlockBtn = panel.querySelector('[data-action="unlock"]');
       const relockBtn = panel.querySelector('[data-action="relock"]');
       const freeBtn = panel.querySelector('[data-variant="free"]');
@@ -341,8 +347,8 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
 
         // Analytics
         try {
-          window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'export_gate_unlock', sim, email_domain: email.split('@')[1] } }));
-          window.dispatchEvent(new CustomEvent('mp:export-unlocked', { detail: { sim, email } }));
+          window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'export_gate_unlock', sim } }));
+          window.dispatchEvent(new CustomEvent('mp:export-unlocked', { detail: { sim } }));
           console.debug(`[analytics] export_gate_unlock`, { sim });
         } catch {}
 
@@ -350,7 +356,7 @@ const storageKeyEmail = `mp_export_email_${simulator}`;
         // Reads from: data-buttondown-user attr (SSOT from newsletter.ts) or window.__MP_BUTTONDOWN_USER__ (set by ButtondownSignup)
         try {
           const btnUser = panel.getAttribute('data-buttondown-user') || (window.__MP_BUTTONDOWN_USER__ || '');
-          if (btnUser) {
+          if (btnUser && newsletterOptIn?.checked) {
             const fd = new FormData();
             fd.append('email', email);
             // Primary tag = sim id for lead source tracking

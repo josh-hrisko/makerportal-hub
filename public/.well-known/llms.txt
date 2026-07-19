@@ -103,18 +103,20 @@ Browser-native mathematical and physical simulations: [makerportal.ai/playground
 - [FEA Structural Dynamics Lab](https://www.makerportal.ai/playground/fea-structural-lab): Von Mises, displacements, creaks, fracture snaps (Independent research instrument)
 - [GaN/SiC Power Electronics & FOC Drive](https://www.makerportal.ai/playground/gan-foc-drive): Space Vector PWM, flux rotation, motor whine to 20 kHz (Independent research instrument)
 - [RTOS Scheduler Visualizer](https://www.makerportal.ai/playground/rtos-scheduler): Tasks, mutexes, ISRs, and deadline tension you can hear (Independent research instrument)
+- [Voice Synthesis DSP Sandbox](https://www.makerportal.ai/playground/elevenlabs-dsp-sandbox): Text-to-speech through a live Web Audio DSP rack (Independent research instrument)
+- [Client vs Serverless GPU Benchmarker](https://www.makerportal.ai/playground/modal-gpu-benchmarker): Your GPU vs a cloud GPU, measured — never estimated (Independent research instrument)
+- [Edge DB Sync Lab](https://www.makerportal.ai/playground/fly-edge-db-lab): Place replicas on a world map, watch reads beat writes (Independent research instrument)
 - [RF & Microwave Circuit Bench](https://www.makerportal.ai/playground/rf-microwave-bench): S-parameters live on a Smith Chart, hum to pure tone at 50Ω (Independent research instrument)
 
 ## Trending Signals
 
-Score-weighted, source-corroborated technical signals from our latest daily scan (Scan Date: 2026-07-18): [makerportal.ai/journal](https://www.makerportal.ai/journal).
+Score-weighted, source-corroborated technical signals from our latest daily scan (Scan Date: 2026-07-19): [makerportal.ai/journal](https://www.makerportal.ai/journal).
 
-1. [Velora – On-device macOS dictation (Whisper and a local LLM, no cloud)](https://github.com/sushilk1991/velora) (Score: 18) - Domain: github.com [Tags: on-device-ai, local-llm, privacy-arch]
-2. ["The SwiftUI Way" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: 
-nilcoalescing.com/blog/TheSwif..](https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f) (Score: 17) - Domain: nilcoalescing.com [Tags: ios-craft]
-3. [Prompt submitted to cloud even when using local LLM by default](https://github.com/anomalyco/opencode/issues/15854) (Score: 12) - Domain: github.com [Tags: local-llm]
-4. [A sandbox for running real jailbreak techniques against local LLMs](https://github.com/joshfischer1108/jailbreak-lab) (Score: 12) - Domain: github.com [Tags: local-llm]
-5. [Experiments with On-device AI — What building on Gemini Nano actually teaches you](https://dev.to/mohanvenkatakrishnan/experiments-with-on-device-ai-what-building-on-gemini-nano-actually-teaches-you-5deo) (Score: 12) - Domain: dev.to [Tags: on-device-ai]
+1. [wispr – Privacy-first voice dictation for macOS — powered by on-device Whisper AI. No cloud, no tracking.](https://github.com/sebsto/wispr) (Score: 33) - Domain: github.com [Tags: on-device-ai, ios-craft, privacy-arch]
+2. [EnviousWispr – Free, sub-second on-device AI dictation for macOS. Dual engines (Whisper + Parakeet) on Apple Silicon. Optional AI polis](https://github.com/saurabhav88/EnviousWispr) (Score: 24) - Domain: github.com [Tags: on-device-ai, metal-ane]
+3. [imp – From-scratch C++/CUDA inference engine for the NVIDIA RTX 5090 (sm_120a) — the best single-GPU backend for agentic AI: t](https://github.com/kekzl/imp) (Score: 24) - Domain: github.com [Tags: on-device-ai, local-llm]
+4. [kernel-ai-assistant – Jandal AI — Local-first Android AI assistant with on-device LLM inference, semantic memory, and extensible skill framewo](https://github.com/NickMonrad/kernel-ai-assistant) (Score: 24) - Domain: github.com [Tags: on-device-ai, local-llm, privacy-arch]
+5. [ETOS-LLM-Studio – A native LLM client for iOS & Apple Watch. Run local GGUF models offline via llama.cpp, or connect to OpenAI/Claude/Gemi](https://github.com/Eric-Terminal/ETOS-LLM-Studio) (Score: 24) - Domain: github.com [Tags: local-llm, ios-craft]
 
 ## Studio Gear Picks
 

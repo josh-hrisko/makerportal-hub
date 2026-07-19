@@ -26,8 +26,9 @@ const updated = 'July 19, 2026';
         <p>This policy covers www.makerportal.ai (the hub) and describes how MakerPortal studio products approach privacy. Individual app subdomains may publish product-specific notices; where they conflict, the product notice controls for that app.</p>
 
         <h2>Hub website</h2>
-        <p>We do not use advertising trackers or analytics SDKs that profile you across the web. Contact form submissions are processed to respond to your message (including spam prevention). Server logs may include standard technical data (IP, user agent) for security and reliability.</p>
+        <p>We do not load third-party analytics, advertising trackers, pixels, or profiling SDKs. Simulator interaction events stay in a rolling 100-event <code>localStorage</code> log named <code>mp_analytics_log</code>; they are not transmitted to MakerPortal or an analytics vendor. Contact form submissions are processed only to respond to your message (including spam prevention). Hosting logs may include standard technical data (IP, user agent) for security and reliability.</p>
         <p>Theme preference is stored in <code>localStorage</code> on your device only — it never leaves your browser.</p>
+        <p>Some gear cards lazy-load product artwork from a merchant image host only when the card approaches the viewport. Those requests use <code>referrerpolicy="no-referrer"</code>; as with any direct web request, the image host can still receive your IP address and user agent. These are product images, not tracking pixels. Provider requests from BYO-key playgrounds occur only after you explicitly run them, and go directly from your browser to the named provider.</p>
 
         <h2>Applications</h2>
         <p>Most MakerPortal apps are built for on-device processing where possible. AuraLinter and future agentic titles use cloud for audio upload, LangGraph orchestration, and clang++ verification — with temporary file retention (30min sync, 4h long jobs) and run records disclosed in each product’s privacy policy. We do not sell personal data and disclose cloud use per-app.</p>
@@ -47,9 +48,9 @@ const updated = 'July 19, 2026';
         <p class="mt-2">Simulator exports (RTOS FreeRTOSConfig.h, SI stackup CSV, SLAM trajectory CSV, PID gains JSON, antenna array JSON, Verilog RTL) have two paths:</p>
         <ul class="mt-2 list-disc space-y-1.5 pl-5">
           <li><strong>Free:</strong> watermarked file (small footer <code>makerportal.ai</code> brand line) — always available, no email.</li>
-          <li><strong>Clean:</strong> watermark removed after soft email unlock. Email is stored in <code>localStorage</code> key <code>mp_export_email_{"{sim}"}</code> + unlock flag <code>mp_export_unlock_{"{sim}"}</code> per simulator. If Buttondown username is configured, we also POST to Buttondown embed endpoint (<code>privacy-first mode</code>, no tracking pixels per D-014) with tag = sim id.</li>
+          <li><strong>Clean:</strong> watermark removed after soft email unlock. Email is stored in <code>localStorage</code> key <code>mp_export_email_{"{sim}"}</code> + unlock flag <code>mp_export_unlock_{"{sim}"}</code> per simulator. If Buttondown is configured, a separate unchecked opt-in controls whether the address is sent to Buttondown; export works without subscribing.</li>
         </ul>
-        <p class="mt-2">No hard paywall, no Clerk. You can re-lock via DevTools → Application → Local Storage. Analytics events <code>export_gate_unlock</code>, <code>export_download</code>, <code>gear_click</code>, <code>kit_cta_click</code>, <code>fab_*_click</code> are first-party <code>CustomEvent('mp:analytics')</code> — privacy-safe, no third-party ad pixels.</p>
+        <p class="mt-2">No hard paywall, no Clerk. You can re-lock via DevTools → Application → Local Storage. Analytics events <code>export_gate_unlock</code>, <code>export_download</code>, <code>gear_click</code>, <code>kit_cta_click</code>, <code>fab_*_click</code> are first-party <code>CustomEvent('mp:analytics')</code> events written only to the local rolling log. Event payloads omit email addresses, domains, API keys, endpoint tokens, and simulator text.</p>
 
         <h2>Contact</h2>
         <p>Privacy questions: <a href="/contact">Contact the studio</a>.</p>
