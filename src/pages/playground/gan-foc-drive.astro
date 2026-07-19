@@ -2,7 +2,8 @@
 import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
-import GearGrid from '../../components/GearGrid.astro';
+import GearCarousel from '../../components/GearCarousel.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
 import KitBuilder from '../../components/KitBuilder.astro';
 import Math from '../../components/Math.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
@@ -249,24 +250,24 @@ function piFOC(e:number, int:number, Kp:number, Ki:number, we:number, L:number, 
       </div>
     </section>
 
-    <section class="border-b border-border">
+    <section class="border-b border-border" aria-labelledby="math-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations of motion</h2>
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Equations of motion</h2>
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Clarke / Park transforms</p>
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-primary-cta">Clarke / Park transforms</p>
             <Math math="i_\alpha=\tfrac23(i_a-\tfrac12 i_b-\tfrac12 i_c),\; i_\beta=\tfrac23(\tfrac{\sqrt3}{2}i_b-\tfrac{\sqrt3}{2}i_c)" display />
             <Math math="\begin{bmatrix}i_d\\ i_q\end{bmatrix}=\begin{bmatrix}c_\theta & s_\theta\\ -s_\theta & c_\theta\end{bmatrix}\begin{bmatrix}i_\alpha\\ i_\beta\end{bmatrix},\; \theta_e=p\theta_m" display />
             <p class="text-[0.78rem] text-muted-text mt-2">Amplitude invariant preserves peak sinusoid as dq DC.</p>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.6rem] uppercase">FOC id=0 & SVPWM</p>
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">FOC id=0 & SVPWM</p>
             <Math math="T_e=\tfrac32 p[\psi_m i_q+(L_d-L_q)i_d i_q],\; V_{ref}\le V_{dc}/\sqrt3" display />
             <Math math="T_1=\sqrt3 T_s\frac{V_{ref}}{V_{dc}}\sin(60^\circ-\theta),\; T_2=\sqrt3 T_s\frac{V_{ref}}{V_{dc}}\sin\theta" display />
             <p class="text-[0.78rem] text-muted-text mt-2">MTPA id=0 for SPMSM, field weakening id negative above base speed.</p>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.6rem] uppercase">Switching, power, audio</p>
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-primary-cta">Switching, power, audio</p>
             <Math math="E_{sw}\approx \tfrac12 V_{dc}|I|(t_r+t_f),\; P_{sw}=f_{sw}E_{sw},\; \Delta T=R_{th}P" display />
             <Math math="f_e=\frac{p\omega_m}{2\pi},\; f_{aud}=5k+55 f_e+1.2k|T_e|,\; f_{side}=f_{sw}\pm k f_e" display />
             <p class="text-[0.78rem] text-muted-text mt-2">fe is electrical, fsw is ultrasonic carrier GaN pushes >30 kHz.</p>
@@ -275,25 +276,66 @@ function piFOC(e:number, int:number, Kp:number, Ki:number, we:number, L:number, 
       </div>
     </section>
 
-    <section class="border-b border-border">
-      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
-        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Core solver — TypeScript</h2>
         <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
           <Code code={coreTS} lang="ts" theme="github-dark" />
         </div>
       </div>
     </section>
 
-    <GearGrid gear={gear}>
-      {kit && <KitBuilder slot="before-grid" kit={kit} />}
-    </GearGrid>
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Build the physical hardware platform. Select your components below to generate a live, real-time bill of materials and build instructions.</p>
+          <div class="mt-10">
+            <KitBuilder kit={kit} />
+          </div>
+        </div>
+      </section>
+    )}
 
-    <section class="border-b border-border">
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              GaN stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Hardware picks
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <GearCarousel gear={gear} />
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
         <div class="mt-8 divide-y divide-border border-y border-border">
-          {faqs.map(f=>(
-            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
           ))}
         </div>
       </div>

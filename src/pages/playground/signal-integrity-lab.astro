@@ -2,7 +2,8 @@
 import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
-import GearGrid from '../../components/GearGrid.astro';
+import GearCarousel from '../../components/GearCarousel.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
 import KitBuilder from '../../components/KitBuilder.astro';
 import ExportGate from '../../components/ExportGate.astro';
 import FabOrderPanel from '../../components/FabOrderPanel.astro';
@@ -99,30 +100,30 @@ export function s11(gammaL:number, beta:number, len:number){
       </div>
     </section>
 
-    <section class="border-b border-border">
+    <section class="border-b border-border" aria-labelledby="math-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">The math</h2>
+        <h2 id="math-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">The math and physics, in full</h2>
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.6rem] uppercase">Hammerstad-Jensen Z0</p>
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Hammerstad-Jensen Z0</p>
             <Math math="Z_0=\frac{60}{\sqrt{\varepsilon_{eff}}}\ln\left(\frac{8h}{W}+\frac{W}{4h}\right),\; W/h\le 1" display />
             <p class="text-[0.78rem] text-muted-text mt-2">ε_eff with ΔW correction for finite copper thickness.</p>
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.6rem] uppercase">Reflection</p>
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Reflection</p>
             <Math math="\Gamma=\frac{Z_L-Z_0}{Z_L+Z_0},\quad S_{11}=\Gamma e^{-j2\beta l}" display />
           </div>
           <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
-            <p class="font-mono text-[0.6rem] uppercase">Delay</p>
+            <p class="font-mono text-[0.6rem] uppercase text-primary-cta">Delay</p>
             <Math math="T_d = \frac{l\sqrt{\varepsilon_{eff}}}{c},\quad c=3e8" display />
           </div>
         </div>
       </div>
     </section>
 
-    <section class="border-b border-border">
-      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
-        <h2 class="text-[1.1rem] font-[650]">Core solver</h2>
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Core solver</h2>
         <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
           <Code code={coreTS} lang="ts" theme="github-dark"/>
         </div>
@@ -140,15 +141,58 @@ export function s11(gammaL:number, beta:number, len:number){
 
     <FabOrderPanel simulator="signal-integrity-lab" exportLabel="Export stackup CSV" />
 
-    <GearGrid gear={gear}>
-      {kit && <KitBuilder slot="before-grid" kit={kit} />}
-    </GearGrid>
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Build the physical hardware platform. Select your components below to generate a live, real-time bill of materials and build instructions.</p>
+          <div class="mt-10">
+            <KitBuilder kit={kit} />
+          </div>
+        </div>
+      </section>
+    )}
 
-    <section class="border-b border-border">
+    {gear.length > 0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear behind this build</h2>
+              <AffiliateDisclosure class="mt-3 max-w-2xl" />
+            </div>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="inline-block h-1.5 w-1.5 rounded-full bg-primary-cta align-middle mr-1.5" aria-hidden="true"></span>
+              Signal Integrity stack · {gear.length} picks
+            </p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <h3 class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+              <span class="size-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+              Hardware picks
+              <span class="ml-1 rounded-full bg-elevated px-1.5 py-0.5 text-[0.6rem] text-muted-text">{gear.length}</span>
+            </h3>
+            <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
+          </div>
+          <GearCarousel gear={gear} />
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <h2 id="faq-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Frequently asked questions</h2>
         <div class="mt-8 divide-y divide-border border-y border-border">
-          {faqs.map(f=>(<details class="group py-4"><summary class="flex cursor-pointer list-none justify-between gap-4 text-[0.98rem] font-semibold">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>))}
+          {faqs.map((f) => (
+            <details class="group py-4">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span class="text-muted-text transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span>
+              </summary>
+              <p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
