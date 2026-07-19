@@ -84,10 +84,18 @@ The way to de-risk it isn't caution alone, it's differentiation the studio can a
 
 New source worth prototyping when this resumes: **Wikipedia's pageviews/current-events REST API** (`wikimedia.org/api/rest_v1/`, free, no auth) for topical/factual grounding beyond social chatter. "Google" as a signal should mean the site's own Search Console top-query data (real-demand signal, already plumbed, stays local per the privacy stance) or the official Trends API alpha waitlist (Phase 5 backlog item, not yet accepted) — never unofficial Trends scraping, which D-011 already declined as an anti-abuse-evasion pattern.
 
-### Not now
-- YouTube ad revenue (needs 1k subs/4k hrs, not passive)
-- Second processor (violates D-014)
-- SearchItems auto-discovery (violates D-015)
+### Standardized Playground Page Section Order
+
+To maintain consistency and maximize conversion at "aha moments", all simulator/playground pages with affiliate hardware kits must strictly follow this visual hierarchy and DOM order:
+
+1. **Interactive Preview / Simulator**: The main workspace containing the canvas rendering, interactive controls, configuration sliders, and real-time outputs.
+2. **Anatomy of the Explorer / Instrument / Explanation**: Explanation of the UI controls, system inputs, physical/mathematical bounds, and visualization details.
+3. **Gear behind this build**: The dynamic `<GearCarousel>` section listing curated affiliate hardware picks for the build (third section).
+4. **Hardware Kit Builder**: The interactive `<KitBuilder>` component allowing users to configure components and calculate BOM cost (fourth section).
+5. **The math and physics, in full**: High-density explanation of equations, formulas, physical constants, or numerical solvers using the `<Math>` component.
+6. **Core Solver / Code Snippets**: Copyable code snippets (C++, Python, TypeScript) using the `<Code>` component, showing the core numerical logic of the page.
+7. **Export Gates & Fab Panels**: Soft lead capture gating (`ExportGate`) and PCB house ordering redirects (`FabOrderPanel`) if applicable.
+8. **Frequently Asked Questions (FAQ)**: High-quality details/summary accordion elements explaining practical engineering questions.
 
 ## Checklist next session (updated 2026-07-19)
 

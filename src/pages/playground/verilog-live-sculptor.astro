@@ -233,38 +233,6 @@ export function slackSetup(clk: number, arrival: number){ return clk - 0.16 - ar
       </div>
     </section>
 
-    <section class="border-b border-border" aria-labelledby="code-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Core solver — TypeScript</h2>
-        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
-          <Code code={coreTS} lang="ts" theme="github-dark" />
-        </div>
-      </div>
-    </section>
-
-    <ExportGate
-      simulator="verilog-live-sculptor"
-      fileName="verilog-module.v"
-      mimeType="text/x-verilog"
-      title="Export Verilog + timing report"
-      description="Your RTL plus synthesized LUT/FF estimate and slack — free watermarked, clean after email. Use with Digilent Arty A7-35T + MicroMod carrier (SparkFun Originals)."
-      fileExtension="v"
-    />
-
-    <FabOrderPanel simulator="verilog-live-sculptor" exportLabel="Export Verilog + PCB carrier notes" description="Export your live Verilog with LUT/slack header + notes for MicroMod carrier PCB. Order carrier on PCBWay Shared Project (10% PCB+SMT) or JLCPCB Brand Advocate path when live." />
-
-    {kit && (
-      <section class="border-b border-border" aria-labelledby="kit-title">
-        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
-          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Build the physical hardware platform. Select your components below to generate a live, real-time bill of materials and build instructions.</p>
-          <div class="mt-10">
-            <KitBuilder kit={kit} />
-          </div>
-        </div>
-      </section>
-    )}
-
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -291,6 +259,38 @@ export function slackSetup(clk: number, arrival: number){ return clk - 0.16 - ar
         </div>
       </section>
     )}
+
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Build the physical hardware platform. Select your components below to generate a live, real-time bill of materials and build instructions.</p>
+          <div class="mt-10">
+            <KitBuilder kit={kit} />
+          </div>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    <ExportGate
+      simulator="verilog-live-sculptor"
+      fileName="verilog-module.v"
+      mimeType="text/x-verilog"
+      title="Export Verilog + timing report"
+      description="Your RTL plus synthesized LUT/FF estimate and slack — free watermarked, clean after email. Use with Digilent Arty A7-35T + MicroMod carrier (SparkFun Originals)."
+      fileExtension="v"
+    />
+
+    <FabOrderPanel simulator="verilog-live-sculptor" exportLabel="Export Verilog + PCB carrier notes" description="Export your live Verilog with LUT/slack header + notes for MicroMod carrier PCB. Order carrier on PCBWay Shared Project (10% PCB+SMT) or JLCPCB Brand Advocate path when live." />
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">

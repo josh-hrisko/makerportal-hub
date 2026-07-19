@@ -215,6 +215,7 @@ Then:
 - **PID toast:** Stable hover detection in main loop (posErr<0.18, vel<0.25 for 2s) → show fixed toast, CTA scrolls to `.gear-grid`. Use `window.__pidStable` global to avoid re-trigger.
 - **Astro TS errors:** Scripts inside `.astro` need `// @ts-nocheck` or cast `HTMLElement`. `dataset` doesn't exist on `Element` — cast.
 - **Kits:** Only use existing `linkId`s — never invent SKUs. New kits added to `kits.json` with mixed merchant.
+- **Standardized Hierarchy:** All 10 playgrounds with hardware kits must place the Gear Carousel as the 3rd navigation section (immediately following the Simulator and Anatomy/description) and the Kit Builder as the 4th section. This maximizes affiliate and partner commission potential.
 - **Privacy:** Must document export gate storage + fab pending + live merchants list matches actual live state.
 
 ---

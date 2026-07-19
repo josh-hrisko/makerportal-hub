@@ -251,36 +251,6 @@ function wrapAngle(a:number){ return Math.atan2(Math.sin(a), Math.cos(a)); }`;
       </div>
     </section>
 
-    <section class="border-b border-border" aria-labelledby="code-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Core solver — TypeScript</h2>
-        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
-          <Code code={coreTS} lang="ts" theme="github-dark" />
-        </div>
-      </div>
-    </section>
-
-    <ExportGate
-      simulator="slam-odometry-arena"
-      fileName="slam-trajectory.csv"
-      mimeType="text/csv"
-      title="Export EKF trajectory + landmarks"
-      description="Robot poses (x,y,θ), covariance diag, loop-closure events as CSV — free watermarked, clean after email. Great for validating against RealSense D455 bag + ZED-F9P RTK ground truth."
-      fileExtension="csv"
-    />
-
-    {kit && (
-      <section class="border-b border-border" aria-labelledby="kit-title">
-        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
-          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
-          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Build the physical hardware platform. Select your components below to generate a live, real-time bill of materials and build instructions.</p>
-          <div class="mt-10">
-            <KitBuilder kit={kit} />
-          </div>
-        </div>
-      </section>
-    )}
-
     {gear.length > 0 && (
       <section class="border-b border-border" aria-labelledby="gear-title">
         <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
@@ -307,6 +277,36 @@ function wrapAngle(a:number){ return Math.atan2(Math.sin(a), Math.cos(a)); }`;
         </div>
       </section>
     )}
+
+    {kit && (
+      <section class="border-b border-border" aria-labelledby="kit-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <h2 id="kit-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Hardware Kit Builder</h2>
+          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Build the physical hardware platform. Select your components below to generate a live, real-time bill of materials and build instructions.</p>
+          <div class="mt-10">
+            <KitBuilder kit={kit} />
+          </div>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border" aria-labelledby="code-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="code-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    <ExportGate
+      simulator="slam-odometry-arena"
+      fileName="slam-trajectory.csv"
+      mimeType="text/csv"
+      title="Export EKF trajectory + landmarks"
+      description="Robot poses (x,y,θ), covariance diag, loop-closure events as CSV — free watermarked, clean after email. Great for validating against RealSense D455 bag + ZED-F9P RTK ground truth."
+      fileExtension="csv"
+    />
 
     <section class="border-b border-border" aria-labelledby="faq-title">
       <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
