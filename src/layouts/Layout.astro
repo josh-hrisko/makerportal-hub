@@ -938,5 +938,14 @@ const organizationSchema = {
         background-color: var(--dot-dark, var(--mp-muted)) !important;
       }
     </style>
+    <script>
+      import { logEvent } from '../data/analytics';
+      window.addEventListener('mp:analytics', (e) => {
+        const detail = (e as CustomEvent).detail;
+        if (detail) {
+          logEvent(detail);
+        }
+      });
+    </script>
   </body>
 </html>

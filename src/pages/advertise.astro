@@ -12,6 +12,7 @@ const pillarLabels = Object.values(pillarMeta).map((p) => p.label);
 
 const formats = [
   { t: 'Sponsored note', price: '$300', unit: 'per note', d: 'One field note with clear sponsor labeling and editorial standards — written by us, reviewed by you before it ships.' },
+  { t: 'Simulator rail', price: '$200', unit: 'per month', d: 'Premium 40px sponsor chip directly under the interactive canvas of a target simulator — capped at 1 sponsor per page.' },
   { t: 'Resource slot', price: '$150', unit: 'per month', d: 'Featured tool card on Learn (/resources) — disclosure always visible, no dark patterns.' },
   { t: 'Video integration', price: '$500', unit: 'per segment', d: 'Mention or dedicated segment on Watch once the channel is live. Waitlist — contact to be notified.' },
 ];
@@ -49,7 +50,7 @@ const formats = [
         </div>
       </div>
 
-      <div class="mt-10 grid gap-5 md:grid-cols-3">
+      <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {formats.map((x) => (
           <article class="surface-card rounded-[24px] border bg-card-bg p-6">
             <div class="flex items-baseline justify-between gap-3">

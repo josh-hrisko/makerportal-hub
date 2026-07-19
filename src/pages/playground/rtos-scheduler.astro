@@ -7,6 +7,7 @@ import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
 import KitBuilder from '../../components/KitBuilder.astro';
 import ExportGate from '../../components/ExportGate.astro';
 import Math from '../../components/Math.astro';
+import SimSponsorChip from '../../components/SimSponsorChip.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
 import { kitForSimulator } from '../../data/kits';
 
@@ -318,6 +319,9 @@ function simulate(tasks:TaskDef[], horizon:number, mode:'RMS'|'EDF', isrPeriod:n
               </div>
               <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 font-mono text-[0.67rem] text-muted-text">
                 <span>X: time ms (tick 1ms)</span><span>Y: tasks (color = task)</span><span>Dashed = deadline, Red X = miss</span>
+              </div>
+              <div class="mt-3">
+                <SimSponsorChip />
               </div>
             </div>
 

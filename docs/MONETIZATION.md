@@ -106,8 +106,10 @@ To maintain consistency and maximize conversion at "aha moments", all simulator/
 - [x] PCBWay/JLCPCB stub-ready — helpers + FabOrderPanel + isFabLive() — blocked until owner IDs (no fake IDs) — G2 compliant
 - [x] Conversion polish — cap 6, merchant badges (★ Original 10%), PID toast → kit, analytics events mp:*
 - [x] Privacy disclosure updated (2026-07-19) + AffiliateDisclosure multi-merchant + fab pending note
+- [x] Upgrade /advertise copy with Simulator rail sponsorships ($200/mo format added)
+- [x] SimSponsorChip.astro live with PCBWay live partner on 3 sims + self-sponsor fallback on RTOS
+- [x] Mobile sticky bottom bar (P3 Conversion Polish) in KitBuilder synced and automated
 - [ ] Owner: PCBWay referral URL / Shared Project URLs + JLCPCB Brand Advocate coupon/terms (still blocked, clear ask)
 - [ ] Owner selects Lemon archives
 - [ ] Ship shop MVP + Buttondown username for newsletter embed (ExportGate currently localStorage soft gate; Buttondown POST is optional fire-and-forget when username present)
-- [ ] Upgrade /advertise copy
 - [ ] After 2-3 cycles tune `keywords.mjs`

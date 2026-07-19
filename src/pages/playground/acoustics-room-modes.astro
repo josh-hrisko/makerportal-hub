@@ -21,7 +21,7 @@ const gear = affiliateLinks
 const primaryHardware = gear.find((item) =>
   ['Component', 'Sensor', 'Apparatus', 'Diagnostic', 'Kit', 'Interface', 'Audio'].includes(item.category)
 );
-const gearById = Object.fromEntries(gear.map((g) => [g.id, g]));
+
 
 const softwareSchema = {
   '@context': 'https://schema.org',

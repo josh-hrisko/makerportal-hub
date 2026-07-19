@@ -83,6 +83,33 @@ const ctaUrl = kit.items.find((i) => !i.optional)?.link.url ?? kit.items[0]?.lin
       Open primary listing ↗
     </a>
   </div>
+  
+  <!-- Mobile Sticky bottom bar (P3 Conversion Polish) -->
+  <div
+    class="mobile-kit-bar fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-between border-t border-border bg-card-bg/95 px-5 py-3.5 shadow-2xl backdrop-blur-md transition-transform duration-300 translate-y-full md:hidden"
+    style="padding-bottom: calc(0.88rem + env(safe-area-inset-bottom, 0px));"
+  >
+    <div class="min-w-0">
+      <p class="font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text">Kit Total</p>
+      <p class="mobile-kit-total text-[1.15rem] font-[650] tracking-tight text-primary-text">—</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="mobile-kit-scroll inline-flex min-h-9 items-center justify-center rounded-full border border-border/80 bg-elevated/40 px-3.5 text-[0.78rem] font-semibold text-muted-text hover:text-primary-text transition-colors"
+      >
+        View Kit ↓
+      </button>
+      <a
+        href={ctaUrl}
+        target="_blank"
+        rel="sponsored noopener noreferrer"
+        class="mobile-kit-cta inline-flex min-h-9 items-center justify-center rounded-full bg-primary-text px-4 text-[0.78rem] font-semibold text-canvas transition-opacity hover:opacity-90"
+      >
+        Buy ↗
+      </a>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -105,6 +132,12 @@ const ctaUrl = kit.items.find((i) => !i.optional)?.link.url ?? kit.items[0]?.lin
     const rows = [...root.querySelectorAll<HTMLElement>('.kit-row')];
     const totalEl = root.querySelector<HTMLElement>('.kit-total');
     const cta = root.querySelector<HTMLAnchorElement>('[data-kit-cta]');
+
+    // Scoped mobile sticky bar elements
+    const mobileBar = root.querySelector<HTMLElement>('.mobile-kit-bar');
+    const mobileTotalEl = root.querySelector<HTMLElement>('.mobile-kit-total');
+    const mobileCta = root.querySelector<HTMLAnchorElement>('.mobile-kit-cta');
+    const scrollBtn = root.querySelector<HTMLButtonElement>('.mobile-kit-scroll');
 
     const recalc = () => {
       let sum = 0;
@@ -132,14 +165,57 @@ const ctaUrl = kit.items.find((i) => !i.optional)?.link.url ?? kit.items[0]?.lin
         row.style.opacity = included ? '1' : '0.55';
       }
 
-      if (totalEl) totalEl.textContent = format(ok ? sum : null);
-      if (cta && primaryUrl) cta.href = primaryUrl;
+      const totalStr = format(ok ? sum : null);
+      if (totalEl) totalEl.textContent = totalStr;
+      if (mobileTotalEl) mobileTotalEl.textContent = totalStr;
+
+      if (primaryUrl) {
+        if (cta) cta.href = primaryUrl;
+        if (mobileCta) mobileCta.href = primaryUrl;
+      }
     };
 
     for (const row of rows) {
       row.querySelector('.kit-include')?.addEventListener('change', recalc);
     }
     recalc();
+
+    // IntersectionObserver to show/hide mobile bar when KitBuilder is offscreen
+    if (mobileBar) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (entry.isIntersecting) {
+            mobileBar.classList.add('translate-y-full');
+            mobileBar.classList.remove('translate-y-0');
+          } else {
+            if (window.scrollY > 350) {
+              mobileBar.classList.remove('translate-y-full');
+              mobileBar.classList.add('translate-y-0');
+            } else {
+              mobileBar.classList.add('translate-y-full');
+              mobileBar.classList.remove('translate-y-0');
+            }
+          }
+        },
+        { threshold: 0.05 }
+      );
+      observer.observe(root);
+
+      // Scroll listener to hide it if user scrolls back to the very top
+      window.addEventListener('scroll', () => {
+        if (window.scrollY < 300) {
+          mobileBar.classList.add('translate-y-full');
+          mobileBar.classList.remove('translate-y-0');
+        }
+      });
+    }
+
+    if (scrollBtn) {
+      scrollBtn.addEventListener('click', () => {
+        root.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
   }
 
   function init() {
