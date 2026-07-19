@@ -12,7 +12,7 @@
     </svg>
   </div>
 
-  <div id="side-nav-track" class="flex max-h-[70vh] flex-col gap-1 w-full items-end overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+  <div id="side-nav-track" class="flex max-h-[70vh] w-[calc(100%+1rem)] -mx-2 flex-col gap-1 items-end overflow-y-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
     <!-- Dynamically populated -->
   </div>
 </nav>
@@ -53,6 +53,10 @@
   .side-nav-dot {
     width: 0.5rem;
     height: 0.5rem;
+    /* Center the dot column in the collapsed 46px rail: content box is 16px,
+       dot is 8px -> 4px offset from the right edge. Also buys clearance so
+       the active glow is never clipped by the track's overflow. */
+    margin-right: 0.25rem;
     border-radius: 9999px;
     border: 1px solid var(--mp-border-strong, #9ca3af);
     background-color: var(--mp-elevated, #f3f4f6);
@@ -85,7 +89,7 @@
   .side-nav-link.is-active .side-nav-dot {
     border-color: var(--mp-cta, #3b82f6);
     background-color: var(--mp-cta, #3b82f6);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--mp-cta) 60%, transparent);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--mp-cta) 60%, transparent);
     transform: scale(1.2);
   }
 
