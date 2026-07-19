@@ -207,6 +207,106 @@ export const playground: PlaygroundEntry[] = [
     isGrounded: false,
     status: 'live',
   },
+  {
+    slug: 'pid-flight-arena',
+    title: 'PID & MPC Flight Arena',
+    tagline: 'Tune a quadrotor, watch quaternions keep it alive',
+    description:
+      'A 3D rigid-body quadrotor simulated with quaternion dynamics and RK4 integration. Tune PID gains and MPC Q/R weightings live, throw wind gusts, trace coordinate paths with force arrows, and hear motor whine mapped to thrust commands. Crash detection shakes the viewport and cuts thrust.',
+    pillarHint: 'on-device-ai',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'signal-integrity-lab',
+    title: 'Microstrip & Signal Integrity Lab',
+    tagline: 'TEM waves, S-parameters, and eye diagrams that bite',
+    description:
+      'Solve microstrip impedance Z0 via Hammerstad-Jensen, compute propagation delay, S-parameters, and crosstalk. Visualize animated voltage waves, magnetic field vectors, active Smith Chart, and eye diagrams while hearing mismatch hiss modulated by reflection coefficient.',
+    pillarHint: 'dsp-audio',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'verilog-live-sculptor',
+    title: 'FPGA Verilog Live Sculptor',
+    tagline: 'WASM-compiled HDL → LUT map, flashing on violations',
+    description:
+      'Type Verilog and watch it compile client-side to a gate netlist. Resource mapping animates LUTs, registers, and DSP blocks onto a chip floorplan. Timing visualizer flashes red on setup/hold violations and plays a harmonic tone on timing closure.',
+    pillarHint: 'ios-craft',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'webgpu-pinn-studio',
+    title: 'WebGPU PINN Training Studio',
+    tagline: 'Watch a neural operator learn Navier-Stokes in your GPU',
+    description:
+      'WebGPU-accelerated gradient descent trains a Physics-Informed Neural Network on your chosen PDE — Heat, Burgers, Navier-Stokes. Real-time 3D loss landscape warps in WebGL, epoch clicks map loss convergence to pitch, and residual field heatmap proves physics loss works.',
+    pillarHint: 'on-device-ai',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'slam-odometry-arena',
+    title: 'Visual-Inertial SLAM Arena',
+    tagline: 'EKF meets pixels: track, map, loop-close, snap',
+    description:
+      'Drive a robot through a synthetic world, watch an EKF fuse visual features and IMU. Sparse 3D point cloud grows live, uncertainty ellipsoids expand, and loop closure snaps the map with a spatial audio cue and viewport flash.',
+    pillarHint: 'on-device-ai',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'antenna-em-sandbox',
+    title: 'Antenna Array & EM Propagation Sandbox',
+    tagline: 'Steer a beam, shimmer RF wavefronts, hear alignment',
+    description:
+      'Live FDTD and array-factor solver for patch and Yagi-Uda arrays. Steer beams with phase shift, visualize 3D radiation lobes and near-field wavefronts, and hear spatial audio clear up only when your virtual cursor aligns with the main lobe.',
+    pillarHint: 'dsp-audio',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'fea-structural-lab',
+    title: 'FEA Structural Dynamics Lab',
+    tagline: 'Von Mises, displacements, creaks, fracture snaps',
+    description:
+      '2D/3D finite element solver deforms a cantilever, plate, or truss with continuous displacement vectors and Von Mises stress tensors. Strain gradients shift live, structure creaks under load, and a fracture snap fires when yield is exceeded.',
+    pillarHint: 'metal-ane',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'gan-foc-drive',
+    title: 'GaN/SiC Power Electronics & FOC Drive',
+    tagline: 'Space Vector PWM, flux rotation, motor whine to 20 kHz',
+    description:
+      'Simulate GaN/SiC buck/boost inverter with SVPWM, thermal rise, and Field-Oriented Control. Stator flux rotates, three-phase currents morph, dead-time distortion visualized, and motor whine pitch-tracks torque from 5 to 20 kHz.',
+    pillarHint: 'metal-ane',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'rtos-scheduler',
+    title: 'RTOS Scheduler Visualizer',
+    tagline: 'Tasks, mutexes, ISRs, and deadline tension you can hear',
+    description:
+      'Execute preemptive RMS/EDF scheduling with mutex priority inheritance and nested ISRs. Gantt timeline paints task states, blocking and jitter highlighted, and dissonant audio tension builds with deadline misses and lock-ups.',
+    pillarHint: 'ios-craft',
+    isGrounded: false,
+    status: 'live',
+  },
+  {
+    slug: 'rf-microwave-bench',
+    title: 'RF & Microwave Circuit Bench',
+    tagline: 'S-parameters live on a Smith Chart, hum to pure tone at 50Ω',
+    description:
+      'Match stubs, L-networks, and filters with live S-parameter curves plotted on a Smith Chart. Adjust stub length, position, L/C values to watch S11 spiral to center. Multi-frequency noise hum resolves to clean tone at exactly 50Ω match.',
+    pillarHint: 'dsp-audio',
+    isGrounded: false,
+    status: 'live',
+  },
 ];
 
 export function livePlayground(): PlaygroundEntry[] {

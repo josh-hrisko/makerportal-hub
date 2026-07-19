@@ -333,6 +333,96 @@ Detailed specifications of mathematical and physical simulations available insid
 - **Description:** Fly a starship at constant proper acceleration and watch special relativity unfold: ship time versus Earth time, Lorentz contraction, the relativistic Doppler shift of the cosmic microwave background, and a live Minkowski spacetime diagram of the hyperbolic worldline. Flip-and-burn trips to real destinations, computed exactly.
 
 
+### PID & MPC Flight Arena
+- **Slug / Route:** /playground/pid-flight-arena
+- **Tagline:** Tune a quadrotor, watch quaternions keep it alive
+- **Pillar Hint:** on-device-ai
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** A 3D rigid-body quadrotor simulated with quaternion dynamics and RK4 integration. Tune PID gains and MPC Q/R weightings live, throw wind gusts, trace coordinate paths with force arrows, and hear motor whine mapped to thrust commands. Crash detection shakes the viewport and cuts thrust.
+
+
+### Microstrip & Signal Integrity Lab
+- **Slug / Route:** /playground/signal-integrity-lab
+- **Tagline:** TEM waves, S-parameters, and eye diagrams that bite
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Solve microstrip impedance Z0 via Hammerstad-Jensen, compute propagation delay, S-parameters, and crosstalk. Visualize animated voltage waves, magnetic field vectors, active Smith Chart, and eye diagrams while hearing mismatch hiss modulated by reflection coefficient.
+
+
+### FPGA Verilog Live Sculptor
+- **Slug / Route:** /playground/verilog-live-sculptor
+- **Tagline:** WASM-compiled HDL → LUT map, flashing on violations
+- **Pillar Hint:** ios-craft
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Type Verilog and watch it compile client-side to a gate netlist. Resource mapping animates LUTs, registers, and DSP blocks onto a chip floorplan. Timing visualizer flashes red on setup/hold violations and plays a harmonic tone on timing closure.
+
+
+### WebGPU PINN Training Studio
+- **Slug / Route:** /playground/webgpu-pinn-studio
+- **Tagline:** Watch a neural operator learn Navier-Stokes in your GPU
+- **Pillar Hint:** on-device-ai
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** WebGPU-accelerated gradient descent trains a Physics-Informed Neural Network on your chosen PDE — Heat, Burgers, Navier-Stokes. Real-time 3D loss landscape warps in WebGL, epoch clicks map loss convergence to pitch, and residual field heatmap proves physics loss works.
+
+
+### Visual-Inertial SLAM Arena
+- **Slug / Route:** /playground/slam-odometry-arena
+- **Tagline:** EKF meets pixels: track, map, loop-close, snap
+- **Pillar Hint:** on-device-ai
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Drive a robot through a synthetic world, watch an EKF fuse visual features and IMU. Sparse 3D point cloud grows live, uncertainty ellipsoids expand, and loop closure snaps the map with a spatial audio cue and viewport flash.
+
+
+### Antenna Array & EM Propagation Sandbox
+- **Slug / Route:** /playground/antenna-em-sandbox
+- **Tagline:** Steer a beam, shimmer RF wavefronts, hear alignment
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Live FDTD and array-factor solver for patch and Yagi-Uda arrays. Steer beams with phase shift, visualize 3D radiation lobes and near-field wavefronts, and hear spatial audio clear up only when your virtual cursor aligns with the main lobe.
+
+
+### FEA Structural Dynamics Lab
+- **Slug / Route:** /playground/fea-structural-lab
+- **Tagline:** Von Mises, displacements, creaks, fracture snaps
+- **Pillar Hint:** metal-ane
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** 2D/3D finite element solver deforms a cantilever, plate, or truss with continuous displacement vectors and Von Mises stress tensors. Strain gradients shift live, structure creaks under load, and a fracture snap fires when yield is exceeded.
+
+
+### GaN/SiC Power Electronics & FOC Drive
+- **Slug / Route:** /playground/gan-foc-drive
+- **Tagline:** Space Vector PWM, flux rotation, motor whine to 20 kHz
+- **Pillar Hint:** metal-ane
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Simulate GaN/SiC buck/boost inverter with SVPWM, thermal rise, and Field-Oriented Control. Stator flux rotates, three-phase currents morph, dead-time distortion visualized, and motor whine pitch-tracks torque from 5 to 20 kHz.
+
+
+### RTOS Scheduler Visualizer
+- **Slug / Route:** /playground/rtos-scheduler
+- **Tagline:** Tasks, mutexes, ISRs, and deadline tension you can hear
+- **Pillar Hint:** ios-craft
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Execute preemptive RMS/EDF scheduling with mutex priority inheritance and nested ISRs. Gantt timeline paints task states, blocking and jitter highlighted, and dissonant audio tension builds with deadline misses and lock-ups.
+
+
+### RF & Microwave Circuit Bench
+- **Slug / Route:** /playground/rf-microwave-bench
+- **Tagline:** S-parameters live on a Smith Chart, hum to pure tone at 50Ω
+- **Pillar Hint:** dsp-audio
+- **Is Grounded:** No (independent research instrument)
+- **Related Application:** None
+- **Description:** Match stubs, L-networks, and filters with live S-parameter curves plotted on a Smith Chart. Adjust stub length, position, L/C values to watch S11 spiral to center. Multi-frequency noise hum resolves to clean tone at exactly 50Ω match.
+
+
 ---
 
 ## Trending Technical Signals — Latest Scan
@@ -429,7 +519,7 @@ curated developer hardware and equipment specifications:
 ### SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25
 - **URL:** https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1
 - **Category:** Storage
-- **Curated Price:** $250.99 USD
+- **Curated Price:** $269.99 USD
 - **Curated Notes:** Portable SSD used for studio project storage and backups.
 
 

@@ -1,0 +1,1031 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l => l.relatedTo?.includes('antenna-em-sandbox')).map(resolveAffiliateLink);
+
+const title = 'Antenna EM Sandbox — Phased Array, Polar Patterns & FDTD Wavefronts | MakerPortal';
+const description = 'Interactive antenna array solver: patch vs Yagi-Uda, Nx elements, λ spacing, phase steering. Array factor AF = Σ wₙ exp(j k d sinθ + jφₙ), polar radiation pattern, 3D lobe projection and FDTD-like near-field wavefront shimmer with spatialized beam-aligned audio.';
+const canonical = new URL('/playground/antenna-em-sandbox', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Antenna EM Sandbox',
+  url: canonical.toString(),
+  applicationCategory: 'EngineeringApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'Antenna EM Sandbox', item: canonical.toString() }
+  ]
+};
+
+const faqs = [
+  { q: 'What is the array factor and why normalize?', a: 'For N elements at x_n, AF(θ)= Σ w_n exp(j k x_n sinθ + j φ_n). With uniform weights w_n=1, |AF|_max = N. Normalizing by N yields 0–1 for pattern multiplication by element pattern. Steering uses φ_n = -k x_n sinθ₀, so phase ψ_n = k x_n (sinθ - sinθ₀) places main beam at θ₀. Grating lobes appear when d > λ/(1+|sinθ₀|).' },
+  { q: 'Patch vs Yagi element — how modeled?', a: 'Isotropic = 1. Patch (broadside): E_e(θ)=cos^q θ for |θ|≤90° with q≈1.5, else 0.08 for backlobe. Yagi (end-fire-enhanced broadside): narrower, E≈(1+cosθ)/2·cos³θ, mimics reflector/director gain ~6–9dBi. Antenna EM Sandbox array type changes graphics: patch = rectangular metal, Yagi = driven + reflector + directors, but physics is same AF × element.' },
+  { q: 'What does ground plane toggle do?', a: 'Ideal infinite PEC at y=0 implements image theory: E_total = E(θ)·2j sin(k h cosθ) for horizontal element height h. We approximate by suppressing back hemisphere |θ|>90° by 12× (21.6 dB) and boosting front by ×1.15, plus drawing PEC line in FDTD view. Full GTD edge diffraction is not included.' },
+  { q: 'How is directivity / HPBW / SLL estimated?', a: 'Pattern samples P_i at 720 angles over 360°. D ≈ max(P²)/mean(P²) (2-D cut approximation, reported dBi =10log10 D). True 3-D D would integrate over sphere; we integrate sampled 3-D points for 3-D canvas estimate (small bias). HPBW via linear interpolation where P crosses 0.707 (-3 dB) around peak. SLL scans outside first nulls for largest secondary peak: SLL_dB=20log10(P_sidelobe/P_main).' },
+  { q: 'How does spatial audio know beam alignment?', a: 'Virtual listener cursor angle θ_c set by mouse on polar plot. Alignment a = |E(θ_c)|/|E|_max ∈ [0,1]. Web Audio: two detuned saw oscillators (220Hz base + a·320Hz) → Biquad lowpass fc=450+a·6200 Hz → master gain g=0.02+0.42·a². Stereo pan = sin θ_c. At a≈1 filter opens → clear tone, gain loud; off beam → muffled, quiet. Nodes are cleaned on astro:before-swap.' }
+];
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const coreTS = `// Linear array AF solver — centers array, progressive steering
+const c = 299792458;
+export function arrayFactor(thetaRad: number, N: number, d: number, k: number, steerRad: number){
+  // positions centered
+  let re=0, im=0;
+  const offset = (N-1)/2;
+  for(let n=0; n<N; n++){
+    const xn = (n - offset)*d;
+    const phi_n = -k*xn*Math.sin(steerRad); // steering
+    const psi = k*xn*Math.sin(thetaRad) + phi_n; // = k xn (sinθ - sinθ0)
+    re += Math.cos(psi);
+    im += Math.sin(psi);
+  }
+  return Math.hypot(re,im)/N; // normalized 0-1
+}
+export function elementPattern(thetaRad: number, type: 'iso'|'patch'|'yagi'){
+  const ct = Math.cos(thetaRad);
+  if(type==='iso') return 1;
+  if(type==='patch'){
+    return ct<=0 ? 0.08 : Math.pow(ct,1.5);
+  }
+  // yagi — more directive
+  return ct<=0 ? 0.04 : 0.15 + 0.85*Math.pow((1+ct)/2,1)*Math.pow(ct,2.2);
+}
+export function totalPattern(thetaRad: number, N: number, spacingLambda: number, fGHz: number, steerDeg: number, elem: 'iso'|'patch'|'yagi', ground: boolean){
+  const lambda = 0.29979 / fGHz;
+  const k = 2*Math.PI/lambda;
+  const d = spacingLambda * lambda;
+  const af = arrayFactor(thetaRad, N, d, k, steerDeg*Math.PI/180);
+  let el = elementPattern(thetaRad, elem);
+  if(ground && Math.abs(thetaRad) > Math.PI/2) el *= 0.12;
+  if(ground && Math.abs(thetaRad) <= Math.PI/2) el *= 1.15;
+  return af*el;
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="Antenna EM Sandbox"
+    lead="Phased array electromagnetics in browser: choose patch or Yagi-Uda, size Nx, spacing in λ, steer phase Δφ = k d sinθ₀. Solver computes AF = Σ exp(j k xₙ sinθ + j φₙ) × element, draws polar pattern, 3-D lobe projection, and FDTD-like near-field wavefront shimmer. Move the virtual listener — audio clears up when it aligns with the main lobe."
+    pillarHint="rf-wireless"
+  >
+    <section class="border-b border-border" aria-labelledby="em-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <button id="btn-audio" class="pill-btn">🔊 Enable Spatial Audio</button>
+          <button id="btn-freeze" class="pill-btn">⏸ Freeze Wavefront</button>
+          <button id="btn-reset-cur" class="pill-btn is-active">Cursor 0°</button>
+          <span id="audio-hint" class="ml-auto font-mono text-[0.68rem] text-muted-text">Move mouse on polar plot to steer virtual listener — gain rises on main lobe</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
+          <!-- controls -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4 h-fit lg:sticky lg:top-6">
+            <h3 class="font-semibold text-[0.95rem]">Array Control</h3>
+
+            <div class="mt-4 space-y-4">
+              <div class="grid grid-cols-2 gap-3">
+                <label class="block"><span class="field-label">Array Type</span>
+                  <select id="sel-type" class="tool-input mt-1">
+                    <option value="patch" selected>Patch (broadside)</option>
+                    <option value="yagi">Yagi-Uda (director chain)</option>
+                  </select>
+                </label>
+                <label class="block"><span class="field-label">Element Pattern</span>
+                  <select id="sel-elem" class="tool-input mt-1">
+                    <option value="iso">Isotropic</option>
+                    <option value="patch" selected>Patch cos^q</option>
+                    <option value="yagi">Yagi dB</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="control-label mt-1"><span>Frequency GHz</span><output id="out-f">2.4</output><input id="sl-f" type="range" min="0.4" max="10" step="0.05" value="2.4"/></label>
+              <label class="control-label"><span>Elements Nₓ</span><output id="out-N">8</output><input id="sl-N" type="range" min="1" max="16" step="1" value="8"/></label>
+              <label class="control-label"><span>Spacing d / λ</span><output id="out-d">0.50</output><input id="sl-d" type="range" min="0.10" max="1.50" step="0.01" value="0.50"/></label>
+              <label class="control-label"><span>Steering θ₀ deg</span><output id="out-steer">0</output><input id="sl-steer" type="range" min="-70" max="70" step="0.5" value="0"/></label>
+
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-ground" type="checkbox" /> Ground plane</label>
+                <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-taper" type="checkbox" checked /> Uniform wt</label>
+                <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-norm" type="checkbox" checked /> Normalize</label>
+                <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-wave-anim" type="checkbox" checked /> Animate</label>
+              </div>
+
+              <div class="rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.70rem] leading-[1.5] space-y-1">
+                <div class="flex justify-between"><span>λ₀</span><span id="ro-lambda">—</span></div>
+                <div class="flex justify-between"><span>k = 2π/λ</span><span id="ro-k">—</span></div>
+                <div class="flex justify-between"><span>d phys</span><span id="ro-dphys">—</span></div>
+                <div class="flex justify-between"><span>Main lobe θ</span><span id="ro-main">—</span></div>
+                <div class="flex justify-between"><span>HPBW</span><span id="ro-hpbw">—</span></div>
+                <div class="flex justify-between"><span>Directivity</span><span id="ro-dir">—</span></div>
+                <div class="flex justify-between"><span>SLL</span><span id="ro-sll">—</span></div>
+                <div class="h-px bg-border my-1"></div>
+                <div class="flex justify-between"><span>Cursor θ_c</span><span id="ro-cursor-ang">0°</span></div>
+                <div class="flex justify-between"><span>Align a</span><span id="ro-align">0.00</span></div>
+                <div class="flex justify-between"><span>Audio gain</span><span id="ro-ag">—</span></div>
+                <div class="mt-2 h-1.5 w-full rounded-full bg-canvas border border-border overflow-hidden"><div id="bar-align" class="h-full bg-primary-cta transition-all" style="width:0%"></div></div>
+                <p class="text-[0.62rem] text-muted-text leading-[1.35]">Virtual listener at θ_c. When |E(θ_c)| ≈ max, filter opens to 6k5Hz + gain↑ — tone clears from muffled to crisp. Pan = sin θ_c.</p>
+              </div>
+
+              <div class="rounded-[12px] border border-border bg-canvas p-2.5">
+                <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Quick presets</p>
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  <button data-preset="broadside" class="pill-btn text-[0.6rem] py-1">Broadside 8×0.5λ</button>
+                  <button data-preset="endfire" class="pill-btn text-[0.6rem] py-1">End-fire scan 70°</button>
+                  <button data-preset="grating" class="pill-btn text-[0.6rem] py-1">Grating demo 1.1λ</button>
+                  <button data-preset="yagi" class="pill-btn text-[0.6rem] py-1">Yagi 4-el narrow</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- visualizations -->
+          <div class="min-w-0 space-y-4">
+            <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <div class="flex items-center justify-between"><p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Polar pattern — |E(θ)| (θ=0 top = broadside)</p><span id="lbl-polar" class="font-mono text-[0.62rem] text-muted-text"></span></div>
+                <canvas id="polar-canvas" width="560" height="560" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border cursor-crosshair"></canvas>
+                <p class="mt-2 font-mono text-[0.65rem] text-muted-text">Drag / mouse to place listener 🎧. Red = main lobe axis. Blue dashed = steering command. Gold = listener.</p>
+              </div>
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">3-D lobe projection (pseudo-isometric) — ULA axis → x</p>
+                <canvas id="lobe-canvas" width="560" height="560" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <p class="mt-2 font-mono text-[0.65rem] text-muted-text">Full sphere samples: r(θ,φ)=|AF(sinθ cosφ)+element| . Isometric view, scale = pattern mag. Grating lobes appear as second balloons when d&gt;λ/(1+|sinθ₀|).</p>
+              </div>
+            </div>
+
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2"><p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">FDTD-like near-field wavefront shimmer — top view, array at bottom, y = broadside range</p><span class="font-mono text-[0.62rem] text-muted-text" id="lbl-wave">Σ cos(k·r + φₙ - ωt)</span></div>
+              <canvas id="wave-canvas" width="900" height="360" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              <div class="mt-2 flex flex-wrap gap-3 font-mono text-[0.62rem] text-muted-text"><span>■ array elements (patch ☐ / yagi ─●─)</span><span>〰️ wavefront phase</span><span>ground = thick line below if enabled</span></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="readout"><dt>Array Length</dt><dd id="ro-L">—</dd></div>
+              <div class="readout"><dt>Grating Limit</dt><dd id="ro-grating">—</dd></div>
+              <div class="readout"><dt>Δφ prog</dt><dd id="ro-dphi">—</dd></div>
+              <div class="readout"><dt>AF max</dt><dd id="ro-afmax">—</dd></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of the sandbox</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="font-[650]">ULA solver + elements</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-decimal list-inside">
+              <li><strong class="text-primary-text">Geometry:</strong> linear uniform array along x, N positions xₙ = (n-(N-1)/2)·d. Physical d = spacing_λ·λ₀, λ₀=0.29979/fGHz m, k=2π/λ₀.</li>
+              <li><strong class="text-primary-text">Steering:</strong> progressive phase φₙ = -k xₙ sinθ₀, with θ₀ slider. Inter-element Δφ = -k d sinθ₀ = -(2π d/λ) sinθ₀. That aligns contributions in direction θ₀.</li>
+              <li><strong class="text-primary-text">Array factor:</strong> AF(θ)= Σ wₙ exp[j(k xₙ sinθ + φₙ)] = Σ exp[j k xₙ (sinθ - sinθ₀)]. Uniform weights ⇒ Dirichlet sinc shape; first null ≈ λ/(N d). Grating when d > λ/(1+|sinθ₀|).</li>
+              <li><strong class="text-primary-text">Element:</strong> isotropic, patch cos^1.5 (broadside null at ±90°), Yagi hybrid (1+cos)/2·cos^2.2 more directive + low backlobe. Total E = AF·Ee.</li>
+              <li><strong class="text-primary-text">Ground:</strong> PEC image halves space, approx suppress back 21 dB and boost front 1.2 dB.</li>
+            </ol>
+            <div class="mt-5 math-card">
+              <p class="math-label">Steering phase</p>
+              <Math math="\Delta\phi = k d \sin\theta_0 = \frac{2\pi d}{\lambda}\sin\theta_0,\quad \phi_n = -k x_n \sin\theta_0" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">Each element delayed so wavefronts add in phase toward θ₀.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-[650]">Rendering & audio</h3>
+            <ul class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-disc list-inside">
+              <li><strong class="text-primary-text">Polar:</strong> 720 samples θ∈[-180,180], radius r=P(θ)/Pmax·R. Canvas mapping x=cx+r·sinθ, y=cy-r·cosθ. Main lobe red, steering blue dashed, listener gold.</li>
+              <li><strong class="text-primary-text">3-D projection:</strong> sweep spherical (θ 0-180 step 8°, φ 0-360 step 8°). For each, uₓ=sinθ·cosφ, AF computed with sinθ·cosφ - sinθ₀, element at θ_dev = φ-90°. Cartesian X=r·sinθ·cosφ etc., then rotate Y -32° pitch 22° and isometric projection to 2D. Depth sorted for painter.</li>
+              <li><strong class="text-primary-text">Wavefront FDTD-ish:</strong> top-view grid 160×90 world (X∈±2λ_ap, Y∈0–2λ_ap). Field at (x,y)= Σ sin(k_vis·Rₙ - ωt + φₙ)/√Rₙ. k_vis=0.42·k to make fringes visible, ωt = 2π·1.6 Hz animation. Colormap diverging: cyan-orange, black null. Elements drawn as patch boxes or Yagi dipoles with reflector blue.</li>
+              <li><strong class="text-primary-text">Spatial audio:</strong> two saw oscillators detuned 2Hz → lowpass. When listener angle θ_c close to main lobe, alignment a= P(θ_c)/max → fc=450+ a·6500 Hz opens + gain follows a², panning = sinθ_c. Web Audio nodes destroyed on page-swap.</li>
+            </ul>
+            <div class="mt-5 math-card">
+              <p class="math-label">Array factor magnitude</p>
+              <Math math="AF(\theta)=\left|\sum_{n=0}^{N-1} w_n e^{j k x_n \sin\theta + j\phi_n}\right|,\quad E_{tot}= AF\cdot E_{element}(\theta)" display />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Array factor</p>
+            <Math math="AF = \sum_{n} e^{j k x_n(\sin\theta-\sin\theta_0)}" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">Centered x_n ensures symmetric side lobes. Grating when phase wraps 2π.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Radiation pattern</p>
+            <Math math="P(\theta)= |AF(\theta)\cdot E_e(\theta)|,\quad D\approx \frac{\max P^2}{\langle P^2\rangle}" display />
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Grating condition</p>
+            <Math math="d_{max}= \frac{\lambda}{1+|\sin\theta_0|},\quad k=\frac{2\pi}{\lambda},\ \lambda=\frac{c}{f}" display />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+          </div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(
+            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted);transition:all 0.15s;cursor:pointer}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.pill-btn:hover{border-color:var(--mp-border-strong);color:var(--mp-text)}
+.readout{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 55%,transparent);padding:0.65rem 0.8rem}
+.readout dt{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--mp-muted)}
+.readout dd{margin-top:0.2rem;font-size:0.88rem;font-weight:600;color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.field-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.math-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initAntenna(){
+  const polarC = document.getElementById('polar-canvas');
+  const lobeC = document.getElementById('lobe-canvas');
+  const waveC = document.getElementById('wave-canvas');
+  if(!polarC || polarC.dataset.init) return;
+  polarC.dataset.init='true';
+
+  const pCtx = polarC.getContext('2d');
+  const lCtx = lobeC.getContext('2d');
+  const wCtx = waveC.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+
+  [polarC,lobeC,waveC].forEach(c=>{
+    const W=c.width,H=c.height;
+    c.width=W*dpr; c.height=H*dpr; c.style.width=W+'px'; c.style.height=H+'px';
+    c.getContext('2d').scale(dpr,dpr);
+  });
+
+  // controls
+  const slF=document.getElementById('sl-f'), slN=document.getElementById('sl-N'), slD=document.getElementById('sl-d'), slSteer=document.getElementById('sl-steer');
+  const selType=document.getElementById('sel-type'), selElem=document.getElementById('sel-elem');
+  const chkGround=document.getElementById('chk-ground'), chkTaper=document.getElementById('chk-taper'), chkNorm=document.getElementById('chk-norm'), chkWaveAnim=document.getElementById('chk-wave-anim');
+  const outF=document.getElementById('out-f'), outN=document.getElementById('out-N'), outD=document.getElementById('out-d'), outSteer=document.getElementById('out-steer');
+  const roLambda=document.getElementById('ro-lambda'), roK=document.getElementById('ro-k'), roDphys=document.getElementById('ro-dphys');
+  const roMain=document.getElementById('ro-main'), roHpbw=document.getElementById('ro-hpbw'), roDir=document.getElementById('ro-dir'), roSll=document.getElementById('ro-sll');
+  const roL=document.getElementById('ro-L'), roGrating=document.getElementById('ro-grating'), roDphi=document.getElementById('ro-dphi'), roAfmax=document.getElementById('ro-afmax');
+  const roCursorAng=document.getElementById('ro-cursor-ang'), roAlign=document.getElementById('ro-align'), roAG=document.getElementById('ro-ag');
+  const barAlign=document.getElementById('bar-align'), lblPolar=document.getElementById('lbl-polar');
+  const btnAudio=document.getElementById('btn-audio'), btnFreeze=document.getElementById('btn-freeze'), btnResetCur=document.getElementById('btn-reset-cur');
+  const audioHint=document.getElementById('audio-hint');
+
+  let cursorThetaDeg = 0; // listener angle, 0 broadside
+  let freeze = false;
+
+  // audio
+  let audioCtx=null, masterGain=null, filt=null, panner=null, oscA=null, oscB=null, audioOn=false;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    masterGain = audioCtx.createGain(); masterGain.gain.value=0;
+    filt = audioCtx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=500; filt.Q.value=0.85;
+    panner = audioCtx.createStereoPanner(); panner.pan.value=0;
+    oscA = audioCtx.createOscillator(); oscA.type='sawtooth'; oscA.frequency.value=220;
+    oscB = audioCtx.createOscillator(); oscB.type='sine'; oscB.frequency.value=222;
+    const gA = audioCtx.createGain(); gA.gain.value=0.5;
+    const gB = audioCtx.createGain(); gB.gain.value=0.32;
+    oscA.connect(gA); gA.connect(filt);
+    oscB.connect(gB); gB.connect(filt);
+    filt.connect(masterGain); masterGain.connect(panner); panner.connect(audioCtx.destination);
+    oscA.start(); oscB.start();
+    return audioCtx;
+  }
+  function destroyAudio(){
+    try{
+      oscA?.stop(); oscB?.stop(); audioCtx?.close();
+    }catch{}
+    audioCtx=null; masterGain=null; filt=null; panner=null; oscA=null; oscB=null; audioOn=false;
+  }
+
+  function updateAudio(align, cursorDeg){
+    if(!audioOn || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    const fc = 450 + align*6200;
+    const g = 0.02 + 0.42*align*align;
+    const pan = Math.max(-0.9, Math.min(0.9, Math.sin(cursorDeg*Math.PI/180)));
+    const f0 = 180 + align*320 + (Math.abs(cursorDeg)<20? 40:0);
+    try{
+      filt.frequency.linearRampToValueAtTime(fc, now+0.12);
+      masterGain.gain.linearRampToValueAtTime(g, now+0.12);
+      panner.pan.linearRampToValueAtTime(pan, now+0.12);
+      oscA.frequency.linearRampToValueAtTime(f0, now+0.12);
+      oscB.frequency.linearRampToValueAtTime(f0+2.3, now+0.12);
+    }catch{}
+    roAG.textContent = g.toFixed(3);
+    barAlign.style.width = (align*100).toFixed(0)+'%';
+  }
+
+  // pattern computation
+  const c0 = 299792458;
+  function calcParams(){
+    const f = parseFloat(slF.value);
+    const N = parseInt(slN.value,10);
+    const sp = parseFloat(slD.value);
+    const steer = parseFloat(slSteer.value);
+    const lambda = 0.299792458 / f; // m
+    const k = 2*Math.PI / lambda;
+    const d = sp * lambda;
+    const L = (N-1)*d;
+    return {f,N,sp,steer,lambda,k,d,L};
+  }
+
+  function elemPattern(thetaRad, type){
+    const ct = Math.cos(thetaRad);
+    if(type==='iso') return 1;
+    if(type==='patch'){
+      return ct<=0 ? 0.08 : Math.pow(ct,1.5);
+    }
+    // yagi
+    return ct<=0 ? 0.04 : 0.12 + 0.88* Math.pow((1+ct)/2,0.9) * Math.pow(Math.max(0,ct),2.2);
+  }
+
+  // compute polar pattern array 720 points from -180..180
+  function computePolarPatterns(params, elemType, groundOn, uniform){
+    const {N,k,d,steer} = params;
+    const steerrad = steer*Math.PI/180;
+    const steps = 720;
+    const pattern = new Float32Array(steps);
+    const thetaList = new Float32Array(steps);
+    const offset = (N-1)/2;
+    // precompute positions and phases
+    const xn = new Float32Array(N);
+    const phi_n = new Float32Array(N);
+    for(let n=0;n<N;n++){ xn[n]=(n-offset)*d; phi_n[n]= -k*xn[n]*Math.sin(steerrad); }
+    // weights: uniform or Hamming taper if checkbox unchecked?
+    const w = new Float32Array(N);
+    if(uniform){
+      for(let n=0;n<N;n++) w[n]=1;
+    }else{
+      for(let n=0;n<N;n++){ w[n]=0.54 - 0.46*Math.cos(2*Math.PI*n/(N-1||1)); }
+    }
+
+    for(let i=0;i<steps;i++){
+      const thetaDeg = -180 + i*0.5;
+      const th = thetaDeg*Math.PI/180;
+      thetaList[i]=th;
+      let re=0, im=0;
+      const sinTh = Math.sin(th);
+      for(let n=0;n<N;n++){
+        const psi = k*xn[n]*sinTh + phi_n[n]; // k xn (sinθ - sinθ0)
+        const wn = w[n];
+        re += wn*Math.cos(psi);
+        im += wn*Math.sin(psi);
+      }
+      const wsum = uniform ? N : w.reduce((a,b)=>a+b,0);
+      const af = Math.hypot(re,im)/wsum;
+      let el = elemPattern(th, elemType);
+      if(groundOn){
+        if(Math.abs(th) > Math.PI/2) el*=0.12; else el*=1.15;
+      }
+      pattern[i]=af*el;
+    }
+    return {pattern, thetaList};
+  }
+
+  function findMetrics(pattern){
+    const steps = pattern.length;
+    // find max index
+    let maxIdx=0, maxV=-1;
+    for(let i=0;i<steps;i++){ if(pattern[i]>maxV){maxV=pattern[i]; maxIdx=i;} }
+    const mainThetaDeg = -180 + maxIdx*0.5;
+    // HPBW: search left/right for 0.707 * max
+    const half = maxV*0.70710678;
+    let leftIdx = maxIdx, rightIdx=maxIdx;
+    for(let i=maxIdx;i>=0;i--){ if(pattern[i]<=half){leftIdx=i; break;} if(i===0) leftIdx=0; }
+    for(let i=maxIdx;i<steps;i++){ if(pattern[i]<=half){rightIdx=i; break;} if(i===steps-1) rightIdx=steps-1; }
+    // linear interpolate
+    function interpCross(i1,i2){
+      const v1=pattern[i1], v2=pattern[i2];
+      if(v1===v2) return -180+i1*0.5;
+      const t=(half - v1)/(v2 - v1 + 1e-12);
+      const deg1=-180+i1*0.5, deg2=-180+i2*0.5;
+      return deg1 + t*(deg2-deg1);
+    }
+    let leftDeg = leftIdx===maxIdx? mainThetaDeg : interpCross(leftIdx, leftIdx+1);
+    let rightDeg = rightIdx===maxIdx? mainThetaDeg : interpCross(rightIdx-1, rightIdx);
+    let hpbw = Math.abs(rightDeg - leftDeg);
+    if(hpbw>180) hpbw=180; // guard
+
+    // directivity approx: max^2 / mean(P^2)
+    let meanSq=0;
+    for(let i=0;i<steps;i++) meanSq+= pattern[i]*pattern[i];
+    meanSq/= steps;
+    const Dlin = (maxV*maxV) / (meanSq+1e-12);
+    const DdBi = 10*Math.log10(Math.max(1e-6,Dlin));
+
+    // SLL: find side lobes outside main lobe nulls
+    // find first null left and right
+    let nullLeft = 0, nullRight = steps-1;
+    for(let i=maxIdx;i>=1;i--){ if(pattern[i]<=pattern[i-1] && pattern[i-1]>0 && pattern[i]<0.25*maxV && i<maxIdx-2){ /* local min */ } 
+      if(pattern[i] < 0.05*maxV){nullLeft=i; break;}
+    }
+    for(let i=maxIdx;i<steps-1;i++){ if(pattern[i]<0.05*maxV){nullRight=i; break;} }
+    // search max outside [nullLeft,nullRight]
+    let sllMax=-1;
+    for(let i=0;i<nullLeft;i++) if(pattern[i]>sllMax) sllMax=pattern[i];
+    for(let i=nullRight+1;i<steps;i++) if(pattern[i]>sllMax) sllMax=pattern[i];
+    const sllDb = sllMax<=0 ? -60 : 20*Math.log10(sllMax / (maxV+1e-12));
+
+    return {maxIdx, maxV, mainThetaDeg, hpbw, DdBi, Dlin, sllDb, sllMax, nullLeft, nullRight};
+  }
+
+  let lastPattern=null, lastThetaList=null, lastMetrics=null, lastParams=null;
+
+  // 3D points cache
+  let threeDCache = null;
+
+  function computeThreeD(params, elemType, groundOn, uniform){
+    const {N,k,d,steer}=params;
+    const steerrad = steer*Math.PI/180;
+    const offset=(N-1)/2;
+    const xn = new Float32Array(N);
+    const phi_n = new Float32Array(N);
+    for(let n=0;n<N;n++){ xn[n]=(n-offset)*d; phi_n[n]= -k*xn[n]*Math.sin(steerrad); }
+    const w = new Float32Array(N);
+    if(uniform){ for(let n=0;n<N;n++) w[n]=1; } else { for(let n=0;n<N;n++) w[n]=0.54 - 0.46*Math.cos(2*Math.PI*n/(N-1||1)); }
+    const wsum = uniform? N : w.reduce((a,b)=>a+b,0);
+
+    const thSteps=22; // theta sph 0..180
+    const phSteps=36; // phi 0..360
+    const points=[];
+    for(let ti=0;ti<thSteps;ti++){
+      const thetaSph = (ti/(thSteps-1))*Math.PI; // 0..pi
+      const sinTh=Math.sin(thetaSph), cosTh=Math.cos(thetaSph);
+      const row=[];
+      for(let pj=0;pj<phSteps;pj++){
+        const phiSph = (pj/phSteps)*2*Math.PI;
+        const ux = sinTh*Math.cos(phiSph); // projection onto array axis x
+        let re=0,im=0;
+        for(let n=0;n<N;n++){
+          const psi = k*xn[n]*ux + phi_n[n];
+          re+= w[n]*Math.cos(psi); im+= w[n]*Math.sin(psi);
+        }
+        let af = Math.hypot(re,im)/wsum;
+        // element pattern uses deviation from broadside: broadside is phi=90°? For simplicity use thetaDev = phi-90° when th~90°
+        // We compute effective theta_dev for element = atan2(ux, sinTh*Math.sin(phiSph)) approximate -> angle from y axis
+        // Simplify: element angle = angle between direction and +y (broadside). y component = sinTh*sinPhi
+        const uy = sinTh*Math.sin(phiSph);
+        // angle from broadside: cosBroad = uy / sqrt(ux^2+uy^2+uz^2)?? Actually broadside direction +y so dot with y = uy
+        // effective theta for element pattern = acos(uy / r_dir) but r_dir=1, so acos(uy) -> 0 when uy=1 (broadside)
+        const cosBroad = uy; // because unit vector
+        // Map to pattern theta: if uy=1 => thetaDev=0, if uy=0 => 90°
+        const thetaDev = Math.acos(Math.max(-1, Math.min(1, cosBroad)));
+        // element pattern expects thetaDev 0= boresight
+        // Need signed? Use absolute via element pattern symmetric.
+        let el = elemPattern(thetaDev, elemType);
+        if(groundOn && uy < 0) el*=0.12; else if(groundOn) el*=1.15;
+
+        const r = af*el;
+        // cartesian
+        const Xc = r * sinTh * Math.cos(phiSph);
+        const Yc = r * sinTh * Math.sin(phiSph);
+        const Zc = r * cosTh;
+        row.push({r, Xc,Yc,Zc, sinTh, thetaSph, phiSph});
+      }
+      points.push(row);
+    }
+    return points;
+  }
+
+  // polar draw
+  function drawPolar(){
+    if(!lastPattern) return;
+    const W=560,H=560,cx=W/2,cy=H/2,R=220;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    pCtx.fillStyle=bg; pCtx.fillRect(0,0,W,H);
+    // grid circles
+    pCtx.strokeStyle='rgba(255,255,255,0.08)'; pCtx.lineWidth=1;
+    for(let i=1;i<=4;i++){
+      const r=i/4*R;
+      pCtx.beginPath(); pCtx.arc(cx,cy,r,0,Math.PI*2); pCtx.stroke();
+    }
+    // angle lines every 30 deg
+    for(let deg=-180; deg<=180; deg+=30){
+      const rad=deg*Math.PI/180;
+      const x=cx + R*Math.sin(rad), y=cy - R*Math.cos(rad);
+      pCtx.beginPath(); pCtx.moveTo(cx,cy); pCtx.lineTo(x,y); pCtx.stroke();
+      // labels
+      pCtx.fillStyle='rgba(255,255,255,0.34)'; pCtx.font='10px ui-monospace';
+      const lx=cx + (R+12)*Math.sin(rad), ly=cy - (R+12)*Math.cos(rad);
+      if(deg%90===0 || Math.abs(deg)<=60){ pCtx.fillText(deg+'°', lx-12, ly+3); }
+    }
+    // pattern fill
+    pCtx.beginPath();
+    for(let i=0;i<lastPattern.length;i++){
+      const th = -180 + i*0.5;
+      const thR=th*Math.PI/180;
+      const r = (chkNorm.checked ? (lastPattern[i]/(lastMetrics.maxV||1)) : lastPattern[i]) * R;
+      const x=cx + r*Math.sin(thR), y=cy - r*Math.cos(thR);
+      if(i===0) pCtx.moveTo(x,y); else pCtx.lineTo(x,y);
+    }
+    pCtx.closePath();
+    pCtx.fillStyle='rgba(96,165,250,0.22)'; pCtx.fill();
+    pCtx.strokeStyle='#60a5fa'; pCtx.lineWidth=2.2; pCtx.stroke();
+
+    // side lobes highlight maybe thinner?
+    pCtx.beginPath();
+    for(let i=0;i<lastPattern.length;i++){
+      const th = -180 + i*0.5;
+      const thR=th*Math.PI/180;
+      const r = (chkNorm.checked ? (lastPattern[i]/(lastMetrics.maxV||1)) : lastPattern[i]) * R;
+      // draw af-only? we already have total, keep simple
+      const x=cx + r*Math.sin(thR), y=cy - r*Math.cos(thR);
+      if(i===0) pCtx.moveTo(x,y); else pCtx.lineTo(x,y);
+    }
+    // not fill again
+
+    // steering line (command)
+    if(lastParams){
+      const st = lastParams.steer;
+      const sr=st*Math.PI/180;
+      pCtx.strokeStyle='#3C888F'; pCtx.setLineDash([6,5]); pCtx.lineWidth=1.2;
+      pCtx.beginPath(); pCtx.moveTo(cx,cy); pCtx.lineTo(cx + R*Math.sin(sr), cy - R*Math.cos(sr)); pCtx.stroke();
+      pCtx.setLineDash([]);
+      pCtx.fillStyle='#3C888F'; pCtx.font='11px ui-monospace'; pCtx.fillText('steer '+st+'°', cx + (R+2)*Math.sin(sr), cy - (R+2)*Math.cos(sr));
+    }
+    // main lobe axis red
+    if(lastMetrics){
+      const ml = lastMetrics.mainThetaDeg;
+      const mlr=ml*Math.PI/180;
+      pCtx.strokeStyle='#f07a94'; pCtx.lineWidth=1.5;
+      pCtx.beginPath(); pCtx.moveTo(cx,cy); pCtx.lineTo(cx + R*Math.sin(mlr), cy - R*Math.cos(mlr)); pCtx.stroke();
+      // marker dot
+      const rr = (chkNorm.checked?1:lastMetrics.maxV)*R;
+      pCtx.fillStyle='#f07a94'; pCtx.beginPath(); pCtx.arc(cx + rr*Math.sin(mlr), cy - rr*Math.cos(mlr), 5,0,Math.PI*2); pCtx.fill();
+    }
+    // listener cursor gold
+    {
+      const cr=cursorThetaDeg*Math.PI/180;
+      const patIdx = Math.round((cursorThetaDeg+180)/0.5);
+      const clamped = Math.max(0,Math.min(lastPattern.length-1, patIdx));
+      const rPat = (chkNorm.checked ? (lastPattern[clamped]/(lastMetrics.maxV||1)) : lastPattern[clamped]) * R;
+      const rx = cx + Math.max(18, rPat+10)*Math.sin(cr);
+      const ry = cy - Math.max(18, rPat+10)*Math.cos(cr);
+      // line
+      pCtx.strokeStyle='#fbbf24'; pCtx.lineWidth=2; pCtx.setLineDash([2,3]);
+      pCtx.beginPath(); pCtx.moveTo(cx,cy); pCtx.lineTo(rx,ry); pCtx.stroke(); pCtx.setLineDash([]);
+      // head
+      pCtx.fillStyle='#fbbf24'; pCtx.beginPath(); pCtx.arc(rx,ry,6,0,Math.PI*2); pCtx.fill();
+      pCtx.strokeStyle='#0f141c'; pCtx.lineWidth=1.2; pCtx.beginPath(); pCtx.arc(rx,ry,6,0,Math.PI*2); pCtx.stroke();
+      pCtx.font='11px ui-monospace'; pCtx.fillText('🎧 '+cursorThetaDeg.toFixed(1)+'°', rx+8, ry-6);
+    }
+
+    // center
+    pCtx.fillStyle='rgba(255,255,255,0.5)'; pCtx.beginPath(); pCtx.arc(cx,cy,3,0,Math.PI*2); pCtx.fill();
+
+    lblPolar.textContent = `max ${lastMetrics.maxV.toFixed(3)} • ${lastMetrics.DdBi.toFixed(1)} dBi est`;
+  }
+
+  function drawLobe(){
+    const W=560,H=560,cx=W/2,cy=H/2;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    lCtx.fillStyle=bg; lCtx.fillRect(0,0,W,H);
+
+    // background faint sphere wire
+    lCtx.strokeStyle='rgba(255,255,255,0.06)'; lCtx.lineWidth=1;
+    lCtx.beginPath(); lCtx.arc(cx,cy,90,0,Math.PI*2); lCtx.stroke();
+
+    if(!threeDCache) return;
+    const pts=threeDCache;
+    const thSteps=pts.length, phSteps=pts[0].length;
+    // rotation: yaw -32°, pitch 22°
+    const yaw=-32*Math.PI/180, pitch=22*Math.PI/180;
+    const cosY=Math.cos(yaw), sinY=Math.sin(yaw), cosP=Math.cos(pitch), sinP=Math.sin(pitch);
+    // project
+    const projected=[];
+    for(let ti=0;ti<thSteps;ti++){
+      const rowP=[];
+      for(let pj=0;pj<phSteps;pj++){
+        const p=pts[ti][pj];
+        let X=p.Xc, Y=p.Yc, Z=p.Zc;
+        // rotate around Y
+        let X1 = X*cosY + Z*sinY;
+        let Z1 = -X*sinY + Z*cosY;
+        // rotate around X
+        let Y1 = Y*cosP - Z1*sinP;
+        let Z2 = Y*sinP + Z1*cosP;
+        // isometric-ish
+        const scale = 85 + p.r*35;
+        const sx = cx + X1*scale;
+        const sy = cy - Y1*scale + Z2*6; // small depth tweak
+        rowP.push({sx,sy,depth:Z2, r:p.r});
+      }
+      projected.push(rowP);
+    }
+
+    // draw phi loops (horizontal) depth sorted? simple painter by avg depth
+    // collect lines for sorting
+    const lines=[];
+    for(let ti=0;ti<thSteps;ti++){
+      for(let pj=0;pj<phSteps;pj++){
+        const pj2=(pj+1)%phSteps;
+        const a=projected[ti][pj], b=projected[ti][pj2];
+        const avgD=(a.depth+b.depth)/2;
+        const avgR=(a.r+b.r)/2;
+        if(avgR<0.02) continue;
+        lines.push({a,b,avgD,avgR, type:'phi'});
+      }
+    }
+    for(let pj=0;pj<phSteps;pj++){
+      for(let ti=0;ti<thSteps-1;ti++){
+        const a=projected[ti][pj], b=projected[ti+1][pj];
+        const avgD=(a.depth+b.depth)/2;
+        const avgR=(a.r+b.r)/2;
+        if(avgR<0.02) continue;
+        lines.push({a,b,avgD,avgR, type:'theta'});
+      }
+    }
+    lines.sort((A,B)=>A.avgD - B.avgD); // back to front
+
+    for(const ln of lines){
+      const alpha = Math.min(0.95, 0.12 + ln.avgR*0.9);
+      if(ln.type==='phi'){
+        lCtx.strokeStyle=`rgba(96,165,250,${alpha*0.9})`;
+        lCtx.lineWidth= ln.avgR>0.6? 1.6:0.8;
+      }else{
+        lCtx.strokeStyle=`rgba(240,122,148,${alpha*0.6})`;
+        lCtx.lineWidth=0.7;
+      }
+      lCtx.beginPath(); lCtx.moveTo(ln.a.sx, ln.a.sy); lCtx.lineTo(ln.b.sx, ln.b.sy); lCtx.stroke();
+    }
+
+    // main lobe direction indicator
+    if(lastMetrics){
+      const ml=lastMetrics.mainThetaDeg*Math.PI/180;
+      // direction in horizontal plane approx: broadside y positive, so main direction vector approx (sin ml, cos ml?) 
+      const dirX = Math.sin(ml)*0.9; // x along array? actually main lobe in y-x plane, y=cos(ml), x=sin(ml)
+      const dirY = Math.cos(ml)*0.9; // broadside component
+      // draw arrow from center outward in lobe space maybe?
+      // Use same rotation: project direction * (maxR)
+      let X=dirX* (lastMetrics.maxV||1)*1.1;
+      let Y=dirY* (lastMetrics.maxV||1)*1.1;
+      let Z=0;
+      let X1 = X*cosY + Z*sinY;
+      let Z1 = -X*sinY + Z*cosY;
+      let Y1 = Y*cosP - Z1*sinP;
+      lCtx.strokeStyle='#f07a94'; lCtx.lineWidth=2;
+      lCtx.beginPath(); lCtx.moveTo(cx,cy); lCtx.lineTo(cx+X1*85, cy - Y1*85); lCtx.stroke();
+    }
+
+    lCtx.fillStyle='rgba(255,255,255,0.45)'; lCtx.font='10px ui-monospace';
+    lCtx.fillText('x: array axis', 10, H-36);
+    lCtx.fillText('y: broadside', 10, H-22);
+    lCtx.fillText('z: elevation', 10, H-8);
+  }
+
+  function drawWavefrontStatic(){ /* placeholder */ }
+
+  // wavefront animated
+  let tAcc=0;
+  const gw = 160, gh = 100;
+  const field = new Float32Array(gw*gh);
+
+  function drawWaveFrame(dt){
+    const W=900,H=360;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    wCtx.fillStyle=bg; wCtx.fillRect(0,0,W,H);
+    if(!lastParams) return;
+    const {N,k,d,steer,lambda, L}=lastParams;
+    const steerrad=steer*Math.PI/180;
+    const offset=(N-1)/2;
+    const xn=[];
+    const phi_n=[];
+    for(let n=0;n<N;n++){ xn[n]=(n-offset)*d; phi_n[n]= -k*xn[n]*Math.sin(steerrad); }
+
+    // world bounds: X ± 2*Lambda*? Let's set span X = max(L*2.2, lambda*4)
+    const spanX = Math.max(L*2.6, lambda*5);
+    const spanY = Math.max(lambda*4, L*1.2); // range forward
+
+    // compute field grid if not frozen or first
+    if(!freeze){
+      for(let j=0;j<gh;j++){
+        const wy = (j/gh)*spanY + 0.06; // distance from array
+        for(let i=0;i<gw;i++){
+          const wx = ((i/gw)-0.5)*spanX;
+          let re=0;
+          // sum
+          for(let n=0;n<N;n++){
+            const dx = wx - xn[n];
+            const dist = Math.hypot(dx, wy) + 1e-6;
+            const att = 1/Math.sqrt(dist + 0.15);
+            const k_vis = k*0.42; // scale for visible fringes
+            const phase = k_vis*dist - tAcc*2.8 + phi_n[n];
+            re += Math.cos(phase)*att;
+          }
+          field[j*gw + i]=re;
+        }
+      }
+    }
+
+    // colormap to image
+    // create image data low-res then upscale via draw rects
+    const cellW = W/gw, cellH = H/gh;
+    // find max for normalization
+    let minF=1e9,maxF=-1e9;
+    for(let i=0;i<field.length;i++){ const v=field[i]; if(v<minF) minF=v; if(v>maxF) maxF=v; }
+    const range = Math.max(0.001, maxF-minF);
+
+    for(let j=0;j<gh;j++){
+      for(let i=0;i<gw;i++){
+        const v=field[j*gw+i];
+        const norm = (v-minF)/range; // 0..1
+        // diverging cyan-orange: map to r,g,b
+        // using: low=-1 => cyan (60,165,250), high=+1 => orange (251,127,92), mid=bg light
+        let r,g,b,a=1;
+        if(norm<0.5){
+          const t = norm/0.5; // 0->1 mid
+          // cyan to mid
+          const cr=60 + (30)*(1 - t) * 0 ? 0 : 0; // blend to bg? simpler: interpolate cyan to white/gray
+          // Let's lerp cyan (60,165,250) -> gray (200,200,200)
+          r = 60 + (190-60)*t;
+          g = 165 + (190-165)*t;
+          b = 250 + (190-250)*t;
+        }else{
+          const t=(norm-0.5)/0.5;
+          // gray to orange (251,127,92)
+          r = 190 + (251-190)*t;
+          g = 190 + (127-190)*t;
+          b = 190 + (92-190)*t;
+        }
+        // attenuation based on distance: fade far
+        const alpha = Math.min(1, 0.25 + Math.abs(v)/ (range*0.6));
+        wCtx.fillStyle=`rgba(${r|0},${g|0},${b|0},${alpha})`;
+        wCtx.fillRect(i*cellW, j*cellH, cellW+0.6, cellH+0.6);
+      }
+    }
+
+    // draw array elements
+    const toScreenX = (wx)=> W/2 + (wx/spanX)*W;
+    const toScreenY = (wy)=> (wy/spanY)*H;
+
+    // ground plane
+    if(chkGround.checked){
+      wCtx.fillStyle='rgba(255,255,255,0.14)';
+      wCtx.fillRect(0, H-22, W, 22);
+      wCtx.strokeStyle='#e8eef6'; wCtx.lineWidth=2;
+      wCtx.beginPath(); wCtx.moveTo(0,H-22); wCtx.lineTo(W,H-22); wCtx.stroke();
+      wCtx.fillStyle='#e8eef6'; wCtx.font='10px ui-monospace'; wCtx.fillText('PEC ground (image theory suppresses back lobes)', 8, H-6);
+    }
+
+    // elements
+    const elemTypeSel = selType.value;
+    for(let n=0;n<N;n++){
+      const wx=xn[n];
+      const sx=toScreenX(wx);
+      const sy=toScreenY(0.04);
+      if(elemTypeSel==='patch'){
+        wCtx.fillStyle='#e8eef6'; wCtx.strokeStyle='#3C888F'; wCtx.lineWidth=1.4;
+        wCtx.fillRect(sx-10, sy-8, 20, 10);
+        wCtx.strokeRect(sx-10, sy-8, 20, 10);
+        // feed dot
+        wCtx.fillStyle='#f07a94'; wCtx.beginPath(); wCtx.arc(sx, sy-3, 2.5,0,Math.PI*2); wCtx.fill();
+      }else{
+        // yagi: reflector + driven + directors line
+        wCtx.strokeStyle='#71b9e3'; wCtx.lineWidth=2;
+        wCtx.beginPath(); wCtx.moveTo(sx-12, sy); wCtx.lineTo(sx+12, sy); wCtx.stroke(); // boom
+        // elements
+        wCtx.fillStyle='#e8eef6'; wCtx.beginPath(); wCtx.arc(sx, sy, 4,0,Math.PI*2); wCtx.fill();
+        wCtx.strokeStyle='#e8eef6'; wCtx.beginPath(); wCtx.moveTo(sx, sy-10); wCtx.lineTo(sx, sy+10); wCtx.stroke();
+        // reflector left-most element larger? mark first
+        if(n===0){
+          wCtx.strokeStyle='#f07a94'; wCtx.beginPath(); wCtx.moveTo(sx-6, sy-14); wCtx.lineTo(sx-6, sy+14); wCtx.stroke();
+        }
+      }
+      // index label
+      wCtx.fillStyle='rgba(255,255,255,0.6)'; wCtx.font='9px ui-monospace'; wCtx.fillText(''+n, sx-4, sy+18);
+    }
+
+    // overlay wavefront phase lines? subtle
+    wCtx.strokeStyle='rgba(255,255,255,0.07)'; wCtx.lineWidth=0.5;
+    for(let i=0;i<field.length;i+= Math.floor(gw*0.18)){ /* skip */ }
+
+    // title
+    wCtx.fillStyle='rgba(255,255,255,0.55)'; wCtx.font='10px ui-monospace';
+    wCtx.fillText(`λ=${lambda.toFixed(3)}m d=${d.toFixed(3)}m steer ${steer}° spanX ${spanX.toFixed(2)}m spanY ${spanY.toFixed(2)}m t=${tAcc.toFixed(1)}`, 10, 16);
+  }
+
+  function recompute(){
+    const params = calcParams();
+    lastParams=params;
+    const elemType = selElem.value;
+    const groundOn = chkGround.checked;
+    const uniform = chkTaper.checked;
+    outF.textContent=params.f.toFixed(2);
+    outN.textContent=params.N.toString();
+    outD.textContent=params.sp.toFixed(2);
+    outSteer.textContent=params.steer.toFixed(1);
+
+    const {pattern, thetaList} = computePolarPatterns(params, elemType, groundOn, uniform);
+    lastPattern=pattern; lastThetaList=thetaList;
+    const metrics = findMetrics(pattern);
+    lastMetrics=metrics;
+
+    // 3D cache
+    threeDCache = computeThreeD(params, elemType, groundOn, uniform);
+
+    // readout
+    roLambda.textContent = params.lambda.toFixed(4)+' m';
+    roK.textContent = params.k.toFixed(2)+' rad/m';
+    roDphys.textContent = params.d.toFixed(4)+' m / '+ (params.sp*100).toFixed(0)+' %λ';
+    roMain.textContent = metrics.mainThetaDeg.toFixed(1)+'°';
+    roHpbw.textContent = metrics.hpbw.toFixed(1)+'°';
+    roDir.textContent = metrics.DdBi.toFixed(2)+' dBi (2D cut)';
+    roSll.textContent = metrics.sllDb.toFixed(1)+' dB';
+    roL.textContent = params.L.toFixed(3)+' m';
+    const gratingLimit = params.lambda / (1+ Math.abs(Math.sin(params.steer*Math.PI/180)) + 1e-9);
+    roGrating.textContent = `d < ${gratingLimit.toFixed(3)} m ( ${ (gratingLimit/params.lambda).toFixed(2)} λ)`;
+    const dphi = -params.k*params.d*Math.sin(params.steer*Math.PI/180);
+    roDphi.textContent = `${(dphi*57.2958).toFixed(1)}° (${dphi.toFixed(2)} rad)`;
+    roAfmax.textContent = metrics.maxV.toFixed(3);
+
+    // align compute
+    const idxCursor = Math.round((cursorThetaDeg+180)/0.5);
+    const clamped = Math.max(0, Math.min(pattern.length-1, idxCursor));
+    const valAtCursor = pattern[clamped];
+    const align = metrics.maxV>1e-9 ? valAtCursor/metrics.maxV : 0;
+    roAlign.textContent = align.toFixed(3);
+    barAlign.style.width = (align*100).toFixed(0)+'%';
+    updateAudio(align, cursorThetaDeg);
+
+    drawPolar();
+    drawLobe();
+  }
+
+  // interaction
+  [slF, slN, slD, slSteer, selType, selElem, chkGround, chkTaper, chkNorm].forEach(el=> el.addEventListener('input', recompute));
+  // presets
+  document.querySelectorAll('[data-preset]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p=btn.getAttribute('data-preset');
+      if(p==='broadside'){ slN.value='8'; slD.value='0.50'; slSteer.value='0'; selType.value='patch'; selElem.value='patch'; }
+      if(p==='endfire'){ slN.value='8'; slD.value='0.5'; slSteer.value='65'; selType.value='patch'; selElem.value='patch'; }
+      if(p==='grating'){ slN.value='8'; slD.value='1.10'; slSteer.value='0'; selType.value='patch'; selElem.value='iso'; }
+      if(p==='yagi'){ slN.value='4'; slD.value='0.25'; slSteer.value='0'; selType.value='yagi'; selElem.value='yagi'; }
+      recompute();
+    });
+  });
+
+  polarC.addEventListener('mousemove', (e)=>{
+    const rect=polarC.getBoundingClientRect();
+    const x = (e.clientX - rect.left) ; // css pixel
+    const y = (e.clientY - rect.top);
+    // map to canvas coord 560 space
+    const W=560;
+    const scaleW = W / rect.width;
+    const cxW = W/2, cyW=W/2;
+    const px = (x*scaleW - cxW);
+    const py = (y*scaleW - cyW);
+    // angle: atan2(px, -py) ??? We used sinθ = px/r, cosθ = -py/r? Actually earlier: x=cx+r sinθ, y=cy - r cosθ => sinθ = (x-cx)/r, cosθ = (cy - y)/r
+    const ang = Math.atan2(px, -(py)); // rad, gives θ
+    let deg = ang*180/Math.PI;
+    // wrap to -180..180
+    if(deg>180) deg-=360; if(deg<-180) deg+=360;
+    cursorThetaDeg=deg;
+    roCursorAng.textContent = deg.toFixed(1)+'°';
+    if(lastPattern){
+      const idx = Math.round((deg+180)/0.5);
+      const clamped = Math.max(0,Math.min(lastPattern.length-1, idx));
+      const align = lastMetrics.maxV>1e-6? lastPattern[clamped]/lastMetrics.maxV : 0;
+      roAlign.textContent = align.toFixed(3);
+      barAlign.style.width = (align*100).toFixed(0)+'%';
+      updateAudio(align, deg);
+    }
+    drawPolar();
+  });
+  polarC.addEventListener('click', (e)=>{
+    // also set cursor on click (same as mousemove)
+    const rect=polarC.getBoundingClientRect();
+    const x = (e.clientX - rect.left);
+    const y = (e.clientY - rect.top);
+    const W=560, scaleW=W/rect.width, cxW=W/2, cyW=W/2;
+    const px = (x*scaleW - cxW), py = (y*scaleW - cyW);
+    const ang = Math.atan2(px, -(py));
+    cursorThetaDeg = ang*180/Math.PI;
+    roCursorAng.textContent = cursorThetaDeg.toFixed(1)+'°';
+    drawPolar();
+  });
+
+  btnResetCur.addEventListener('click', ()=>{ cursorThetaDeg=0; roCursorAng.textContent='0°'; drawPolar(); if(lastPattern){ const idx=Math.round((0+180)/0.5); const al=lastPattern[idx]/(lastMetrics.maxV||1); roAlign.textContent=al.toFixed(3); barAlign.style.width=(al*100).toFixed(0)+'%'; updateAudio(al,0);} });
+
+  btnAudio.addEventListener('click', ()=>{
+    if(!audioOn){
+      ensureAudio(); audioCtx.resume(); audioOn=true; btnAudio.classList.add('is-active'); btnAudio.textContent='◼ Disable Audio'; audioHint.textContent='Audio enabled — alignment drives filter cutoff + gain';
+      // init gain
+      if(lastPattern){ const idx=Math.round((cursorThetaDeg+180)/0.5); const al=lastPattern[idx]/(lastMetrics.maxV||1); updateAudio(al,cursorThetaDeg); masterGain.gain.value=0.08+al*0.25; }
+    }else{
+      try{masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.15);}catch{}
+      setTimeout(()=>{ destroyAudio(); },200);
+      btnAudio.classList.remove('is-active'); btnAudio.textContent='🔊 Enable Spatial Audio'; roAG.textContent='—'; audioHint.textContent='Audio off — enable to hear beam alignment';
+    }
+  });
+
+  btnFreeze.addEventListener('click', ()=>{
+    freeze=!freeze; btnFreeze.classList.toggle('is-active', freeze); btnFreeze.textContent= freeze? '▶ Unfreeze' : '⏸ Freeze Wavefront';
+  });
+
+  // animation loop for wavefront
+  let raf=0;
+  let lastT=performance.now();
+  function loop(now){
+    raf=requestAnimationFrame(loop);
+    const dt = Math.min(0.05, (now-lastT)/1000); lastT=now;
+    if(!chkWaveAnim.checked) { drawWaveFrame(dt); return; }
+    if(!freeze) tAcc+= dt;
+    drawWaveFrame(dt);
+  }
+
+  recompute();
+  loop(performance.now());
+
+  document.addEventListener('astro:before-swap', ()=>{
+    cancelAnimationFrame(raf);
+    destroyAudio();
+  }, {once:true});
+}
+
+document.addEventListener('astro:page-load', initAntenna);
+initAntenna();
+</script>
+</Layout>

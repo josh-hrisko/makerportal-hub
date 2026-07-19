@@ -1,0 +1,1048 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l => l.relatedTo?.includes('rf-microwave-bench')).map(resolveAffiliateLink);
+
+const title = 'RF Microwave Bench — Smith Chart, Stub Tuning & S-Parameter Matching | MakerPortal';
+const description = 'Live Smith Chart and S-parameter bench: source/load Z with R+X sliders, L-network (series L shunt C etc), open/short stubs with electrical length and position, S11/S21 sweep, matching journey trace, schematic, and audio where mismatch hiss narrows to pure 440 Hz tone at 50 Ω.';
+const canonical = new URL('/playground/rf-microwave-bench', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'RF Microwave Bench',
+  url: canonical.toString(),
+  applicationCategory: 'EngineeringApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'RF Microwave Bench', item: canonical.toString() }
+  ]
+};
+
+const faqs = [
+  { q: 'What exactly is plotted on the Smith Chart here?', a: 'Smith Chart maps normalized impedance z=Z/Z0 to reflection Γ=(z-1)/(z+1). We use Z0=50 Ω (or source Rs if you change it). Load ZL gives ΓL. Transmission line of electrical length θ=βl rotates Γ by e^{-j2θ}: Γ_in = ΓL·e^{-j2θ} moving clockwise on constant |Γ| circle. Adding a shunt stub adds susceptance jB moving along constant conductance circle. L-network then adds series jX and shunt jB to bring Γ to origin (50Ω). The trace shows sweep vs frequency and the matching journey with animated rotation as you tune stub.' },
+  { q: 'How does stub susceptance work? Open vs short?', a: 'For lossless line, open stub Zin_open = -j Z0 cot βl_stub → Yin = j Y0 tan βl. So susceptance B_open = Y0·tan βl, can be capacitive (0<θ<90°) or inductive. Short stub Zin_short = j Z0 tan βl → Yin = -j Y0 cot βl, B_short = -Y0·cot βl. At θ=45°, open gives +Y0 (cap), short gives -Y0 (ind). At 90°, open → ∞ susceptance (short circuit), short → 0 (open). We clamp near singularities.' },
+  { q: 'What formula does the auto L-match use?', a: 'Two topologies. Shunt-first (RL>RS): given G_L+jB_L=1/Z_mid, we need G_L/D=1/RS where D=G_L²+(B_L+B)² → B = -B_L ± sqrt(G_L/RS - G_L²). Then series X = (B_L+B)/D - XS to cancel source reactance. Series-first (RL<RS): RL²+(XL+X)² = RL·(RS²+XS²)/RS → X = -XL ± sqrt(...), then B = B_target - B\' where B_target = XS/(RS²+XS²). The simpler textbook Q for XL=0: Q=√(Rp/Rs -1), with Rp larger R. Then series X=Q·Rs, shunt susceptance Q/Rp. Two sign solutions map to low-pass (L in series, C shunt) vs high-pass.' },
+  { q: 'How is S11 / S21 computed across frequency?', a: 'For each f in 0.1–6 GHz sweep, βl = θ0·f/f0 where θ0 is electrical length at f0 (center). Stub length θ_stub(f)=θ_stub0·f/f0. Transform ZL through line length pos: Z1=Z0·(ZL+jZ0 tan βl_pos)/(Z0+jZL tan βl_pos). Add stub: Y2=Y1+jB_stub(f), Z2=1/Y2. Apply L-match frequency scaling: if series L: X(f)=X0·f/f0, if C: X0·f0/f. Shunt B(f): if C: B0·f/f0, if L: B0·f0/f. Then get Z_in(f). Γ(f)=(Z_in-Z0)/(Z_in+Z0). S11=20log10|Γ|. For lossless network, S21=10log10(1-|Γ|²) = insertion loss; we plot that as transmission. VSWR=(1+|Γ|)/(1-|Γ|).' },
+  { q: 'Why does the audio go from noisy hum to pure 440 Hz?', a: 'Web Audio: white-noise buffer (2s loop) → Biquad bandpass centered 440 Hz with Q = 0.5 + (1-|Γ|)·28. Bandwidth BW = fc/Q. When |Γ|≈1 wideband (Q low) → harsh multi-frequency hiss representing mismatch. When |Γ|→0, Q→28 → narrow hum around 440 Hz. Simultaneously two tone oscillators: pure 440 Hz gain = (1-|Γ|)²·0.28, beat oscillator 440+|Γ|·38 Hz gain = |Γ|·0.13 creates beating when mismatched. At |Γ|<0.02 (VSWR≈1.04) only 440 remains, indicating 50 Ω lock. Extra 120 Hz and 185 Hz hum oscillators faded by |Γ| give power-line-like hum off-match.' }
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const coreTS = `// Complex helpers
+type C = { re:number; im:number };
+export const c = (re:number, im=0):C => ({re,im});
+export const cAdd = (a:C,b:C):C => ({re:a.re+b.re, im:a.im+b.im});
+export const cSub = (a:C,b:C):C => ({re:a.re-b.re, im:a.im-b.im});
+export const cMul = (a:C,b:C):C => ({re:a.re*b.re-a.im*b.im, im:a.re*b.im+a.im*b.re});
+export const cDiv = (a:C,b:C):C => {
+  const d=b.re*b.re+b.im*b.im||1e-12;
+  return {re:(a.re*b.re+a.im*b.im)/d, im:(a.im*b.re-a.re*b.im)/d};
+};
+export const cMag = (a:C) => Math.hypot(a.re,a.im);
+export const cInv = (a:C):C => cDiv(c(1,0), a);
+
+// Reflection
+export function Gamma(Z:C, Z0:number):C {
+  return cDiv(cSub(Z,c(Z0,0)), cAdd(Z,c(Z0,0)));
+}
+
+// Zin through lossless line: Z0*(ZL + j Z0 t)/(Z0 + j ZL t), t=tan(beta l)
+export function Zin_line(ZL:C, Z0:number, tanBL:number):C {
+  // numer = ZL + j Z0 t
+  const numer: C = {re: ZL.re, im: ZL.im + Z0*tanBL};
+  // denom = Z0 + j ZL t = (Z0 - XL*t) + j RL*t
+  const denom: C = {re: Z0 - ZL.im*tanBL, im: ZL.re*tanBL};
+  const ratio = cDiv(numer, denom);
+  return {re: ratio.re*Z0, im: ratio.im*Z0};
+}
+
+// Stub susceptance: Y0=1/Z0
+export function stubSus(Y0:number, betaL:number, type:'open'|'short'):number {
+  const t = Math.tan(betaL);
+  if(type==='open') return Y0 * t; // B
+  // short: -Y0 cot = -Y0 / tan
+  return Math.abs(t) < 1e-5 ? -Y0*1e3*Math.sign(t||1) : -Y0 / t;
+}
+
+// L-match Q (XL=0 case)
+export function lMatchQ(Rp:number, Rs:number):number {
+  return Math.sqrt(Math.max(0, Rp/Rs - 1));
+}
+
+// Shunt-first solution for target Rs (real), source Xs=0 simplified
+export function designShuntFirst(ZL:C, Rs:number){
+  const YL = cInv(ZL); // G+jB
+  const GL = YL.re, BL = YL.im;
+  const disc = GL/Rs - GL*GL;
+  if(disc < 0) return null;
+  const sq = Math.sqrt(disc);
+  const B1 = -BL + sq, B2 = -BL - sq;
+  const D1 = GL*GL + (BL+B1)*(BL+B1), D2 = GL*GL + (BL+B2)*(BL+B2);
+  const X1 = (BL+B1)/D1, X2 = (BL+B2)/D2;
+  return [{B:B1,X:X1},{B:B2,X:X2}];
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="RF Microwave Bench"
+    lead="A microwave workbench in your browser: Smith Chart rotation, stub tuning (open/short electrical deg + position), L-network with series L/C shunt C/L, live S11/S21 sweep 0.1–6 GHz, matching journey trace, schematic view, and sonification where wideband hiss collapses to a pure 440 Hz when you hit 50 Ω (VSWR→1)."
+    pillarHint="rf-wireless"
+  >
+    <section class="border-b border-border" aria-labelledby="bench-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center gap-3 mb-6">
+          <button id="btn-audio" class="pill-btn">🔊 Audio: mismatch hiss → 440 Hz pure</button>
+          <button id="btn-automatch" class="pill-btn is-active">✦ Auto L-match</button>
+          <button id="btn-reset" class="pill-btn">Reset to 50Ω load</button>
+          <span id="match-state" class="ml-auto font-mono text-[0.70rem] uppercase tracking-[0.1em] text-muted-text">VSWR —</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[400px_1fr]">
+          <!-- Controls -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4 h-fit lg:sticky lg:top-6">
+            <h3 class="font-semibold text-[0.95rem]">Impedances</h3>
+            <div class="mt-3 space-y-3">
+              <div class="rounded-[12px] border border-border bg-elevated/30 p-3">
+                <p class="field-label">Source Zₛ = Rₛ + j Xₛ (ref)</p>
+                <label class="control-label mt-2"><span>Rₛ Ω (Z0 ref)</span><output id="out-rsrc">50</output><input id="sl-rsrc" type="range" min="10" max="120" step="1" value="50"/></label>
+                <label class="control-label"><span>Xₛ Ω</span><output id="out-xsrc">0</output><input id="sl-xsrc" type="range" min="-80" max="80" step="1" value="0"/></label>
+                <label class="control-label"><span>Line Z₀ Ω</span><output id="out-z0">50</output><input id="sl-z0" type="range" min="20" max="120" step="1" value="50"/></label>
+              </div>
+              <div class="rounded-[12px] border border-border bg-elevated/30 p-3">
+                <p class="field-label">Load Zʟ = Rʟ + j Xʟ</p>
+                <label class="control-label mt-2"><span>Rʟ Ω</span><output id="out-rl">75</output><input id="sl-rl" type="range" min="5" max="300" step="1" value="75"/></label>
+                <label class="control-label"><span>Xʟ Ω</span><output id="out-xl">60</output><input id="sl-xl" type="range" min="-200" max="200" step="1" value="60"/></label>
+                <label class="control-label"><span>Center f₀ GHz</span><output id="out-f0">1.00</output><input id="sl-f0" type="range" min="0.2" max="6" step="0.05" value="1.0"/></label>
+              </div>
+
+              <div class="rounded-[12px] border border-border bg-elevated/40 p-3">
+                <p class="field-label">Matching Network</p>
+                <label class="block mt-2"><span class="field-label">L-Type Topology</span>
+                  <select id="sel-match" class="tool-input mt-1">
+                    <option value="none">None – line + stub only</option>
+                    <option value="auto-shunt-LC" selected>Shunt-first (RL&gt;RS) Series L Shunt C – low-pass</option>
+                    <option value="auto-shunt-CL">Shunt-first Series C Shunt L – high-pass</option>
+                    <option value="auto-series-LC">Series-first (RL&lt;RS) Series L Shunt C</option>
+                    <option value="auto-series-CL">Series-first Series C Shunt L</option>
+                  </select>
+                </label>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                  <label class="block"><span class="field-label">Stub Type</span>
+                    <select id="sel-stub" class="tool-input mt-1">
+                      <option value="open" selected>Open</option>
+                      <option value="short">Short</option>
+                    </select>
+                  </label>
+                  <label class="block"><span class="field-label">Audio Hum</span>
+                    <select id="sel-hum" class="tool-input mt-1">
+                      <option value="on" selected>On – hiss→tone</option>
+                      <option value="off">Off</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="control-label mt-2"><span>Stub Length θ_e deg @ f₀</span><output id="out-stublen">45</output><input id="sl-stublen" type="range" min="0" max="175" step="0.5" value="45"/></label>
+                <label class="control-label"><span>Stub Position d/λ @ f₀ (from load)</span><output id="out-stubpos">0.12</output><input id="sl-stubpos" type="range" min="0" max="0.50" step="0.005" value="0.12"/></label>
+                <label class="control-label"><span>Sweep Span GHz (0.1–6)</span><output id="out-span">2.9</output><input id="sl-span" type="range" min="0.2" max="5.9" step="0.1" value="2.9"/></label>
+              </div>
+
+              <div class="rounded-[12px] border border-border bg-elevated/30 p-3 font-mono text-[0.70rem] leading-[1.45] space-y-1">
+                <div class="flex justify-between"><span>Γ_L (load)</span><span id="ro-gammaL">—</span></div>
+                <div class="flex justify-between"><span>Γ_in @ f₀</span><span id="ro-gammain">—</span></div>
+                <div class="flex justify-between"><span>|Γ| / VSWR</span><span id="ro-vswr">—</span></div>
+                <div class="flex justify-between"><span>Return Loss dB</span><span id="ro-rloss">—</span></div>
+                <div class="flex justify-between"><span>Mismatch Loss dB</span><span id="ro-mloss">—</span></div>
+                <div class="flex justify-between"><span>Z₁ after line</span><span id="ro-z1">—</span></div>
+                <div class="flex justify-between"><span>Z₂ after stub</span><span id="ro-z2">—</span></div>
+                <div class="flex justify-between"><span>Z_in final</span><span id="ro-zin">—</span></div>
+                <div class="h-px bg-border my-1"></div>
+                <div class="flex justify-between"><span>Q = √(Rp/Rs-1)</span><span id="ro-q">—</span></div>
+                <div class="flex justify-between"><span>B_stub = Y0 tan/ -cot</span><span id="ro-bstub">—</span></div>
+                <div class="flex justify-between"><span>L-match X_s / B_p @f₀</span><span id="ro-xb">—</span></div>
+                <div class="flex justify-between"><span>L / C values</span><span id="ro-lc">—</span></div>
+                <div class="mt-2 h-1.5 w-full rounded-full bg-canvas border border-border overflow-hidden"><div id="bar-match" class="h-full bg-primary-cta transition-all" style="width:0%"></div></div>
+                <p class="text-[0.62rem] text-muted-text leading-[1.35] mt-1">Bandwidth of noise ∝ |Γ|·2 kHz, Q=0.5+(1-|Γ|)·28. When |Γ|→0, tone 440 Hz pure, VSWR≈1. Bar shows match % = 100·(1-|Γ|).</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visuals -->
+          <div class="min-w-0 space-y-4">
+            <div class="grid grid-cols-1 gap-4 xl:grid-cols-[400px_1fr]">
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <div class="flex items-center justify-between"><p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Smith Chart 400×400 — normalized to Z₀</p><span id="lbl-smith" class="font-mono text-[0.62rem] text-muted-text">|Γ₀|=—</span></div>
+                <canvas id="smith-canvas" width="400" height="400" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border cursor-crosshair"></canvas>
+                <p class="mt-2 font-mono text-[0.62rem] text-muted-text">Gold = ΓL, Cyan = after line, Orange = after stub, White = final. Spiral = sweep 0.1–6 GHz. Dashed = VSWR=2 circle. Click near center to snap load 50Ω.</p>
+              </div>
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Matching Network Schematic — live</p>
+                <canvas id="schem-canvas" width="520" height="400" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <div class="mt-2 grid grid-cols-3 gap-2 font-mono text-[0.62rem] text-muted-text">
+                  <span>─ line Z₀ • stub: open ⊣ / short ⊥</span><span>⎍ C = || , L = coil</span><span>Z_s left, Z_L right</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">S-Parameters vs Frequency — S11 red, S21 blue (lossless est)</p>
+                <span id="lbl-sweep" class="font-mono text-[0.62rem] text-muted-text">f0 marker</span>
+              </div>
+              <canvas id="sweep-canvas" width="900" height="280" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              <div class="mt-2 flex flex-wrap gap-3 font-mono text-[0.62rem] text-muted-text"><span>Red S11 = 20log|Γ| dB</span><span>Blue S21 = 10log(1-|Γ|²) dB</span><span>White dot = f₀, green line = -10 dB BW</span></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="readout"><dt>Γ Magnitude</dt><dd id="ro-gmag">—</dd></div>
+              <div class="readout"><dt>VSWR</dt><dd id="ro-vswr2">—</dd></div>
+              <div class="readout"><dt>Z Inverted</dt><dd id="ro-zmatch">—</dd></div>
+              <div class="readout"><dt>Audio Filter Q</dt><dd id="ro-audioq">—</dd></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of the bench</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="font-[650]">Signal path & controls</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-decimal list-inside">
+              <li><strong class="text-primary-text">Source Zₛ = Rₛ+jXₛ:</strong> reference for Smith normalization. Default 50+ j0. Changing Rₛ moves VSWR circles scaling. Xₛ is used for conjugate matching target Rₛ−jXₛ.</li>
+              <li><strong class="text-primary-text">Load Z_L:</strong> R_L 5–300Ω, X_L −200→+200Ω. Directly drives Γ_L=(Z_L−Z0)/(Z_L+Z0). Gold dot on Smith.</li>
+              <li><strong class="text-primary-text">Line to stub d:</strong> position from load in λ at f₀: βl_pos0=2π·d/λ. Frequency scaling βl(f)=βl0·f/f0 rotates Γ: Γ1=ΓL·exp(-j2βl). Cyan dot. Visual arc is constant |Γ|.</li>
+              <li><strong class="text-primary-text">Stub susceptance:</strong> shunt stub at distance d. Open B=Y0·tanθ_s, Short B=−Y0·cotθ_s where θ_s electrical length slider. At f, θ_s(f)=θ_s0·f/f0. Admittance Y2=Y1+jB. Moves along constant conductance circle (orange).</li>
+              <li><strong class="text-primary-text">L-network:</strong> two reactive elements. Auto solver picks shunt-first if Re(Z2)&gt;Rs else series-first. For shunt-first, G/D=Rs gives B = −B_L ±√(G_L/Rs−G_L²). X = (B_L+B)/D − Xs. Sign of X,B decides L (positive) vs C (negative). Schematic shows coil vs capacitor. Final white dot near center when matched.</li>
+            </ol>
+            <div class="mt-5 math-card">
+              <p class="math-label">Line transformation</p>
+              <Math math="Z_{in}=Z_0\,\frac{Z_L+jZ_0 \tan \beta l}{Z_0+jZ_L\tan\beta l},\quad \Gamma_{in}=\Gamma_L e^{-j2\beta l}" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">Clockwise rotation on Smith with line length. Sweep over f traces spiral.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-[650]">Visualization & audio coupling</h3>
+            <ul class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-disc list-inside">
+              <li><strong class="text-primary-text">Smith 400×400:</strong> resistance circles r=0,0.2,0.5,1,2,5 centered at r/(1+r) radius 1/(1+r). Reactance circles ±x with centers 1±j/x. VSWR=2 circle radius 1/3. Sweep trace blue thin line from 0.1–6 GHz computed with frequency-scaled βl. Journey polyline gold→cyan→orange→white with arrow.</li>
+              <li><strong class="text-primary-text">S-param sweep 900×280:</strong> log-ish linear f axis. S11_dB=20log10|Γ(f)| clipped −40→0 dB. S21_dB=10log10(1−|Γ|²) for lossless estimate. Current f0 marker white dot, green dashed −10 dB bandwidth crossing.</li>
+              <li><strong class="text-primary-text">Schematic:</strong> Canvas 520×400 draws source circle left, series element (zig inductor if X>0 else two plates for C with value), shunt to ground mid with component, transmission line as two parallel lines length ∝ d, stub perpendicular length ∝ θ_e with open circle or ground short, load resistor zigzag with label matched %. Label Q=√(Rp/Rs−1).</li>
+              <li><strong class="text-primary-text">Audio engine:</strong> white noise buffer loop → Biquad bandpass fc=440 Hz Q=0.5+(1−|Γ|)·28 → gain noise =0.05+|Γ|·0.18. Pure tone osc 440 Hz gain =(1−|Γ|)²·0.28, beat osc 440+|Γ|·38 Hz gain |Γ|·0.13 creates hum beating off-match. Two extra hum oscs 120 Hz &amp; 185 Hz gains ∝|Γ| fade as matched. When VSWR≈1 ( |Γ| &lt; 0.02 ) noise → narrow hum resolving to clean single 440 Hz.</li>
+            </ul>
+            <div class="mt-5 math-card">
+              <p class="math-label">Stub + L-match Q</p>
+              <Math math="B_{stub}^{open}=Y_0\tan\beta l_s,\;B_{stub}^{short}=-Y_0\cot\beta l_s,\quad Q=\sqrt{\frac{R_p}{R_s}-1}" display />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Reflection</p>
+            <Math math="\Gamma=\frac{Z-Z_0}{Z+Z_0},\quad \mathrm{VSWR}=\frac{1+|\Gamma|}{1-|\Gamma|},\; RL=-20\log_{10}|\Gamma|" display />
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Line + Stub</p>
+            <Math math="Z_{in}=Z_0\frac{Z_L+jZ_0\tan\beta l}{Z_0+jZ_L\tan\beta l},\;Y_{stub}=jB,\;B_{open}=Y_0\tan\theta,\;B_{short}=-Y_0\cot\theta" display />
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">L-Match Q & components</p>
+            <Math math="Q=\sqrt{R_p/R_s-1},\;X_s=Q R_s,\;B_p=Q/R_p,\;L=X/\omega,\;C=B/\omega,\; \omega=2\pi f_0" display />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+          </div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(
+            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted);transition:all 0.15s;cursor:pointer}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.pill-btn:hover{border-color:var(--mp-border-strong);color:var(--mp-text)}
+.readout{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 55%,transparent);padding:0.65rem 0.8rem}
+.readout dt{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--mp-muted)}
+.readout dd{margin-top:0.2rem;font-size:0.88rem;font-weight:600;color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.field-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.math-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initRFBench(){
+  const smithC = document.getElementById('smith-canvas');
+  const schemC = document.getElementById('schem-canvas');
+  const sweepC = document.getElementById('sweep-canvas');
+  if(!smithC || smithC.dataset.init) return;
+  smithC.dataset.init='true';
+
+  const smithCtx = smithC.getContext('2d');
+  const schemCtx = schemC.getContext('2d');
+  const sweepCtx = sweepC.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  [smithC,schemC,sweepC].forEach(c=>{
+    const W=c.width,H=c.height;
+    c.width=W*dpr; c.height=H*dpr; c.style.width=W+'px'; c.style.height=H+'px';
+    c.getContext('2d').scale(dpr,dpr);
+  });
+
+  const slRsrc=document.getElementById('sl-rsrc'), slXsrc=document.getElementById('sl-xsrc'), slZ0=document.getElementById('sl-z0');
+  const slRl=document.getElementById('sl-rl'), slXl=document.getElementById('sl-xl'), slF0=document.getElementById('sl-f0');
+  const selMatch=document.getElementById('sel-match'), selStub=document.getElementById('sel-stub'), selHum=document.getElementById('sel-hum');
+  const slStubLen=document.getElementById('sl-stublen'), slStubPos=document.getElementById('sl-stubpos'), slSpan=document.getElementById('sl-span');
+  const outRsrc=document.getElementById('out-rsrc'), outXsrc=document.getElementById('out-xsrc'), outZ0=document.getElementById('out-z0');
+  const outRl=document.getElementById('out-rl'), outXl=document.getElementById('out-xl'), outF0=document.getElementById('out-f0');
+  const outStubLen=document.getElementById('out-stublen'), outStubPos=document.getElementById('out-stubpos'), outSpan=document.getElementById('out-span');
+  const roGammaL=document.getElementById('ro-gammaL'), roGammaIn=document.getElementById('ro-gammain'), roVswr=document.getElementById('ro-vswr');
+  const roRloss=document.getElementById('ro-rloss'), roMloss=document.getElementById('ro-mloss'), roZ1=document.getElementById('ro-z1'), roZ2=document.getElementById('ro-z2'), roZin=document.getElementById('ro-zin');
+  const roQ=document.getElementById('ro-q'), roBstub=document.getElementById('ro-bstub'), roXB=document.getElementById('ro-xb'), roLc=document.getElementById('ro-lc');
+  const roGmag=document.getElementById('ro-gmag'), roVswr2=document.getElementById('ro-vswr2'), roZmatch=document.getElementById('ro-zmatch'), roAudioQ=document.getElementById('ro-audioq');
+  const lblSmith=document.getElementById('lbl-smith'), lblSweep=document.getElementById('lbl-sweep'), matchState=document.getElementById('match-state'), barMatch=document.getElementById('bar-match');
+  const btnAudio=document.getElementById('btn-audio'), btnAuto=document.getElementById('btn-automatch'), btnReset=document.getElementById('btn-reset');
+
+  function updOut(){
+    outRsrc.textContent=slRsrc.value; outXsrc.textContent=slXsrc.value; outZ0.textContent=slZ0.value;
+    outRl.textContent=slRl.value; outXl.textContent=slXl.value; outF0.textContent=parseFloat(slF0.value).toFixed(2);
+    outStubLen.textContent=slStubLen.value; outStubPos.textContent=parseFloat(slStubPos.value).toFixed(3); outSpan.textContent=slSpan.value;
+  }
+  [slRsrc,slXsrc,slZ0,slRl,slXl,slF0,slStubLen,slStubPos,slSpan].forEach(el=>el.addEventListener('input',()=>{updOut(); compute();}));
+  selMatch.addEventListener('change',compute); selStub.addEventListener('change',compute);
+
+  // complex helpers
+  function C(re,im){ return {re,im}; }
+  function cAdd(a,b){return {re:a.re+b.re, im:a.im+b.im};}
+  function cSub(a,b){return {re:a.re-b.re, im:a.im-b.im};}
+  function cMul(a,b){return {re:a.re*b.re - a.im*b.im, im:a.re*b.im + a.im*b.re};}
+  function cDiv(a,b){
+    const d=b.re*b.re+b.im*b.im || 1e-12;
+    return {re:(a.re*b.re + a.im*b.im)/d, im:(a.im*b.re - a.re*b.im)/d};
+  }
+  function cMag(a){return Math.hypot(a.re,a.im);}
+  function cInv(a){return cDiv(C(1,0),a);}
+  function cAngle(a){return Math.atan2(a.im,a.re);}
+
+  function Gamma(Z,Z0){
+    const Z0c=C(Z0,0);
+    return cDiv(cSub(Z,Z0c), cAdd(Z,Z0c));
+  }
+  function Zin_line(ZL,Z0,tanBL){
+    const numer=C(ZL.re, ZL.im + Z0*tanBL);
+    const denom=C(Z0 - ZL.im*tanBL, ZL.re*tanBL);
+    const ratio=cDiv(numer,denom);
+    return C(ratio.re*Z0, ratio.im*Z0);
+  }
+
+  function stubSus(Y0, betaL, type){
+    const t=Math.tan(betaL);
+    if(type==='open') return Y0*t;
+    // short
+    if(Math.abs(t)<1e-4) return -Y0*1e4*Math.sign(t||1);
+    return -Y0 / t;
+  }
+
+  function computeJourney(){
+    const Rs=parseFloat(slRsrc.value), Xs=parseFloat(slXsrc.value), Z0c=parseFloat(slZ0.value)||50;
+    const Rl=parseFloat(slRl.value), Xl=parseFloat(slXl.value);
+    const f0=parseFloat(slF0.value)*1e9;
+    const stubType=selStub.value;
+    const stubLenDeg=parseFloat(slStubLen.value)*Math.PI/180;
+    const dPos=parseFloat(slStubPos.value); // fraction lambda at f0
+    const Y0=1/Z0c;
+
+    const ZL=C(Rl,Xl);
+    const betaPos0=2*Math.PI*dPos; // rad at f0
+    const tanPos0=Math.tan(betaPos0);
+    const Z1 = Zin_line(ZL,Z0c,tanPos0);
+    const Y1=cInv(Z1);
+    const Bstub0=stubSus(Y0, stubLenDeg, stubType);
+    const Y2=cAdd(Y1, C(0,Bstub0));
+    const Z2=cInv(Y2);
+
+    // L-match design targeting Rs - jXs (conj)
+    const omega0=2*Math.PI*f0;
+    const targetRs=Rs, targetXs=Xs; // want Zin = Rs - j Xs for max power? Actually conj
+    // compute G,B for Z2
+    const Y2c=Y2;
+    const G2=Y2c.re, B2=Y2c.im;
+
+    // Two possible topologies solving
+    let solution=null, topo='none', secondSol=null;
+    let Xmatch=0,Bmatch=0;
+
+    function shuntFirst(Zmid,Rs_target,Xs_target){
+      const Ym=cInv(Zmid);
+      const Gm=Ym.re, Bm=Ym.im;
+      const disc=Gm/Rs_target - Gm*Gm;
+      if(disc < -1e-12) return null;
+      const sq=Math.sqrt(Math.max(0,disc));
+      const B1=-Bm+sq, B2=-Bm-sq;
+      const D1=Gm*Gm + (Bm+B1)*(Bm+B1), D2=Gm*Gm + (Bm+B2)*(Bm+B2);
+      const X1_f = (Bm+B1)/(D1||1e-12) - Xs_target;
+      const X2_f = (Bm+B2)/(D2||1e-12) - Xs_target;
+      return [{B:B1,X:X1_f,D:D1},{B:B2,X:X2_f,D:D2}];
+    }
+    function seriesFirst(Zmid,Rs_target,Xs_target){
+      const Rm=Zmid.re, Xm=Zmid.im;
+      const Gt = Rs_target / (Rs_target*Rs_target + Xs_target*Xs_target); // G target for Y_in
+      const Bt = Xs_target / (Rs_target*Rs_target + Xs_target*Xs_target);
+      const Dtarget = Rm / (Gt||1e-12);
+      const disc = Dtarget - Rm*Rm;
+      if(disc < -1e-12) return null;
+      const sq=Math.sqrt(Math.max(0,disc));
+      const X1=-Xm+sq, X2=-Xm-sq;
+      const D1=Rm*Rm + (Xm+X1)*(Xm+X1);
+      const D2=Rm*Rm + (Xm+X2)*(Xm+X2);
+      const Bp1 = -(Xm+X1)/D1; // B' in our notation
+      const Bp2 = -(Xm+X2)/D2;
+      const B1 = Bt - Bp1, B2 = Bt - Bp2;
+      return [{B:B1,X:X1},{B:B2,X:X2}];
+    }
+
+    const matchSel=selMatch.value;
+    let sols=null;
+    let chosen=null;
+    let topoUsed='none';
+    if(matchSel!=='none'){
+      if(matchSel.includes('shunt')){
+        sols=shuntFirst(Z2,targetRs,targetXs);
+        topoUsed='shunt-first';
+      }else if(matchSel.includes('series')){
+        sols=seriesFirst(Z2,targetRs,targetXs);
+        topoUsed='series-first';
+      }
+      if(sols){
+        // pick based on desired signs
+        const wantSeriesL = matchSel.includes('LC') && (matchSel.includes('shunt') ? matchSel.includes('Series L') : true); // our labels: shunt-LC means Series L Shunt C
+        // Map signs: Series L -> X>0, Series C X<0, Shunt C B>0, Shunt L B<0
+        let wantXsSign = 0, wantBsSign = 0;
+        if(matchSel==='auto-shunt-LC' || matchSel==='auto-series-LC'){ wantXsSign=1; wantBsSign=1; }
+        else if(matchSel==='auto-shunt-CL' || matchSel==='auto-series-CL'){ wantXsSign=-1; wantBsSign=-1; }
+
+        // try find sol matching signs
+        let best=null;
+        for(const s of sols){
+          const xsSign = s.X>0?1:-1;
+          const bsSign = s.B>0?1:-1;
+          if(wantXsSign!==0 && xsSign!==wantXsSign) continue;
+          if(wantBsSign!==0 && bsSign!==wantBsSign) continue;
+          best=s; break;
+        }
+        // fallback to first if none matches sign
+        if(!best) best=sols[0];
+        chosen=best;
+        secondSol=sols.length>1 ? sols[1] : null;
+      }
+    }
+
+    let Z_final=Z2, Xfinal=0,Bfinal=0;
+    if(chosen){
+      Xfinal=chosen.X; Bfinal=chosen.B;
+      if(topoUsed==='shunt-first'){
+        const Ymid_p=C(G2 + 0, B2 + Bfinal); // Actually Y2 + jBfinal
+        const Ynew=cAdd(Y2, C(0,Bfinal));
+        const Znew=cInv(Ynew);
+        Z_final=C(Znew.re, Znew.im + Xfinal);
+      }else{
+        const Ztmp=C(Z2.re, Z2.im + Xfinal);
+        const Ytmp=cInv(Ztmp);
+        const Yfinal=cAdd(Ytmp, C(0,Bfinal));
+        Z_final=cInv(Yfinal);
+      }
+    }
+
+    const Z0ref=Z0c;
+    const gammaL=Gamma(ZL,Z0ref);
+    const gamma1=Gamma(Z1,Z0ref);
+    const gamma2=Gamma(Z2,Z0ref);
+    const gammaF=Gamma(Z_final,Z0ref);
+
+    // Sweep for smith trace and S-params
+    const span=parseFloat(slSpan.value); // GHz span
+    const f0GHz=parseFloat(slF0.value);
+    const fMin=Math.max(0.1, f0GHz - span/2), fMax=Math.min(6, f0GHz + span/2);
+    const sweepPoints=[];
+    const N=320;
+    for(let i=0;i<N;i++){
+      const fGHz=fMin + (fMax-fMin)*i/(N-1);
+      const f=fGHz*1e9;
+      const scale=f/f0;
+      const betaPos=betaPos0*scale;
+      const tanPos=Math.tan(betaPos);
+      const Z1f=Zin_line(ZL,Z0ref,tanPos);
+      const Y1f=cInv(Z1f);
+      const thetaStub=stubLenDeg*scale;
+      const Bstub=stubSus(Y0, thetaStub, stubType);
+      const Y2f=cAdd(Y1f, C(0,Bstub));
+      const Z2f=cInv(Y2f);
+      let Zinf=Z2f;
+      if(chosen){
+        // scale reactances with frequency
+        let Xf=0,Bf=0;
+        // determine if X is inductive or capacitive based on sign at f0
+        const isXind= chosen.X>0;
+        const isBind= chosen.B<0; // inductive susceptance negative? B = -1/(wL) negative
+        if(isXind) Xf=chosen.X*scale;
+        else Xf=chosen.X/scale; // C: X = -1/(wC) scales 1/f
+        // B: if capacitive B>0 -> B scales f, inductive B<0 -> scales 1/f (since B=-1/(wL))
+        if(chosen.B>0) Bf=chosen.B*scale;
+        else Bf=chosen.B/scale;
+        // Note: we use chosen X,B but scaled
+        if(topoUsed==='shunt-first'){
+          const Ymid=cAdd(Y2f, C(0,Bf));
+          const Zm=cInv(Ymid);
+          Zinf=C(Zm.re, Zm.im + Xf);
+        }else{
+          const Zmid=C(Z2f.re, Z2f.im + Xf);
+          const Ymid=cInv(Zmid);
+          const Yfin=cAdd(Ymid, C(0,Bf));
+          Zinf=cInv(Yfin);
+        }
+      }
+      const g=Gamma(Zinf,Z0ref);
+      const mag=cMag(g);
+      const s11db=20*Math.log10(Math.max(1e-4,mag));
+      const s21lin=Math.sqrt(Math.max(0,1 - mag*mag));
+      const s21db=10*Math.log10(Math.max(1e-6, s21lin*s21lin));
+      sweepPoints.push({fGHz,g,mag,s11db,s21db,Zinf});
+    }
+
+    return {Z0ref,Rs,Xs,ZL,Z1,Z2,Z_final,gammaL,gamma1,gamma2,gammaF,Bstub0,Y0,betaPos0,stubLenDeg,chosen,secondSol,topoUsed,Xfinal,Bfinal,f0,Rl,Xl,sweepPoints,fMin,fMax, f0GHz};
+  }
+
+  // Audio engine
+  let audioCtx=null, masterGain=null, noiseBufSrc=null, noiseFilter=null, noiseGain=null, oscPure=null, oscBeat=null, oscHum1=null, oscHum2=null, gainPure=null, gainBeat=null, gainHum1=null, gainHum2=null, audioOn=false;
+
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain(); masterGain.gain.value=0; masterGain.connect(audioCtx.destination);
+    // white noise buffer 2 sec
+    const len=audioCtx.sampleRate*2;
+    const buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<len;i++) ch[i]=Math.random()*2-1;
+    noiseBufSrc=audioCtx.createBufferSource(); noiseBufSrc.buffer=buf; noiseBufSrc.loop=true;
+    noiseFilter=audioCtx.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.frequency.value=440; noiseFilter.Q.value=0.8;
+    noiseGain=audioCtx.createGain(); noiseGain.gain.value=0;
+    noiseBufSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(masterGain);
+    noiseBufSrc.start();
+
+    oscPure=audioCtx.createOscillator(); oscPure.type='sine'; oscPure.frequency.value=440;
+    gainPure=audioCtx.createGain(); gainPure.gain.value=0;
+    oscPure.connect(gainPure); gainPure.connect(masterGain); oscPure.start();
+
+    oscBeat=audioCtx.createOscillator(); oscBeat.type='sine'; oscBeat.frequency.value=455;
+    gainBeat=audioCtx.createGain(); gainBeat.gain.value=0;
+    oscBeat.connect(gainBeat); gainBeat.connect(masterGain); oscBeat.start();
+
+    oscHum1=audioCtx.createOscillator(); oscHum1.type='sine'; oscHum1.frequency.value=120;
+    gainHum1=audioCtx.createGain(); gainHum1.gain.value=0;
+    oscHum1.connect(gainHum1); gainHum1.connect(masterGain); oscHum1.start();
+
+    oscHum2=audioCtx.createOscillator(); oscHum2.type='sine'; oscHum2.frequency.value=185;
+    gainHum2=audioCtx.createGain(); gainHum2.gain.value=0;
+    oscHum2.connect(gainHum2); gainHum2.connect(masterGain); oscHum2.start();
+
+    return audioCtx;
+  }
+
+  function updateAudio(gammaMag){
+    if(!audioOn) return;
+    const ac=ensureAudio();
+    ac.resume();
+    const q=0.5 + (1 - gammaMag)*28;
+    const now=ac.currentTime;
+    try{
+      noiseFilter.frequency.linearRampToValueAtTime(440, now+0.08);
+      noiseFilter.Q.linearRampToValueAtTime(q, now+0.12);
+      const gNoise=0.04 + gammaMag*0.18;
+      const gPure=(1-gammaMag)*(1-gammaMag)*0.28;
+      const beatFreq=440 + gammaMag*38;
+      const gBeat=gammaMag*0.13;
+      const gH1=gammaMag*0.07;
+      const gH2=gammaMag*0.05;
+      noiseGain.gain.linearRampToValueAtTime(gNoise, now+0.1);
+      gainPure.gain.linearRampToValueAtTime(gPure, now+0.1);
+      gainBeat.gain.linearRampToValueAtTime(gBeat, now+0.1);
+      gainHum1.gain.linearRampToValueAtTime(gH1, now+0.1);
+      gainHum2.gain.linearRampToValueAtTime(gH2, now+0.1);
+      oscBeat.frequency.linearRampToValueAtTime(beatFreq, now+0.08);
+      masterGain.gain.linearRampToValueAtTime(0.22, now+0.08);
+    }catch{}
+    roAudioQ.textContent=q.toFixed(2);
+  }
+
+  btnAudio.addEventListener('click',()=>{
+    if(selHum.value==='off'){ audioOn=false; btnAudio.classList.remove('is-active'); btnAudio.textContent='🔇 Audio off (set hum on)'; if(masterGain) masterGain.gain.value=0; return; }
+    audioOn=!audioOn;
+    btnAudio.classList.toggle('is-active',audioOn);
+    btnAudio.textContent=audioOn?'🔊 Audio on: hiss→440Hz':'🔊 Audio: mismatch hiss → 440 Hz pure';
+    if(audioOn){
+      ensureAudio(); audioCtx.resume();
+      masterGain.gain.value=0.22;
+    }else{
+      if(masterGain) masterGain.gain.value=0;
+    }
+  });
+
+  function formatComplex(z){
+    const sign=z.im>=0?'+':'';
+    return `${z.re.toFixed(1)}${sign}${z.im.toFixed(1)}j`;
+  }
+
+  function compute(){
+    const data=computeJourney();
+    if(!data) return;
+    const {Z0ref, ZL, Z1, Z2, Z_final, gammaL, gamma1, gamma2, gammaF, Bstub0, Y0, chosen, topoUsed, Xfinal, Bfinal, Rl, Xl, sweepPoints, fMin, fMax, f0GHz} = data;
+    const gLmag=cMag(gammaL), gFmag=cMag(gammaF);
+    const vswrL = (1+gFmag)/(1 - gFmag + 1e-6);
+    const rloss = -20*Math.log10(Math.max(1e-4,gFmag));
+    const mloss = -10*Math.log10(Math.max(1e-6,1 - gFmag*gFmag));
+    const Rp=Math.max(Rl, parseFloat(slRsrc.value)), Rs=Math.min(Rl, parseFloat(slRsrc.value));
+    const Q=Math.sqrt(Math.max(0,Rp/Rs -1));
+
+    // readouts
+    roGammaL.textContent=`${gammaL.re.toFixed(3)}${gammaL.im>=0?'+':''}${gammaL.im.toFixed(3)}j |${gLmag.toFixed(3)}|`;
+    roGammaIn.textContent=`${gammaF.re.toFixed(3)}${gammaF.im>=0?'+':''}${gammaF.im.toFixed(3)}j |${gFmag.toFixed(3)}|`;
+    roVswr.textContent=`${gFmag.toFixed(3)} / ${vswrL.toFixed(2)}:1`;
+    roRloss.textContent=`${isFinite(rloss)?rloss.toFixed(1)+' dB':'∞'}`;
+    roMloss.textContent=`${mloss.toFixed(2)} dB`;
+    roZ1.textContent=formatComplex(Z1)+' Ω';
+    roZ2.textContent=formatComplex(Z2)+' Ω';
+    roZin.textContent=formatComplex(Z_final)+' Ω';
+    roQ.textContent=Q.toFixed(3);
+    roBstub.textContent=`${Bstub0.toFixed(5)} S (Y0=${Y0.toFixed(4)}) ${(Bstub0>0?'C':'L')}`;
+    if(chosen){
+      roXB.textContent=`Xs=${Xfinal.toFixed(2)} Ω (${Xfinal>0?'L':'C'}), Bp=${Bfinal.toFixed(5)} S (${Bfinal>0?'C':'L'}) [${topoUsed}]`;
+      const w0=2*Math.PI*parseFloat(slF0.value)*1e9;
+      let lText='', cText='';
+      if(Xfinal>0){ const Lh=Xfinal/w0*1e9; lText=`L_series=${Lh.toFixed(2)} nH`; }
+      else if(Xfinal<0){ const Ch=-1/(Xfinal*w0)*1e12; lText=`C_series=${Ch.toFixed(2)} pF`; }
+      if(Bfinal>0){ const Ch=Bfinal/w0*1e12; cText=`C_shunt=${Ch.toFixed(2)} pF`; }
+      else if(Bfinal<0){ const Lh=-1/(Bfinal*w0)*1e9; cText=`L_shunt=${Lh.toFixed(2)} nH`; }
+      roLc.textContent=`${lText} ${cText}`.trim() || '—';
+    }else{
+      roXB.textContent= document.getElementById('sel-match').value==='none' ? 'Bypass – no L' : 'No solution (|Γ| constraints)';
+      roLc.textContent='—';
+    }
+    roGmag.textContent=gFmag.toFixed(4);
+    roVswr2.textContent=vswrL.toFixed(3)+':1';
+    roZmatch.textContent=formatComplex(Z_final);
+    lblSmith.textContent=`|ΓF|=${gFmag.toFixed(3)} |ΓL|=${gLmag.toFixed(3)}`;
+    const matchPct=Math.max(0,Math.min(100,(1-gFmag)*100));
+    barMatch.style.width=matchPct.toFixed(1)+'%';
+    if(vswrL<1.05) { matchState.textContent=`MATCHED ✓ VSWR ${vswrL.toFixed(2)}`; matchState.style.color='#4ade80'; }
+    else if(vswrL<2) { matchState.textContent=`Near match VSWR ${vswrL.toFixed(2)} |Γ|=${gFmag.toFixed(3)}`; matchState.style.color='#fbbf24'; }
+    else { matchState.textContent=`Mismatch VSWR ${vswrL.toFixed(2)} Return ${rloss.toFixed(1)} dB`; matchState.style.color='var(--mp-muted)'; }
+
+    if(vswrL<1.12) barMatch.style.background='#4ade80';
+    else if(vswrL<2) barMatch.style.background='#fbbf24';
+    else barMatch.style.background='var(--mp-cta)';
+
+    // update audio
+    updateAudio(gFmag);
+
+    // draw
+    drawSmith(data);
+    drawSweep(data);
+    drawSchem(data);
+  }
+
+  function drawSmith(data){
+    const W=400,H=400,cx=W/2, cy=H/2, R=175;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    smithCtx.fillStyle=bg; smithCtx.fillRect(0,0,W,H);
+
+    // grid outer circle
+    smithCtx.strokeStyle='rgba(255,255,255,0.18)'; smithCtx.lineWidth=1.2;
+    smithCtx.beginPath(); smithCtx.arc(cx,cy,R,0,Math.PI*2); smithCtx.stroke();
+
+    // resistance circles r=0,0.2,0.5,1,2,5
+    const rVals=[0,0.2,0.5,1,2,5];
+    for(const r of rVals){
+      const rr=R/(1+r);
+      const ccx=cx + R * r/(1+r);
+      smithCtx.strokeStyle= r===1 ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.10)';
+      smithCtx.lineWidth= r===1 ? 1.2 : 0.8;
+      smithCtx.beginPath(); smithCtx.arc(ccx,cy,rr,0,Math.PI*2); smithCtx.stroke();
+    }
+    // reactance circles
+    const xVals=[0.2,0.5,1,2,5];
+    for(const xv of xVals){
+      for(const sign of [1,-1]){
+        const x=xv*sign;
+        const rr=R/Math.abs(x);
+        const ccx=cx + R;
+        const ccy=cy - R/x; // formula
+        smithCtx.strokeStyle='rgba(255,255,255,0.08)';
+        smithCtx.lineWidth=0.7;
+        smithCtx.beginPath();
+        // arc of reactance circle: center (1, 1/x) radius 1/|x| – we draw full circle but clip to main circle by using arc and keeping inside? Simplify full
+        smithCtx.arc(ccx, ccy, rr, 0, Math.PI*2); smithCtx.stroke();
+      }
+    }
+    // horizontal diameter
+    smithCtx.strokeStyle='rgba(255,255,255,0.10)'; smithCtx.beginPath(); smithCtx.moveTo(cx-R,cy); smithCtx.lineTo(cx+R,cy); smithCtx.stroke();
+
+    // VSWR=2 circle
+    const vswr2Rad = R * (2-1)/(2+1); // actually |Γ| = (VSWR-1)/(VSWR+1)=1/3
+    smithCtx.strokeStyle='rgba(251,191,36,0.35)'; smithCtx.setLineDash([4,3]); smithCtx.beginPath(); smithCtx.arc(cx,cy,R*1/3,0,Math.PI*2); smithCtx.stroke(); smithCtx.setLineDash([]);
+    smithCtx.fillStyle='rgba(251,191,36,0.55)'; smithCtx.font='9px ui-monospace'; smithCtx.fillText('VSWR 2', cx+ R*0.33+4, cy-4);
+
+    // sweep trace
+    if(data.sweepPoints){
+      smithCtx.beginPath(); smithCtx.strokeStyle='rgba(96,165,250,0.38)'; smithCtx.lineWidth=1;
+      data.sweepPoints.forEach((p,i)=>{
+        const x=cx + p.g.re*R, y=cy - p.g.im*R;
+        if(i===0) smithCtx.moveTo(x,y); else smithCtx.lineTo(x,y);
+      }); smithCtx.stroke();
+    }
+
+    // journey
+    const pts=[data.gammaL, data.gamma1, data.gamma2, data.gammaF];
+    const colors=['#fbbf24','#22d3ee','#fb923c','#ffffff'];
+    // lines
+    smithCtx.lineWidth=1.8;
+    for(let i=0;i<pts.length-1;i++){
+      const a=pts[i], b=pts[i+1];
+      if(!a||!b) continue;
+      smithCtx.strokeStyle=colors[i];
+      smithCtx.beginPath(); smithCtx.moveTo(cx + a.re*R, cy - a.im*R); smithCtx.lineTo(cx + b.re*R, cy - b.im*R); smithCtx.stroke();
+      // arrow mid
+      const mx=(a.re+b.re)/2, my=(a.im+b.im)/2;
+      smithCtx.fillStyle=colors[i]; smithCtx.beginPath(); smithCtx.arc(cx+mx*R, cy - my*R, 2,0,Math.PI*2); smithCtx.fill();
+    }
+
+    // dots
+    pts.forEach((g,i)=>{
+      if(!g) return;
+      const x=cx + g.re*R, y=cy - g.im*R;
+      smithCtx.fillStyle=colors[i];
+      smithCtx.beginPath(); smithCtx.arc(x,y, i===3?6:5,0,Math.PI*2); smithCtx.fill();
+      smithCtx.strokeStyle=bg; smithCtx.lineWidth=1.5; smithCtx.stroke();
+      smithCtx.fillStyle='#e8eef6'; smithCtx.font='10px ui-monospace';
+      const label=['ΓL','Γ_line','Γ_stub','Γ_in'][i];
+      smithCtx.fillText(label, x+7, y-7);
+    });
+
+    // center
+    smithCtx.fillStyle='#4ade80'; smithCtx.beginPath(); smithCtx.arc(cx,cy,3,0,Math.PI*2); smithCtx.fill();
+    smithCtx.fillStyle='rgba(255,255,255,0.6)'; smithCtx.font='9px ui-monospace'; smithCtx.fillText('50Ω', cx+6, cy+4);
+  }
+
+  function drawSweep(data){
+    const W=900,H=280;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    sweepCtx.fillStyle=bg; sweepCtx.fillRect(0,0,W,H);
+
+    // grid dB -40..0
+    sweepCtx.strokeStyle='rgba(255,255,255,0.06)'; sweepCtx.lineWidth=1;
+    for(let db=-40; db<=0; db+=10){
+      const y=H - (db+40)/40 * H;
+      sweepCtx.beginPath(); sweepCtx.moveTo(0,y); sweepCtx.lineTo(W,y); sweepCtx.stroke();
+      sweepCtx.fillStyle='rgba(255,255,255,0.35)'; sweepCtx.font='10px ui-monospace'; sweepCtx.fillText(db+' dB', 4, y-2);
+    }
+    // freq ticks
+    const fMin=data.fMin, fMax=data.fMax;
+    for(let i=0;i<=6;i++){
+      const f=fMin + (fMax-fMin)*i/6;
+      const x= (f - fMin)/(fMax - fMin) * W;
+      sweepCtx.beginPath(); sweepCtx.moveTo(x,0); sweepCtx.lineTo(x,H); sweepCtx.stroke();
+      sweepCtx.fillStyle='rgba(255,255,255,0.35)'; sweepCtx.fillText(f.toFixed(2)+'GHz', x-18, H-4);
+    }
+
+    // S11
+    sweepCtx.beginPath(); sweepCtx.strokeStyle='#f87171'; sweepCtx.lineWidth=2.2;
+    data.sweepPoints.forEach((p,i)=>{
+      const x= (p.fGHz - fMin)/(fMax-fMin)*W;
+      const y= H - (p.s11db +40)/40 * H;
+      const yc=Math.max(0,Math.min(H,y));
+      if(i===0) sweepCtx.moveTo(x,yc); else sweepCtx.lineTo(x,yc);
+    }); sweepCtx.stroke();
+
+    // S21
+    sweepCtx.beginPath(); sweepCtx.strokeStyle='#60a5fa'; sweepCtx.lineWidth=1.8;
+    data.sweepPoints.forEach((p,i)=>{
+      const x= (p.fGHz - fMin)/(fMax-fMin)*W;
+      const y= H - (p.s21db +40)/40 * H;
+      const yc=Math.max(0,Math.min(H,y));
+      if(i===0) sweepCtx.moveTo(x,yc); else sweepCtx.lineTo(x,yc);
+    }); sweepCtx.stroke();
+
+    // -10dB line
+    const y10=H - (-10+40)/40*H;
+    sweepCtx.strokeStyle='rgba(74,222,128,0.5)'; sweepCtx.setLineDash([6,4]); sweepCtx.beginPath(); sweepCtx.moveTo(0,y10); sweepCtx.lineTo(W,y10); sweepCtx.stroke(); sweepCtx.setLineDash([]);
+
+    // f0 marker
+    const f0=data.f0GHz;
+    const x0=(f0 - fMin)/(fMax-fMin)*W;
+    const idxClosest=data.sweepPoints.reduce((best,i,idx)=> Math.abs(i.fGHz - f0) < Math.abs(best.fGHz - f0) ? i : best, data.sweepPoints[0]);
+    // find point closest
+    let bestP=data.sweepPoints[0], bestDiff=1e9;
+    for(const p of data.sweepPoints){ const d=Math.abs(p.fGHz - f0); if(d<bestDiff){bestDiff=d; bestP=p;} }
+    const yS11=H - (bestP.s11db +40)/40*H;
+    const yS21=H - (bestP.s21db +40)/40*H;
+    sweepCtx.fillStyle='#fff'; sweepCtx.beginPath(); sweepCtx.arc(x0, yS11, 5,0,Math.PI*2); sweepCtx.fill();
+    sweepCtx.fillStyle='#fff'; sweepCtx.beginPath(); sweepCtx.arc(x0, yS21, 4,0,Math.PI*2); sweepCtx.fill();
+    sweepCtx.strokeStyle='#fff'; sweepCtx.lineWidth=1; sweepCtx.beginPath(); sweepCtx.moveTo(x0,0); sweepCtx.lineTo(x0,H); sweepCtx.stroke();
+
+    lblSweep.textContent=`f₀=${f0.toFixed(2)}GHz S11=${bestP.s11db.toFixed(1)}dB S21=${bestP.s21db.toFixed(1)}dB BW-10dB ?`;
+  }
+
+  function drawSchem(data){
+    const W=520,H=400;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    schemCtx.fillStyle=bg; schemCtx.fillRect(0,0,W,H);
+
+    const leftX=40, rightX=W-50, midY=H/2;
+    // source
+    schemCtx.strokeStyle='#e8eef6'; schemCtx.lineWidth=1.5;
+    schemCtx.beginPath(); schemCtx.arc(leftX,midY,18,0,Math.PI*2); schemCtx.stroke();
+    schemCtx.fillStyle='#e8eef6'; schemCtx.font='11px ui-monospace'; schemCtx.fillText('Z_s', leftX-12, midY+4);
+    schemCtx.fillStyle='rgba(255,255,255,0.5)'; schemCtx.font='10px ui-monospace'; schemCtx.fillText(`${parseFloat(slRsrc.value)}${parseFloat(slXsrc.value)>=0?'+':''}${parseFloat(slXsrc.value)}j`, leftX-20, midY-26);
+
+    // line start
+    let curX=leftX+18;
+    const seriesGap=110;
+    const shuntX=leftX+120;
+    // series element from L-match
+    if(data.chosen){
+      const X=data.chosen.X;
+      if(Math.abs(X)>0.5){
+        if(X>0){ // inductor coil
+          schemCtx.strokeStyle='#fbbf24'; schemCtx.lineWidth=1.8;
+          schemCtx.beginPath();
+          let sx=curX;
+          schemCtx.moveTo(sx,midY);
+          for(let k=0;k<4;k++){ const cx=sx+8 + k*12; const cy=midY + (k%2? -10:10); schemCtx.lineTo(cx,cy); }
+          sx+=50; schemCtx.lineTo(sx,midY);
+          schemCtx.stroke();
+          const w0=2*Math.PI*parseFloat(slF0.value)*1e9;
+          const Ln = X/w0*1e9;
+          schemCtx.fillStyle='#fbbf24'; schemCtx.font='9px ui-monospace'; schemCtx.fillText(`L ${Ln>=0?Ln.toFixed(1)+'nH':''}`, curX, midY-16);
+          curX+=60;
+        }else{ // capacitor
+          schemCtx.strokeStyle='#60a5fa'; schemCtx.lineWidth=1.8;
+          const capX=curX+25;
+          schemCtx.beginPath(); schemCtx.moveTo(curX,midY); schemCtx.lineTo(capX-6,midY); schemCtx.moveTo(capX+6,midY); schemCtx.lineTo(capX+18,midY); schemCtx.stroke();
+          schemCtx.beginPath(); schemCtx.moveTo(capX-6,midY-14); schemCtx.lineTo(capX-6,midY+14); schemCtx.moveTo(capX+6,midY-14); schemCtx.lineTo(capX+6,midY+14); schemCtx.stroke();
+          const w0=2*Math.PI*parseFloat(slF0.value)*1e9;
+          const Cc = -1/(X*w0)*1e12;
+          schemCtx.fillStyle='#60a5fa'; schemCtx.font='9px ui-monospace'; schemCtx.fillText(`C ${Cc.toFixed(2)}pF`, curX, midY-16);
+          curX+=50;
+        }
+      }
+    }
+
+    // line to stub position
+    const totalLineLen= rightX-100 - curX;
+    const posFrac=parseFloat(slStubPos.value); // 0-0.5
+    const posX=curX + totalLineLen* (0.3 + posFrac*1.2); // map
+    // draw main line as two lines
+    schemCtx.strokeStyle='#9ca3af'; schemCtx.lineWidth=1.2;
+    schemCtx.beginPath(); schemCtx.moveTo(curX,midY-6); schemCtx.lineTo(rightX-80,midY-6); schemCtx.stroke();
+    schemCtx.beginPath(); schemCtx.moveTo(curX,midY+6); schemCtx.lineTo(rightX-80,midY+6); schemCtx.stroke();
+    // distance label
+    schemCtx.fillStyle='rgba(255,255,255,0.5)'; schemCtx.font='9px ui-monospace'; schemCtx.fillText(`d=${posFrac.toFixed(3)}λ`, curX+10, midY-18);
+
+    // shunt element at shuntX (if shunt-first, this is L-match shunt; else stub location is shunt)
+    // draw shunt L-match at shuntX if exists and shunt-first
+    if(data.chosen && data.topoUsed==='shunt-first'){
+      const B=data.chosen.B;
+      const sx=curX+20;
+      schemCtx.strokeStyle= B>0 ? '#60a5fa' : '#fbbf24';
+      schemCtx.beginPath(); schemCtx.moveTo(sx,midY-6); schemCtx.lineTo(sx, midY+60); schemCtx.stroke();
+      // component symbol
+      if(B>0){ // shunt C => capacitor to ground
+        schemCtx.beginPath(); schemCtx.moveTo(sx-12, midY+24); schemCtx.lineTo(sx+12, midY+24); schemCtx.moveTo(sx-12, midY+32); schemCtx.lineTo(sx+12, midY+32); schemCtx.stroke();
+      }else{
+        // inductor
+        schemCtx.beginPath();
+        let sy=midY+20;
+        schemCtx.moveTo(sx,sy);
+        for(let k=0;k<3;k++){ const cy=sy+6+k*10; schemCtx.lineTo(sx + (k%2?6:-6), cy); }
+        schemCtx.stroke();
+      }
+      // ground
+      schemCtx.strokeStyle='#e8eef6'; schemCtx.beginPath(); schemCtx.moveTo(sx-14, midY+66); schemCtx.lineTo(sx+14, midY+66); schemCtx.moveTo(sx-10, midY+71); schemCtx.lineTo(sx+10, midY+71); schemCtx.moveTo(sx-6, midY+76); schemCtx.lineTo(sx+6, midY+76); schemCtx.stroke();
+      schemCtx.fillStyle='#e8eef6'; schemCtx.font='8px ui-monospace'; schemCtx.fillText(`Bp ${B.toFixed(4)}S`, sx+10, midY+40);
+    }
+
+    // stub at posX
+    const stubLenDeg=parseFloat(slStubLen.value);
+    const lenPx= 20 + stubLenDeg*0.55;
+    const stubX=posX;
+    schemCtx.strokeStyle='#f472b6'; schemCtx.lineWidth=1.6;
+    schemCtx.beginPath(); schemCtx.moveTo(stubX,midY-6); schemCtx.lineTo(stubX, midY- lenPx); schemCtx.stroke();
+    schemCtx.strokeStyle='#f472b6';
+    schemCtx.fillStyle='#f472b6'; schemCtx.font='9px ui-monospace'; schemCtx.fillText(`${selStub.value} ${stubLenDeg.toFixed(0)}°`, stubX+6, midY- lenPx+10);
+    // stub end: open circle or short ground
+    if(selStub.value==='open'){
+      schemCtx.beginPath(); schemCtx.arc(stubX, midY- lenPx, 5,0,Math.PI*2); schemCtx.stroke();
+      schemCtx.fillStyle='rgba(255,255,255,0.6)'; schemCtx.fillText('open', stubX+8, midY- lenPx);
+    }else{
+      // short to ground? Actually short stub shorted to ground? Usually to ground? Draw ground
+      schemCtx.strokeStyle='#e8eef6'; schemCtx.beginPath(); schemCtx.moveTo(stubX-10, midY- lenPx); schemCtx.lineTo(stubX+10, midY- lenPx); schemCtx.stroke();
+      schemCtx.beginPath(); schemCtx.moveTo(stubX-7, midY- lenPx+5); schemCtx.lineTo(stubX+7, midY- lenPx+5); schemCtx.stroke();
+    }
+    // if series-first shunt at end before load
+    if(data.chosen && data.topoUsed==='series-first'){
+      const B=data.chosen.B;
+      const sx=rightX-90;
+      schemCtx.strokeStyle= B>0 ? '#60a5fa' : '#fbbf24'; schemCtx.lineWidth=1.6;
+      schemCtx.beginPath(); schemCtx.moveTo(sx,midY-6); schemCtx.lineTo(sx, midY+55); schemCtx.stroke();
+      if(B>0){ schemCtx.beginPath(); schemCtx.moveTo(sx-12, midY+22); schemCtx.lineTo(sx+12, midY+22); schemCtx.moveTo(sx-12, midY+30); schemCtx.lineTo(sx+12, midY+30); schemCtx.stroke(); }
+      else { schemCtx.beginPath(); let sy=midY+18; schemCtx.moveTo(sx,sy); for(let k=0;k<3;k++){ schemCtx.lineTo(sx+(k%2?6:-6), sy+6+k*10);} schemCtx.stroke();}
+      schemCtx.strokeStyle='#e8eef6'; schemCtx.beginPath(); schemCtx.moveTo(sx-14, midY+64); schemCtx.lineTo(sx+14, midY+64); schemCtx.stroke();
+    }
+
+    // load
+    const loadX=rightX-30;
+    schemCtx.strokeStyle='#e8eef6'; schemCtx.lineWidth=1.6;
+    // zigzag resistor
+    schemCtx.beginPath();
+    schemCtx.moveTo(rightX-80, midY);
+    let lx=rightX-80;
+    for(let i=0;i<4;i++){ const nx=lx+10; const ny=midY + (i%2? -8:8); schemCtx.lineTo(nx,ny); lx=nx; }
+    schemCtx.lineTo(loadX,midY); schemCtx.stroke();
+    schemCtx.fillStyle='#e8eef6'; schemCtx.font='11px ui-monospace'; schemCtx.fillText('Z_L', loadX-10, midY-16);
+    schemCtx.fillStyle='rgba(255,255,255,0.6)'; schemCtx.font='9px ui-monospace'; schemCtx.fillText(`${formatComplex(data.ZL)}`, loadX-35, midY+24);
+
+    // VSWR label
+    const vswr=(1+cMag(data.gammaF))/(1-cMag(data.gammaF)+1e-6);
+    schemCtx.fillStyle= vswr<1.2 ? '#4ade80' : '#fbbf24'; schemCtx.font='12px ui-monospace'; schemCtx.fillText(`VSWR ${vswr.toFixed(2)} |Γ| ${cMag(data.gammaF).toFixed(3)}`, curX, H-14);
+
+    // ground line bottom
+    schemCtx.strokeStyle='rgba(255,255,255,0.15)'; schemCtx.beginPath(); schemCtx.moveTo(leftX, H-36); schemCtx.lineTo(W-10, H-36); schemCtx.stroke();
+  }
+
+  smithC.addEventListener('click',(e)=>{
+    const rect=smithC.getBoundingClientRect();
+    const W=400,H=400,cx=W/2,cy=H/2,R=175;
+    const x=(e.clientX - rect.left) * (W/rect.width);
+    const y=(e.clientY - rect.top) * (H/rect.height);
+    const re=(x-cx)/R, im=(cy - y)/R;
+    const mag=Math.hypot(re,im);
+    if(mag>0.98) return;
+    // Gamma to Z: Z = Z0*(1+Γ)/(1-Γ)
+    const Z0=parseFloat(slZ0.value);
+    const g=C(re,im);
+    const one=C(1,0);
+    const num=cAdd(one,g), den=cSub(one,g);
+    const ratio=cDiv(num,den);
+    const Z=C(ratio.re*Z0, ratio.im*Z0);
+    slRl.value= Math.max(5,Math.min(300, Z.re)).toFixed(0);
+    slXl.value= Math.max(-200,Math.min(200, Z.im)).toFixed(0);
+    updOut(); compute();
+  });
+
+  btnReset.addEventListener('click',()=>{
+    slRl.value=50; slXl.value=0; slRsrc.value=50; slXsrc.value=0; slStubLen.value=45; slStubPos.value=0.12; selStub.value='open'; selMatch.value='auto-shunt-LC';
+    updOut(); compute();
+  });
+  btnAuto.addEventListener('click',()=>{
+    // naive auto: try find stub len that minimizes |GammaF| by brute force
+    let bestLen=parseFloat(slStubLen.value), bestGamma=1e9;
+    const orig=parseFloat(slStubLen.value);
+    for(let len=0; len<=170; len+=1){
+      slStubLen.value=len;
+      const d=computeJourney();
+      const mag=cMag(d.gammaF);
+      if(mag<bestGamma){ bestGamma=mag; bestLen=len; }
+    }
+    slStubLen.value=bestLen;
+    updOut(); compute();
+    btnAuto.textContent=`✦ Auto ${bestLen}° |Γ|${bestGamma.toFixed(3)}`;
+    setTimeout(()=>{ btnAuto.textContent='✦ Auto L-match'; },2200);
+  });
+
+  updOut();
+  compute();
+
+  document.addEventListener('astro:before-swap',()=>{ try{audioCtx?.close();}catch{} },{once:true});
+}
+document.addEventListener('astro:page-load', initRFBench);
+initRFBench();
+</script>
+</Layout>

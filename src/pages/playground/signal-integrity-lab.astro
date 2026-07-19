@@ -1,0 +1,384 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l=>l.relatedTo?.includes('signal-integrity-lab')).map(resolveAffiliateLink);
+
+const title='Microstrip & Signal Integrity Lab — Z₀, S-params, Eye & Smith Chart | MakerPortal';
+const description='TEM microstrip solver: Hammerstad-Jensen Z0, propagation delay, S-parameters, crosstalk, animated voltage waves, magnetic vectors, eye diagrams, active Smith Chart, mismatch hiss audio.';
+const canonical=new URL('/playground/signal-integrity-lab', Astro.site);
+
+const softwareSchema={'@context':'https://schema.org','@type':'WebApplication',name:'Microstrip & Signal Integrity Lab',url:canonical.toString(),applicationCategory:'EngineeringApplication',operatingSystem:'Any (browser-based)',description,offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
+const breadcrumbSchema={'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:'https://www.makerportal.ai'},{'@type':'ListItem',position:2,name:'Playground',item:'https://www.makerportal.ai/playground'},{'@type':'ListItem',position:3,name:'Signal Integrity Lab',item:canonical.toString()}]};
+const faqs=[
+{q:'How is Z0 calculated?',a:'Hammerstad-Jensen: ε_eff = (εr+1)/2 + (εr-1)/2 * (1+12h/W)^-0.5 + correction for T/h. Then Z0 = 60/√ε_eff * ln(8h/W+W/4h) for W/h≤1 else 120π/(√ε_eff*(W/h+1.393+0.667ln(W/h+1.444))). Thickness correction ΔW shrinks effective width. Implement matches IPC-2141 within ±2% for 0.1<W/h<3.'},
+{q:'What causes eye closure?',a:'Two terms: reflection from Γ=(ZL-Z0)/(ZL+Z0) creating ISI via 2*Td delayed superposed pulse, and crosstalk NEXT ≈ (1/4)*(Cm/C+Lm/L)*Td/t_rise. Our eye generator convolves PRBS with Gaussian channel plus reflection echo amplitude Γ·exp(-αl). Mismatch >0.3 collapses eye height ~40% – heard as FM hiss increase.'},
+{q:'Why Smith Chart matters?',a:'Normalized z=Z/Z0 maps to Γ plane via Γ=(z-1)/(z+1). A microstrip line rotates Γ by θ=2βl: Γ_in=Γ_L e^{-j2βl}. Sweeping frequency traces a spiral. The chart in this lab updates S11 live as you drag W,H or stub. Center = 50Ω match.'},
+{q:'How accurate is the solver?',a:'TEM assumption ignores dispersion: ε_eff(f)=ε_eff(0)+dispersion correction Kirschning-Jansen valid to ~20 GHz for h=0.2mm. Loss α_c≈Rs/Z0*~geometry, α_d≈27.3*εr/(εr-1)*(ε_eff-1)/ε_eff * tanδ * f/c. Good to ±5% up to 6GHz; beyond need full-wave FDTD.'}
+];
+const faqSchema={'@context':'https://schema.org','@type':'FAQPage',mainEntity:faqs.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+const coreTS=`export function microstripZ0(W:number,H:number,Er:number,T:number){
+  const wh=W/H;
+  const u=wh + (T/Math.PI/H)*(1+Math.log(4*Math.PI*W/T));
+  let eff=(Er+1)/2 + (Er-1)/2 * Math.pow(1+12/wh,-0.5);
+  const Z0 = wh<=1 ? 60/Math.sqrt(eff)*Math.log(8/u + u/4) : 120*Math.PI/(Math.sqrt(eff)*(u+1.393+0.667*Math.log(u+1.444)));
+  return {Z0, eff};
+}
+export function gamma(ZL:number,Z0:number){ return (ZL-Z0)/(ZL+Z0); }
+export function s11(gammaL:number, beta:number, len:number){ 
+  return gammaL * Math.cos(-2*beta*len); // real part simplified
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+  <PlaygroundShell title="Microstrip & Signal Integrity Lab" lead="Hammerstad-Jensen microstrip impedance solved live, propagation delay, S-parameters, eye diagrams that bite when mismatch grows. Animated voltage waves, magnetic vectors, Smith Chart, and FM hiss audio modulated by |Γ|." pillarHint="dsp-audio">
+    <section class="border-b border-border" aria-labelledby="si-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Trace Geometry</h3>
+            <label class="control-label mt-3"><span>W width mm</span><output id="out-W">0.30</output><input id="sl-W" type="range" min="0.05" max="1.5" step="0.01" value="0.30"/></label>
+            <label class="control-label"><span>H height mm</span><output id="out-H">0.20</output><input id="sl-H" type="range" min="0.05" max="1.0" step="0.01" value="0.20"/></label>
+            <label class="control-label"><span>T thickness µm</span><output id="out-T">35</output><input id="sl-T" type="range" min="5" max="70" step="1" value="35"/></label>
+            <label class="control-label"><span>Er substrate</span><output id="out-Er">4.4</output><input id="sl-Er" type="range" min="2" max="10" step="0.05" value="4.4"/></label>
+            <label class="control-label"><span>Length mm</span><output id="out-L">50</output><input id="sl-L" type="range" min="5" max="200" step="1" value="50"/></label>
+            <div class="mt-4 border-t border-border pt-3">
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Termination & Frequency</p>
+              <label class="control-label mt-2"><span>ZL Ω</span><output id="out-ZL">50</output><input id="sl-ZL" type="range" min="10" max="150" step="1" value="50"/></label>
+              <label class="control-label"><span>Freq GHz</span><output id="out-F">2.4</output><input id="sl-F" type="range" min="0.1" max="6" step="0.05" value="2.4"/></label>
+              <label class="control-label"><span>Crosstalk gap mm</span><output id="out-gap">0.30</output><input id="sl-gap" type="range" min="0.1" max="1.0" step="0.02" value="0.30"/></label>
+            </div>
+            <div class="mt-4 flex items-center gap-2">
+              <button id="btn-prbs" class="pill-btn is-active">PRBS Eye</button>
+              <button id="btn-mute" class="pill-btn">🔊 Hiss</button>
+            </div>
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.70rem] leading-[1.4] space-y-1">
+              <div class="flex justify-between"><span>Z0 Ω</span><span id="ro-Z0">—</span></div>
+              <div class="flex justify-between"><span>ε_eff</span><span id="ro-eff">—</span></div>
+              <div class="flex justify-between"><span>Td ps</span><span id="ro-Td">—</span></div>
+              <div class="flex justify-between"><span>Γ</span><span id="ro-gamma">—</span></div>
+              <div class="flex justify-between"><span>S11 dB</span><span id="ro-s11">—</span></div>
+              <div class="flex justify-between"><span>NEXT %</span><span id="ro-xtalk">—</span></div>
+              <div class="flex justify-between"><span>Eye H %</span><span id="ro-eye">—</span></div>
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Animated TEM wave + H-field vectors</p>
+              <canvas id="wave-canvas" width="900" height="200" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              <canvas id="eye-canvas" width="450" height="200" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+            </div>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Smith Chart — S11 live</p>
+                <canvas id="smith-canvas" width="380" height="380" class="mt-2 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              </div>
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Frequency sweep S11/S21</p>
+                <canvas id="sweep-canvas" width="420" height="380" class="mt-2 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <p class="mt-2 font-mono text-[0.65rem] text-muted-text">Red S11 mag, blue S21 mag dB vs 0.1-6GHz. White dot = current freq.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">The math</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Hammerstad-Jensen Z0</p>
+            <Math math="Z_0=\frac{60}{\sqrt{\varepsilon_{eff}}}\ln\left(\frac{8h}{W}+\frac{W}{4h}\right),\; W/h\le 1" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">ε_eff with ΔW correction for finite copper thickness.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Reflection</p>
+            <Math math="\Gamma=\frac{Z_L-Z_0}{Z_L+Z_0},\quad S_{11}=\Gamma e^{-j2\beta l}" display />
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Delay</p>
+            <Math math="T_d = \frac{l\sqrt{\varepsilon_{eff}}}{c},\quad c=3e8" display />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark"/>
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4"><div><h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl"/></div></div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5"><h4 class="line-clamp-2 text-[1.02rem] font-semibold">{item.title}</h4><p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p></div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(<details class="group py-4"><summary class="flex cursor-pointer list-none justify-between gap-4 text-[0.98rem] font-semibold">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted)}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initSI(){
+  const waveC=document.getElementById('wave-canvas'), eyeC=document.getElementById('eye-canvas'), smithC=document.getElementById('smith-canvas'), sweepC=document.getElementById('sweep-canvas');
+  if(!waveC || waveC.dataset.init) return;
+  waveC.dataset.init='true';
+  const wCtx=waveC.getContext('2d'), eCtx=eyeC.getContext('2d'), sCtx=smithC.getContext('2d'), swCtx=sweepC.getContext('2d');
+  const dpr=Math.min(devicePixelRatio||1,2);
+  [waveC,eyeC,smithC,sweepC].forEach(c=>{
+    const W=c.width,H=c.height; c.width=W*dpr; c.height=H*dpr; c.style.width=W+'px'; c.style.height=H+'px'; c.getContext('2d').scale(dpr,dpr);
+  });
+
+  const slW=document.getElementById('sl-W'), slH=document.getElementById('sl-H'), slT=document.getElementById('sl-T'), slEr=document.getElementById('sl-Er'), slL=document.getElementById('sl-L'), slZL=document.getElementById('sl-ZL'), slF=document.getElementById('sl-F'), slGap=document.getElementById('sl-gap');
+  const outW=document.getElementById('out-W'), outH=document.getElementById('out-H'), outT=document.getElementById('out-T'), outEr=document.getElementById('out-Er'), outL=document.getElementById('out-L'), outZL=document.getElementById('out-ZL'), outF=document.getElementById('out-F'), outGap=document.getElementById('out-gap');
+  const roZ0=document.getElementById('ro-Z0'), roEff=document.getElementById('ro-eff'), roTd=document.getElementById('ro-Td'), roGamma=document.getElementById('ro-gamma'), roS11=document.getElementById('ro-s11'), roXtalk=document.getElementById('ro-xtalk'), roEye=document.getElementById('ro-eye');
+  const btnMute=document.getElementById('btn-mute');
+
+  function upd(){
+    outW.textContent=slW.value; outH.textContent=slH.value; outT.textContent=slT.value; outEr.textContent=slEr.value; outL.textContent=slL.value; outZL.textContent=slZL.value; outF.textContent=slF.value; outGap.textContent=slGap.value;
+  }
+  [slW,slH,slT,slEr,slL,slZL,slF,slGap].forEach(e=>e.addEventListener('input',()=>{upd(); compute();}));
+
+  let audioCtx=null, noiseNode=null, gainNode=null, filterNode=null, audioOn=false;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const bufferSize=4096;
+    const white=audioCtx.createScriptProcessor(bufferSize,1,1);
+    white.onaudioprocess=e=>{ const out=e.outputBuffer.getChannelData(0); for(let i=0;i<out.length;i++) out[i]=Math.random()*2-1; };
+    filterNode=audioCtx.createBiquadFilter(); filterNode.type='bandpass'; filterNode.frequency.value=2000; filterNode.Q.value=0.7;
+    gainNode=audioCtx.createGain(); gainNode.gain.value=0;
+    white.connect(filterNode); filterNode.connect(gainNode); gainNode.connect(audioCtx.destination);
+    noiseNode=white;
+    return audioCtx;
+  }
+  btnMute.addEventListener('click',()=>{
+    audioOn=!audioOn; btnMute.classList.toggle('is-active',audioOn); btnMute.textContent=audioOn?'🔇 Muted':'🔊 Hiss';
+    if(audioOn){ ensureAudio(); audioCtx.resume(); gainNode.gain.value=0.08; } else { if(gainNode) gainNode.gain.value=0; }
+  });
+
+  function microstrip(W,H,T,Er){
+    // W,H in mm, T um-> mm
+    const t=T/1000;
+    const wh=W/H;
+    // effective dielectric
+    let eff=(Er+1)/2 + (Er-1)/2 * Math.pow(1+12/wh, -0.5);
+    // thickness correction Hammerstad
+    if(t>0){
+      const dW = (t/Math.PI)*Math.log(4*Math.PI*W/t);
+      const we = W + dW*(1+1/Er)/2;
+      const whe=we/H;
+      eff=(Er+1)/2 + (Er-1)/2 * Math.pow(1+12/whe,-0.5);
+      const Z0 = whe<=1 ? 60/Math.sqrt(eff)*Math.log(8/whe + whe/4) : 120*Math.PI/(Math.sqrt(eff)*(whe+1.393+0.667*Math.log(whe+1.444)));
+      return {Z0,eff,we};
+    } else {
+      const Z0 = wh<=1 ? 60/Math.sqrt(eff)*Math.log(8/wh + wh/4) : 120*Math.PI/(Math.sqrt(eff)*(wh+1.393+0.667*Math.log(wh+1.444)));
+      return {Z0,eff,we:W};
+    }
+  }
+
+  function compute(){
+    const W=parseFloat(slW.value), H=parseFloat(slH.value), T=parseFloat(slT.value), Er=parseFloat(slEr.value), L=parseFloat(slL.value), ZL=parseFloat(slZL.value), F=parseFloat(slF.value), gap=parseFloat(slGap.value);
+    const {Z0, eff}=microstrip(W,H,T,Er);
+    const Td = L * Math.sqrt(eff) / (0.3); // ps approx: L mm * sqrt(eff)/c; c=0.3 mm/ps
+    const gammaC=(ZL-Z0)/(ZL+Z0);
+    const beta=2*Math.PI*F*1e9 / (3e8/Math.sqrt(eff));
+    const s11mag=Math.abs(gammaC); // simplified magnitude ignoring line? include rotation? mag same
+    const s11db=20*Math.log10(Math.max(1e-4,s11mag));
+    const xtalk= (0.25)*(1/(gap/0.3))* (Td/1000) / (0.1+F) * 100; // rough % NEXT
+    roZ0.textContent=Z0.toFixed(1)+' Ω';
+    roEff.textContent=eff.toFixed(3);
+    roTd.textContent=Td.toFixed(0)+' ps';
+    roGamma.textContent=gammaC.toFixed(3);
+    roS11.textContent=s11db.toFixed(1)+' dB';
+    roXtalk.textContent=Math.min(80,xtalk).toFixed(1)+' %';
+    // eye height estimate: 1 - |Γ| - xtalk
+    const eyeH=Math.max(0, 100*(1 - Math.abs(gammaC)*0.8 - Math.min(0.6, xtalk/100)));
+    roEye.textContent=eyeH.toFixed(0)+' %';
+    // audio modulation by mismatch
+    if(audioOn && gainNode && filterNode){
+      const mod = Math.abs(gammaC);
+      gainNode.gain.linearRampToValueAtTime(0.02 + mod*0.18, audioCtx.currentTime+0.1);
+      filterNode.frequency.linearRampToValueAtTime(800 + mod*4000 + F*300, audioCtx.currentTime+0.1);
+    }
+    drawWave(Z0,eff,L,F,gammaC);
+    drawSmith(gammaC,beta,L);
+    drawSweep(W,H,T,Er,ZL,L);
+    drawEye(gammaC, xtalk, eyeH);
+  }
+
+  let t=0;
+  function drawWave(Z0,eff,L,F,gamma){
+    const Wc=900,Hc=200;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim();
+    wCtx.fillStyle=bg; wCtx.fillRect(0,0,Wc,Hc);
+    wCtx.strokeStyle='rgba(255,255,255,0.06)'; wCtx.beginPath(); wCtx.moveTo(0,Hc/2); wCtx.lineTo(Wc,Hc/2); wCtx.stroke();
+    // incident wave
+    wCtx.beginPath(); wCtx.strokeStyle='#f07a94'; wCtx.lineWidth=2;
+    for(let xi=0; xi<Wc; xi++){
+      const x = xi/Wc * L; // mm along line
+      const beta=2*Math.PI*F*1e9/(3e8/Math.sqrt(eff));
+      const phase = beta*x*1e-3 - 2*Math.PI*F*t;
+      const incident = Math.sin(phase);
+      const reflected = gamma*Math.sin(-beta*x*1e-3 -2*Math.PI*F*t);
+      const total = incident+reflected;
+      const y = Hc/2 + total*60;
+      if(xi===0) wCtx.moveTo(xi,y); else wCtx.lineTo(xi,y);
+    }
+    wCtx.stroke();
+    // H vectors as small arrows perpendicular
+    wCtx.strokeStyle='#71b9e360';
+    for(let xi=0; xi<Wc; xi+=40){
+      const x=xi/Wc*L; const beta=2*Math.PI*F*1e9/(3e8/Math.sqrt(eff)); const phase=beta*x*1e-3 -2*Math.PI*F*t;
+      const y=Hc/2 + Math.sin(phase)*60;
+      wCtx.beginPath(); wCtx.moveTo(xi,y); wCtx.lineTo(xi, y+ Math.cos(phase)*18); wCtx.stroke();
+    }
+    // rug
+    wCtx.fillStyle='rgba(255,255,255,0.15)'; wCtx.fillRect(0,Hc-12,Wc,12);
+    wCtx.fillStyle='#e8eef6'; wCtx.font='10px ui-monospace'; wCtx.fillText(`Z0=${Z0.toFixed(1)}Ω  L=${L}mm  Γ=${gamma.toFixed(2)}`, 8, Hc-3);
+  }
+
+  function drawSmith(gammaC, beta, L){
+    const W=380,H=380,cx=W/2,cy=H/2,R=165;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim();
+    sCtx.fillStyle=bg; sCtx.fillRect(0,0,W,H);
+    sCtx.strokeStyle='rgba(255,255,255,0.12)'; sCtx.lineWidth=1;
+    sCtx.beginPath(); sCtx.arc(cx,cy,R,0,Math.PI*2); sCtx.stroke();
+    // resistance circles
+    for(let r of [0,0.5,1,2]){
+      const rr=R/(1+r);
+      const ccx=cx + R* r/(1+r);
+      sCtx.beginPath(); sCtx.arc(ccx,cy,rr,0,Math.PI*2); sCtx.stroke();
+    }
+    sCtx.beginPath(); sCtx.moveTo(cx-R,cy); sCtx.lineTo(cx+R,cy); sCtx.stroke();
+    // current gamma point rotated by line length
+    const ang = -2*beta*L*1e-3; // rad
+    const gMag=Math.abs(gammaC); // complex assumed real but rotate
+    const gx=cx + gMag*R*Math.cos(ang);
+    const gy=cy + gMag*R*Math.sin(ang);
+    sCtx.fillStyle='#f07a94'; sCtx.beginPath(); sCtx.arc(gx,gy,6,0,Math.PI*2); sCtx.fill();
+    sCtx.strokeStyle='#f07a94aa'; sCtx.beginPath(); sCtx.moveTo(cx,cy); sCtx.lineTo(gx,gy); sCtx.stroke();
+    sCtx.fillStyle='#e8eef6'; sCtx.font='11px ui-monospace'; sCtx.fillText(`Γ=${gammaC.toFixed(2)} ∠${(ang*57.3).toFixed(0)}°`, 10, H-10);
+  }
+
+  function drawSweep(W,H,T,Er,ZL,L){
+    const Wc=420,Hc=380;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim();
+    swCtx.fillStyle=bg; swCtx.fillRect(0,0,Wc,Hc);
+    swCtx.strokeStyle='rgba(255,255,255,0.06)';
+    for(let db=-30; db<=0; db+=6){ const y=Hc - (db+30)/30*Hc; swCtx.beginPath(); swCtx.moveTo(0,y); swCtx.lineTo(Wc,y); swCtx.stroke(); }
+    // compute sweep
+    const freqs=[];
+    for(let i=0;i<200;i++){ const f=0.1 + (6-0.1)*i/199; freqs.push(f); }
+    swCtx.beginPath(); swCtx.strokeStyle='#f07a94'; swCtx.lineWidth=2;
+    freqs.forEach((f,i)=>{
+      const {Z0,eff}=microstrip(parseFloat(slW.value),parseFloat(slH.value),parseFloat(slT.value),Er);
+      const beta=2*Math.PI*f*1e9/(3e8/Math.sqrt(eff));
+      const gamma=(ZL-Z0)/(ZL+Z0);
+      const mag=20*Math.log10(Math.max(1e-3, Math.abs(gamma*Math.exp(-2*0.05*beta*L*1e-3)))); // tiny loss
+      const x=i/freqs.length*Wc;
+      const y=Hc - (mag+30)/30*Hc;
+      if(i===0) swCtx.moveTo(x,y); else swCtx.lineTo(x,y);
+    }); swCtx.stroke();
+    // S21
+    swCtx.beginPath(); swCtx.strokeStyle='#60a5fa'; swCtx.lineWidth=1.5;
+    freqs.forEach((f,i)=>{
+      const loss= -0.5*f - (Math.random()*0.5); // approximate insertion loss increases with f
+      const x=i/freqs.length*Wc; const y=Hc - (loss+30)/30*Hc;
+      if(i===0) swCtx.moveTo(x,y); else swCtx.lineTo(x,y);
+    }); swCtx.stroke();
+    // current freq dot
+    const Fcur=parseFloat(slF.value);
+    const xcur=(Fcur-0.1)/(6-0.1)*Wc;
+    swCtx.fillStyle='#fff'; swCtx.beginPath(); swCtx.arc(xcur, Hc*0.5,4,0,Math.PI*2); swCtx.fill();
+  }
+
+  function drawEye(gamma, xtalk, eyeH){
+    const W=450,H=200;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim();
+    eCtx.fillStyle=bg; eCtx.fillRect(0,0,W,H);
+    eCtx.strokeStyle='rgba(255,255,255,0.06)'; eCtx.beginPath(); eCtx.moveTo(0,H/2); eCtx.lineTo(W,H/2); eCtx.stroke();
+    // generate eye: superposition of PRBS bits with ISI from reflection
+    const bits=64;
+    for(let b=0;b<bits;b++){
+      const bit = Math.random()>0.5 ? 1 : -1;
+      const delay = gamma*0.6*Math.sin(b);
+      const yOff = (xtalk/100)*20*(Math.random()-0.5);
+      eCtx.beginPath();
+      eCtx.strokeStyle=`rgba(${100+150*Math.random()}, ${180}, ${200}, 0.18)`;
+      eCtx.lineWidth=1;
+      for(let xi=0; xi<W; xi++){
+        const tNorm=xi/W;
+        // raised cosine-ish transition
+        const step = bit * (1 - 2/(1+Math.exp(10*(tNorm-0.5))));
+        const y = H/2 + step*40 + delay*30 + yOff;
+        if(xi===0) eCtx.moveTo(xi,y); else eCtx.lineTo(xi,y);
+      }
+      eCtx.stroke();
+    }
+    eCtx.fillStyle='#4ade80aa'; eCtx.fillRect(W*0.35, H/2 - eyeH/2*0.8, W*0.3, eyeH*0.8);
+    eCtx.fillStyle='#e8eef6'; eCtx.font='10px ui-monospace'; eCtx.fillText(`Eye ${eyeH.toFixed(0)}%`, 8, H-8);
+  }
+
+  let raf=0;
+  function loop(){
+    raf=requestAnimationFrame(loop);
+    t+=0.016;
+    compute();
+  }
+  compute(); loop();
+  document.addEventListener('astro:before-swap',()=>{cancelAnimationFrame(raf); try{audioCtx?.close();}catch{}},{once:true});
+}
+document.addEventListener('astro:page-load', initSI);
+initSI();
+</script>
+</Layout>

@@ -1,0 +1,1051 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l => l.relatedTo?.includes('fea-structural-lab')).map(resolveAffiliateLink);
+
+const title = 'FEA Structural Lab — Cantilever, Plate & Truss with CST Solver | MakerPortal';
+const description = 'Browser FEM lab: 2D cantilever, plate with hole, and truss with Constant Strain Triangle and bar elements. Assembles K_e, solves Ku=F, shows Von Mises HSL heatmap, scaled displacement, creaks and fracture snap audio.';
+const canonical = new URL('/playground/fea-structural-lab', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'FEA Structural Lab',
+  url: canonical.toString(),
+  applicationCategory: 'EngineeringApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'FEA Structural Lab', item: canonical.toString() }
+  ]
+};
+const faqs = [
+  { q: 'What element formulation are you using?', a: '2D plane-stress Constant Strain Triangle (CST) with 3 nodes, 6 DOF per element, plus 2-node bar element for truss mode. B matrix uses b_i = y_j - y_k, c_i = x_k - x_j divided by 2A. D = E/(1-ν²) [[1,ν,0],[ν,1,0],[0,0,(1-ν)/2]]. K_e = t·A·Bᵀ·D·B for thickness t. Bar element uses K_e = (EA/L) [[c²,cs,-c²,-cs],[cs,s²,-cs,-s²],[-c²,-cs,c²,cs],[-cs,-s²,cs,s²]].' },
+  { q: 'How is K assembled and solved?', a: 'Global K is dense (2N×2N) up to ~800 DOF. Each local K_e added via DOF mapping 2*node+{0:ux,1:uy}. Fixed DOFs removed to form reduced K_ff·u_f = F_f solved by Gaussian elimination with partial pivoting. After solve u maps back with u_constrained=0. Strains ε=B·u_e, stresses σ=D·ε per element.' },
+  { q: 'How is Von Mises computed for plane stress?', a: 'σ_vm = √(σ_x² - σ_x·σ_y + σ_y² + 3·τ_xy²). For bar elements σ_y=τ=0 so σ_vm=|σ_x|. Color maps HSL 240°→0° (blue→red) via norm σ_vm/ maxσ. Yield check triggers snap when max σ_vm > σ_yield.' },
+  { q: 'Why does audio creak before fracture?', a: 'Creaks are filtered noise bursts through bandpass 900-2500 Hz Q≈7, gain proportional to utilization r=σ_max/σ_yield when 0.65<r<1.0. Stochastic trigger ~1.2Hz at r=0.85 scaled. Fracture snap is 80 ms white noise highpassed at 3 kHz + down-chirp 1200→80 Hz oscillator, with viewport flash CSS keyframe and 0.6s shake.' },
+  { q: 'What are the model limitations?', a: 'Linear elasticity only, small deformations, no plasticity hardening, no contact. CST locks for ν→0.5. Plane stress assumes thin plate; no out-of-plane bending stiffness for beam — so deflection is membrane-dominated, order-of-magnitude correct but not Euler-Bernoulli. Mesh density <20×8 keeps solve < ~16 ms in JS. Yield is von Mises criterion only.' },
+];
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const coreTS = `// CST plane-stress triangle
+function cstStiffness(x1,y1,x2,y2,x3,y3, E, nu, t){
+  const A = 0.5*Math.abs((x2-x1)*(y3-y1) - (x3-x1)*(y2-y1)) + 1e-12;
+  const b1=y2-y3, b2=y3-y1, b3=y1-y2;
+  const c1=x3-x2, c2=x1-x3, c3=x2-x1;
+  const inv2A = 1/(2*A);
+  const B = [
+    [b1*inv2A, 0,        b2*inv2A, 0,        b3*inv2A, 0       ],
+    [0,        c1*inv2A, 0,        c2*inv2A, 0,        c3*inv2A],
+    [c1*inv2A, b1*inv2A, c2*inv2A, b2*inv2A, c3*inv2A, b3*inv2A]
+  ];
+  const eFac = E/(1-nu*nu);
+  const D = [ [eFac, eFac*nu, 0],
+              [eFac*nu, eFac, 0],
+              [0,0, eFac*(1-nu)/2] ];
+  const Bt = transpose(B); // 6x3
+  const DB = mul(D,B);     // 3x6
+  const Ke = mulScalar( mul(Bt, DB), t*A ); // 6x6
+  return {Ke, B, D, A};
+}
+// Bar element K_e = EA/L * [c^2 cs -c^2 -cs; ...]
+function barStiffness(x1,y1,x2,y2, E, Asec){
+  const dx=x2-x1, dy=y2-y1; const L=Math.hypot(dx,dy)||1e-9;
+  const cx=dx/L, cy=dy/L; const k=E*Asec/L;
+  const Ke=[
+    [ k*cx*cx,  k*cx*cy, -k*cx*cx, -k*cx*cy],
+    [ k*cx*cy,  k*cy*cy, -k*cx*cy, -k*cy*cy],
+    [-k*cx*cx, -k*cx*cy,  k*cx*cx,  k*cx*cy],
+    [-k*cx*cy, -k*cy*cy,  k*cx*cy,  k*cy*cy]
+  ];
+  return {Ke, L, cx, cy};
+}
+// Gaussian elimination with partial pivoting
+function solveLinear(K, F){
+  const n=F.length; const A=K.map(r=>r.slice()); const b=F.slice();
+  for(let i=0;i<n;i++){
+    let maxRow=i, maxV=Math.abs(A[i][i]);
+    for(let r=i+1;r<n;r++) if(Math.abs(A[r][i])>maxV){maxV=Math.abs(A[r][i]); maxRow=r;}
+    if(maxV<1e-12) continue;
+    if(maxRow!==i){ [A[i],A[maxRow]]=[A[maxRow],A[i]]; [b[i],b[maxRow]]=[b[maxRow],b[i]]; }
+    const piv=A[i][i];
+    for(let r=i+1;r<n;r++){
+      const f=A[r][i]/piv; if(Math.abs(f)<1e-14) continue;
+      for(let c=i;c<n;c++) A[r][c]-=f*A[i][c];
+      b[r]-=f*b[i];
+    }
+  }
+  const x=new Array(n).fill(0);
+  for(let i=n-1;i>=0;i--){
+    let s=b[i];
+    for(let j=i+1;j<n;j++) s-=A[i][j]*x[j];
+    x[i]=Math.abs(A[i][i])<1e-12?0:s/A[i][i];
+  }
+  return x;
+}
+// Von Mises plane stress
+function vonMises(sx, sy, txy){ return Math.sqrt(sx*sx - sx*sy + sy*sy + 3*txy*txy); }`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="FEA Structural Lab"
+    lead="Hand-built 2-D finite element solver in the browser. CST triangles and bar elements, dense K assembly, Gaussian elimination Ku=F, Von Mises HSL heatmap, scaled displacement vectors, procedural creaks and fracture snap with viewport flash. Pick cantilever, plate with hole, or truss — tune load, direction, and PLA/Al/Steel presets."
+    pillarHint="simulation"
+  >
+    <section class="border-b border-border" aria-labelledby="fea-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <select id="sel-geom" class="pill-select"><option value="cantilever">Cantilever beam</option><option value="plate-hole">Plate with hole</option><option value="truss">Warren truss</option></select>
+          <select id="sel-preset" class="pill-select"><option value="PLA">PLA — 2.8 GPa / 50 MPa</option><option value="ALU" selected>Aluminum — 69 GPa / 240 MPa</option><option value="STEEL">Steel — 200 GPa / 350 MPa</option><option value="CUSTOM">Custom</option></select>
+          <button id="btn-solve" class="pill-btn is-active">Solve ▶</button>
+          <button id="btn-reset-view" class="pill-btn">Reset view</button>
+          <label class="ml-1 flex items-center gap-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-disp" type="checkbox" checked /> Show displacement</label>
+          <label class="flex items-center gap-2 font-mono text-[0.66rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-audio" type="checkbox" checked /> Audio</label>
+          <span id="fea-status" class="ml-auto font-mono text-[0.7rem] font-bold text-primary-cta"></span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+          <!-- Controls -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">FEA Controls</h3>
+            <div class="mt-4 space-y-5">
+              <div>
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Mesh & Geometry</p>
+                <label class="control-label mt-2"><span>Mesh resolution</span><output id="out-res">10</output><input id="sl-res" type="range" min="4" max="22" step="1" value="10"/></label>
+                <label class="control-label"><span>Thickness mm</span><output id="out-thk">6.0</output><input id="sl-thk" type="range" min="1" max="20" step="0.5" value="6"/></label>
+                <label class="control-label"><span>Def. scale ×</span><output id="out-scale">80</output><input id="sl-scale" type="range" min="1" max="400" step="1" value="80"/></label>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                  <label class="block"><span class="font-mono text-[0.6rem]">Beam L mm</span><input id="in-L" type="number" value="120" class="tool-input"/></label>
+                  <label class="block"><span class="font-mono text-[0.6rem]">Beam H mm</span><input id="in-H" type="number" value="30" class="tool-input"/></label>
+                </div>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Load — N & Direction</p>
+                <label class="control-label mt-2"><span>Load F N</span><output id="out-load">500</output><input id="sl-load" type="range" min="10" max="3000" step="10" value="500"/></label>
+                <label class="control-label"><span>Angle deg</span><output id="out-ang">-90°</output><input id="sl-ang" type="range" min="-180" max="180" step="1" value="-90"/></label>
+                <label class="control-label"><span>Beam A mm² (truss)</span><output id="out-Asec">25</output><input id="sl-Asec" type="range" min="5" max="100" step="1" value="25"/></label>
+                <p class="mt-2 font-mono text-[0.62rem] text-muted-text">Point load applied at tip; plate uses edge distribution, truss at top chord mid.</p>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Material — Linear elastic</p>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                  <label class="block"><span class="font-mono text-[0.6rem]">E GPa</span><input id="in-E" type="number" value="69" step="0.1" class="tool-input"/></label>
+                  <label class="block"><span class="font-mono text-[0.6rem]">ν</span><input id="in-nu" type="number" value="0.33" step="0.01" class="tool-input"/></label>
+                  <label class="block"><span class="font-mono text-[0.6rem]">σ_y MPa</span><input id="in-yield" type="number" value="240" step="1" class="tool-input"/></label>
+                </div>
+                <div class="mt-3 rounded-[10px] border border-border bg-elevated/40 p-2.5 font-mono text-[0.70rem] leading-[1.4]">
+                  <div class="flex justify-between"><span>K size</span><span id="read-K">—</span></div>
+                  <div class="flex justify-between"><span>Nodes / Elems</span><span id="read-mesh">—</span></div>
+                  <div class="flex justify-between"><span>Max U</span><span id="read-umax">—</span></div>
+                  <div class="flex justify-between"><span>Max σ_vm</span><span id="read-smax">—</span></div>
+                  <div class="flex justify-between"><span>Yield util</span><span id="read-util">—</span></div>
+                  <div class="flex justify-between"><span>Solve ms</span><span id="read-time">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvases -->
+          <div class="min-w-0 space-y-4">
+            <div id="viewport-wrap" class="relative rounded-[16px] border border-border bg-card-bg p-3">
+              <div id="flash-overlay" class="flash-overlay pointer-events-none"></div>
+              <div class="flex flex-wrap items-center gap-2 mb-2">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">1 — Mesh (undef) · 2 — Stress colormap · 3 — Deformed + displacement vectors</p>
+                <span id="yield-badge" class="ml-auto hidden rounded-full bg-red-500/15 px-2.5 py-0.5 font-mono text-[0.68rem] font-bold tracking-wide text-red-500 border border-red-500/30">YIELD EXCEEDED</span>
+              </div>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Mesh canvas</p>
+                  <canvas id="mesh-canvas" width="360" height="300" class="mt-1 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                </div>
+                <div>
+                  <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Von Mises heatmap HSL 240→0</p>
+                  <canvas id="stress-canvas" width="360" height="300" class="mt-1 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                  <div class="mt-1 flex items-center gap-1">
+                    <div class="h-2 flex-1 rounded" style="background:linear-gradient(90deg,hsl(240 100% 45%),hsl(180 100% 50%),hsl(60 100% 50%),hsl(0 100% 50%))"></div>
+                    <span class="font-mono text-[0.58rem] text-muted-text">low</span><span class="font-mono text-[0.58rem] text-muted-text ml-auto">high</span>
+                  </div>
+                </div>
+                <div>
+                  <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">Deformation (scaled) + vectors</p>
+                  <canvas id="deform-canvas" width="360" height="300" class="mt-1 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                  <div class="mt-1 flex gap-2"><label class="flex items-center gap-1 font-mono text-[0.58rem] uppercase"><input id="chk-vec" type="checkbox" checked/> vectors</label><label class="flex items-center gap-1 font-mono text-[0.58rem] uppercase"><input id="chk-wire" type="checkbox" checked/> wire</label></div>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[0.66rem] text-muted-text">
+                <span>◼ fixed BC</span><span>→ load F</span><span>Color = σ_vm</span><span>Arrow len = |U|</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div class="readout"><dt>Assembly K_e</dt><dd id="ro-ke">CST + bar EA/L</dd></div>
+              <div class="readout"><dt>Strain ε = B·u</dt><dd id="ro-strain">B from b_i,c_i</dd></div>
+              <div class="readout"><dt>Criterion</dt><dd id="ro-crit">σ_vm &lt; σ_y</dd></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of the lab</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="font-[650]">Mesh → K → Ku=F → stress</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-decimal list-inside">
+              <li><strong class="text-primary-text">Geometry:</strong> Cantilever L×H grid nx×ny quads split to 2 CST each; plate with hole rejects elements with centroid r&lt;R_hole; truss builds nodes at chords and diagonals.</li>
+              <li><strong class="text-primary-text">Local K_e:</strong> CST B=(1/2A)[b_i,0;c_i ...], D plane-stress. Bar formula EA/L with cx,cy rotates to global.</li>
+              <li><strong class="text-primary-text">Assembly:</strong>  K[2*i+di, 2*j+dj] += Ke_local[3*i+di,3*j+dj]. F tip = [F·cosθ, F·sinθ]. Fixed left edge Dirichlet ux=uy=0.</li>
+              <li><strong class="text-primary-text">Reduction:</strong> Free DOF list → K_ff, F_f → Gaussian elimination with pivoting O((2N)³) — capped at ~800 DOF for interactivity.</li>
+              <li><strong class="text-primary-text">Post:</strong> u_e extracted → ε=B·u, σ=D·ε → σ_vm. Max σ colored, displacement scaled by user ×.</li>
+            </ol>
+            <div class="mt-5 math-card">
+              <p class="math-label">CST B matrix & Von Mises</p>
+              <Math math="B=\frac{1}{2A}\begin{bmatrix}b_1&0&b_2&0&b_3&0\\0&c_1&0&c_2&0&c_3\\c_1&b_1&c_2&b_2&c_3&b_3\end{bmatrix},\quad \sigma_{vm}=\sqrt{\sigma_x^2-\sigma_x\sigma_y+\sigma_y^2+3\tau_{xy}^2}" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">b_i = y_j-y_k, c_i = x_k-x_j cyclic. D scaled by E/(1-ν²).</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-[650]">Visual-audio coupling</h3>
+            <ul class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-disc list-inside">
+              <li>Mesh canvas: original nodes light, fixed nodes dark squares, triangles thin stroke. Keeps undeformed reference.</li>
+              <li>Stress canvas: each triangle filled with HSL mapping h = 240°·(1 - σ_norm)^0.85 → continuous blue-cyan-yellow-red. Edge highlight at yield.</li>
+              <li>Deform canvas: positions p_def = p₀ + scale·U. Optional wireframe + displacement vectors arrow_len ∝ |U| / max|U| capped.</li>
+              <li>Audio: WebAudio. Creaks when 0.65&lt;σ_max/σ_y&lt;1.0: white noise buffer 180 ms → BPF 1100 Hz Q8 + 2200 Hz parallel, gain=r²·0.34. Fracture when σ_max&gt;σ_y: 85 ms snap highpass 2.8 kHz + down-chirp osc 1400→60 Hz, master gain 0.85, triggers flash.</li>
+              <li>Viewport flash: overlay div background radial rgba(255,60,60,0.42) animate flash 460 ms, canvas transform shake 8 px.</li>
+            </ul>
+            <div class="mt-5 math-card">
+              <p class="math-label">Bar element & global K</p>
+              <Math math="k=\frac{EA}{L},\ K_e=k\begin{bmatrix}c_x^2&c_xc_y&-c_x^2&-c_xc_y\\c_xc_y&c_y^2&-c_xc_y&-c_y^2\\-c_x^2&-c_xc_y&c_x^2&c_xc_y\\-c_xc_y&-c_y^2&c_xc_y&c_y^2\end{bmatrix},\ K_{ij}\mathrel{+}=K_e" display />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Element stiffness</p>
+            <Math math="K_e^{CST}=tA B^T D B,\quad D=\frac{E}{1-\nu^2}\begin{bmatrix}1&\nu&0\\\nu&1&0\\0&0&\frac{1-\nu}{2}\end{bmatrix}" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">CST = constant strain triangle, plane-stress.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">System</p>
+            <Math math="K_{global}u=F,\quad K_{ff}u_f=F_f\ \text{(Dirichlet reduced)},\quad \sigma=DBu_e" display />
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Von Mises & Yield</p>
+            <Math math="\sigma_{vm}=\sqrt{\tfrac12[(\sigma_1-\sigma_2)^2+(\sigma_2-\sigma_3)^2+(\sigma_3-\sigma_1)^2]} =\sqrt{\sigma_x^2-\sigma_x\sigma_y+\sigma_y^2+3\tau^2}<\sigma_y" display />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+          </div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(
+            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted);transition:all 0.15s}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.pill-btn:hover{border-color:var(--mp-border-strong);color:var(--mp-text)}
+.pill-select{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.72rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--mp-text)}
+.readout{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 55%,transparent);padding:0.65rem 0.8rem}
+.readout dt{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--mp-muted)}
+.readout dd{margin-top:0.2rem;font-size:0.88rem;font-weight:600;color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.math-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.flash-overlay{position:absolute;inset:0;border-radius:16px;pointer-events:none;opacity:0;background:radial-gradient(60% 80% at 50% 35%, rgba(255,70,70,0.45), rgba(140,0,0,0.28));z-index:5}
+.flash-overlay.active{animation:flashRed 460ms ease-out}
+@keyframes flashRed{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+.shake{animation:feashake 380ms cubic-bezier(.36,.07,.19,.97) both}
+@keyframes feashake{10%,90%{transform:translate(-1px,0)}20%,80%{transform:translate(2px,1px)}30%,50%,70%{transform:translate(-3px,-1px)}40%,60%{transform:translate(3px,2px)}}
+</style>
+
+<script>
+// @ts-nocheck
+function initFEA(){
+  const meshCanvas=document.getElementById('mesh-canvas');
+  const stressCanvas=document.getElementById('stress-canvas');
+  const deformCanvas=document.getElementById('deform-canvas');
+  if(!meshCanvas || meshCanvas.dataset.init) return;
+  meshCanvas.dataset.init='1';
+  const ctxMesh=meshCanvas.getContext('2d');
+  const ctxStress=stressCanvas.getContext('2d');
+  const ctxDeform=deformCanvas.getContext('2d');
+  function setupHiDPI(c, ctx){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const Wc=c.width, Hc=c.height;
+    c.width=Wc*dpr; c.height=Hc*dpr; c.style.width=Wc+'px'; c.style.height=Hc+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {W:Wc, H:Hc};
+  }
+  const dM=setupHiDPI(meshCanvas,ctxMesh);
+  const dS=setupHiDPI(stressCanvas,ctxStress);
+  const dD=setupHiDPI(deformCanvas,ctxDeform);
+
+  // UI refs
+  const selGeom=document.getElementById('sel-geom');
+  const selPreset=document.getElementById('sel-preset');
+  const slRes=document.getElementById('sl-res'), outRes=document.getElementById('out-res');
+  const slThk=document.getElementById('sl-thk'), outThk=document.getElementById('out-thk');
+  const slScale=document.getElementById('sl-scale'), outScale=document.getElementById('out-scale');
+  const slLoad=document.getElementById('sl-load'), outLoad=document.getElementById('out-load');
+  const slAng=document.getElementById('sl-ang'), outAng=document.getElementById('out-ang');
+  const slAsec=document.getElementById('sl-Asec'), outAsec=document.getElementById('out-Asec');
+  const inL=document.getElementById('in-L'), inH=document.getElementById('in-H');
+  const inE=document.getElementById('in-E'), inNu=document.getElementById('in-nu'), inYield=document.getElementById('in-yield');
+  const chkDisp=document.getElementById('chk-disp'), chkAudio=document.getElementById('chk-audio');
+  const chkVec=document.getElementById('chk-vec'), chkWire=document.getElementById('chk-wire');
+  const btnSolve=document.getElementById('btn-solve'), btnResetView=document.getElementById('btn-reset-view');
+  const statusEl=document.getElementById('fea-status');
+  const readK=document.getElementById('read-K'), readMesh=document.getElementById('read-mesh'), readUmax=document.getElementById('read-umax'), readSmax=document.getElementById('read-smax'), readUtil=document.getElementById('read-util'), readTime=document.getElementById('read-time');
+  const flashOverlay=document.getElementById('flash-overlay'), viewportWrap=document.getElementById('viewport-wrap'), yieldBadge=document.getElementById('yield-badge');
+
+  function updLabels(){
+    outRes.textContent=slRes.value; outThk.textContent=Number(slThk.value).toFixed(1);
+    outScale.textContent=slScale.value; outLoad.textContent=slLoad.value;
+    outAng.textContent=slAng.value+'°'; outAsec.textContent=slAsec.value;
+  }
+  [slRes,slThk,slScale,slLoad,slAng,slAsec].forEach(el=>el.addEventListener('input',updLabels)); updLabels();
+
+  const presets={
+    PLA:{E:2.8, nu:0.33, y:50},
+    ALU:{E:69, nu:0.33, y:240},
+    STEEL:{E:200, nu:0.30, y:350},
+  };
+  selPreset.addEventListener('change',()=>{
+    const p=presets[selPreset.value];
+    if(p){ inE.value=p.E; inNu.value=p.nu; inYield.value=p.y; triggerSolve(); }
+  });
+
+  // Material helpers
+  function getMat(){
+    const E_GPa=parseFloat(inE.value)||69, nu=parseFloat(inNu.value)||0.33, sy_MPa=parseFloat(inYield.value)||240;
+    return {E:E_GPa*1e9, nu, sy:sy_MPa*1e6, E_GPa, sy_MPa};
+  }
+
+  // Mesh generation
+  function buildCantilever(nx, ny, Lmm, Hmm){
+    const L=Lmm/1000, H=Hmm/1000;
+    const nodes=[]; // {x,y,origX,origY}
+    const nodeId=(ix,iy)=>iy*(nx+1)+ix;
+    for(let iy=0; iy<=ny; iy++){
+      const y= (iy/ny -0.5)*H;
+      for(let ix=0; ix<=nx; ix++){
+        const x= (ix/nx)*L;
+        nodes.push({x,y,origX:x,origY:y, id:nodeId(ix,iy), fix: x<1e-9});
+      }
+    }
+    const tris=[];
+    for(let iy=0; iy<ny; iy++){
+      for(let ix=0; ix<nx; ix++){
+        const n0=nodeId(ix,iy), n1=nodeId(ix+1,iy), n2=nodeId(ix+1,iy+1), n3=nodeId(ix,iy+1);
+        tris.push({n:[n0,n1,n3], type:'tri'});
+        tris.push({n:[n1,n2,n3], type:'tri'});
+      }
+    }
+    // load nodes: right edge middle
+    const loadNodes=[];
+    for(let iy=0; iy<=ny; iy++){
+      const ix=nx;
+      if(Math.abs( (iy/ny -0.5)*H ) < H*0.25 + 1e-6){
+        loadNodes.push(nodeId(ix,iy));
+      }
+    }
+    if(loadNodes.length===0) loadNodes.push(nodeId(nx,Math.floor(ny/2)));
+    return {nodes, tris, loadNodes, L, H};
+  }
+  function buildPlateWithHole(nx, ny, Lmm, Hmm){
+    const L=Lmm/1000, H=Hmm/1000;
+    const R= 0.22* Math.min(L,H); // hole radius
+    const cx=L*0.5, cy=0;
+    const nodes=[];
+    const nodeId=(ix,iy)=>iy*(nx+1)+ix;
+    for(let iy=0; iy<=ny; iy++){
+      const y=(iy/ny -0.5)*H;
+      for(let ix=0; ix<=nx; ix++){
+        const x=(ix/nx)*L;
+        nodes.push({x,y,origX:x,origY:y, id:nodeId(ix,iy), fix:x<1e-9, holeInside:Math.hypot(x-cx,y-cy)<R*0.98});
+      }
+    }
+    const tris=[];
+    for(let iy=0; iy<ny; iy++){
+      for(let ix=0; ix<nx; ix++){
+        const n0=nodeId(ix,iy), n1=nodeId(ix+1,iy), n2=nodeId(ix+1,iy+1), n3=nodeId(ix,iy+1);
+        const c1x=(nodes[n0].x+nodes[n1].x+nodes[n3].x)/3, c1y=(nodes[n0].y+nodes[n1].y+nodes[n3].y)/3;
+        const c2x=(nodes[n1].x+nodes[n2].x+nodes[n3].x)/3, c2y=(nodes[n1].y+nodes[n2].y+nodes[n3].y)/3;
+        if(Math.hypot(c1x-cx,c1y-cy) > R) tris.push({n:[n0,n1,n3], type:'tri'});
+        if(Math.hypot(c2x-cx,c2y-cy) > R) tris.push({n:[n1,n2,n3], type:'tri'});
+      }
+    }
+    const loadNodes=[];
+    for(let iy=0; iy<=ny; iy++){
+      const id=nodeId(nx,iy);
+      if(!nodes[id].holeInside) loadNodes.push(id);
+    }
+    return {nodes, tris, loadNodes, L, H, hole:{cx,cy,R}};
+  }
+  function buildTruss(nxSeg, Lmm, Hmm){
+    // simple warren truss: bottom chord length L, height H, nxSeg bays
+    const L=Lmm/1000, H=Hmm/1000;
+    const nodes=[];
+    const bottom=[]; const top=[];
+    for(let i=0;i<=nxSeg;i++){
+      const x=(i/nxSeg)*L;
+      bottom.push(nodes.length); nodes.push({x,y:-H/2,origX:x,origY:-H/2,id:nodes.length,fix:i===0||i===nxSeg});
+      if(i<nxSeg){
+        // top nodes offset half bay for warren? Use straight top chord with top count = nxSeg +1 for simplicity but with diagonal
+        // We'll create top nodes at mid-bay? Simpler: top chord nodes at same x as bottom but y=+H/2 except triangular caps.
+      }
+    }
+    // top chord nodes (nxSeg+1) at y=H/2
+    const topStart=nodes.length;
+    for(let i=0;i<=nxSeg;i++){
+      const x=(i/nxSeg)*L;
+      top.push(nodes.length); nodes.push({x,y:H/2,origX:x,origY:H/2,id:nodes.length,fix:false});
+    }
+    const bars=[];
+    // bottom chord
+    for(let i=0;i<nxSeg;i++) bars.push({n:[bottom[i], bottom[i+1]], type:'bar'});
+    // top chord
+    for(let i=0;i<nxSeg;i++) bars.push({n:[top[i], top[i+1]], type:'bar'});
+    // verticals
+    for(let i=0;i<=nxSeg;i++) bars.push({n:[bottom[i], top[i]], type:'bar'});
+    // diagonals warren
+    for(let i=0;i<nxSeg;i++){
+      bars.push({n:[bottom[i], top[i+1]], type:'bar'});
+      if(i<nxSeg-0) bars.push({n:[top[i], bottom[i+1]], type:'bar'});
+    }
+    // load at top middle
+    const mid=Math.floor(nxSeg/2);
+    const loadNodes=[top[mid]];
+    // fix bottom ends fully (already)
+    nodes.forEach(nd=>{ nd.isBottomFix = bottom.includes(nd.id); });
+    return {nodes, tris:bars, loadNodes, L, H, bottom, top};
+  }
+
+  // Math helpers
+  function transpose(M){ const r=M.length, c=M[0].length; const T=Array(c).fill(0).map(()=>Array(r)); for(let i=0;i<r;i++) for(let j=0;j<c;j++) T[j][i]=M[i][j]; return T; }
+  function mul(A,B){
+    const r=A.length, k=A[0].length, c=B[0].length;
+    const C=Array(r).fill(0).map(()=>Array(c).fill(0));
+    for(let i=0;i<r;i++) for(let j=0;j<c;j++){ let s=0; for(let t=0;t<k;t++) s+=A[i][t]*B[t][j]; C[i][j]=s; }
+    return C;
+  }
+  function mulScalar(A,s){ return A.map(row=>row.map(v=>v*s)); }
+
+  function cstKe(x1,y1,x2,y2,x3,y3, E, nu, t){
+    const det=(x2-x1)*(y3-y1)-(x3-x1)*(y2-y1);
+    const A=0.5*Math.abs(det)+1e-12;
+    if(Math.abs(det)<1e-12) return {Ke:Array(6).fill(0).map(()=>Array(6).fill(0)), B:null, D:null, A};
+    const b1=y2-y3, b2=y3-y1, b3=y1-y2;
+    const c1=x3-x2, c2=x1-x3, c3=x2-x1;
+    const inv2A=1/(2*A);
+    const B=[
+      [b1*inv2A, 0,        b2*inv2A, 0,        b3*inv2A, 0       ],
+      [0,        c1*inv2A, 0,        c2*inv2A, 0,        c3*inv2A],
+      [c1*inv2A, b1*inv2A, c2*inv2A, b2*inv2A, c3*inv2A, b3*inv2A]
+    ];
+    const eFac=E/(1-nu*nu);
+    const D=[[eFac, eFac*nu, 0],[eFac*nu, eFac, 0],[0,0,eFac*(1-nu)/2]];
+    const Bt=transpose(B);
+    const DB=mul(D,B);
+    const BtDB=mul(Bt,DB);
+    const Ke=mulScalar(BtDB, t*A);
+    return {Ke,B,D,A,det};
+  }
+  function barKe(x1,y1,x2,y2,E,Asec){
+    const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1e-9;
+    const cx=dx/L, cy=dy/L;
+    const k=E*Asec/L;
+    const Ke=[
+      [ k*cx*cx,  k*cx*cy, -k*cx*cx, -k*cx*cy],
+      [ k*cx*cy,  k*cy*cy, -k*cx*cy, -k*cy*cy],
+      [-k*cx*cx, -k*cx*cy,  k*cx*cx,  k*cx*cy],
+      [-k*cx*cy, -k*cy*cy,  k*cx*cy,  k*cy*cy]
+    ];
+    return {Ke, L, cx, cy};
+  }
+  function solveLinear(K,F){
+    const n=F.length;
+    const A=K.map(r=>r.slice());
+    const b=F.slice();
+    for(let i=0;i<n;i++){
+      let maxRow=i, maxV=Math.abs(A[i][i]);
+      for(let r=i+1;r<n;r++) if(Math.abs(A[r][i])>maxV){maxV=Math.abs(A[r][i]); maxRow=r;}
+      if(maxV<1e-12) continue;
+      if(maxRow!==i){ const tmp=A[i]; A[i]=A[maxRow]; A[maxRow]=tmp; const tb=b[i]; b[i]=b[maxRow]; b[maxRow]=tb; }
+      const piv=A[i][i];
+      for(let r=i+1;r<n;r++){
+        const f=A[r][i]/piv;
+        if(Math.abs(f)<1e-14) continue;
+        for(let c=i;c<n;c++) A[r][c]-=f*A[i][c];
+        b[r]-=f*b[i];
+      }
+    }
+    const x=new Array(n).fill(0);
+    for(let i=n-1;i>=0;i--){
+      let s=b[i];
+      for(let j=i+1;j<n;j++) s-=A[i][j]*x[j];
+      x[i]= Math.abs(A[i][i])<1e-12 ? 0 : s/A[i][i];
+    }
+    return x;
+  }
+
+  // Solver wrapper
+  let lastResult=null; // {nodes, elems, U, stresses, maxU, maxS}
+  function assembleAndSolve(){
+    const t0=performance.now();
+    const nx=parseInt(slRes.value,10);
+    const ny=Math.max(2, Math.round(nx*0.45));
+    const Lmm=parseFloat(inL.value)||120;
+    const Hmm=parseFloat(inH.value)||30;
+    const tmm=parseFloat(slThk.value)||6;
+    const t=tmm/1000;
+    const Fmag=parseFloat(slLoad.value)||500;
+    const angDeg=parseFloat(slAng.value)||-90;
+    const ang=angDeg*Math.PI/180;
+    const Asecmm2=parseFloat(slAsec.value)||25;
+    const Asec=Asecmm2*1e-6;
+    const mat=getMat();
+    const geom=selGeom.value;
+
+    let mesh;
+    if(geom==='cantilever') mesh=buildCantilever(nx,ny,Lmm,Hmm);
+    else if(geom==='plate-hole') mesh=buildPlateWithHole(nx,ny,Lmm,Hmm);
+    else mesh=buildTruss(nx,Lmm,Hmm);
+
+    const nodes=mesh.nodes;
+    const elems=mesh.tris;
+    const N=nodes.length;
+    const ndof=2*N;
+    // global K dense
+    let K=Array(ndof).fill(0).map(()=>Array(ndof).fill(0));
+    const elemData=[]; // per elem store B,D etc for stress
+
+    for(let ei=0; ei<elems.length; ei++){
+      const el=elems[ei];
+      if(el.type==='tri'){
+        const n0=nodes[el.n[0]], n1=nodes[el.n[1]], n2=nodes[el.n[2]];
+        if(n0.holeInside||n1.holeInside||n2.holeInside) continue;
+        const {Ke,B,D,A:Ar,det}=cstKe(n0.x,n0.y,n1.x,n1.y,n2.x,n2.y, mat.E, mat.nu, t);
+        const map=[el.n[0]*2, el.n[0]*2+1, el.n[1]*2, el.n[1]*2+1, el.n[2]*2, el.n[2]*2+1];
+        for(let a=0;a<6;a++) for(let b=0;b<6;b++) K[map[a]][map[b]]+=Ke[a][b];
+        elemData.push({type:'tri', n:el.n.slice(), B,D, A:Ar, det});
+      } else {
+        const n0=nodes[el.n[0]], n1=nodes[el.n[1]];
+        const {Ke,L,cx,cy}=barKe(n0.x,n0.y,n1.x,n1.y, mat.E, Asec);
+        const map=[el.n[0]*2, el.n[0]*2+1, el.n[1]*2, el.n[1]*2+1];
+        for(let a=0;a<4;a++) for(let b=0;b<4;b++) K[map[a]][map[b]]+=Ke[a][b];
+        elemData.push({type:'bar', n:el.n.slice(), L,cx,cy, Asec});
+      }
+    }
+    // Force vector
+    const Fvec=Array(ndof).fill(0);
+    const loadNodes=mesh.loadNodes||[];
+    const nLoad=loadNodes.length||1;
+    const fxPer=Fmag*Math.cos(ang)/nLoad;
+    const fyPer=Fmag*Math.sin(ang)/nLoad;
+    loadNodes.forEach(id=>{
+      Fvec[id*2]+=fxPer;
+      Fvec[id*2+1]+=fyPer;
+    });
+
+    // fixed DOFs
+    const fixed=new Set();
+    nodes.forEach(nd=>{
+      if(nd.fix || nd.isBottomFix){
+        fixed.add(nd.id*2); fixed.add(nd.id*2+1);
+      } else if(geom!=='truss' && nd.origX<1e-9){
+        // for cantilever & plate, left edge clamp
+        fixed.add(nd.id*2); fixed.add(nd.id*2+1);
+      }
+    });
+    // truss: also bottom fixes already, but we want only two bottom nodes fully fixed, others free; our buildTruss marks two bottom nodes fix.
+    if(geom==='truss'){
+      // clear then add only two nodes fixed
+      fixed.clear();
+      (mesh.bottom||[]).forEach((_,idx,arr)=>{
+        if(idx===0||idx===arr.length-1){
+          const nid=mesh.bottom[idx];
+          fixed.add(nid*2); fixed.add(nid*2+1);
+        }
+      });
+    }
+
+    const free=[]; const freeMap=new Map();
+    for(let i=0;i<ndof;i++) if(!fixed.has(i)){ freeMap.set(i, free.length); free.push(i); }
+
+    const nFree=free.length;
+    const Kff=Array(nFree).fill(0).map(()=>Array(nFree).fill(0));
+    const Ff=Array(nFree).fill(0);
+    for(let i=0;i<nFree;i++){
+      const gi=free[i];
+      Ff[i]=Fvec[gi];
+      for(let j=0;j<nFree;j++){
+        const gj=free[j];
+        Kff[i][j]=K[gi][gj];
+      }
+    }
+    const uf = nFree>0 ? solveLinear(Kff,Ff) : [];
+    const U=Array(ndof).fill(0);
+    for(let i=0;i<nFree;i++) U[free[i]]=uf[i];
+
+    // stresses
+    const stresses=[]; let maxS=0, maxU=0;
+    for(let i=0;i<N;i++){
+      const ux=U[i*2], uy=U[i*2+1];
+      const um=Math.hypot(ux,uy); if(um>maxU) maxU=um;
+    }
+    elemData.forEach(ed=>{
+      if(ed.type==='tri'){
+        const ue=[
+          U[ed.n[0]*2], U[ed.n[0]*2+1],
+          U[ed.n[1]*2], U[ed.n[1]*2+1],
+          U[ed.n[2]*2], U[ed.n[2]*2+1]
+        ];
+        // eps = B*ue
+        const eps=[0,0,0];
+        for(let r=0;r<3;r++){ let s=0; for(let c=0;c<6;c++) s+=ed.B[r][c]*ue[c]; eps[r]=s; }
+        const sx=ed.D[0][0]*eps[0]+ed.D[0][1]*eps[1];
+        const sy=ed.D[1][0]*eps[0]+ed.D[1][1]*eps[1];
+        const txy=ed.D[2][2]*eps[2];
+        const vm=Math.sqrt(sx*sx - sx*sy + sy*sy + 3*txy*txy);
+        stresses.push({vm,sx,sy,txy,type:'tri'});
+        if(vm>maxS) maxS=vm;
+      } else {
+        const u0x=U[ed.n[0]*2], u0y=U[ed.n[0]*2+1], u1x=U[ed.n[1]*2], u1y=U[ed.n[1]*2+1];
+        const dux=u1x-u0x, duy=u1y-u0y;
+        const elong=dux*ed.cx + duy*ed.cy;
+        const strain=elong/ed.L;
+        const sigma=mat.E*strain;
+        const vm=Math.abs(sigma);
+        stresses.push({vm,sx:sigma,sy:0,txy:0,type:'bar', strain});
+        if(vm>maxS) maxS=vm;
+      }
+    });
+
+    const t1=performance.now();
+    return {nodes,elems:elemData,origElems:elems, U, stresses, maxU, maxS, Ksize:ndof, nNodes:N, nElems:elems.length, time:t1-t0, L:mesh.L, H:mesh.H, hole:mesh.hole, loadNodes, mat};
+  }
+
+  // Colors: HSL 240->0 mapping
+  function stressToColor(norm){
+    norm=Math.max(0,Math.min(1,norm));
+    // pow for emphasis
+    const nPow=Math.pow(norm,0.85);
+    const hue=240*(1-nPow); // 240 blue to 0 red
+    // slightly desat low
+    const sat= 85 + 15*nPow;
+    const lig= 50 + (norm>0.5? -10*norm : 10*(1-norm));
+    return `hsl(${hue.toFixed(1)} ${sat}% ${lig}%)`;
+  }
+
+  // Drawing transforms: map physical coords to canvas
+  function getBounds(res){
+    // use L,H from result, pad
+    const margin=18;
+    const Wp=res.W||200, Hp=res.H||200;
+    const L=res.L||0.12, H=res.H||0.03;
+    // choose scale to fit beam centered
+    const scale = Math.min((Wp-margin*2)/ (L*1.25), (Hp-margin*2)/(H*1.6));
+    const ox = margin + 8;
+    const oy = Hp/2;
+    return {scale, ox, oy};
+  }
+  function worldToCanvas(x,y, bounds){
+    // y inverted: + up = - screen
+    return {cx: bounds.ox + x*bounds.scale, cy: bounds.oy - y*bounds.scale};
+  }
+
+  function drawMesh(res){
+    const ctx=ctxMesh; const {W,H}=dM;
+    ctx.clearRect(0,0,W,H);
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    if(!res) return;
+    const b=getBounds({W,H,L:res.L,H:res.H});
+    // hole circle for plate
+    if(res.hole){
+      const cc=worldToCanvas(res.hole.cx,res.hole.cy,b);
+      const r=res.hole.R*b.scale;
+      ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.arc(cc.cx,cc.cy,r,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.stroke();
+    }
+    // draw tris wire
+    ctx.lineWidth=1;
+    res.origElems.forEach(el=>{
+      if(el.type==='tri'){
+        const n0=res.nodes[el.n[0]], n1=res.nodes[el.n[1]], n2=res.nodes[el.n[2]];
+        if(n0.holeInside||n1.holeInside||n2.holeInside) return;
+        const p0=worldToCanvas(n0.x,n0.y,b), p1=worldToCanvas(n1.x,n1.y,b), p2=worldToCanvas(n2.x,n2.y,b);
+        ctx.strokeStyle='rgba(255,255,255,0.18)';
+        ctx.beginPath(); ctx.moveTo(p0.cx,p0.cy); ctx.lineTo(p1.cx,p1.cy); ctx.lineTo(p2.cx,p2.cy); ctx.closePath(); ctx.stroke();
+      } else {
+        const n0=res.nodes[el.n[0]], n1=res.nodes[el.n[1]];
+        const p0=worldToCanvas(n0.x,n0.y,b), p1=worldToCanvas(n1.x,n1.y,b);
+        ctx.strokeStyle='rgba(180,210,255,0.45)'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(p0.cx,p0.cy); ctx.lineTo(p1.cx,p1.cy); ctx.stroke(); ctx.lineWidth=1;
+      }
+    });
+    // nodes: fixed squares
+    res.nodes.forEach(nd=>{
+      if(nd.holeInside) return;
+      const p=worldToCanvas(nd.x,nd.y,b);
+      const isFix= (res.nodes[nd.id].fix || (nd.isBottomFix && (nd.id===res.nodes[0].id || true))) && (nd.fix||nd.isBottomFix);
+      // draw small dot
+      if(nd.fix){
+        ctx.fillStyle='#f07a94'; ctx.fillRect(p.cx-3,p.cy-3,6,6);
+      } else if(nd.isBottomFix){
+        // handled fixed set still
+      } else {
+        ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.beginPath(); ctx.arc(p.cx,p.cy,1.6,0,Math.PI*2); ctx.fill();
+      }
+    });
+    // load arrows
+    (res.loadNodes||[]).forEach(id=>{
+      const nd=res.nodes[id];
+      const p=worldToCanvas(nd.x,nd.y,b);
+      const ang=parseFloat(slAng.value)*Math.PI/180;
+      const len=18;
+      ctx.strokeStyle='#4ade80'; ctx.lineWidth=1.8;
+      ctx.beginPath(); ctx.moveTo(p.cx,p.cy); ctx.lineTo(p.cx+Math.cos(ang)*len, p.cy - Math.sin(ang)*len); ctx.stroke();
+      // arrow head
+      const ahx=p.cx+Math.cos(ang)*len, ahy=p.cy - Math.sin(ang)*len;
+      ctx.fillStyle='#4ade80'; ctx.beginPath(); ctx.arc(ahx,ahy,2.5,0,Math.PI*2); ctx.fill();
+    });
+  }
+
+  function drawStress(res){
+    const ctx=ctxStress; const {W,H}=dS;
+    ctx.clearRect(0,0,W,H);
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    if(!res) return;
+    const b=getBounds({W,H,L:res.L,H:res.H});
+    const maxS=res.maxS||1e6;
+    // draw each elem filled by stress color
+    res.elems.forEach((ed, idx)=>{
+      const vm=res.stresses[idx]?.vm||0;
+      const norm = maxS>1e-9 ? vm/maxS : 0;
+      ctx.fillStyle=stressToColor(norm);
+      if(ed.type==='tri'){
+        const n0=res.nodes[ed.n[0]], n1=res.nodes[ed.n[1]], n2=res.nodes[ed.n[2]];
+        const p0=worldToCanvas(n0.x,n0.y,b), p1=worldToCanvas(n1.x,n1.y,b), p2=worldToCanvas(n2.x,n2.y,b);
+        ctx.beginPath(); ctx.moveTo(p0.cx,p0.cy); ctx.lineTo(p1.cx,p1.cy); ctx.lineTo(p2.cx,p2.cy); ctx.closePath(); ctx.fill();
+        // outline subtly
+        if(norm>0.9){ ctx.strokeStyle='rgba(255,40,40,0.8)'; ctx.lineWidth=1.2; ctx.stroke();}
+      } else {
+        const n0=res.nodes[ed.n[0]], n1=res.nodes[ed.n[1]];
+        const p0=worldToCanvas(n0.x,n0.y,b), p1=worldToCanvas(n1.x,n1.y,b);
+        ctx.strokeStyle=stressToColor(norm); ctx.lineWidth= 2 + norm*5;
+        ctx.beginPath(); ctx.moveTo(p0.cx,p0.cy); ctx.lineTo(p1.cx,p1.cy); ctx.stroke();
+      }
+    });
+    // fixed indicators faint
+    res.nodes.forEach(nd=>{
+      if(nd.holeInside) return;
+      if(nd.fix){ const p=worldToCanvas(nd.x,nd.y,b); ctx.fillStyle='rgba(240,122,148,0.9)'; ctx.fillRect(p.cx-2,p.cy-2,4,4); }
+    });
+    if(res.hole){
+      const cc=worldToCanvas(res.hole.cx,res.hole.cy,b); const r=res.hole.R*b.scale;
+      ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(cc.cx,cc.cy,r,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.28)'; ctx.beginPath(); ctx.arc(cc.cx,cc.cy,r,0,Math.PI*2); ctx.stroke();
+    }
+  }
+
+  function drawDeform(res){
+    const ctx=ctxDeform; const {W,H}=dD;
+    ctx.clearRect(0,0,W,H);
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    if(!res) return;
+    const b=getBounds({W,H,L:res.L,H:res.H});
+    const scaleU = chkDisp.checked ? parseFloat(slScale.value)||80 : 0;
+    const maxS=res.maxS||1;
+    const showVec=chkVec.checked;
+    const showWire=chkWire.checked;
+
+    // deformed positions
+    function defPos(nd){
+      const ux=res.U[nd.id*2], uy=res.U[nd.id*2+1];
+      return {x: nd.x + ux*scaleU, y: nd.y + uy*scaleU, ux, uy};
+    }
+
+    res.elems.forEach((ed, idx)=>{
+      const vm=res.stresses[idx]?.vm||0;
+      const norm= maxS>1e-9 ? vm/maxS : 0;
+      const col=stressToColor(norm);
+      if(ed.type==='tri'){
+        const n0=res.nodes[ed.n[0]], n1=res.nodes[ed.n[1]], n2=res.nodes[ed.n[2]];
+        const d0=defPos(n0), d1=defPos(n1), d2=defPos(n2);
+        const p0=worldToCanvas(d0.x,d0.y,b), p1=worldToCanvas(d1.x,d1.y,b), p2=worldToCanvas(d2.x,d2.y,b);
+        ctx.fillStyle=col; ctx.globalAlpha=0.85; ctx.beginPath(); ctx.moveTo(p0.cx,p0.cy); ctx.lineTo(p1.cx,p1.cy); ctx.lineTo(p2.cx,p2.cy); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+        if(showWire){ ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=0.6; ctx.stroke();}
+      } else {
+        const n0=res.nodes[ed.n[0]], n1=res.nodes[ed.n[1]];
+        const d0=defPos(n0), d1=defPos(n1);
+        const p0=worldToCanvas(d0.x,d0.y,b), p1=worldToCanvas(d1.x,d1.y,b);
+        ctx.strokeStyle=col; ctx.lineWidth=1.5 + norm*3; ctx.beginPath(); ctx.moveTo(p0.cx,p0.cy); ctx.lineTo(p1.cx,p1.cy); ctx.stroke();
+      }
+    });
+    if(showVec){
+      res.nodes.forEach(nd=>{
+        if(nd.holeInside) return;
+        if(nd.fix) return;
+        const d=defPos(nd);
+        const pOrig=worldToCanvas(nd.x,nd.y,b);
+        const pDef=worldToCanvas(d.x,d.y,b);
+        const mag=Math.hypot(d.ux,d.uy);
+        if(mag<1e-9) return;
+        const lenScale=0.9; // vector arrow length already via deformation? we draw small vector of displacement direction scaled
+        // For readability, draw arrow from original to deformed with opacity
+        // Alternatively draw displacement vector at def pos
+        ctx.strokeStyle='rgba(110,230,150,0.85)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(pOrig.cx,pOrig.cy); ctx.lineTo(pDef.cx,pDef.cy); ctx.stroke();
+        // dot at deformed
+        ctx.fillStyle='rgba(110,230,150,0.9)'; ctx.beginPath(); ctx.arc(pDef.cx,pDef.cy,1.2,0,Math.PI*2); ctx.fill();
+      });
+    }
+    // fixed and hole
+    if(res.hole){
+      // hole also moves? For simplicity keep at original but with small deformation based on near nodes? ignore
+      const cc=worldToCanvas(res.hole.cx,res.hole.cy,b); const r=res.hole.R*b.scale*0.96;
+      ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(cc.cx,cc.cy,r,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(cc.cx,cc.cy,r,0,Math.PI*2); ctx.stroke();
+    }
+    // load arrow at deformed tip
+    (res.loadNodes||[]).forEach(id=>{
+      const nd=res.nodes[id]; const d=defPos(nd);
+      const p=worldToCanvas(d.x,d.y,b);
+      const ang=parseFloat(slAng.value)*Math.PI/180;
+      ctx.strokeStyle='#4ade80'; ctx.lineWidth=1.6;
+      const len=16; ctx.beginPath(); ctx.moveTo(p.cx,p.cy); ctx.lineTo(p.cx+Math.cos(ang)*len, p.cy - Math.sin(ang)*len); ctx.stroke();
+    });
+  }
+
+  // Audio
+  let audioCtx=null;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function playCreak(intensity){
+    if(!chkAudio.checked) return;
+    const ctx=ensureAudio(); ctx.resume();
+    const dur=0.18;
+    const buf=ctx.createBuffer(1, Math.floor(ctx.sampleRate*dur), ctx.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++){
+      // pink-ish: integrate white
+      ch[i]=(Math.random()*2-1)* (1 - i/ch.length*0.5);
+    }
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const bp1=ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=1100 + intensity*500; bp1.Q.value=7;
+    const bp2=ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=2200 + intensity*300; bp2.Q.value=4.5;
+    const gain=ctx.createGain(); gain.gain.value=0.0001;
+    const mixGain=ctx.createGain(); mixGain.gain.value=0.7;
+    src.connect(bp1); bp1.connect(bp2); bp2.connect(gain); gain.connect(mixGain); mixGain.connect(ctx.destination);
+    const now=ctx.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(intensity*0.34, now+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+    src.start(now); src.stop(now+dur+0.02);
+  }
+  function playFracture(){
+    if(!chkAudio.checked) return;
+    const ctx=ensureAudio(); ctx.resume();
+    const dur=0.35;
+    const buf=ctx.createBuffer(1, Math.floor(ctx.sampleRate*0.085), ctx.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/ch.length,2.2);
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2800; hp.Q.value=1.2;
+    const gain=ctx.createGain(); gain.gain.value=0.0001;
+    src.connect(hp); hp.connect(gain); gain.connect(ctx.destination);
+    const now=ctx.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.85, now+0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now+0.16);
+    src.start(now);
+    // chirp down
+    const osc=ctx.createOscillator(); osc.type='triangle';
+    const oscGain=ctx.createGain(); oscGain.gain.value=0.0001;
+    const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2400;
+    osc.connect(lp); lp.connect(oscGain); oscGain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(1400, now);
+    osc.frequency.exponentialRampToValueAtTime(60, now+0.28);
+    oscGain.gain.setValueAtTime(0.0001, now);
+    oscGain.gain.linearRampToValueAtTime(0.5, now+0.01);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, now+0.35);
+    osc.start(now); osc.stop(now+0.36);
+  }
+  let creakTimer=0; let lastFracture=false;
+
+  function triggerSolve(){
+    const res=assembleAndSolve();
+    lastResult=res;
+    drawMesh(res); drawStress(res); drawDeform(res);
+    // status
+    readK.textContent=res.Ksize+' × '+res.Ksize;
+    readMesh.textContent=res.nNodes+' / '+res.nElems;
+    readUmax.textContent=(res.maxU*1000).toFixed(3)+' mm';
+    readSmax.textContent=(res.maxS/1e6).toFixed(2)+' MPa';
+    const mat=res.mat;
+    const util=res.maxS/ (mat.sy||1e6);
+    readUtil.textContent=(util*100).toFixed(1)+'%';
+    readTime.textContent=res.time.toFixed(1)+' ms';
+    statusEl.textContent = util>1 ? 'FRACTURE' : util>0.85 ? 'YIELD NEAR' : 'solved';
+    statusEl.style.color = util>1 ? '#ef4444' : util>0.75 ? '#f59e0b' : 'var(--mp-muted)';
+
+    // yield badge + flash + audio
+    const isFracture = util >= 1.0;
+    if(isFracture){
+      yieldBadge.classList.remove('hidden');
+      if(!lastFracture){
+        // flash
+        flashOverlay.classList.remove('active'); void flashOverlay.offsetWidth; flashOverlay.classList.add('active');
+        viewportWrap.classList.remove('shake'); void viewportWrap.offsetWidth; viewportWrap.classList.add('shake');
+        playFracture();
+        setTimeout(()=>{ viewportWrap.classList.remove('shake'); }, 400);
+        setTimeout(()=>{ flashOverlay.classList.remove('active'); }, 500);
+      }
+    } else {
+      yieldBadge.classList.add('hidden');
+      // creaks when util high
+      if(util>0.65){
+        const prob = (util-0.65)*2.2; // 0..~0.77
+        creakTimer += 0.016; // approx caller loop? we call only on solve though - so trigger probabilistic
+        if(Math.random()<prob*0.45){
+          playCreak(util);
+        }
+      }
+    }
+    lastFracture=isFracture;
+  }
+
+  // Events
+  btnSolve.addEventListener('click', triggerSolve);
+  selGeom.addEventListener('change', triggerSolve);
+  slRes.addEventListener('change', triggerSolve);
+  slThk.addEventListener('change', triggerSolve);
+  inL.addEventListener('change', triggerSolve);
+  inH.addEventListener('change', triggerSolve);
+  slLoad.addEventListener('change', triggerSolve);
+  slAng.addEventListener('change', ()=>{
+    updLabels();
+    if(lastResult) { drawMesh(lastResult); drawDeform(lastResult); }
+  });
+  slAng.addEventListener('input', ()=>{
+    updLabels();
+    if(lastResult){ drawMesh(lastResult); drawDeform(lastResult); }
+  });
+  slAsec.addEventListener('change', triggerSolve);
+  inE.addEventListener('change', ()=>{ selPreset.value='CUSTOM'; triggerSolve(); });
+  inNu.addEventListener('change', triggerSolve);
+  inYield.addEventListener('change', triggerSolve);
+  slScale.addEventListener('input', ()=>{ updLabels(); if(lastResult) drawDeform(lastResult); });
+  chkDisp.addEventListener('change', ()=>{ if(lastResult) drawDeform(lastResult); });
+  chkVec.addEventListener('change', ()=>{ if(lastResult) drawDeform(lastResult); });
+  chkWire.addEventListener('change', ()=>{ if(lastResult) drawDeform(lastResult); });
+  btnResetView.addEventListener('click', ()=>{
+    slScale.value='80'; slAng.value='-90'; slLoad.value='500'; updLabels(); triggerSolve();
+  });
+
+  // initial solve
+  triggerSolve();
+
+  // rudimentary continuous creak check via interval when stressed but not re-solving
+  let creakInterval=setInterval(()=>{
+    if(!lastResult) return;
+    const util= lastResult.maxS / (lastResult.mat.sy||1e6);
+    if(util>=1 || util<0.66) return;
+    if(Math.random()< 0.04 + (util-0.66)*0.25){ playCreak(util); }
+  }, 320);
+
+  document.addEventListener('astro:before-swap',()=>{
+    clearInterval(creakInterval);
+    try{audioCtx?.close();}catch{}
+  },{once:true});
+}
+document.addEventListener('astro:page-load', initFEA);
+initFEA();
+</script>
+</Layout>

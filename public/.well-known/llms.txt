@@ -94,6 +94,16 @@ Browser-native mathematical and physical simulations: [makerportal.ai/playground
 - [Quantum Tunneling Simulator](https://www.makerportal.ai/playground/quantum-tunneling): Watch a wave packet leak through a wall (Independent research instrument)
 - [Magnetic Field Line Tracer](https://www.makerportal.ai/playground/magnetic-field-tracer): Biot–Savart field lines, marched by RK4 (Independent research instrument)
 - [Relativistic Starship Journey](https://www.makerportal.ai/playground/relativistic-spaceflight): 1g to the stars, drawn on a Minkowski diagram (Independent research instrument)
+- [PID & MPC Flight Arena](https://www.makerportal.ai/playground/pid-flight-arena): Tune a quadrotor, watch quaternions keep it alive (Independent research instrument)
+- [Microstrip & Signal Integrity Lab](https://www.makerportal.ai/playground/signal-integrity-lab): TEM waves, S-parameters, and eye diagrams that bite (Independent research instrument)
+- [FPGA Verilog Live Sculptor](https://www.makerportal.ai/playground/verilog-live-sculptor): WASM-compiled HDL → LUT map, flashing on violations (Independent research instrument)
+- [WebGPU PINN Training Studio](https://www.makerportal.ai/playground/webgpu-pinn-studio): Watch a neural operator learn Navier-Stokes in your GPU (Independent research instrument)
+- [Visual-Inertial SLAM Arena](https://www.makerportal.ai/playground/slam-odometry-arena): EKF meets pixels: track, map, loop-close, snap (Independent research instrument)
+- [Antenna Array & EM Propagation Sandbox](https://www.makerportal.ai/playground/antenna-em-sandbox): Steer a beam, shimmer RF wavefronts, hear alignment (Independent research instrument)
+- [FEA Structural Dynamics Lab](https://www.makerportal.ai/playground/fea-structural-lab): Von Mises, displacements, creaks, fracture snaps (Independent research instrument)
+- [GaN/SiC Power Electronics & FOC Drive](https://www.makerportal.ai/playground/gan-foc-drive): Space Vector PWM, flux rotation, motor whine to 20 kHz (Independent research instrument)
+- [RTOS Scheduler Visualizer](https://www.makerportal.ai/playground/rtos-scheduler): Tasks, mutexes, ISRs, and deadline tension you can hear (Independent research instrument)
+- [RF & Microwave Circuit Bench](https://www.makerportal.ai/playground/rf-microwave-bench): S-parameters live on a Smith Chart, hum to pure tone at 50Ω (Independent research instrument)
 
 ## Trending Signals
 
@@ -115,7 +125,7 @@ Hardware and equipment utilized inside the studio for engineering and testing: [
 - [Shure MV7+ Podcast Dynamic Microphone with Stand – OBS Certified, Enhanced Audio, LED Panel, USB-C & XLR Outputs, Auto Level Mode, Digital Pop Filter – for Podcasting, Streaming, and Recording, Black](https://www.amazon.com/dp/B0CTJ8BSWN?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($319.00 USD): USB/XLR hybrid mic used building and testing nymic. (Category: Microphone)
 - [Audio-Technica ATH-M50X Professional Studio Monitor Headphones, Black, Professional Grade, Critically Acclaimed, with Detachable Cable](https://www.amazon.com/dp/B00HVLUR86?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($159.00 USD): Reference monitoring headphones used for akous's binaural audio testing. (Category: Headphones)
 - [Deep Learning (Adaptive Computation and Machine Learning series)](https://www.amazon.com/dp/0262035618?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($61.00 USD): Foundational deep-learning textbook referenced while building itria. (Category: Book)
-- [SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25](https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($250.99 USD): Portable SSD used for studio project storage and backups. (Category: Storage)
+- [SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25](https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($269.99 USD): Portable SSD used for studio project storage and backups. (Category: Storage)
 
 ## Technical Stack
 

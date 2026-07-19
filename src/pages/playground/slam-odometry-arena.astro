@@ -1,0 +1,952 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l => l.relatedTo?.includes('slam-odometry-arena')).map(resolveAffiliateLink);
+
+const title = 'SLAM Odometry Arena — EKF SLAM, Loop Closure & Uncertainty Lab | MakerPortal';
+const description = 'Interactive EKF SLAM simulation with IMU noise, visual landmarks, uncertainty ellipsoids, sparse 3-D point-cloud projection, and loop-closure snap with spatial audio.';
+const canonical = new URL('/playground/slam-odometry-arena', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'SLAM Odometry Arena',
+  url: canonical.toString(),
+  applicationCategory: 'EngineeringApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'SLAM Odometry Arena', item: canonical.toString() }
+  ]
+};
+
+const faqs = [
+  { q: 'What state does EKF-SLAM maintain?', a: 'μ = [x, y, θ, m1x, m1y, m2x, m2y, …]ᵀ dimension 3+2N. Covariance P is (3+2N)². Robot prediction uses differential-drive unicycle model, landmarks are static. Each range-bearing observation updates only 5 columns via sparse Jacobians, so S is 2×2 and K = P Hᵀ S⁻¹ can be formed from 5 columns of P.' },
+  { q: 'How are uncertainty ellipses drawn?', a: 'For landmark j, marginal Σ = P[lm:lm+2, lm:lm+2] 2×2. Eigen-decomposition λ₁,₂ = (a+c)/2 ± √(((a−c)/2)²+b²) with orientation atan2(λ₁−a,b). Axes scaled by √χ²₂(0.95)=2.447 for 95% ellipse. Robot ellipse uses P[0:2,0:2]. Ellipse growth after long odometry without observation = drift visualization.' },
+  { q: 'How is loop closure detected and corrected?', a: 'Keyframes store histograms of visual words (BoW): each landmark quantized descriptor hashed into 32-bin visual vocabulary. Current BoW compared via cosine similarity to historic keyframes (>0.72) plus metric proximity of true poses (<1.5m) and travelled distance >12m. On match, a pose-graph correction snaps μ_robot toward matched keyframe pose: Δ = 0.85·(μ_matched−μ_curr), applied to robot and to shared landmarks. P_rr scaled ×0.28, mimicking information gain from loop constraint.' },
+  { q: 'Why bundle adjustment here vs filtering?', a: 'EKF is filtering: marginalizes past poses. Visual-inertial SLAM production systems run bundle adjustment minimizing ∑ ‖z−h(T_i, X_j)‖²_{Σ} over window of keyframes and 3-D points – a nonlinear least-squares solved by Levenberg-Marquardt with Schur complement. This arena shows filtering drift; toggling loop closure on/off lets you see filtering alone accumulates ATE ~ linear in distance, while loop closure resets error similar to global BA.' },
+  { q: 'How is audio spatialized on snap?', a: 'Web Audio: AudioContext → PannerNode (HRTF, position derived from relative loop closure vector) → DynamicsCompressor. Snap sound is dual oscillator (880 Hz + 2.6 kHz) with exponential decay 0.25 s + filtered noise burst 2-6 kHz. Panner azimuth = atan2(dy,dx) − θ, elevation from point-cloud height. Flash viewport via CSS overlay alpha blending.' }
+];
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const coreTS = `// EKF SLAM minimal core: unicycle predict + sparse range-bearing update
+type State = { mu: number[]; P: number[][]; seen: boolean[]; };
+
+function predict(mu: number[], P: number[][], v: number, w: number, dt: number, q: number[]) {
+  const th = mu[2];
+  const G = [[1,0,-v*dt*Math.sin(th)],[0,1,v*dt*Math.cos(th)],[0,0,1]];
+  // robot
+  mu[0] += v*dt*Math.cos(th);
+  mu[1] += v*dt*Math.sin(th);
+  mu[2] += w*dt;
+  // P_rr = G P_rr G^T + Q
+  const Prr = [[P[0][0],P[0][1],P[0][2]],[P[1][0],P[1][1],P[1][2]],[P[2][0],P[2][1],P[2][2]]];
+  const GP = matMul(G, Prr);
+  const GPGT = matMul(GP, transpose(G));
+  addDiag(GPGT, q); // Q = diag(motionNoise)
+  // copy back + cross terms P_rm = G P_rm
+}
+
+function updateLandmark(mu: number[], P: number[][], zid: number, z: [number,number], R: number[][]){
+  const rx=mu[0], ry=mu[1], rt=mu[2];
+  const lix = 3+zid*2;
+  const dx = mu[lix]-rx, dy = mu[lix+1]-ry;
+  const q = dx*dx+dy*dy, r = Math.sqrt(q);
+  const h = [r, Math.atan2(dy,dx)-rt];
+  const Hr = [[-dx/r, -dy/r, 0],[ dy/q, -dx/q, -1]];
+  const Hl = [[ dx/r,  dy/r],[-dy/q,  dx/q]];
+  // sparse Jacobian 2x(3+2N) -> use only 5 columns
+  // S = H P H^T + R (2x2), K = P H^T S^{-1}
+  const innov = [z[0]-h[0], wrapAngle(z[1]-h[1])];
+  // ... K, mu+=K*innov, P=(I-KH)P
+  // loop closure: compare BoW histograms
+}
+
+function wrapAngle(a:number){ return Math.atan2(Math.sin(a), Math.cos(a)); }`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="SLAM Odometry Arena"
+    lead="EKF visual-inertial odometry in the browser: unicycle robot, IMU drift, range-bearing features, covariance ellipsoids, sparse 3-D point cloud, and bag-of-words loop closure that snaps the map with a spatial audio ping and viewport flash. Tune noise, watch ATE grow, close the loop."
+    pillarHint="on-device-ai"
+  >
+    <section class="border-b border-border" aria-labelledby="slam-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <button id="btn-play" class="pill-btn is-active">⏸ Pause</button>
+          <button id="btn-reset" class="pill-btn">↺ Reset world</button>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-loop" type="checkbox" checked /> Loop closure</label>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-audio" type="checkbox" checked /> Snap audio</label>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-true" type="checkbox" checked /> True map</label>
+          <span id="loop-flash" class="ml-auto font-mono text-[0.7rem] font-bold text-primary-cta"></span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Odometry & Sensing</h3>
+            <div class="mt-4 space-y-5">
+              <div>
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Motion model — IMU / wheel noise</p>
+                <label class="control-label mt-2"><span>σ motion</span><output id="out-motion">0.08</output><input id="sl-motion" type="range" min="0.01" max="0.45" step="0.01" value="0.08"/></label>
+                <label class="control-label"><span>σ observ (range)</span><output id="out-obs">0.12</output><input id="sl-obs" type="range" min="0.02" max="0.6" step="0.01" value="0.12"/></label>
+                <label class="control-label"><span># visual features</span><output id="out-feat">80</output><input id="sl-feat" type="range" min="20" max="160" step="4" value="80"/></label>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Platform</p>
+                <label class="control-label mt-2"><span>v m/s</span><output id="out-v">1.20</output><input id="sl-v" type="range" min="0.2" max="2.5" step="0.1" value="1.2"/></label>
+                <label class="control-label"><span>ω rad/s (loop radius)</span><output id="out-w">0.18</output><input id="sl-w" type="range" min="0.05" max="0.6" step="0.01" value="0.18"/></label>
+                <label class="control-label"><span>Sensor range m</span><output id="out-range">7.0</output><input id="sl-range" type="range" min="3" max="12" step="0.5" value="7"/></label>
+              </div>
+              <div class="rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.70rem] leading-[1.45]">
+                <div class="flex justify-between"><span>True pose</span><span id="ro-true">—</span></div>
+                <div class="flex justify-between"><span>Est pose μ</span><span id="ro-est">—</span></div>
+                <div class="flex justify-between"><span>ATE RMSE m</span><span id="ro-ate">—</span></div>
+                <div class="flex justify-between"><span>tr(P_rr) cov</span><span id="ro-cov">—</span></div>
+                <div class="flex justify-between"><span>Visible lm</span><span id="ro-vis">—</span></div>
+                <div class="flex justify-between"><span>Loop closures</span><span id="ro-loop">0</span></div>
+                <div class="flex justify-between"><span>Map size N</span><span id="ro-map">—</span></div>
+                <div class="mt-2 h-px bg-border"></div>
+                <div class="mt-2 text-[0.62rem] uppercase tracking-[0.1em]">BoW similarity</div>
+                <div class="mt-1 h-2 w-full rounded-full bg-canvas border border-border"><div id="bar-bow" class="h-full rounded-full bg-primary-cta transition-all" style="width:12%"></div></div>
+                <div class="flex justify-between text-[0.62rem] mt-1"><span id="ro-bow">0.12</span><span>thr 0.72</span></div>
+              </div>
+              <p class="text-[0.75rem] leading-[1.5] text-muted-text">Robot drives a noisy unicycle circle. EKF predicts with noisy v,w then updates with range-bearing landmarks. Uncertainty ellipsoids grow without loop closure — enable it and return to start to hear snap and see map correction.</p>
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="relative overflow-hidden rounded-[16px] border border-border bg-card-bg p-4">
+              <div id="flash-overlay" class="pointer-events-none absolute inset-0 z-10 opacity-0 bg-white mix-blend-screen transition-opacity duration-200"></div>
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Top-down arena — trajectory, landmarks, ellipsoids, loop edge</p>
+              <canvas id="slam-canvas" width="960" height="540" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[0.65rem] text-muted-text">
+                <span><span class="inline-block h-2 w-2 rounded-full bg-[#60a5fa]"></span> true path</span>
+                <span><span class="inline-block h-2 w-2 rounded-full bg-[#f07a94]"></span> EKF estimate</span>
+                <span><span class="inline-block h-2 w-2 rounded-full bg-[#4ade80]"></span> loop snap</span>
+                <span>dashed: odom only</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Sparse 3-D point cloud — pinhole projection from robot frame</p>
+                <canvas id="cloud-canvas" width="560" height="300" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <p class="mt-2 font-mono text-[0.65rem] text-muted-text">Size ∝ 1/depth, color by visual word. Height jitter = stereo reconstruction noise.</p>
+              </div>
+              <div class="space-y-3">
+                <div class="rounded-[16px] border border-border bg-elevated/50 p-4">
+                  <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Live histogram BoW</p>
+                  <canvas id="bow-canvas" width="320" height="120" class="mt-2 block w-full rounded-[8px] bg-canvas border border-border"></canvas>
+                  <p class="mt-2 text-[0.72rem] text-muted-text">Visual words = 32 bins quantized by position hash. Loop when cosine similarity spikes as you revisit.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="readout"><dt>Loop dist m</dt><dd id="ro-loopdist">—</dd></div>
+                  <div class="readout"><dt>Drift before snap</dt><dd id="ro-drift">—</dd></div>
+                  <div class="readout"><dt>FOV count</dt><dd id="ro-fov">—</dd></div>
+                  <div class="readout"><dt>Time s</dt><dd id="ro-time">0.0</dd></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of the arena</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="font-[650]">EKF SLAM pipeline</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-decimal list-inside">
+              <li><strong class="text-primary-text">State:</strong> μ ∈ R^(3+2N) = [x,y,θ, m1x,m1y…]. P covariance (3+2N)² initialized P_rr=0.01·I, P_mm=800·I for unknown landmarks.</li>
+              <li><strong class="text-primary-text">True world:</strong> N visual features uniformly in [-11,11]² with random height 0.3-2.4 m for cloud projection, descriptor = hash of cell + random BoW word in 0..31.</li>
+              <li><strong class="text-primary-text">Motion:</strong> unicycle v, ω. True integrates v, ω. Filter integrates v̂=v+𝒩(0,σ_m²), ω̂=ω+𝒩(0,(σ_m/2)²). Jacobian G = ∂f/∂[x,y,θ] = [[1,0,-v dt sinθ],[0,1,v dt cosθ],[0,0,1]]. P_rm = G P_rm.</li>
+              <li><strong class="text-primary-text">Observation:</strong> range r=√(dx²+dy²), bearing φ=atan2(dy,dx)−θ. ẑ = z_true+𝒩(0, diag(σ_o², (σ_o·0.6)²)). Only landmarks within range and |φ| &lt; 95° generate measurement.</li>
+              <li><strong class="text-primary-text">Init:</strong> first sight sets μ_landmark = [x+ r cos(θ+φ), y+ r sin(θ+φ)], covariance clamped to 1.2, seen=true. Subsequent sights run sparse EKF update.</li>
+              <li><strong class="text-primary-text">Visualization:</strong> top-down shows true gray dots, estimated orange; ellipsoids 95% from marginal covariance. Robot triangle with σ ellipse. Odom-only (dead reckoning) dashed line diverges.</li>
+            </ol>
+            <div class="mt-5 math-card">
+              <p class="math-label">Motion Jacobian</p>
+              <Math math="G_t=\begin{bmatrix}1&0&-v\Delta t\sin\theta\\0&1&v\Delta t\cos\theta\\0&0&1\end{bmatrix}" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">Cross-covariance propagates by P_rm ← G P_rm keeping landmark correlations.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-[650]">Loop closure, point cloud, audio</h3>
+            <ul class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-disc list-inside">
+              <li>Keyframes every ~1.1 m or 18° rotation: store pose, BoW 32-histogram, landmark IDs seen. History up to 90 frames.</li>
+              <li>BoW similarity: cosine sim = (h1·h2)/(‖h1‖‖h2‖). Candidate if sim>0.72, metric distance of estimated trajectory loop &lt;1.8 m, travelled >12 m, and not same recent frame.</li>
+              <li>Correction: pose graph snap Δp=μ_kframe−μ_curr, applied 0.85 gain to μ_robot and shared landmarks shifted by Δp·0.7 averages (emulating BA). P_rr ×0.28 and P cross scaled 0.7 mimics information matrix boost.</li>
+              <li>Feedback: flash overlay α flashTimer, canvas CSS translate jitter proportional to drift energy, loop edge green line, ATE drop in readout.</li>
+              <li>Cloud projection: p_cam = R(-θ)([mₓ−x, mᵧ−y, h_z]ᵀ). u = cₓ + fₓ·pₓ/p_z, v = cᵧ − f_y·h_z/p_z, size ∝ 1/(p_z+0.2). Height noise simulated, size encodes depth uncertainty.</li>
+              <li>Spatial audio: HRTF PannerNode. Pos = loop vector rotated into listener frame. Snap = 880 Hz sine ×exp(-18t) + 2.6 kHz pluck + 2-6 kHz noise burst 80 ms. Gain = 0.22 + 0.18·drift_before.</li>
+            </ul>
+            <div class="mt-5 math-card">
+              <p class="math-label">Observation Jacobian (one landmark)</p>
+              <Math math="H = [H_{robot}\;0\;H_{lm}\;0],\;H_r=\begin{bmatrix}-dx/r&-dy/r&0\\dy/q&-dx/q&-1\end{bmatrix},\;H_{lm}=\begin{bmatrix}dx/r&dy/r\\-dy/q&dx/q\end{bmatrix}" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">q=dx²+dy², r=√q. Sparse so S is 2×2 only.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">EKF Predict</p>
+            <Math math="\mu_{t|t-1}=f(\mu_{t-1},u_t),\quad P_{t|t-1}=F_t P_{t-1}F_t^T+R_t" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">F_t = diag(G_t, I_2N). R_t only affects robot 3x3 block: sigma_v², sigma_w².</p>
+            <div class="mt-3 math-card">
+              <p class="math-label">Range-bearing</p>
+              <Math math="h(x)=\begin{bmatrix}\sqrt{(m_x-x)^2+(m_y-y)^2}\\ \operatorname{atan2}(m_y-y,m_x-x)-\theta\end{bmatrix}" display />
+            </div>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">EKF Update</p>
+            <Math math="S=H P H^T+Q,\;K=P H^T S^{-1},\;\mu\gets\mu+K(z-h(\mu)),\;P\gets(I-KH)P" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">H sparse 2×(3+2N). S⁻¹ analytic 2×2. Innovation angle wrapped to (−π,π].</p>
+            <div class="mt-3 math-card">
+              <p class="math-label">95% ellipse</p>
+              <Math math="\lambda_{1,2}=\frac{a+c}{2}\pm\sqrt{((a-c)/2)^2+b^2},\;axes=2.447\sqrt{\lambda}" display />
+            </div>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Loop & BA</p>
+            <Math math="\text{BoW sim}= \frac{h_c\cdot h_k}{\|h_c\|\|h_k\|},\quad \text{if }>0.72\text{ candidate}" display />
+            <Math math="J_{BA}=\sum_{i,j}\|z_{ij}-h(T_i,X_j)\|^2_{\Sigma_{ij}},\quad \Delta^* = -(J^TJ+\lambda I)^{-1}J^T r" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">Loop adds pose-pose constraint factor; BA optimizes over window. Filtering alone drifts O(√ distance).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+          </div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(
+            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted);transition:all 0.15s}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.pill-btn:hover{border-color:var(--mp-border-strong);color:var(--mp-text)}
+.readout{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 55%,transparent);padding:0.65rem 0.8rem}
+.readout dt{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--mp-muted)}
+.readout dd{margin-top:0.2rem;font-size:0.88rem;font-weight:600;color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.math-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initSLAM(){
+  const slamCanvas = document.getElementById('slam-canvas');
+  if(!slamCanvas || slamCanvas.dataset.init) return;
+  slamCanvas.dataset.init='true';
+  const cloudCanvas = document.getElementById('cloud-canvas');
+  const bowCanvas = document.getElementById('bow-canvas');
+  const sCtx = slamCanvas.getContext('2d');
+  const cCtx = cloudCanvas.getContext('2d');
+  const bCtx = bowCanvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  [[slamCanvas,960,540],[cloudCanvas,560,300],[bowCanvas,320,120]].forEach(([c,W0,H0])=>{
+    const W=W0,H=H0; c.width=W*dpr; c.height=H*dpr; c.style.width=W+'px'; c.style.height=H+'px'; c.getContext('2d').scale(dpr,dpr);
+  });
+  const W=960,H=540, CW=560,CH=300;
+
+  // UI
+  const slMotion=document.getElementById('sl-motion'), slObs=document.getElementById('sl-obs'), slFeat=document.getElementById('sl-feat');
+  const slV=document.getElementById('sl-v'), slWrpm=document.getElementById('sl-w'), slRange=document.getElementById('sl-range');
+  const outMotion=document.getElementById('out-motion'), outObs=document.getElementById('out-obs'), outFeat=document.getElementById('out-feat');
+  const outV=document.getElementById('out-v'), outW=document.getElementById('out-w'), outRange=document.getElementById('out-range');
+  const chkLoop=document.getElementById('chk-loop'), chkAudio=document.getElementById('chk-audio'), chkTrue=document.getElementById('chk-true');
+  const btnPlay=document.getElementById('btn-play'), btnReset=document.getElementById('btn-reset');
+  const roTrue=document.getElementById('ro-true'), roEst=document.getElementById('ro-est'), roATE=document.getElementById('ro-ate'), roCov=document.getElementById('ro-cov');
+  const roVis=document.getElementById('ro-vis'), roLoopC=document.getElementById('ro-loop'), roMap=document.getElementById('ro-map');
+  const roBow=document.getElementById('ro-bow'), barBow=document.getElementById('bar-bow'), loopFlash=document.getElementById('loop-flash');
+  const roLoopDist=document.getElementById('ro-loopdist'), roDrift=document.getElementById('ro-drift'), roFov=document.getElementById('ro-fov'), roTime=document.getElementById('ro-time');
+  const flashOverlay=document.getElementById('flash-overlay');
+
+  function updOut(){
+    outMotion.textContent=slMotion.value; outObs.textContent=slObs.value; outFeat.textContent=slFeat.value;
+    outV.textContent=slV.value; outW.textContent=slWrpm.value; outRange.textContent=slRange.value;
+  }
+  [slMotion,slObs,slFeat,slV,slWrpm,slRange].forEach(el=>el.addEventListener('input',updOut));
+  updOut();
+
+  // Utils
+  function rand(){ return Math.random(); }
+  function randn(){
+    let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+  function wrap(a){ return Math.atan2(Math.sin(a),Math.cos(a)); }
+
+  // Audio
+  let audioCtx=null, masterGain=null;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain(); masterGain.gain.value=0.28; masterGain.connect(audioCtx.destination);
+    return audioCtx;
+  }
+  function playSnap(relX, relY, drift){
+    if(!chkAudio.checked) return;
+    const ctx=ensureAudio(); ctx.resume();
+    const panner=ctx.createPanner(); panner.panningModel='HRTF'; panner.distanceModel='inverse';
+    const azimuth=Math.atan2(relY,relX); // left-right
+    const dist=Math.sqrt(relX*relX+relY*relY)+1;
+    panner.positionX.value=Math.sin(azimuth)*2;
+    panner.positionY.value=0;
+    panner.positionZ.value=-Math.cos(azimuth)*2;
+    const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=8;
+    panner.connect(comp); comp.connect(masterGain);
+    const t=ctx.currentTime;
+    // dual oscillator
+    [[880,0.22,0.25],[2640,0.14,0.18]].forEach(([freq,g,dec])=>{
+      const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=freq;
+      const gn=ctx.createGain(); gn.gain.setValueAtTime(0,t); gn.gain.linearRampToValueAtTime(g*(0.7+drift*0.2),t+0.01); gn.gain.exponentialRampToValueAtTime(0.001, t+dec);
+      o.connect(gn); gn.connect(panner); o.start(t); o.stop(t+dec+0.05);
+    });
+    // noise burst
+    const bufferSize=Math.floor(ctx.sampleRate*0.12);
+    const buf=ctx.createBuffer(1,bufferSize,ctx.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+      const env=Math.exp(-i/(bufferSize*0.22));
+      ch[i]=(Math.random()*2-1)*env*0.6;
+    }
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=3400+drift*800; bp.Q.value=0.8;
+    const gN=ctx.createGain(); gN.gain.setValueAtTime(0.32,t); gN.gain.exponentialRampToValueAtTime(0.001,t+0.18);
+    src.connect(bp); bp.connect(gN); gN.connect(panner); src.start(t); src.stop(t+0.16);
+  }
+
+  // World
+  let truePose={x:0,y:0,th:0};
+  let odomPose={x:0,y:0,th:0}; // dead reckoning only
+  let mu=[]; // state
+  let P=[]; // covariance matrix
+  let seen=[]; // bool per landmark
+  let landmarks=[]; // true {x,y,z,wrd}
+  let trails={true:[], est:[], odom:[]};
+  let keyframes=[]; // {mu:[x,y,th], true:[x,y], bow: array 32, ids:[]}
+  let loopCount=0, flashTimer=0, time=0;
+  let isPlaying=true;
+  let bowCurr=new Array(32).fill(0);
+
+  function initWorld(){
+    const N=parseInt(slFeat.value);
+    landmarks=[];
+    for(let i=0;i<N;i++){
+      const angle=rand()*Math.PI*2;
+      const radius=2.5+rand()*9.5;
+      // bias to make loop more feature rich near loop path
+      let x=radius*Math.cos(angle)+(rand()-0.5)*1.5;
+      let y=radius*Math.sin(angle)+(rand()-0.5)*1.5;
+      // avoid very close to origin too many
+      if(Math.hypot(x,y)<1.2){ x+= (x>=0?1.2:-1.2); y+= (y>=0?1.2:-1.2); }
+      const z=0.3+rand()*2.1 + (rand()>0.7? rand()*0.8:0);
+      const bowWord=Math.floor(rand()*32);
+      landmarks.push({x,y,z,bow:bowWord, id:i});
+    }
+    const D=3+2*N;
+    mu=new Array(D).fill(0);
+    mu[0]=0; mu[1]=0; mu[2]=0;
+    P=new Array(D);
+    for(let i=0;i<D;i++){ P[i]=new Array(D).fill(0); }
+    for(let i=0;i<3;i++) P[i][i]=0.01;
+    for(let i=3;i<D;i++) P[i][i]=800; // large unknown
+    seen=new Array(N).fill(false);
+    truePose={x:0,y:0,th:0};
+    odomPose={x:0,y:0,th:0};
+    trails={true:[], est:[], odom:[]};
+    keyframes=[];
+    bowCurr=new Array(32).fill(0);
+    loopCount=0; flashTimer=0; time=0;
+    roLoopC.textContent='0';
+    loopFlash.textContent='';
+  }
+
+  function predict(v,w,dt,sigmaM){
+    const th=mu[2];
+    const vNoisy=v + randn()*sigmaM;
+    const wNoisy=w + randn()*sigmaM*0.45;
+    // true moves with clean
+    truePose.x += v*dt*Math.cos(truePose.th);
+    truePose.y += v*dt*Math.sin(truePose.th);
+    truePose.th = wrap(truePose.th + w*dt);
+    // odom drift only
+    odomPose.x += vNoisy*dt*Math.cos(odomPose.th);
+    odomPose.y += vNoisy*dt*Math.sin(odomPose.th);
+    odomPose.th = wrap(odomPose.th + wNoisy*dt);
+
+    // EKF mu robot
+    mu[0] += vNoisy*dt*Math.cos(th);
+    mu[1] += vNoisy*dt*Math.sin(th);
+    mu[2] = wrap(mu[2] + wNoisy*dt);
+
+    // G matrix 3x3
+    const G00=1, G01=0, G02=-vNoisy*dt*Math.sin(th);
+    const G10=0, G11=1, G12= vNoisy*dt*Math.cos(th);
+    const G20=0, G21=0, G22=1;
+    // P_rr = G P_rr G^T + Q
+    const qv=sigmaM*sigmaM*0.8; const qw=sigmaM*sigmaM*0.3;
+    // extract Prr
+    const Prr=[[P[0][0],P[0][1],P[0][2]],[P[1][0],P[1][1],P[1][2]],[P[2][0],P[2][1],P[2][2]]];
+    // GP = G*Prr
+    const GP=[
+      [G00*Prr[0][0]+G01*Prr[1][0]+G02*Prr[2][0], G00*Prr[0][1]+G01*Prr[1][1]+G02*Prr[2][1], G00*Prr[0][2]+G01*Prr[1][2]+G02*Prr[2][2]],
+      [G10*Prr[0][0]+G11*Prr[1][0]+G12*Prr[2][0], G10*Prr[0][1]+G11*Prr[1][1]+G12*Prr[2][1], G10*Prr[0][2]+G11*Prr[1][2]+G12*Prr[2][2]],
+      [G20*Prr[0][0]+G21*Prr[1][0]+G22*Prr[2][0], G20*Prr[0][1]+G21*Prr[1][1]+G22*Prr[2][1], G20*Prr[0][2]+G21*Prr[1][2]+G22*Prr[2][2]]
+    ];
+    // GPGT = GP * G^T : GT = [[1,0,0],[0,1,0],[G02,G12,1]]
+    const GPGT=[
+      [GP[0][0]*G00 + GP[0][1]*G01 + GP[0][2]*G02, GP[0][0]*G10 + GP[0][1]*G11 + GP[0][2]*G12, GP[0][0]*G20 + GP[0][1]*G21 + GP[0][2]*G22],
+      [GP[1][0]*G00 + GP[1][1]*G01 + GP[1][2]*G02, GP[1][0]*G10 + GP[1][1]*G11 + GP[1][2]*G12, GP[1][0]*G20 + GP[1][1]*G21 + GP[1][2]*G22],
+      [GP[2][0]*G00 + GP[2][1]*G01 + GP[2][2]*G02, GP[2][0]*G10 + GP[2][1]*G11 + GP[2][2]*G12, GP[2][0]*G20 + GP[2][1]*G21 + GP[2][2]*G22]
+    ];
+    GPGT[0][0]+=qv; GPGT[1][1]+=qv; GPGT[2][2]+=qw;
+    // copy back
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) P[i][j]=GPGT[i][j];
+    // P_rm = G P_rm for all landmark columns
+    const N=(mu.length-3)/2;
+    for(let k=0;k<N;k++){
+      const cx=3+k*2, cy=cx+1;
+      const p0x=P[0][cx], p0y=P[0][cy], p1x=P[1][cx], p1y=P[1][cy], p2x=P[2][cx], p2y=P[2][cy];
+      // actually need full matrix multiplication for rows 0,1,2 vs all? Simplified: G * P_rm where P_rm is 3x2N matrix (top rows)
+      // new P0 = G00*P0+G01*P1+G02*P2
+      const np0x = G00*p0x + G01*p1x + G02*p2x;
+      const np0y = G00*p0y + G01*p1y + G02*p2y;
+      const np1x = G10*p0x + G11*p1x + G12*p2x;
+      const np1y = G10*p0y + G11*p1y + G12*p2y;
+      const np2x = G20*p0x + G21*p1x + G22*p2x;
+      const np2y = G20*p0y + G21*p1y + G22*p2y;
+      P[0][cx]=np0x; P[0][cy]=np0y;
+      P[1][cx]=np1x; P[1][cy]=np1y;
+      P[2][cx]=np2x; P[2][cy]=np2y;
+      // symmetric lower
+      P[cx][0]=np0x; P[cy][0]=np0y;
+      P[cx][1]=np1x; P[cy][1]=np1y;
+      P[cx][2]=np2x; P[cy][2]=np2y;
+    }
+  }
+
+  function observe(sigmaO, maxRange){
+    const rx=mu[0], ry=mu[1], rt=mu[2];
+    const trueRx=truePose.x, trueRy=truePose.y, trueRt=truePose.th;
+    const visible=[];
+    bowCurr=new Array(32).fill(0);
+    for(let i=0;i<landmarks.length;i++){
+      const lm=landmarks[i];
+      const dxT=lm.x-trueRx, dyT=lm.y-trueRy;
+      const rT=Math.hypot(dxT,dyT);
+      const bearT=wrap(Math.atan2(dyT,dxT)-trueRt);
+      if(rT>maxRange) continue;
+      if(Math.abs(bearT)>1.65) continue; // 95 deg
+      // measurement
+      const rMeas=rT + randn()*sigmaO;
+      const bearMeas=wrap(bearT + randn()*sigmaO*0.55);
+      // init if never seen
+      const lix=3+i*2;
+      if(!seen[i]){
+        // first observation triangulation
+        mu[lix]=rx + rMeas*Math.cos(rt+bearMeas);
+        mu[lix+1]=ry + rMeas*Math.sin(rt+bearMeas);
+        P[lix][lix]=1.5; P[lix+1][lix+1]=1.5;
+        // rough cross correlation from robot?
+        seen[i]=true;
+      }
+      visible.push({id:i, r:rMeas, bear:bearMeas, rT, bearT, dx: mu[lix]-rx, dy: mu[lix+1]-ry });
+      bowCurr[lm.bow]+=1;
+    }
+    // sequential update per visible
+    for(let v of visible){
+      const lix=3+v.id*2;
+      if(!seen[v.id]) continue;
+      const dx=mu[lix]-mu[0], dy=mu[lix+1]-mu[1];
+      const q=dx*dx+dy*dy;
+      if(q<1e-6) continue;
+      const r=Math.sqrt(q);
+      const predBear=wrap(Math.atan2(dy,dx)-mu[2]);
+      // measurement prediction
+      // Jacobians
+      // H_r 2x3
+      const dr_dx=-dx/r, dr_dy=-dy/r, dr_dt=0;
+      const dphi_dx= dy/q, dphi_dy= -dx/q, dphi_dt= -1;
+      const dr_dmx= dx/r, dr_dmy= dy/r;
+      const dphi_dmx= -dy/q, dphi_dmy= dx/q;
+      const idx=[0,1,2,lix,lix+1];
+      const Hsmall=[
+        [dr_dx, dr_dy, dr_dt, dr_dmx, dr_dmy],
+        [dphi_dx, dphi_dy, dphi_dt, dphi_dmx, dphi_dmy]
+      ];
+      // P_sub 5x5
+      const Psub=[];
+      for(let a=0;a<5;a++){ Psub[a]=[]; for(let b=0;b<5;b++){ Psub[a][b]=P[idx[a]][idx[b]]; } }
+      // S = H Psub H^T + R
+      let S00=0,S01=0,S10=0,S11=0;
+      for(let a=0;a<5;a++) for(let b=0;b<5;b++){
+        const pab=Psub[a][b];
+        S00+=Hsmall[0][a]*pab*Hsmall[0][b];
+        S01+=Hsmall[0][a]*pab*Hsmall[1][b];
+        S10+=Hsmall[1][a]*pab*Hsmall[0][b];
+        S11+=Hsmall[1][a]*pab*Hsmall[1][b];
+      }
+      const Rr=sigmaO*sigmaO;
+      const Rb=(sigmaO*0.55)*(sigmaO*0.55);
+      S00+=Rr; S11+=Rb;
+      const det=S00*S11 - S01*S10;
+      if(Math.abs(det)<1e-9) continue;
+      const invDet=1/det;
+      const Sinv=[[S11*invDet, -S01*invDet],[-S10*invDet, S00*invDet]];
+      // P_HT = P[:,idx] * H^T => D x2
+      const D=mu.length;
+      const PHT=new Array(D);
+      for(let i=0;i<D;i++){ PHT[i]=[0,0]; }
+      for(let i=0;i<D;i++){
+        let sum0=0,sum1=0;
+        for(let k=0;k<5;k++){
+          const Pik=P[i][idx[k]];
+          sum0+=Pik*Hsmall[0][k];
+          sum1+=Pik*Hsmall[1][k];
+        }
+        PHT[i][0]=sum0; PHT[i][1]=sum1;
+      }
+      // K = PHT * S_inv => D x2
+      const K=new Array(D);
+      for(let i=0;i<D;i++){
+        K[i]=[
+          PHT[i][0]*Sinv[0][0] + PHT[i][1]*Sinv[1][0],
+          PHT[i][0]*Sinv[0][1] + PHT[i][1]*Sinv[1][1]
+        ];
+      }
+      // innovation
+      const innov0=v.r - r;
+      const innov1=wrap(v.bear - predBear);
+      // mu update
+      for(let i=0;i<D;i++){
+        mu[i] += K[i][0]*innov0 + K[i][1]*innov1;
+      }
+      mu[2]=wrap(mu[2]);
+      // P update P = P - K * PHT^T
+      // P[i][j] -= K[i][0]*PHT[j][0] + K[i][1]*PHT[j][1]
+      for(let i=0;i<D;i++){
+        for(let j=0;j<D;j++){
+          P[i][j] -= K[i][0]*PHT[j][0] + K[i][1]*PHT[j][1];
+        }
+      }
+      // enforce symmetry a bit
+      for(let i=0;i<D;i++) for(let j=i+1;j<D;j++){
+        const avg=(P[i][j]+P[j][i])*0.5;
+        P[i][j]=avg; P[j][i]=avg;
+      }
+    }
+    // normalize bow histogram
+    const norm=Math.hypot(...bowCurr)||1;
+    const bowNorm=bowCurr.map(v=>v/norm);
+    return {visible, bowNorm};
+  }
+
+  function manageKeyframes(bowNorm, visible){
+    const lastKf=keyframes[keyframes.length-1];
+    const moved= lastKf ? Math.hypot(mu[0]-lastKf.mu[0], mu[1]-lastKf.mu[1]) : 10;
+    const rot=Math.abs(wrap(mu[2]- (lastKf?lastKf.mu[2]:0)));
+    if(!lastKf || moved>1.1 || rot>0.32){
+      keyframes.push({
+        mu:[mu[0],mu[1],mu[2]],
+        true:[truePose.x,truePose.y,truePose.th],
+        bow: bowNorm.slice(),
+        ids: visible.map(v=>v.id),
+        t: time
+      });
+      if(keyframes.length>90) keyframes.shift();
+    }
+  }
+
+  function checkLoopClosure(bowNorm){
+    if(!chkLoop.checked) return {sim:0, trigger:false, matched:null};
+    if(keyframes.length<12) return {sim:0, trigger:false, matched:null};
+    if(time<12) return {sim:0, trigger:false, matched:null};
+    const totalDist=Math.hypot(...trails.true.reduce((acc,_,i,a)=>{ if(i===0) return [0,0]; const d=Math.hypot(a[i].x-a[i-1].x, a[i].y-a[i-1].y); acc[0]+=d; return acc; },[0,0]))||0;
+    // rough total distance from trail length
+    const traveled=trails.true.length*0.06*parseFloat(slV.value); // approx
+    if(traveled<12) return {sim:0, trigger:false, matched:null};
+
+    // compare current bow vs old keyframes not recent (exclude last 8)
+    let bestSim=-1, bestIdx=-1;
+    for(let i=0;i<keyframes.length-8;i++){
+      const kf=keyframes[i];
+      let dot=0, n1=0,n2=0;
+      for(let b=0;b<32;b++){ dot+=kf.bow[b]*bowNorm[b]; n1+=kf.bow[b]*kf.bow[b]; n2+=bowNorm[b]*bowNorm[b]; }
+      const sim=n1>0&&n2>0? dot/(Math.sqrt(n1)*Math.sqrt(n2)):0;
+      // metric proximity: estimated pos close to old kf true proximity plus drift
+      const distEst=Math.hypot(mu[0]-kf.mu[0], mu[1]-kf.mu[1]);
+      const distTrue=Math.hypot(truePose.x-kf.true[0], truePose.y-kf.true[1]);
+      // we want small distTrue but maybe larger distEst if drifted => good loop candidate
+      if(distTrue<2.2 && sim>bestSim){
+        bestSim=sim; bestIdx=i;
+      }
+    }
+    if(bestIdx>=0 && bestSim>0.72){
+      const kf=keyframes[bestIdx];
+      const drift=Math.hypot(mu[0]-kf.mu[0], mu[1]-kf.mu[1]);
+      if(drift>0.85){
+        // trigger
+        return {sim:bestSim, trigger:true, matched:kf, drift};
+      }
+      return {sim:bestSim, trigger:false, matched:kf, drift};
+    }
+    return {sim: bestSim>0?bestSim:0, trigger:false, matched:null};
+  }
+
+  function applyLoopClosure(matched, drift){
+    const dx=matched.mu[0]-mu[0];
+    const dy=matched.mu[1]-mu[1];
+    const dth=wrap(matched.mu[2]-mu[2]);
+    const gain=0.85;
+    // snap robot
+    mu[0]+=dx*gain; mu[1]+=dy*gain; mu[2]=wrap(mu[2]+dth*gain);
+    // snap landmarks that were shared: those visible now and in matched ids
+    const sharedSet=new Set(matched.ids);
+    for(let vId of sharedSet){
+      const lix=3+vId*2;
+      // shift landmark proportionally
+      mu[lix]+=dx*gain*0.7;
+      mu[lix+1]+=dy*gain*0.7;
+    }
+    // covariance shrinkage
+    const D=mu.length;
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) P[i][j]*=0.28;
+    // cross terms shrink
+    const N=(D-3)/2;
+    for(let k=0;k<N;k++){
+      const cx=3+k*2, cy=cx+1;
+      P[0][cx]*=0.7; P[0][cy]*=0.7; P[1][cx]*=0.7; P[1][cy]*=0.7; P[2][cx]*=0.7; P[2][cy]*=0.7;
+      P[cx][0]*=0.7; P[cy][0]*=0.7; P[cx][1]*=0.7; P[cy][1]*=0.7; P[cx][2]*=0.7; P[cy][2]*=0.7;
+    }
+    // for snapped landmarks also reduce their covariance
+    for(let id of sharedSet){
+      const lix=3+id*2;
+      P[lix][lix]*=0.55; P[lix+1][lix+1]*=0.55;
+    }
+    loopCount++;
+    flashTimer=0.85;
+    loopFlash.textContent=`LOOP CLOSURE #${loopCount} Δ=${drift.toFixed(2)}m`;
+    setTimeout(()=>{ if(flashTimer<0.1) loopFlash.textContent=''; }, 2200);
+    // audio
+    playSnap(dx,dy,drift);
+  }
+
+  // Drawing helpers
+  function worldToScreen(x,y){
+    const scale=22;
+    return {sx: W/2 + x*scale, sy: H/2 - y*scale, scale};
+  }
+  function drawEllipse(ctx, cx, cy, cov00, cov01, cov11, color, lineW=1){
+    const a=cov00, b=cov01, c=cov11;
+    const trace=a+c; const det=a*c - b*b;
+    const temp=Math.sqrt(Math.max(0, (a-c)*(a-c)/4 + b*b));
+    const l1=trace/2 + temp; const l2=trace/2 - temp;
+    if(l1<=0||l2<=0) return;
+    const angle = Math.abs(b)<1e-9 ? 0 : 0.5*Math.atan2(2*b, a-c);
+    const chi=2.447; // 95%
+    const rx=Math.sqrt(l1)*chi, ry=Math.sqrt(l2)*chi;
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle);
+    ctx.strokeStyle=color; ctx.lineWidth=lineW;
+    ctx.beginPath(); ctx.ellipse(0,0, rx*22, ry*22, 0,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  let raf=0;
+  let lastT=performance.now();
+  function loop(now){
+    raf=requestAnimationFrame(loop);
+    const dtFrame=Math.min(0.05, (now-lastT)/1000); lastT=now;
+    if(!isPlaying) { draw(); return; }
+    const sigmaM=parseFloat(slMotion.value);
+    const sigmaO=parseFloat(slObs.value);
+    const maxRange=parseFloat(slRange.value);
+    const v=parseFloat(slV.value);
+    const w=parseFloat(slWrpm.value);
+    const dtSim=0.05;
+    // integrate maybe multiple steps per frame for stability
+    const steps=2;
+    let lastVisible=[], lastBow=[];
+    for(let s=0;s<steps;s++){
+      predict(v,w,dtSim,sigmaM);
+      const obs=observe(sigmaO, maxRange);
+      lastVisible=obs.visible; lastBow=obs.bowNorm;
+      manageKeyframes(obs.bowNorm, obs.visible);
+      time+=dtSim;
+    }
+    // trail push
+    trails.true.push({x:truePose.x, y:truePose.y});
+    trails.est.push({x:mu[0], y:mu[1]});
+    trails.odom.push({x:odomPose.x, y:odomPose.y});
+    if(trails.true.length>800){ trails.true.shift(); trails.est.shift(); trails.odom.shift(); }
+
+    const loopInfo=checkLoopClosure(lastBow);
+    if(loopInfo.trigger && loopInfo.matched){
+      applyLoopClosure(loopInfo.matched, loopInfo.drift);
+    }
+
+    // update bow bar
+    roBow.textContent=loopInfo.sim.toFixed(2);
+    barBow.style.width=Math.min(100, Math.max(4, loopInfo.sim*100))+'%';
+    barBow.style.background=loopInfo.trigger? '#4ade80' : (loopInfo.sim>0.5? '#f07a94':'var(--mp-cta)');
+
+    // readouts
+    roTrue.textContent=`${truePose.x.toFixed(2)},${truePose.y.toFixed(2)},${(truePose.th*57.3).toFixed(0)}°`;
+    roEst.textContent=`${mu[0].toFixed(2)},${mu[1].toFixed(2)},${(mu[2]*57.3).toFixed(0)}°`;
+    const ate = Math.hypot(truePose.x-mu[0], truePose.y-mu[1]);
+    // RMSE over trail
+    let sum=0,len=trails.true.length;
+    for(let i=0;i<len;i++){ const dx=trails.true[i].x-trails.est[i].x, dy=trails.true[i].y-trails.est[i].y; sum+=dx*dx+dy*dy; }
+    const rmse=Math.sqrt(sum/Math.max(1,len));
+    roATE.textContent=rmse.toFixed(3)+' m (inst '+ate.toFixed(2)+')';
+    const trP=P[0][0]+P[1][1]+P[2][2];
+    roCov.textContent=trP.toFixed(3);
+    roVis.textContent=`${lastVisible.length} / ${landmarks.length}`;
+    roMap.textContent=`${seen.filter(Boolean).length}`;
+    roLoopDist.textContent= loopInfo.matched ? Math.hypot(truePose.x-loopInfo.matched.true[0], truePose.y-loopInfo.matched.true[1]).toFixed(2) : '—';
+    roDrift.textContent= loopInfo.drift!==undefined? loopInfo.drift.toFixed(2)+' m':'—';
+    roFov.textContent=`${lastVisible.length}`;
+    roTime.textContent=time.toFixed(1);
+
+    if(flashTimer>0){ flashTimer-=dtFrame; flashOverlay.style.opacity=(flashTimer*0.8).toString(); if(flashTimer<=0){ flashOverlay.style.opacity='0'; } }
+
+    draw(lastVisible, loopInfo);
+  }
+
+  function draw(visible=[], loopInfo=null){
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    sCtx.fillStyle=bg; sCtx.fillRect(0,0,W,H);
+    // grid
+    sCtx.strokeStyle='rgba(255,255,255,0.05)'; sCtx.lineWidth=1;
+    for(let gx=-24; gx<=24; gx+=2){
+      const p1=worldToScreen(gx,-14), p2=worldToScreen(gx,14);
+      sCtx.beginPath(); sCtx.moveTo(p1.sx,p1.sy); sCtx.lineTo(p2.sx,p2.sy); sCtx.stroke();
+    }
+    for(let gy=-14; gy<=14; gy+=2){
+      const p1=worldToScreen(-14,gy), p2=worldToScreen(14,gy);
+      sCtx.beginPath(); sCtx.moveTo(p1.sx,p1.sy); sCtx.lineTo(p2.sx,p2.sy); sCtx.stroke();
+    }
+    // landmarks true
+    if(chkTrue.checked){
+      sCtx.fillStyle='#8da0b8aa';
+      for(let lm of landmarks){
+        const ps=worldToScreen(lm.x,lm.y);
+        sCtx.beginPath(); sCtx.arc(ps.sx,ps.sy, 1.8,0,Math.PI*2); sCtx.fill();
+      }
+    }
+    // landmarks estimated + ellipses
+    for(let i=0;i<landmarks.length;i++){
+      if(!seen[i]) continue;
+      const lix=3+i*2;
+      const ex=mu[lix], ey=mu[lix+1];
+      const ps=worldToScreen(ex,ey);
+      // ellipse from P
+      const c00=P[lix][lix], c01=P[lix][lix+1]||P[lix+1][lix], c11=P[lix+1][lix+1];
+      drawEllipse(sCtx, ps.sx, ps.sy, c00,c01,c11, 'rgba(240,122,148,0.28)', 0.8);
+      // dot
+      sCtx.fillStyle='#ff9b6e';
+      sCtx.beginPath(); sCtx.arc(ps.sx,ps.sy, 3,0,Math.PI*2); sCtx.fill();
+      sCtx.strokeStyle='rgba(255,255,255,0.6)'; sCtx.lineWidth=0.5; sCtx.stroke();
+    }
+    // robot ellipse
+    const rps=worldToScreen(mu[0],mu[1]);
+    const pr00=P[0][0], pr01=P[0][1], pr11=P[1][1];
+    drawEllipse(sCtx, rps.sx, rps.sy, pr00,pr01,pr11, '#71b9e3', 1.2);
+    // trails
+    function drawTrail(arr,color,lineW,dash=null){
+      if(arr.length<2) return;
+      sCtx.beginPath(); sCtx.strokeStyle=color; sCtx.lineWidth=lineW; if(dash) sCtx.setLineDash(dash);
+      for(let i=0;i<arr.length;i++){
+        const p=worldToScreen(arr[i].x, arr[i].y);
+        if(i===0) sCtx.moveTo(p.sx,p.sy); else sCtx.lineTo(p.sx,p.sy);
+      }
+      sCtx.stroke(); sCtx.setLineDash([]);
+    }
+    drawTrail(trails.true,'#60a5fa88',1.5);
+    drawTrail(trails.odom,'#9aa0a6aa',1,[6,5]);
+    drawTrail(trails.est,'#f07a94',2);
+    // observation lines
+    if(visible && visible.length){
+      sCtx.strokeStyle='rgba(113,185,227,0.22)'; sCtx.lineWidth=0.8;
+      const rp=worldToScreen(mu[0],mu[1]);
+      for(let v of visible){
+        const lix=3+v.id*2;
+        const ep=worldToScreen(mu[lix], mu[lix+1]);
+        sCtx.beginPath(); sCtx.moveTo(rp.sx,rp.sy); sCtx.lineTo(ep.sx,ep.sy); sCtx.stroke();
+      }
+    }
+    // loop edge
+    if(loopInfo && loopInfo.matched){
+      const mf=loopInfo.matched;
+      const p1=worldToScreen(mu[0],mu[1]);
+      const p2=worldToScreen(mf.mu[0], mf.mu[1]);
+      sCtx.strokeStyle= loopInfo.trigger ? '#4ade80' : 'rgba(74,222,128,0.25)';
+      sCtx.lineWidth= loopInfo.trigger? 3 :1;
+      sCtx.beginPath(); sCtx.moveTo(p1.sx,p1.sy); sCtx.lineTo(p2.sx,p2.sy); sCtx.stroke();
+      // flash circle at match
+      if(loopInfo.trigger || flashTimer>0){
+        sCtx.fillStyle=`rgba(74,222,128,${Math.min(0.5,flashTimer)})`;
+        sCtx.beginPath(); sCtx.arc(p2.sx,p2.sy, 10+flashTimer*10,0,Math.PI*2); sCtx.fill();
+      }
+    }
+    // robot triangle
+    sCtx.save(); sCtx.translate(rps.sx, rps.sy); sCtx.rotate(-mu[2]); // canvas y flipped? we used -y mapping, adjust
+    // because world y up => screen y down, rotation inverse
+    // Our worldToScreen uses -y, so angle should be -theta for screen? use -mu[2]
+    sCtx.fillStyle='#e8eef6'; sCtx.strokeStyle='#0f141c'; sCtx.lineWidth=1;
+    sCtx.beginPath(); sCtx.moveTo(10,0); sCtx.lineTo(-7,5); sCtx.lineTo(-7,-5); sCtx.closePath(); sCtx.fill(); sCtx.stroke();
+    sCtx.restore();
+    // origin start marker
+    const o=worldToScreen(0,0);
+    sCtx.strokeStyle='#4ade80aa'; sCtx.setLineDash([3,3]); sCtx.beginPath(); sCtx.arc(o.sx,o.sy,8,0,Math.PI*2); sCtx.stroke(); sCtx.setLineDash([]);
+    sCtx.fillStyle='#e8eef6'; sCtx.font='10px ui-monospace'; sCtx.fillText(`x=${mu[0].toFixed(1)} y=${mu[1].toFixed(1)} ATE=${Math.hypot(truePose.x-mu[0],truePose.y-mu[1]).toFixed(2)}m`, 8, H-8);
+
+    // cloud canvas
+    cCtx.fillStyle=bg; cCtx.fillRect(0,0,CW,CH);
+    cCtx.strokeStyle='rgba(255,255,255,0.06)'; cCtx.beginPath(); cCtx.moveTo(0,CH/2); cCtx.lineTo(CW,CH/2); cCtx.stroke();
+    // pinhole projection
+    const fx=220, cx=CW/2, cy=CH*0.68;
+    const rx=mu[0], ry=mu[1], rt=mu[2];
+    const points=[];
+    for(let i=0;i<landmarks.length;i++){
+      if(!seen[i]) continue;
+      const lix=3+i*2;
+      const ex=mu[lix], ey=mu[lix+1];
+      const dx=ex-rx, dy=ey-ry;
+      const r=Math.hypot(dx,dy);
+      if(r<0.3||r>parseFloat(slRange.value)) continue;
+      const bear=wrap(Math.atan2(dy,dx)-rt);
+      if(Math.abs(bear)>1.2) continue;
+      const depth = r*Math.cos(bear); // forward
+      if(depth<0.3) continue;
+      const lateral = r*Math.sin(bear);
+      const height=landmarks[i].z + randn()*0.06;
+      const u = cx + (lateral/depth)*fx;
+      const v = cy - (height/depth)*fx*0.9;
+      const sz = Math.max(1.2, 7/(depth+0.5));
+      points.push({u,v,sz,depth,bow:landmarks[i].bow, id:i});
+    }
+    points.sort((a,b)=>b.depth-a.depth);
+    for(let pt of points){
+      const hue = (pt.bow/32)*240;
+      cCtx.fillStyle=`hsl(${hue} 70% 65% / ${0.55 + 0.35*Math.max(0,1-pt.depth/10)})`;
+      cCtx.beginPath(); cCtx.arc(pt.u, pt.v, pt.sz,0,Math.PI*2); cCtx.fill();
+      // vertical line to ground
+      cCtx.strokeStyle='rgba(255,255,255,0.10)'; cCtx.lineWidth=0.5;
+      cCtx.beginPath(); cCtx.moveTo(pt.u, pt.v); cCtx.lineTo(pt.u, cy); cCtx.stroke();
+    }
+    cCtx.fillStyle='#e8eef6'; cCtx.font='10px ui-monospace'; cCtx.fillText(`cloud ${points.length} pts`, 8, CH-8);
+
+    // bow canvas
+    bCtx.fillStyle=bg; bCtx.fillRect(0,0,320,120);
+    bCtx.fillStyle='#1e2633'; bCtx.fillRect(0,0,320,120);
+    for(let i=0;i<32;i++){
+      const h=bowCurr[i]||0;
+      const bh=(h/Math.max(1, Math.max(...bowCurr)))*100;
+      const x=i/32*320;
+      bCtx.fillStyle= i%2? '#f07a94' : '#71b9e3';
+      bCtx.fillRect(x+1, 120-bh, 320/32 -2, bh);
+    }
+    bCtx.strokeStyle='rgba(255,255,255,0.08)'; bCtx.strokeRect(0.5,0.5,319,119);
+  }
+
+  // events
+  btnPlay.addEventListener('click',()=>{
+    isPlaying=!isPlaying;
+    btnPlay.textContent=isPlaying?'⏸ Pause':'▶ Play';
+    btnPlay.classList.toggle('is-active', isPlaying);
+  });
+  btnReset.addEventListener('click',()=>{
+    initWorld();
+  });
+  slFeat.addEventListener('change',()=>{ initWorld(); });
+  chkLoop.addEventListener('change',()=>{ if(!chkLoop.checked) loopFlash.textContent='loop disabled'; else loopFlash.textContent=''; });
+
+  initWorld();
+  loop(performance.now());
+
+  document.addEventListener('astro:before-swap',()=>{ cancelAnimationFrame(raf); try{audioCtx?.close();}catch{} },{once:true});
+}
+document.addEventListener('astro:page-load', initSLAM);
+initSLAM();
+</script>
+</Layout>

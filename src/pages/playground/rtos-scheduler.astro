@@ -1,0 +1,1156 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l => l.relatedTo?.includes('rtos-scheduler')).map(resolveAffiliateLink);
+
+const title = 'RTOS Scheduler Lab — RMS, EDF, Priority Inheritance & Mutex Visualizer | MakerPortal';
+const description = 'Visualize real-time scheduling: RMS vs EDF, preemptive Gantt with Running/Ready/Blocked states, mutex priority inheritance chains, ISR nesting, Liu & Layland bound, response time analysis, and dissonant audio mapping to deadline misses.';
+const canonical = new URL('/playground/rtos-scheduler', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'RTOS Scheduler Lab',
+  url: canonical.toString(),
+  applicationCategory: 'EngineeringApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'RTOS Scheduler Lab', item: canonical.toString() }
+  ]
+};
+const faqs = [
+  { q: 'What does RMS guarantee and when does it fail?', a: 'Rate Monotonic Scheduling assigns fixed priority by period: shorter T → higher priority. Liu & Layland bound U ≤ n(2^{1/n}-1) is sufficient but not necessary; if U exceeds bound, tasks may still be schedulable but must pass exact response time analysis R_i = C_i + Σ ceil(R_i/T_j)C_j for all higher priority j. Failure mode is deadline miss of low priority tasks even when U<1 if harmonicity poor.' },
+  { q: 'How does priority inheritance fix unbounded blocking?', a: 'When high priority job H blocks on mutex held by low L, L inherits H priority (or earliest deadline in EDF). This bounds blocking to one critical section. Without it, medium tasks can preempt L indefinitely, causing chain blocking. SRP (Stack Resource Policy) and PCP build on this with ceiling: lock only if priority > system ceiling.' },
+  { q: 'EDF vs RMS under mutexes?', a: 'EDF is optimal for independent tasks: U≤1 schedulable. With mutexes, it needs deadline inheritance: holder inherits min(deadline) of waiters, called DIPP or SRP. RMS uses priority inheritance. EDF generally yields lower jitter for mixed periods but needs more dynamic queue; RMS is simpler for static analysis and certification.' },
+  { q: 'What is response time analysis RTA?', a: 'Iterative equation R_i^{k+1}= C_i + B_i + Σ_{j∈hp(i)} ceil(R_i^k/T_j)*C_j where B_i is worst blocking time from lower priority tasks holding mutex. Converges if R_i≤D_i. Our simulator logs actual response vs analytic bound; jitter = std(R_i) across jobs.' },
+  { q: 'Why audio tension mapping?', a: 'Deadline misses correlate with urgency. We map miss ratio m = misses/jobs to beating frequency: two oscillators f1=220Hz, f2 = 330 - m·99Hz. At m=0, f2=330Hz perfect fifth consonant. At m=1, f2=231Hz → 11Hz beating roughness (Helmholtz dissonance curve peaks ~15-30Hz beating). Gain also scales with m, so lock-ups sound tense.' },
+  { q: 'ISR nesting how?', a: 'ISR task has priority 1e9, preempts all. If ISR period < C_ISR, multiple ISR jobs queue (nesting). We show purple bars always on top. ISR holding mutex can cause priority inversion even for kernel tasks; our mutex manager allows it to demonstrate why ISR should use lock-free queues.' }
+];
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const coreTS = `// RTOS core model: TCB, ready queue, PI inheritance, RMS/EDF
+type TaskDef = {
+  id:number; name:string;
+  T:number; C:number; D:number;       // period, WCET, deadline ms
+  basePrio:number;                     // RMS: 1/T, manual: 1..99 mapped
+  mutex:string|null;
+  csStart:number; // fraction 0..1 where lock attempted
+  csDur:number;   // fraction held
+  color:string;
+};
+type Job = {
+  jobId:number; taskId:number;
+  release:number; absDeadline:number;
+  executed:number; remaining:number;
+  state:'Ready'|'Running'|'Blocked'|'Done';
+  blockedOn:string|null;
+  holds:Set<string>;
+  basePrio:number; effPrio:number;
+  effDeadline:number;
+  blockedTime:number;
+  firstStart:number|null;
+  completion:number|null;
+  missed:boolean;
+};
+
+function basePriority(t:TaskDef, mode:'RMS'|'EDF'){
+  if(t.basePrio>=100) return t.basePrio; // manual mapped 100..9900
+  return mode==='RMS' ? (1_000_000 / t.T) : (1_000_000 / t.T); // rate monotonic base
+}
+
+function simulate(tasks:TaskDef[], horizon:number, mode:'RMS'|'EDF', isrPeriod:number, isrC:number){
+  const mutexState = new Map<string,{holder:Job|null, queue:Job[]}>();
+  let jobs:Job[]=[]; let jid=0;
+  const log:number[] = new Array(horizon).fill(-1);
+  const perTask: Record<number, Job['state'][]> = {};
+  tasks.forEach(t=> perTask[t.id]= new Array(horizon).fill('Idle' as any));
+  const events:{t:number, waiter:number, holder:number, mutex:string}[]=[];
+  let totalMiss=0;
+
+  for(let t=0; t<horizon; t++){
+    // releases
+    tasks.forEach(td=>{
+      if(t % td.T===0){
+        const j:Job={
+          jobId:jid++, taskId:td.id, release:t, absDeadline:t+td.D,
+          executed:0, remaining:td.C, state:'Ready',
+          blockedOn:null, holds:new Set(), basePrio:basePriority(td,mode),
+          effPrio:basePriority(td,mode), effDeadline:t+td.D,
+          blockedTime:0, firstStart:null, completion:null, missed:false
+        };
+        jobs.push(j);
+      }
+    });
+    if(isrPeriod>0 && t % isrPeriod===0){
+      const ij:Job={
+        jobId:jid++, taskId:-1, release:t, absDeadline:t+isrPeriod,
+        executed:0, remaining:isrC, state:'Ready', blockedOn:null,
+        holds:new Set(), basePrio:1e9, effPrio:1e9, effDeadline:t+isrPeriod,
+        blockedTime:0, firstStart:null, completion:null, missed:false
+      };
+      jobs.push(ij);
+    }
+
+    // active jobs
+    const active = jobs.filter(j=> j.release<=t && j.remaining>0);
+
+    // try unblock / release expired CS
+    active.forEach(j=>{
+      if(j.taskId===-1) return;
+      const td = tasks.find(x=>x.id===j.taskId);
+      if(!td || !td.mutex) return;
+      const m = td.mutex;
+      // release check
+      if(j.holds.has(m)){
+        const endFrac = td.csStart+td.csDur;
+        if(j.executed >= endFrac*td.C){
+          j.holds.delete(m);
+          const st = mutexState.get(m);
+          if(st) st.holder=null;
+        }
+      }
+    });
+
+    // blocked jobs attempting acquisition after release
+    active.filter(j=> j.state==='Blocked' && j.blockedOn).forEach(j=>{
+      const st = mutexState.get(j.blockedOn!);
+      if(st && !st.holder){
+        // arbitration: highest effPrio waiter gets lock
+        const candidates = st.queue.slice().sort((a,b)=> b.effPrio-a.effPrio);
+        if(candidates[0]===j){
+          st.holder=j; j.holds.add(j.blockedOn!); j.blockedOn=null; j.state='Ready';
+          st.queue = st.queue.filter(x=>x!==j);
+        }
+      }
+    });
+
+    // new lock attempts
+    active.filter(j=> j.state!=='Blocked' && j.remaining>0 && !j.blockedOn).forEach(j=>{
+      if(j.taskId===-1) return;
+      const td = tasks.find(x=>x.id===j.taskId);
+      if(!td?.mutex) return;
+      if(j.holds.has(td.mutex)) return;
+      if(j.executed < td.csStart*td.C) return;
+      if(j.executed >= (td.csStart+td.csDur)*td.C) return;
+      let st = mutexState.get(td.mutex);
+      if(!st){ st={holder:null, queue:[]}; mutexState.set(td.mutex,st); }
+      if(!st.holder){
+        st.holder=j; j.holds.add(td.mutex);
+      }else if(st.holder!==j){
+        if(!st.queue.includes(j)) st.queue.push(j);
+        j.state='Blocked'; j.blockedOn=td.mutex;
+        events.push({t, waiter:j.taskId, holder:st.holder.taskId, mutex:td.mutex});
+      }
+    });
+
+    // priority / deadline inheritance fixpoint
+    let changed=true;
+    for(let iter=0; iter<10 && changed; iter++){
+      changed=false;
+      for(const [mname, st] of mutexState){
+        if(!st.holder || st.queue.length===0) continue;
+        if(mode==='RMS'){
+          const maxWait = Math.max(...st.queue.map(q=> q.effPrio));
+          if(maxWait > st.holder.effPrio){ st.holder.effPrio=maxWait; changed=true; }
+        }else{
+          const minDead = Math.min(...st.queue.map(q=> q.effDeadline));
+          if(minDead < st.holder.effDeadline){ st.holder.effDeadline=minDead; changed=true; }
+        }
+      }
+    }
+
+    // deadline miss detection
+    active.forEach(j=>{
+      if(!j.missed && t >= j.absDeadline && j.remaining>0){
+        j.missed=true; totalMiss++;
+      }
+      if(j.state==='Blocked') j.blockedTime++;
+    });
+
+    // scheduling selection
+    const cand = active.filter(j=> j.state!=='Blocked');
+    if(cand.length>0){
+      cand.sort((a,b)=>{
+        if(mode==='RMS') return b.effPrio - a.effPrio;
+        const d = a.effDeadline - b.effDeadline;
+        return d!==0? d : b.effPrio - a.effPrio;
+      });
+      const run = cand[0];
+      run.state='Running';
+      if(run.firstStart==null) run.firstStart=t;
+      cand.slice(1).forEach(j=>{ if(j.state==='Running') j.state='Ready'; if(j.state!=='Blocked') j.state='Ready'; });
+      run.executed++; run.remaining--;
+      if(run.remaining<=0){
+        run.remaining=0; run.state='Done'; run.completion=t+1;
+        for(const m of [...run.holds]){ const st=mutexState.get(m); if(st?.holder===run) st.holder=null; }
+        run.holds.clear();
+      }
+      log[t]=run.taskId;
+    }else{
+      log[t]=-1;
+    }
+
+    // per-task aggregate timeline for drawing
+    tasks.forEach(td=>{
+      const js = active.filter(j=> j.taskId===td.id);
+      let st:'Idle'|'Ready'|'Running'|'Blocked' = 'Idle';
+      if(js.some(j=> j.state==='Running')) st='Running';
+      else if(js.some(j=> j.state==='Blocked')) st='Blocked';
+      else if(js.some(j=> j.state==='Ready')) st='Ready';
+      perTask[td.id][t]=st as any;
+    });
+  }
+
+  const U = tasks.reduce((s,t)=> s + t.C/t.T, 0);
+  const bound = tasks.length * (Math.pow(2,1/tasks.length)-1);
+  return {log, perTask, jobs, events, U, bound, totalMiss};
+}
+
+// Utilization: U = Σ C_i / T_i
+// Liu & Layland: U ≤ n(2^{1/n}-1)
+// Response time iteration: R_i^{k+1}= C_i + B_i + Σ ceil(R_i^k/T_j) C_j
+`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="RTOS Scheduler Lab"
+    lead="Preemptive RMS vs EDF playground: edit tasks (T,C,D,mutex), watch Gantt of Running/Ready/Blocked states, priority inheritance chains, ISR nesting, and live schedulability analysis. Tension audio (220Hz vs 231Hz beating) rises with deadline miss ratio."
+    pillarHint="on-device-ai"
+  >
+    <section class="border-b border-border" aria-labelledby="rtos-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-8 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <button id="btn-play" class="pill-btn is-active">▶ Play</button>
+          <button id="btn-step" class="pill-btn">Step</button>
+          <button id="btn-reset" class="pill-btn">Reset sim</button>
+          <button id="btn-add" class="pill-btn">+ Task</button>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">
+            Scheduler
+            <select id="sel-sched" class="tool-input !mt-0 !w-28 !py-1">
+              <option value="RMS">RMS</option>
+              <option value="EDF">EDF</option>
+            </select>
+          </label>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">
+            Horizon ms <input id="in-horizon" type="range" min="60" max="600" step="10" value="240" class="w-24"/>
+            <output id="out-horizon" class="text-primary-text">240</output>
+          </label>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text">
+            Speed <input id="in-speed" type="range" min="0.25" max="8" step="0.25" value="2" class="w-20"/> <output id="out-speed">2×</output>
+          </label>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-audio" type="checkbox" checked /> Audio</label>
+          <span id="tension-ind" class="ml-auto font-mono text-[0.7rem] font-bold text-primary-cta">Tension 0%</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
+          <!-- controls left -->
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Tasks — T period, C WCET, D deadline</h3>
+            <p class="mt-1 font-mono text-[0.62rem] text-muted-text">Auto prio RMS: shorter T = higher. Manual 1..99 (99 high) overrides. Mutex M1/M2/M3 shows blocking. cs 20% offset 40% dur default.</p>
+            <div id="task-table" class="mt-4 space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
+
+            <div class="mt-5 border-t border-border pt-4 space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <label class="block"><span class="font-mono text-[0.6rem] uppercase">ISR period ms (0 off)</span><input id="in-isr-per" type="number" value="40" min="0" max="200" step="5" class="tool-input"/></label>
+                <label class="block"><span class="font-mono text-[0.6rem] uppercase">ISR C ms</span><input id="in-isr-c" type="number" value="2" min="0" max="10" step="1" class="tool-input"/></label>
+              </div>
+              <div class="rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.70rem] leading-[1.5]">
+                <div class="flex justify-between"><span>U ΣC/T</span><span id="ro-u">—</span></div>
+                <div class="flex justify-between"><span>LL bound n(2^(1/n)-1)</span><span id="ro-bound">—</span></div>
+                <div class="flex justify-between"><span>Misses / Jobs</span><span id="ro-miss">—</span></div>
+                <div class="flex justify-between"><span>Worst blocking ms</span><span id="ro-block">—</span></div>
+                <div class="flex justify-between"><span>Avg jitter ms</span><span id="ro-jitter">—</span></div>
+                <div class="flex justify-between"><span>Idle %</span><span id="ro-idle">—</span></div>
+                <div class="flex justify-between border-t border-border mt-2 pt-2"><span>Status</span><span id="ro-status" class="max-w-[14ch] truncate text-right">—</span></div>
+              </div>
+              <div class="rounded-[10px] border border-border bg-canvas p-2">
+                <p class="font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">Blocking chains</p>
+                <div id="blocking-list" class="mt-1 max-h-[88px] overflow-y-auto font-mono text-[0.66rem] leading-[1.45] text-muted-text"></div>
+              </div>
+              <div class="flex flex-wrap gap-2 font-mono text-[0.6rem] text-muted-text">
+                <span class="inline-flex items-center gap-1.5"><i class="dot run"></i> Running</span>
+                <span class="inline-flex items-center gap-1.5"><i class="dot ready"></i> Ready</span>
+                <span class="inline-flex items-center gap-1.5"><i class="dot blocked"></i> Blocked</span>
+                <span class="inline-flex items-center gap-1.5"><i class="dot isr"></i> ISR</span>
+                <span class="inline-flex items-center gap-1.5"><i class="dot idle"></i> Idle</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- canvas right -->
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Gantt timeline — preemptive + inheritance</p>
+                <span id="time-label" class="font-mono text-[0.68rem] text-muted-text">t=0 ms</span>
+              </div>
+              <div class="mt-3 overflow-x-auto">
+                <canvas id="rtos-canvas" width="1200" height="440" class="block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              </div>
+              <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 font-mono text-[0.67rem] text-muted-text">
+                <span>X: time ms (tick 1ms)</span><span>Y: tasks (color = task)</span><span>Dashed = deadline, Red X = miss</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div class="readout"><dt>CPU Util</dt><dd id="ro2-u">—</dd></div>
+              <div class="readout"><dt>Deadline misses</dt><dd id="ro2-miss">0</dd></div>
+              <div class="readout"><dt>Cursor response R</dt><dd id="ro2-resp">—</dd></div>
+            </div>
+
+            <div class="rounded-[14px] border border-border bg-elevated/30 p-3 font-mono text-[0.68rem] leading-[1.5] text-muted-text">
+              <p><strong class="text-primary-text">How to read:</strong> Each row is a task timeline. Segment colors: solid Running (task color), amber Ready waiting for CPU, red Blocked on mutex (label e.g., M1 held by T2). Top darker row is global running. Vertical dashed lines are per-job deadlines. Red markers are misses. Priority inheritance bubbles pulse when low-prio task inherits high priority. ISR row (purple) preempts always.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of an RTOS</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="font-[650]">TCB, ready queue, scheduler, mutex</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-decimal list-inside">
+              <li><strong class="text-primary-text">TCB (Task Control Block):</strong> id, T period, C WCET, D relative deadline, basePrio, mutex M, csStart/Dur, stack pointer, holding set, blockedOn, effective prio/deadline.</li>
+              <li><strong class="text-primary-text">Ready queue:</strong> intrusively linked list sorted by effective priority (RMS) or effective deadline (EDF). O(n) insert, O(1) pop top. Tick interrupt 1ms moves released jobs from sleep list to ready.</li>
+              <li><strong class="text-primary-text">Scheduler:</strong> preemptive: if top ready effPrio > running effPrio → context switch. ISR entry pushes context, raises BASEPRI mask.</li>
+              <li><strong class="text-primary-text">Mutex & PI:</strong> each mutex has holder + FIFO/prio queue. On block, holder.effPrio = max(holder.effPrio, waiter.effPrio). Chain propagates via fixpoint. Release wakes highest waiter.</li>
+              <li><strong class="text-primary-text">ISR nesting:</strong> ISR job taskId -1, prio 1e9, T_isr period, C_isr ~2ms. If new ISR arrives while one runs, queues (same priority FIFO) showing nested purple burst.</li>
+            </ol>
+            <div class="mt-5 math-card">
+              <p class="math-label">Effective priority inheritance</p>
+              <Math math="P^{eff}_i = \max\left(P^{base}_i, \max_{k: k \text{ waits for } \mu \in held(i)} P^{eff}_k\right)" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">Fixpoint iteration propagates along blocking chains, bounding blocking to one CS under PCP.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-[650]">Visual-audio coupling</h3>
+            <ul class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-disc list-inside">
+              <li>Gantt per-task rows: 36px high, 1ms = 3-5px depending on horizon. Running = solid task color, Ready = amber @45% alpha, Blocked = red stripe.</li>
+              <li>Mutex hold indicator: lock glyph 🔒M1 drawn on Running segment where CS active, with small duration bar.</li>
+              <li>Deadline dashed vertical per job per task; miss renders red X and tints row background pink transient.</li>
+              <li>Blocking chain list: each block event logs waiter → holder (M). Canvas draws bezier arrow between rows for current cursor time if blocking active.</li>
+              <li>Audio: two oscillators f1=220Hz, f2=330−m·99Hz (m=miss ratio). Beating f_beat=|f1−f2|. At m=1 →110Hz→11Hz roughness → perceptual tension. Gain 0.02+m·0.14.</li>
+            </ul>
+            <div class="mt-5 math-card">
+              <p class="math-label">Beating roughness</p>
+              <Math math="f_1=220\,\text{Hz},\; f_2=330-99\cdot m,\; f_{beat}=|f_1-f_2|,\; A=0.02+0.14 m" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">m ∈ [0,1] miss ratio. 11Hz beating at m=1 sits in maximal dissonance ~15Hz per Helmholtz.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations & schedulability</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Utilization</p>
+            <Math math="U=\sum_{i=1}^{n}\frac{C_i}{T_i}" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">Necessary condition for any scheduler: U ≤1 (EDF optimal). RMS needs stricter bound.</p>
+            <div class="mt-3 font-mono text-[0.68rem] text-muted-text">LL bound: <Math math="U_{ll}=n(2^{1/n}-1)" /></div>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Response Time Analysis</p>
+            <Math math="R_i = C_i + B_i + \sum_{j\in hp(i)} \left\lceil\frac{R_i}{T_j}\right\rceil C_j" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">Iterate R_i(k+1) until convergence. If R_i ≤ D_i for all i, schedulable. B_i is worst blocking from lower priority tasks.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">EDF & SRP ceiling</p>
+            <Math math="d_i^{eff}=\min(d_i,\min_{k\in blockedBy(i)} d_k^{eff})" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">Stack Resource Policy: preemption level π_i, system ceiling Π = max locked resource ceiling. Job blocks if π_i ≤ Π.</p>
+            <Math math="\text{beating: }y(t)=\sin(2πf_1t)+\sin(2πf_2t)=2\sin(π(f_1+f_2)t)\cos(π(f_1-f_2)t)" display />
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Worst blocking chain example</p>
+            <p class="text-[0.84rem] text-muted-text leading-[1.6] mt-2">T_high(5ms/1ms) needs M1 held by T_low(100ms/20ms, CS 8ms). Without PI, T_med(20ms/5ms) preempts T_low for 60ms → H blocks 68ms → miss. With PI, T_low inherits H prio → blocks only 8ms. Simulator shows red blocked segment length difference.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">ISR nesting</p>
+            <p class="text-[0.84rem] text-muted-text leading-[1.6] mt-2">ISR period T_isr with WCET C_isr. Utilization U_isr = C_isr/T_isr adds to total U. If T_isr &lt; C_isr, instances queue (nest depth >1). Best practice: ISR defers to task via semaphore, keep C_isr ≤ 0.2·T_task_min.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+          </div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(
+            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted);transition:all 0.15s}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.pill-btn:hover{border-color:var(--mp-border-strong);color:var(--mp-text)}
+.readout{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 55%,transparent);padding:0.65rem 0.8rem}
+.readout dt{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--mp-muted)}
+.readout dd{margin-top:0.2rem;font-size:0.88rem;font-weight:600;color:var(--mp-text)}
+.tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.math-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.dot{width:.7rem;height:.7rem;border-radius:9999px;display:inline-block;border:1px solid var(--mp-border)}
+.dot.run{background:#71b9e3}
+.dot.ready{background:#fbbf24}
+.dot.blocked{background:#ef4444}
+.dot.isr{background:#a78bfa}
+.dot.idle{background:var(--mp-elevated)}
+.task-row{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 35%,transparent);padding:.6rem .7rem}
+.mini-input{width:100%;border-radius:8px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:.28rem .4rem;font-size:.78rem;color:var(--mp-text)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initRtos(){
+  const canvas = document.getElementById('rtos-canvas');
+  if(!canvas || canvas.dataset.init) return;
+  canvas.dataset.init='true';
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  const W0 = canvas.width, H0=canvas.height;
+  canvas.width=W0*dpr; canvas.height=H0*dpr;
+  canvas.style.width=W0+'px'; canvas.style.height=H0+'px';
+  ctx.scale(dpr,dpr);
+  const W=W0, H=H0;
+
+  // UI refs
+  const btnPlay=document.getElementById('btn-play');
+  const btnStep=document.getElementById('btn-step');
+  const btnReset=document.getElementById('btn-reset');
+  const btnAdd=document.getElementById('btn-add');
+  const selSched=document.getElementById('sel-sched');
+  const inHorizon=document.getElementById('in-horizon');
+  const outHorizon=document.getElementById('out-horizon');
+  const inSpeed=document.getElementById('in-speed');
+  const outSpeed=document.getElementById('out-speed');
+  const chkAudio=document.getElementById('chk-audio');
+  const tensionInd=document.getElementById('tension-ind');
+  const taskTableDiv=document.getElementById('task-table');
+  const inIsrPer=document.getElementById('in-isr-per');
+  const inIsrC=document.getElementById('in-isr-c');
+  const tableBlocking=document.getElementById('blocking-list');
+  const timeLabel=document.getElementById('time-label');
+
+  const roU=document.getElementById('ro-u');
+  const roBound=document.getElementById('ro-bound');
+  const roMiss=document.getElementById('ro-miss');
+  const roBlock=document.getElementById('ro-block');
+  const roJitter=document.getElementById('ro-jitter');
+  const roIdle=document.getElementById('ro-idle');
+  const roStatus=document.getElementById('ro-status');
+  const ro2U=document.getElementById('ro2-u');
+  const ro2Miss=document.getElementById('ro2-miss');
+  const ro2Resp=document.getElementById('ro2-resp');
+
+  // state
+  let playing=true;
+  let speed=2;
+  let horizon=240;
+  let scheduler='RMS';
+  let isrPer=40;
+  let isrC=2;
+  let tasks=[
+    {id:0, name:'T1 Ctrl', T:20, C:4, D:20, prioManual:'', mutex:'M1', csStart:0.2, csDur:0.5, color:'#71b9e3'},
+    {id:1, name:'T2 Sens', T:30, C:6, D:30, prioManual:'', mutex:'M1', csStart:0.25, csDur:0.4, color:'#f07a94'},
+    {id:2, name:'T3 Log', T:80, C:12, D:80, prioManual:'', mutex:'M2', csStart:0.15, csDur:0.35, color:'#4ade80'},
+    {id:3, name:'T4 UI', T:200, C:20, D:200, prioManual:'', mutex:'', csStart:0.2, csDur:0.2, color:'#fbbf24'},
+  ];
+  const mutexOptions=['','M1','M2','M3'];
+  const palette=['#71b9e3','#f07a94','#4ade80','#fbbf24','#a78bfa','#fb7185','#34d399','#f59e0b'];
+
+  let nextId=4;
+  let simResult=null;
+  let cursor=0;
+  let lastFrame=performance.now();
+  let accum=0;
+
+  function basePrioOf(td, mode){
+    const manual = parseInt(td.prioManual);
+    if(!isNaN(manual) && td.prioManual!=='' ){
+      const m = Math.max(1,Math.min(99,manual));
+      return m*100 + 500; // map 1..99 -> 600..10400 so high overrides auto but still below ISR
+    }
+    return Math.round(1_000_000 / td.T);
+  }
+
+  function simulate(allTasks, horiz, mode, isrP, isrWCET){
+    const mutexState=new Map();
+    let jobs=[];
+    let jid=0;
+    const log=new Array(horiz).fill(-1);
+    const perTask={};
+    allTasks.forEach(t=> perTask[t.id]= new Array(horiz).fill('Idle'));
+    perTask[-1]= new Array(horiz).fill('Idle');
+    const events=[];
+    let totalMiss=0;
+
+    for(let t=0;t<horiz;t++){
+      // releases tasks
+      allTasks.forEach(td=>{
+        if(t % td.T===0){
+          const j={
+            jobId:jid++, taskId:td.id, release:t, absDeadline:t+td.D,
+            executed:0, remaining:td.C, state:'Ready',
+            blockedOn:null, holds:new Set(), basePrio:basePrioOf(td,mode),
+            effPrio:basePrioOf(td,mode), effDeadline:t+td.D,
+            blockedTime:0, firstStart:null, completion:null, missed:false, tdRef:td
+          };
+          jobs.push(j);
+        }
+      });
+      if(isrP>0 && t % isrP===0){
+        const ij={
+          jobId:jid++, taskId:-1, release:t, absDeadline:t+isrP,
+          executed:0, remaining:isrWCET, state:'Ready', blockedOn:null,
+          holds:new Set(), basePrio:1e9, effPrio:1e9, effDeadline:t+isrP,
+          blockedTime:0, firstStart:null, completion:null, missed:false, tdRef:null
+        };
+        jobs.push(ij);
+      }
+
+      const active = jobs.filter(j=> j.release<=t && j.remaining>0);
+
+      // release expired CS
+      active.forEach(j=>{
+        if(j.taskId===-1) return;
+        const td = allTasks.find(x=>x.id===j.taskId);
+        if(!td || !td.mutex) return;
+        const m = td.mutex;
+        if(j.holds.has(m)){
+          const end = td.csStart + td.csDur;
+          if(j.executed >= end*td.C){
+            j.holds.delete(m);
+            const st=mutexState.get(m);
+            if(st && st.holder===j) st.holder=null;
+          }
+        }
+      });
+
+      // try to unblock waiting jobs whose mutex became free (highest prio first)
+      // gather per mutex queues arbitration
+      for(const [mname, st] of mutexState){
+        if(!st.holder && st.queue.length>0){
+          // sort queue by eff prio descending for RMS, deadline ascending for EDF
+          st.queue.sort((a,b)=>{
+            if(mode==='RMS') return b.effPrio - a.effPrio;
+            return a.effDeadline - b.effDeadline;
+          });
+          const nxt = st.queue.shift();
+          if(nxt){
+            st.holder=nxt;
+            nxt.holds.add(mname);
+            nxt.blockedOn=null;
+            nxt.state='Ready';
+          }
+        }
+      }
+
+      // also check blocked jobs individually if holder null but not in queue iteration above (initial releases)
+      active.filter(j=> j.state==='Blocked' && j.blockedOn).forEach(j=>{
+        const st = mutexState.get(j.blockedOn);
+        if(!st) return;
+        if(!st.holder){
+          // will be handled next loop, but ensure queue contains it
+          if(!st.queue.includes(j)){
+            // shouldn't happen
+          }
+        }
+      });
+
+      // new lock attempts
+      active.filter(j=> j.state!=='Blocked' && j.remaining>0 && !j.blockedOn).forEach(j=>{
+        if(j.taskId===-1) return;
+        const td = allTasks.find(x=>x.id===j.taskId);
+        if(!td?.mutex) return;
+        if(j.holds.has(td.mutex)) return;
+        if(j.executed < td.csStart*td.C) return;
+        if(j.executed >= (td.csStart+td.csDur)*td.C) return;
+        let st = mutexState.get(td.mutex);
+        if(!st){ st={holder:null, queue:[]}; mutexState.set(td.mutex, st); }
+        if(!st.holder){
+          st.holder=j; j.holds.add(td.mutex);
+        }else if(st.holder!==j){
+          if(!st.queue.includes(j)) st.queue.push(j);
+          j.state='Blocked'; j.blockedOn=td.mutex;
+          events.push({t, waiter:j.taskId, holder:st.holder.taskId, mutex:td.mutex});
+        }
+      });
+
+      // inheritance fixpoint
+      let changed=true;
+      let iter=0;
+      while(changed && iter<12){
+        changed=false; iter++;
+        for(const [mname, st] of mutexState){
+          if(!st.holder || st.queue.length===0) continue;
+          if(mode==='RMS'){
+            let maxWait = st.holder.effPrio;
+            let maxJob = null;
+            for(const q of st.queue){ if(q.effPrio>maxWait){ maxWait=q.effPrio; maxJob=q; } }
+            if(maxWait>st.holder.effPrio){
+              st.holder.effPrio=maxWait; changed=true;
+            }
+          }else{
+            let minDead=st.holder.effDeadline;
+            for(const q of st.queue){ if(q.effDeadline<minDead) minDead=q.effDeadline; }
+            if(minDead < st.holder.effDeadline){ st.holder.effDeadline=minDead; changed=true; }
+          }
+        }
+        // propagate through chain: if holder itself blocked, its new eff should affect its holder
+        // loop again covers because holder's boosted eff will be seen by its mutex holder's queue
+      }
+
+      // misses
+      active.forEach(j=>{
+        if(!j.missed && t >= j.absDeadline && j.remaining>0){
+          j.missed=true; totalMiss++;
+        }
+        if(j.state==='Blocked') j.blockedTime++;
+      });
+
+      // scheduling
+      const cand = active.filter(j=> j.state!=='Blocked');
+      if(cand.length>0){
+        cand.sort((a,b)=>{
+          if(mode==='RMS') return b.effPrio - a.effPrio;
+          const d=a.effDeadline - b.effDeadline;
+          if(d!==0) return d;
+          return b.effPrio - a.effPrio;
+        });
+        const run=cand[0];
+        run.state='Running';
+        if(run.firstStart==null) run.firstStart=t;
+        cand.slice(1).forEach(j=>{ if(j.state==='Running') j.state='Ready'; if(j.state!=='Blocked') j.state='Ready'; });
+        run.executed++; run.remaining--;
+        if(run.remaining<=0){
+          run.remaining=0; run.state='Done'; run.completion=t+1;
+          for(const m of [...run.holds]){
+            const st=mutexState.get(m);
+            if(st?.holder===run) st.holder=null;
+          }
+          run.holds.clear();
+        }
+        log[t]=run.taskId;
+      }else{
+        log[t]=-1;
+      }
+
+      // per task timeline aggregation
+      allTasks.forEach(td=>{
+        const js = active.filter(j=> j.taskId===td.id);
+        let st='Idle';
+        if(js.some(j=> j.state==='Running')) st='Running';
+        else if(js.some(j=> j.state==='Blocked')) st='Blocked';
+        else if(js.some(j=> j.state==='Ready' || j.state==='Done' && j.completion===t+1)) {
+          // check if any ready
+          if(js.some(j=> j.state==='Ready')) st='Ready';
+          else if(js.some(j=> j.state==='Running')) st='Running';
+          else if(js.length>0 && js.some(j=> j.state==='Ready' || j.state==='Running' || j.state==='Blocked')) st='Ready';
+          else st=js.length? 'Ready':'Idle';
+          // more precise: if active includes this task jobs
+          // if any Ready else if Blocked else Ready else Idle
+          if(js.some(j=> j.state==='Blocked')) st='Blocked';
+          if(js.some(j=> j.state==='Running')) st='Running';
+          else if(js.some(j=> j.state==='Ready')) st='Ready';
+        } else if(js.length>0){
+          // if jobs exist but not yet determined, infer
+          if(js.every(j=> j.state==='Done')) st='Idle';
+          else st='Ready';
+        }
+        // If multiple jobs overlapping, keep Running > Blocked > Ready
+        const states = js.map(j=>j.state);
+        if(states.includes('Running')) st='Running';
+        else if(states.includes('Blocked')) st='Blocked';
+        else if(states.includes('Ready')) st='Ready';
+        else if(js.length>0) st='Ready';
+        perTask[td.id][t]=st;
+      });
+      // ISR timeline
+      {
+        const isrActive = active.filter(j=> j.taskId===-1);
+        let st='Idle';
+        if(isrActive.some(j=> j.state==='Running')) st='Running';
+        else if(isrActive.some(j=> j.state==='Blocked')) st='Blocked';
+        else if(isrActive.some(j=> j.state==='Ready')) st='Ready';
+        perTask[-1][t]=st;
+      }
+    }
+
+    const U = allTasks.reduce((s,t)=> s + t.C/t.T, 0);
+    const n=allTasks.length ||1;
+    const bound = n * (Math.pow(2,1/n)-1);
+    const idleCount = log.filter(v=> v===-1).length;
+    // jitter and blocking per task
+    const taskStats={};
+    allTasks.forEach(td=>{
+      const js = jobs.filter(j=> j.taskId===td.id && j.completion!=null);
+      const responses = js.map(j=> j.completion - j.release);
+      const mean = responses.length? responses.reduce((a,b)=>a+b,0)/responses.length : 0;
+      const varr = responses.length? Math.sqrt(responses.reduce((s,r)=> s+(r-mean)*(r-mean),0)/responses.length) : 0;
+      const worstBlock = Math.max(0,...jobs.filter(j=> j.taskId===td.id).map(j=> j.blockedTime));
+      const misses = jobs.filter(j=> j.taskId===td.id && j.missed).length;
+      const total = jobs.filter(j=> j.taskId===td.id).length;
+      taskStats[td.id]={responses, mean, jitter:varr, worstBlock, misses, total};
+    });
+    const avgJitter = Object.values(taskStats).reduce((s, st)=> s+st.jitter,0)/ Math.max(1,Object.values(taskStats).length);
+
+    return {log, perTask, jobs, events, U, bound, totalMiss, idleCount, taskStats, avgJitter};
+  }
+
+  function renderTaskTable(){
+    taskTableDiv.innerHTML='';
+    tasks.forEach((td, idx)=>{
+      const row=document.createElement('div');
+      row.className='task-row';
+      row.innerHTML=`
+        <div class="flex items-center justify-between gap-2">
+          <input data-k="name" data-id="${td.id}" value="${td.name}" class="mini-input !w-[92px] font-semibold" />
+          <span class="h-3 w-3 rounded-full border border-border shrink-0" style="background:${td.color}"></span>
+          <button data-act="remove" data-id="${td.id}" class="pill-btn !py-1 !px-2 text-[0.6rem]">✕</button>
+        </div>
+        <div class="mt-2 grid grid-cols-3 gap-2">
+          <label class="block"><span class="font-mono text-[0.55rem] uppercase">T ms</span><input data-k="T" data-id="${td.id}" type="number" min="5" max="500" step="1" value="${td.T}" class="mini-input"/></label>
+          <label class="block"><span class="font-mono text-[0.55rem] uppercase">C ms</span><input data-k="C" data-id="${td.id}" type="number" min="1" max="100" step="1" value="${td.C}" class="mini-input"/></label>
+          <label class="block"><span class="font-mono text-[0.55rem] uppercase">D ms</span><input data-k="D" data-id="${td.id}" type="number" min="1" max="500" step="1" value="${td.D}" class="mini-input"/></label>
+        </div>
+        <div class="mt-2 grid grid-cols-3 gap-2">
+          <label class="block"><span class="font-mono text-[0.55rem] uppercase">Prio manual</span><input data-k="prioManual" data-id="${td.id}" placeholder="auto" value="${td.prioManual}" class="mini-input"/></label>
+          <label class="block"><span class="font-mono text-[0.55rem] uppercase">Mutex</span>
+            <select data-k="mutex" data-id="${td.id}" class="mini-input">
+              ${mutexOptions.map(m=>`<option value="${m}" ${m===td.mutex?'selected':''}>${m||'—'}</option>`).join('')}
+            </select>
+          </label>
+          <label class="block"><span class="font-mono text-[0.55rem] uppercase">Color</span><input data-k="color" data-id="${td.id}" type="color" value="${td.color}" class="mini-input !p-1 !h-7"/></label>
+        </div>
+      `;
+      taskTableDiv.appendChild(row);
+    });
+
+    // bind events
+    taskTableDiv.querySelectorAll('input, select').forEach(el=>{
+      el.addEventListener('change', (e)=>{
+        const id=parseInt(el.getAttribute('data-id'));
+        const k=el.getAttribute('data-k');
+        const td=tasks.find(t=>t.id===id);
+        if(!td) return;
+        let v=el.value;
+        if(['T','C','D'].includes(k)){
+          v=parseInt(v)|| td[k];
+          if(k==='C' && v>td.T) v=td.T;
+        }
+        td[k]=v;
+        if(k==='T' && td.D>td.T*2) td.D=td.T;
+        rerun();
+      });
+    });
+    taskTableDiv.querySelectorAll('button[data-act="remove"]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=parseInt(b.getAttribute('data-id'));
+        if(tasks.length<=1) return;
+        tasks=tasks.filter(t=>t.id!==id);
+        rerun();
+        renderTaskTable();
+      });
+    });
+  }
+
+  function rerun(){
+    try{
+      simResult=simulate(tasks, horizon, scheduler, isrPer, isrC);
+      updateMetrics();
+      renderBlocking();
+    }catch(e){
+      console.error(e);
+      roStatus.textContent='Sim error';
+    }
+  }
+
+  function updateMetrics(){
+    if(!simResult) return;
+    const {U, bound, totalMiss, jobs, idleCount, taskStats, avgJitter}=simResult;
+    roU.textContent=U.toFixed(3)+(U>1?' ⚠>1':'');
+    roBound.textContent=bound.toFixed(3);
+    const totalJobs=jobs.length;
+    roMiss.textContent=`${totalMiss} / ${totalJobs}`;
+    ro2Miss.textContent=`${totalMiss}`;
+    ro2U.textContent=U.toFixed(3);
+    const worstB = Math.max(0,...Object.values(taskStats).map(s=>s.worstBlock));
+    roBlock.textContent=`${worstB} ms`;
+    roJitter.textContent=`${avgJitter.toFixed(2)} ms`;
+    roIdle.textContent=`${((idleCount/horizon)*100).toFixed(1)}%`;
+    const status = U>1 ? 'Overload' : (U>bound ? 'Bound exceed — RTA needed' : (totalMiss>0?'Miss!':'Schedulable'));
+    roStatus.textContent=status;
+    // response for cursor position task
+    const t = Math.min(Math.max(0, Math.floor(cursor)), horizon-1);
+    const runningId = simResult.log[t];
+    if(runningId!==undefined && runningId!==-1){
+      const jobAtT = simResult.jobs.filter(j=> j.taskId===runningId && j.release<=t && (j.completion==null || j.completion>t)).sort((a,b)=> b.release-a.release)[0];
+      if(jobAtT){
+        const resp = t - jobAtT.release;
+        ro2Resp.textContent=`T${runningId} R=${resp}ms (deadline ${jobAtT.absDeadline - jobAtT.release})`;
+      }else ro2Resp.textContent='—';
+    }else ro2Resp.textContent='Idle';
+  }
+
+  function renderBlocking(){
+    if(!simResult) return;
+    const ev = simResult.events.slice(-20).reverse();
+    if(ev.length===0){ tableBlocking.textContent='No blocking — clean DAG'; return; }
+    tableBlocking.innerHTML= ev.map(e=>{
+      const waiter = e.waiter===-1?'ISR': tasks.find(t=>t.id===e.waiter)?.name || `T${e.waiter}`;
+      const holder = e.holder===-1?'ISR': tasks.find(t=>t.id===e.holder)?.name || `T${e.holder}`;
+      return `<div class="flex gap-1"><span class="opacity-60">${e.t}ms</span> ${waiter} → ${holder} [${e.mutex}] blocked</div>`;
+    }).join('');
+  }
+
+  function draw(){
+    if(!simResult){ return; }
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim() || '#0f141c';
+    ctx.fillStyle=bg;
+    ctx.fillRect(0,0,W,H);
+
+    const leftLabel=90;
+    const topPad=24;
+    const rowH=34;
+    const headerH=18;
+    const timePx = (W-leftLabel-12)/horizon;
+    const rows = tasks.length+2; // + global + ISR
+    const neededH = topPad + headerH + rows*rowH + 30;
+    // adjust canvas height visually but keep W,H
+    // clear and draw time axis
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    ctx.font='10px ui-monospace, monospace';
+    // time ticks
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    for(let t=0; t<=horizon; t+=10){
+      const x=leftLabel + t*timePx;
+      if(t%50===0){
+        ctx.beginPath(); ctx.moveTo(x, topPad); ctx.lineTo(x, topPad+headerH+rows*rowH); ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.28)';
+        ctx.fillText(`${t}`, x-6, topPad+headerH+rows*rowH+12);
+        ctx.fillStyle='rgba(255,255,255,0.05)';
+      }else if(t%10===0){
+        ctx.beginPath(); ctx.moveTo(x, topPad); ctx.lineTo(x, topPad+headerH+rows*rowH); ctx.stroke();
+      }
+    }
+
+    // global running lane (row 0)
+    const allRowY = topPad;
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font='11px ui-monospace';
+    ctx.fillText('CPU', 8, allRowY+headerH+14);
+    // draw global running bars
+    let curRun=null, segStart=0;
+    for(let t=0; t<=horizon; t++){
+      const rid = t<horizon? simResult.log[t]: -2;
+      if(rid!==curRun){
+        if(curRun!==null && curRun!==-1){
+          const td = tasks.find(x=>x.id===curRun);
+          const color = curRun===-1? '#a78bfa' : (td? td.color : '#888');
+          const x0=leftLabel+segStart*timePx;
+          const x1=leftLabel+t*timePx;
+          ctx.fillStyle=color; ctx.globalAlpha=0.9;
+          ctx.fillRect(x0, allRowY+headerH+2, x1-x0, rowH-8);
+          ctx.globalAlpha=1;
+        }
+        curRun=rid; segStart=t;
+      }
+    }
+
+    // per task rows (+ ISR)
+    const rowsData = [{id:-1, label:'ISR', color:'#a78bfa'}].concat(tasks.map(t=>({id:t.id, label:t.name, color:t.color})));
+    rowsData.forEach((rd, idx)=>{
+      const y = topPad + headerH + (idx+1)*rowH;
+      // alternating bg
+      ctx.fillStyle= idx%2===0? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.00)';
+      ctx.fillRect(0, y, W, rowH);
+      // label
+      ctx.fillStyle=rd.color;
+      ctx.fillRect(8, y+12, 10, 10);
+      ctx.fillStyle='rgba(255,255,255,0.75)';
+      ctx.font='11px ui-monospace';
+      ctx.fillText(rd.label, 24, y+20);
+
+      const timeline = simResult.perTask[rd.id];
+      if(!timeline) return;
+      let segState=null; let sStart=0;
+      for(let t=0; t<=horizon; t++){
+        const st = t<horizon? timeline[t] : null;
+        if(st!==segState){
+          if(segState){
+            const x0=leftLabel+sStart*timePx;
+            const x1=leftLabel+t*timePx;
+            let fill='#222';
+            let alpha=0.9;
+            if(segState==='Running'){ fill=rd.color; alpha=0.95; }
+            else if(segState==='Ready'){ fill='#fbbf24'; alpha=0.42; }
+            else if(segState==='Blocked'){ fill='#ef4444'; alpha=0.88; }
+            else if(segState==='Idle'){ fill='transparent'; alpha=0; }
+            if(alpha>0){
+              ctx.fillStyle=fill; ctx.globalAlpha=alpha;
+              ctx.fillRect(x0, y+4, Math.max(1,x1-x0), rowH-10);
+              ctx.globalAlpha=1;
+              // stripe for blocked
+              if(segState==='Blocked'){
+                ctx.strokeStyle='rgba(0,0,0,0.25)';
+                ctx.lineWidth=1;
+                for(let xx=x0; xx<x1; xx+=6){
+                  ctx.beginPath(); ctx.moveTo(xx, y+6); ctx.lineTo(xx+4, y+rowH-6); ctx.stroke();
+                }
+              }
+            }
+            // mutex hold indicator for running segments: check if job holds mutex at that interval
+            if(segState==='Running' && rd.id!==-1){
+              // find job at sStart
+              const mid = Math.floor((sStart+t)/2);
+              const job = simResult.jobs.find(j=> j.taskId===rd.id && j.release<=mid && (j.completion==null || j.completion>mid));
+              if(job && job.tdRef?.mutex && job.holds.has(job.tdRef.mutex)){
+                // actually holds set is final after sim, need approximate: during execution, holds during CS interval
+                const cs = job.tdRef;
+                const inCS = job.executed>=0 && (mid-job.release) >= cs.csStart*cs.C && (mid-job.release) < (cs.csStart+cs.csDur)*cs.C;
+                // simpler show if holds was ever
+                if(t-sStart>1){
+                  ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.font='8px ui-monospace';
+                  ctx.fillText('🔒'+cs.mutex, x0+2, y+12);
+                }
+              }
+            }
+          }
+          segState=st; sStart=t;
+        }
+      }
+      // deadlines per job vertical dashed
+      const jobsForRow = simResult.jobs.filter(j=> j.taskId===rd.id);
+      ctx.strokeStyle= rd.id===-1? 'rgba(167,139,250,0.45)' : 'rgba(255,255,255,0.18)';
+      ctx.setLineDash([3,4]);
+      ctx.lineWidth=1;
+      jobsForRow.forEach(j=>{
+        if(j.absDeadline<0 || j.absDeadline>horizon) return;
+        const x=leftLabel + j.absDeadline*timePx;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y+rowH); ctx.stroke();
+        if(j.missed){
+          ctx.fillStyle='#ef4444'; ctx.font='12px ui-monospace'; ctx.fillText('✕', x-4, y+rowH-2);
+        }
+      });
+      ctx.setLineDash([]);
+    });
+
+    // blocking chain arrows at cursor time
+    {
+      const t = Math.floor(cursor);
+      if(t>=0 && t<horizon){
+        const blockedJobs = simResult.jobs.filter(j=> j.blockedOn && j.release<=t && j.remaining>0 && t>=j.release && (j.completion==null || j.completion>t));
+        blockedJobs.forEach(bj=>{
+          const mutex = bj.blockedOn;
+          // find holder active at same t
+          const holderJob = simResult.jobs.find(hj=> hj.holds.has(mutex) && hj.release<=t && hj.remaining>0 && hj.taskId!==bj.taskId);
+          // Actually after sim, holds cleared; use events more reliable: for current t, find event waiter=bj
+          // We'll draw arrow from waiter row to holder row at cursor x
+          const waiterIdx = rowsData.findIndex(r=> r.id===bj.taskId);
+          const holderIdx = holderJob? rowsData.findIndex(r=> r.id===holderJob.taskId) : -1;
+          // fallback use event list
+          let hIdx = holderIdx;
+          if(hIdx===-1){
+            const ev = simResult.events.find(e=> e.t===t && e.waiter===bj.taskId && e.mutex===mutex);
+            if(ev) hIdx = rowsData.findIndex(r=> r.id===ev.holder);
+          }
+          if(waiterIdx>=0 && hIdx>=0){
+            const y1 = topPad + headerH + (waiterIdx+1)*rowH + rowH/2;
+            const y2 = topPad + headerH + (hIdx+1)*rowH + rowH/2;
+            const x = leftLabel + t*timePx;
+            ctx.strokeStyle='rgba(239,68,68,0.85)'; ctx.lineWidth=1.2;
+            ctx.beginPath(); ctx.moveTo(x, y1); ctx.bezierCurveTo(x+24, y1, x+24, y2, x, y2); ctx.stroke();
+            ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(x, y2, 3, 0, Math.PI*2); ctx.fill();
+          }
+        });
+      }
+    }
+
+    // cursor line
+    {
+      const x = leftLabel + cursor*timePx;
+      ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(x, topPad); ctx.lineTo(x, topPad+headerH+rows*rowH); ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x, topPad+headerH+rows*rowH+4, 4, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // audio dissonance
+  let audioCtx=null, osc1=null, osc2=null, gainMaster=null;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    gainMaster=audioCtx.createGain(); gainMaster.gain.value=0; gainMaster.connect(audioCtx.destination);
+    osc1=audioCtx.createOscillator(); osc1.type='sine'; osc1.frequency.value=220;
+    const g1=audioCtx.createGain(); g1.gain.value=0.5;
+    osc2=audioCtx.createOscillator(); osc2.type='sine'; osc2.frequency.value=330;
+    const g2=audioCtx.createGain(); g2.gain.value=0.5;
+    const mix=audioCtx.createGain(); mix.gain.value=1;
+    osc1.connect(g1); g1.connect(mix);
+    osc2.connect(g2); g2.connect(mix);
+    mix.connect(gainMaster);
+    osc1.start(); osc2.start();
+    return audioCtx;
+  }
+  function updateAudio(){
+    if(!chkAudio.checked || !simResult) return;
+    const ctx=ensureAudio();
+    ctx.resume();
+    const totalJobs=simResult.jobs.length||1;
+    const missRatio = Math.min(1, simResult.totalMiss/totalJobs);
+    const f1=220;
+    const f2=330 - missRatio*99; // 330 -> 231
+    try{
+      osc1.frequency.linearRampToValueAtTime(f1, ctx.currentTime+0.12);
+      osc2.frequency.linearRampToValueAtTime(f2, ctx.currentTime+0.12);
+      const targetGain = missRatio>0 ? 0.02 + missRatio*0.14 : 0.0;
+      gainMaster.gain.linearRampToValueAtTime(targetGain, ctx.currentTime+0.2);
+    }catch{}
+    tensionInd.textContent=`Tension ${Math.round(missRatio*100)}% (${(Math.abs(f1-f2)).toFixed(1)}Hz beat)`;
+    tensionInd.style.color= missRatio>0.3? '#ef4444' : (missRatio>0? '#f59e0b':'var(--mp-cta)');
+  }
+
+  // loop animation
+  let raf;
+  function loop(now){
+    raf = requestAnimationFrame(loop);
+    const dt = Math.min(0.05, (now-lastFrame)/1000); lastFrame=now;
+    if(playing){
+      cursor += dt*1000*0.06*speed; // 0.06 converts ms to timeline speed factor
+      if(cursor>horizon) cursor=0;
+      timeLabel.textContent=`t=${cursor.toFixed(1)} ms`;
+      draw();
+      if(Math.floor(now/200)%2===0) updateAudio();
+    }
+  }
+
+  // events
+  btnPlay.addEventListener('click', ()=>{
+    playing=!playing;
+    btnPlay.textContent= playing? '⏸ Pause' : '▶ Play';
+    btnPlay.classList.toggle('is-active', playing);
+    if(playing) ensureAudio();
+  });
+  btnStep.addEventListener('click', ()=>{
+    cursor = (cursor+5)%horizon;
+    timeLabel.textContent=`t=${cursor.toFixed(1)} ms`;
+    draw(); updateMetrics();
+  });
+  btnReset.addEventListener('click', ()=>{
+    cursor=0; rerun(); draw();
+  });
+  btnAdd.addEventListener('click', ()=>{
+    const color = palette[tasks.length%palette.length];
+    tasks.push({id:nextId++, name:`T${nextId} New`, T:50, C:5, D:50, prioManual:'', mutex:'', csStart:0.2, csDur:0.3, color});
+    renderTaskTable(); rerun(); draw();
+  });
+  selSched.addEventListener('change', e=>{ scheduler=e.target.value; rerun(); });
+  inHorizon.addEventListener('input', e=>{
+    horizon=parseInt(e.target.value)||240;
+    outHorizon.textContent=horizon;
+    rerun(); draw();
+  });
+  inSpeed.addEventListener('input', e=>{
+    speed=parseFloat(e.target.value)||2;
+    outSpeed.textContent=speed+'×';
+  });
+  inIsrPer.addEventListener('change', e=>{ isrPer=parseInt(e.target.value)||0; rerun(); });
+  inIsrC.addEventListener('change', e=>{ isrC=parseInt(e.target.value)||0; rerun(); });
+
+  // initial
+  function initBind(){
+    outHorizon.textContent=horizon;
+    outSpeed.textContent=speed+'×';
+    inHorizon.value=horizon;
+    inSpeed.value=speed;
+    selSched.value=scheduler;
+  }
+  initBind();
+  renderTaskTable();
+  rerun();
+  draw();
+  loop(performance.now());
+  document.addEventListener('astro:before-swap',()=>{
+    cancelAnimationFrame(raf);
+    try{audioCtx?.close();}catch{}
+  },{once:true});
+}
+document.addEventListener('astro:page-load', initRtos);
+initRtos();
+</script>
+</Layout>

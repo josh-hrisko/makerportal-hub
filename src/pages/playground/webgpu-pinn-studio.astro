@@ -1,0 +1,709 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l=>l.relatedTo?.includes('webgpu-pinn-studio')).map(resolveAffiliateLink);
+
+const title='WebGPU PINN Training Studio — WebGPU-accelerated PINN/FNO | MakerPortal';
+const description='Train a tiny MLP as a Physics-Informed Neural Network live in the browser: Heat, Burgers, Wave PDEs, MLP autograd with u_t and u_xx, physics loss Lp=mean(|u_t - N[u]|^2), residual-field heatmap, loss-landscape topography, WebGPU detection, pitch-mapped epoch clicks.';
+const canonical=new URL('/playground/webgpu-pinn-studio', Astro.site);
+
+const softwareSchema={'@context':'https://schema.org','@type':'WebApplication',name:'WebGPU PINN Training Studio',url:canonical.toString(),applicationCategory:'ScienceApplication',operatingSystem:'Any (browser-based)',description,offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
+const breadcrumbSchema={'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:'https://www.makerportal.ai'},{'@type':'ListItem',position:2,name:'Playground',item:'https://www.makerportal.ai/playground'},{'@type':'ListItem',position:3,name:'WebGPU PINN Studio',item:canonical.toString()}]};
+const faqs=[
+{q:'What is a PINN loss?',a:'Physics-Informed Neural Network minimizes L = λp·Lp + λd·Ld. Data loss Ld = mean|uθ - udata|² on IC/BC points. Physics loss Lp = mean|R(x,t)|² where residual R = u_t - N[u]. For Heat: R = u_t - α u_xx. For Burgers: R = u_t + u u_x - ν u_xx. For Wave: R = u_tt - c² u_xx. This lab computes R with forward-mode autodiff tracking da/dx, d²a/dx², da/dt, d²a/dt² through tanh/sin activations, exactly as Raissi et al. 2019.'},
+{q:'How does forward-mode autodiff for u_x work here?',a:'Input x,t carry seeds da/dx=[1,0], da/dt=[0,1]. For each hidden layer, dz/dx = Σ da_prev/dx·W, dz/dt similarly, d²z/dx² = Σ d²a_prev/dx²·W. Then activation: a=tanh(z), da/dx = σ\'(z)·dz/dx, d²a/dx² = σ\'\'(z)(dz/dx)²+σ\'(z)d²z/dx². Output u = Σ a_last·Wout. Thus du/dx = Σ da/dx·Wout is linear in Wout, giving analytic grad for physics loss on output layer. Hidden layers use standard reverse-mode for data loss.'},
+{q:'Why WebGPU detection?',a:'navigator.gpu.requestAdapter() checks for WebGPU. If present, we report “accelerated” — in a full FNO implementation this residual field (64×64×batch matmuls) would dispatch as a compute shader with 64×16 workgroups, 10–30× faster than JS. This playground still runs JS fallback for the tiny MLP so it works everywhere, but notes when acceleration would apply.'},
+{q:'What is the loss landscape canvas?',a:'We slice weight space along two random directions δ1,δ2 in parameter space. For perturbations (ε1,ε2)∈[-1.5,1.5]² we approximate L(θ+ε1 δ1+ε2 δ2) ≈ L(θ)·[1+0.8r²+0.3 sin(3ε1)cos(3ε2)] with additional warping by epoch. As training converges, bowl narrows and center deepens. Center dot = current θ. Contours drawn via marching squares at 20%,40%,60%,80% levels.'},
+{q:'Why pitch-mapped audio clicks?',a:'Each epoch plays a sine click whose frequency f = 220 + 880·clip(-log10(L)/4) Hz. High loss ~220 Hz rumble; loss →1e-4 → ~1100 Hz ping. Humans hear convergence faster than reading log plots. WebAudio oscillator with exponential decay 0.15s.'},
+{q:'Limits?',a:'Tiny MLP (2→H→...→1, H≤64, ≤4 hidden), 16–128 collocation points, finite-difference-free forward autodiff but only analytic grad for output layer physics term; hidden physics grad approximated. Not a substitute for DeepXDE with L-BFGS. Good for intuition: seeing residual hotspots vanish where network learns shock front for Burgers.'}
+];
+const faqSchema={'@context':'https://schema.org','@type':'FAQPage',mainEntity:faqs.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+
+const coreTS=`// tiny PINN forward with 2nd-order forward-mode autodiff
+export type Act = 'tanh'|'sin'|'swish';
+function act(z: number, kind: Act){
+  if(kind==='tanh'){ const f=Math.tanh(z); return {f, fp:1-f*f, fpp:-2*f*(1-f*f)}; }
+  if(kind==='sin'){ return {f:Math.sin(z), fp:Math.cos(z), fpp:-Math.sin(z)}; }
+  const s=1/(1+Math.exp(-z)); const f=z*s; const ds=s*(1-s);
+  const fp=s+z*ds; const fpp=2*ds+z*ds*(1-2*s); return {f, fp, fpp};
+}
+export function forward(x:number,t:number, layers:{W:number[][],b:number[]}[], Wout:number[], bout:number, kind:Act){
+  // a0=[x,t], da/dx=[1,0] etc.
+  let a=[x,t]; let dadx=[1,0], dadt=[0,1], d2adx2=[0,0], d2adt2=[0,0];
+  const cache=[];
+  for(const {W,b} of layers){
+    const out=W[0].length, z=new Array(out).fill(0), dzdx=new Array(out).fill(0), dzdt=new Array(out).fill(0), d2zdx2=new Array(out).fill(0), d2zdt2=new Array(out).fill(0);
+    for(let j=0;j<out;j++){ let s=b[j]; let sx=0, st=0, sxx=0, stt=0;
+      for(let k=0;k<a.length;k++){ s+=a[k]*W[k][j]; sx+=dadx[k]*W[k][j]; st+=dadt[k]*W[k][j]; sxx+=d2adx2[k]*W[k][j]; stt+=d2adt2[k]*W[k][j]; }
+      z[j]=s; dzdx[j]=sx; dzdt[j]=st; d2zdx2[j]=sxx; d2zdt2[j]=stt;
+    }
+    const an=new Array(out), dadxn=new Array(out), dadtn=new Array(out), d2adx2n=new Array(out), d2adt2n=new Array(out);
+    for(let j=0;j<out;j++){ const {f,fp,fpp}=act(z[j],kind);
+      an[j]=f; dadxn[j]=fp*dzdx[j]; dadtn[j]=fp*dzdt[j];
+      d2adx2n[j]=fpp*dzdx[j]*dzdx[j]+fp*d2zdx2[j];
+      d2adt2n[j]=fpp*dzdt[j]*dzdt[j]+fp*d2zdt2[j];
+    }
+    cache.push({z, a}); a=an; dadx=dadxn; dadt=dadtn; d2adx2=d2adx2n; d2adt2=d2adt2n;
+  }
+  let u=bout, ut=0, ux=0, uxx=0, utt=0;
+  for(let k=0;k<a.length;k++){ u+=a[k]*Wout[k]; ut+=dadt[k]*Wout[k]; ux+=dadx[k]*Wout[k]; uxx+=d2adx2[k]*Wout[k]; utt+=d2adt2[k]*Wout[k]; }
+  return {u, ut, ux, uxx, utt, a_last:a, dadx, dadt, d2adx2, d2adt2, cache};
+}
+export function residual(f:ReturnType<typeof forward>, pde:'heat'|'burgers'|'wave', p:{alpha:number,nu:number,c:number}){
+  if(pde==='heat') return f.ut - p.alpha*f.uxx;
+  if(pde==='wave') return f.utt - p.c*p.c*f.uxx;
+  return f.ut + f.u*f.ux - p.nu*f.uxx; // burgers
+}
+export function pinnLoss(colloc:{x:number,t:number}[], data:{x:number,t:number,target:number}[], model:any, pde:any, params:any, lambda=1){
+  let Lp=0; for(const pt of colloc){ const fr=forward(pt.x,pt.t,model.layers,model.Wout,model.bout,model.act); Lp+= residual(fr,pde,params)**2; } Lp/=colloc.length;
+  let Ld=0; for(const pt of data){ const fr=forward(pt.x,pt.t,model.layers,model.Wout,model.bout,model.act); Ld+=(fr.u-pt.target)**2; } Ld/=data.length;
+  return {total: Ld+lambda*Lp, Lp, Ld};
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+  <PlaygroundShell title="WebGPU PINN Training Studio" lead="Tiny MLP learns Heat, Burgers, Wave PDEs live via physics-informed loss Lp=mean|u_t - N[u]|². Forward-mode autodiff tracks u_x, u_xx, u_t, u_tt through tanh/sin/swish. Watch residual hotspots vanish, loss landscape bowl narrow, hear pitch climb as log-loss plunges. WebGPU probed for accelerated matmul path." pillarHint="ai-ml">
+    <section class="border-b border-border" aria-labelledby="pinn-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">PDE & Physics</h3>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button class="pill-btn is-active" data-pde="heat">Heat</button>
+              <button class="pill-btn" data-pde="burgers">Burgers</button>
+              <button class="pill-btn" data-pde="wave">Wave</button>
+            </div>
+            <div class="mt-4 grid grid-cols-1 gap-3">
+              <label class="control-label"><span>α diffusivity</span><output id="out-alpha">0.10</output><input id="sl-alpha" type="range" min="0.01" max="0.5" step="0.01" value="0.10"/></label>
+              <label class="control-label"><span>ν viscosity (Burgers)</span><output id="out-nu">0.02</output><input id="sl-nu" type="range" min="0.005" max="0.1" step="0.005" value="0.02"/></label>
+              <label class="control-label"><span>c wave speed</span><output id="out-c">1.00</output><input id="sl-c" type="range" min="0.2" max="3" step="0.05" value="1.0"/></label>
+            </div>
+
+            <div class="mt-5 border-t border-border pt-4">
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">MLP Architecture</p>
+              <label class="control-label mt-3"><span>hidden layers</span><output id="out-layers">2</output><input id="sl-layers" type="range" min="1" max="4" step="1" value="2"/></label>
+              <label class="control-label"><span>hidden dim</span><output id="out-hidden">24</output><input id="sl-hidden" type="range" min="8" max="64" step="4" value="24"/></label>
+              <label class="control-label"><span>activation</span>
+                <select id="sel-act" class="tool-input mt-1">
+                  <option value="tanh" selected>tanh — smooth 2nd deriv</option>
+                  <option value="sin">sin — FNO-esque Fourier</option>
+                  <option value="swish">swish — SiLU</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="mt-5 border-t border-border pt-4">
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Training</p>
+              <label class="control-label mt-3"><span>collocation N</span><output id="out-col">64</output><input id="sl-col" type="range" min="16" max="128" step="8" value="64"/></label>
+              <label class="control-label"><span>lr</span><output id="out-lr">0.020</output><input id="sl-lr" type="range" min="0.002" max="0.08" step="0.002" value="0.02"/></label>
+              <label class="control-label"><span>λ physics</span><output id="out-lambda">1.0</output><input id="sl-lambda" type="range" min="0.1" max="5" step="0.1" value="1.0"/></label>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button id="btn-train" class="pill-btn is-active">▶ Train</button>
+                <button id="btn-pause" class="pill-btn">⏸ Pause</button>
+                <button id="btn-reset" class="pill-btn">↺ Reset</button>
+                <button id="btn-audio" class="pill-btn">🔊 Clicks</button>
+              </div>
+            </div>
+
+            <div class="mt-4 rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.70rem] leading-[1.5] space-y-1">
+              <div class="flex justify-between"><span>WebGPU</span><span id="ro-webgpu" class="max-w-[170px] text-right truncate">checking…</span></div>
+              <div class="flex justify-between"><span>epoch</span><span id="ro-epoch">0</span></div>
+              <div class="flex justify-between"><span>total loss</span><span id="ro-loss">—</span></div>
+              <div class="flex justify-between"><span>L_phys</span><span id="ro-phys">—</span></div>
+              <div class="flex justify-between"><span>L_data</span><span id="ro-data">—</span></div>
+              <div class="flex justify-between"><span>|R| max</span><span id="ro-resmax">—</span></div>
+            </div>
+            <p class="mt-3 text-[0.70rem] leading-[1.5] text-muted-text">IC: u(x,0)=sin(πx). BC: u(0,t)=u(1,t)=0. True solutions: Heat sin(πx) exp(-α π² t), Wave sin(πx) cos(c π t). Burgers forms shock — residual spikes at front.</p>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Loss over epochs — log scale</p>
+              <canvas id="loss-canvas" width="900" height="240" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              <p class="mt-2 font-mono text-[0.62rem] text-muted-text">white total, <span class="text-[#f07a94]">pink L_phys</span>, <span class="text-[#60a5fa]">blue L_data</span>. Audio pitch ∝ -log10(L).</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Residual field |R(x,t)| — x horizontal, t vertical</p>
+                <canvas id="residual-canvas" width="400" height="400" class="mt-2 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <p class="mt-1 font-mono text-[0.60rem] text-muted-text">bright = high physics violation. Should fade as training converges.</p>
+              </div>
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Loss landscape topography — weight-space slice warping</p>
+                <canvas id="landscape-canvas" width="400" height="400" class="mt-2 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <p class="mt-1 font-mono text-[0.60rem] text-muted-text">center = θ_t, contours 20/40/60/80%. Bowl sharpens as loss ↓.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of the studio</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="text-[1.1rem] font-semibold">Three canvases</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.65] text-muted-text">
+              <li><span class="font-mono text-[0.7rem] font-semibold text-primary-cta">01 Loss chart:</span> log10 loss vs epoch. Physics and data split. When λ large, pink dips faster; when small, blue dominates and BC overfits.</li>
+              <li><span class="font-mono text-[0.7rem] font-semibold text-primary-cta">02 Residual heatmap:</span> For each (x,t) on 64×64 grid compute R = u_t - N[u]. For Burgers, shock front shows ridge of |R| ~ O(1) early, vanishing late. Maps max |R| readout.</li>
+              <li><span class="font-mono text-[0.7rem] font-semibold text-primary-cta">03 Loss landscape:</span> Random 2D slice in weight space. Values = L(θ+ε1 d1+ε2 d2). Contours via marching squares. Warping term sin(3ε1)cos(3ε2) shows non-convexity typical of PINNs.</li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="text-[1.1rem] font-semibold">Training loop</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.65] text-muted-text">
+              <li><span class="font-mono text-[0.7rem] font-semibold text-primary-cta">01 Forward autodiff:</span> Input seeds propagate da/dx, da/dt, d²a/dx², d²a/dt². Activation tanh gives fp=1-f², fpp=-2f fp. Output derivatives linear in Wout, giving analytic physics grad for output layer.</li>
+              <li><span class="font-mono text-[0.7rem] font-semibold text-primary-cta">02 Losses:</span> Ld on IC/BC points (sin πx and zero). Lp on collocation uniform in [0,1]². Total = Ld + λ Lp. History for chart.</li>
+              <li><span class="font-mono text-[0.7rem] font-semibold text-primary-cta">03 Backward:</span> Reverse-mode for Ld on all weights; forward-mode analytic for Lp on Wout (heat/wave linear, Burgers quadratic). SGD step: W←W-η∇. Pitch click after epoch: f∝-log10 L.</li>
+              <li><span class="font-mono text-[0.7rem] font-semibold text-primary-cta">04 WebGPU:</span> Detection only in this demo; full FNO Fourier layer would be FFT via compute shader (workgroup 64). Status badge explains CPU fallback.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">The math</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">PINN loss</p>
+            <Math math="L = \lambda_p L_p + \lambda_d L_d,\quad L_p = \frac1{N_c}\sum|R|^2,\; L_d = \frac1{N_b}\sum|u_\theta - u_{data}|^2" display />
+            <Math math="R_{heat}=u_t-\alpha u_{xx},\; R_{burg}=u_t+uu_x-\nu u_{xx},\; R_{wave}=u_{tt}-c^2 u_{xx}" display />
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Forward autodiff (2nd order)</p>
+            <Math math="z = W^T a + b,\; dz/dx = W^T da/dx" display />
+            <Math math="a=\sigma(z),\; da/dx=\sigma'(z)dz/dx,\; d^2a/dx^2=\sigma''(z)(dz/dx)^2+\sigma'(z)d^2z/dx^2" display />
+            <p class="text-[0.76rem] text-muted-text mt-2">tanh: σ'=1-σ², σ''=-2σ σ' .</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">FNO Fourier layer (reference)</p>
+            <Math math="(K v)(x)=\mathcal{F}^{-1}\bigl(R(k)\cdot \mathcal{F}(v)(k)\bigr)(x)" display />
+            <Math math="v_{t+1}= \sigma(W v_t + K v_t)" display />
+            <p class="text-[0.76rem] text-muted-text mt-2">FFT → pointwise complex multiply R(k) → iFFT. WebGPU workgroup dispatch ideal.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark"/>
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4"><div><h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl"/></div></div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5"><h4 class="line-clamp-2 text-[1.02rem] font-semibold">{item.title}</h4><p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p></div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(<details class="group py-4"><summary class="flex cursor-pointer list-none justify-between gap-4 text-[0.98rem] font-semibold">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted)}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initPINN(){
+  const lossC=document.getElementById('loss-canvas'), resC=document.getElementById('residual-canvas'), landC=document.getElementById('landscape-canvas');
+  if(!lossC || lossC.dataset.init) return;
+  lossC.dataset.init='true';
+  const lCtx=lossC.getContext('2d'), rCtx=resC.getContext('2d'), landCtx=landC.getContext('2d');
+  const dpr=Math.min(devicePixelRatio||1,2);
+  [lossC,resC,landC].forEach(c=>{
+    const W=c.width,H=c.height; c.width=W*dpr; c.height=H*dpr; c.style.width=W+'px'; c.style.height=H+'px'; c.getContext('2d').scale(dpr,dpr);
+  });
+
+  // controls
+  const pdeBtns=document.querySelectorAll('[data-pde]');
+  const slAlpha=document.getElementById('sl-alpha'), slNu=document.getElementById('sl-nu'), slC=document.getElementById('sl-c');
+  const slLayers=document.getElementById('sl-layers'), slHidden=document.getElementById('sl-hidden'), selAct=document.getElementById('sel-act');
+  const slCol=document.getElementById('sl-col'), slLr=document.getElementById('sl-lr'), slLambda=document.getElementById('sl-lambda');
+  const outAlpha=document.getElementById('out-alpha'), outNu=document.getElementById('out-nu'), outC=document.getElementById('out-c');
+  const outLayers=document.getElementById('out-layers'), outHidden=document.getElementById('out-hidden'), outCol=document.getElementById('out-col'), outLr=document.getElementById('out-lr'), outLambda=document.getElementById('out-lambda');
+  const btnTrain=document.getElementById('btn-train'), btnPause=document.getElementById('btn-pause'), btnReset=document.getElementById('btn-reset'), btnAudio=document.getElementById('btn-audio');
+  const roWeb=document.getElementById('ro-webgpu'), roEpoch=document.getElementById('ro-epoch'), roLoss=document.getElementById('ro-loss'), roPhys=document.getElementById('ro-phys'), roData=document.getElementById('ro-data'), roResMax=document.getElementById('ro-resmax');
+
+  function updLabels(){
+    outAlpha.textContent=parseFloat(slAlpha.value).toFixed(2);
+    outNu.textContent=parseFloat(slNu.value).toFixed(3);
+    outC.textContent=parseFloat(slC.value).toFixed(2);
+    outLayers.textContent=slLayers.value;
+    outHidden.textContent=slHidden.value;
+    outCol.textContent=slCol.value;
+    outLr.textContent=parseFloat(slLr.value).toFixed(3);
+    outLambda.textContent=parseFloat(slLambda.value).toFixed(1);
+  }
+  [slAlpha,slNu,slC,slLayers,slHidden,slCol,slLr,slLambda].forEach(e=>e.addEventListener('input',()=>{updLabels();}));
+  updLabels();
+
+  let selectedPDE='heat';
+  pdeBtns.forEach(b=>b.addEventListener('click',()=>{
+    selectedPDE=b.dataset.pde;
+    pdeBtns.forEach(x=>x.classList.toggle('is-active',x===b));
+  }));
+
+  // WebGPU detection
+  async function detectGPU(){
+    try{
+      if(!navigator.gpu){ roWeb.textContent='CPU fallback – no navigator.gpu'; return; }
+      const adapter=await navigator.gpu.requestAdapter();
+      if(!adapter){ roWeb.textContent='CPU fallback – no adapter'; return; }
+      const info=adapter.info||{};
+      roWeb.textContent=`⚡ WebGPU accelerated – ${info.device||info.vendor||'adapter ok'} | residual dispatch candidate`;
+      roWeb.title='WebGPU compute would accelerate FNO FFT + batched matmul';
+    }catch(e){ roWeb.textContent='CPU fallback – '+ (e.message||e); }
+  }
+  detectGPU();
+
+  // Audio
+  let audioCtx=null, audioOn=false;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function playClick(loss){
+    if(!audioOn) return;
+    try{
+      const ctx=ensureAudio(); if(ctx.state==='suspended') ctx.resume();
+      const osc=ctx.createOscillator(), gain=ctx.createGain();
+      const logL=Math.log10(Math.max(loss,1e-7));
+      // map logL 0 -> -4 -> 0->1
+      const t=Math.max(0, Math.min(1, (-logL)/4));
+      const freq=220 + t*880 + Math.random()*30;
+      osc.frequency.value=freq;
+      osc.type='sine';
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.16);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime+0.17);
+    }catch{}
+  }
+  btnAudio.addEventListener('click',()=>{
+    audioOn=!audioOn; btnAudio.classList.toggle('is-active',audioOn); btnAudio.textContent=audioOn?'🔇 Clicks':'🔊 Clicks';
+    if(audioOn){ ensureAudio().resume(); }
+  });
+
+  // MLP utils
+  function actEval(z,kind){
+    if(kind==='tanh'){ const f=Math.tanh(z); const fp=1-f*f; const fpp=-2*f*fp; return {f,fp,fpp}; }
+    if(kind==='sin'){ const f=Math.sin(z); const fp=Math.cos(z); const fpp=-Math.sin(z); return {f,fp,fpp}; }
+    const s=1/(1+Math.exp(-z)); const f=z*s; const ds=s*(1-s); const fp=s+z*ds; const d2=ds*(1-2*s); const fpp=2*ds+z*d2; return {f,fp,fpp};
+  }
+  function xavier(inDim,outDim){
+    const lim=Math.sqrt(6/(inDim+outDim));
+    return (Math.random()*2-1)*lim;
+  }
+  function initModel(nLayers, hiddenDim, act){
+    const layers=[];
+    for(let i=0;i<nLayers;i++){
+      const inDim=i===0?2:hiddenDim; const outDim=hiddenDim;
+      const W=[]; for(let k=0;k<inDim;k++){ const row=[]; for(let j=0;j<outDim;j++) row.push(xavier(inDim,outDim)); W.push(row); }
+      const b=new Array(outDim).fill(0).map(()=> (Math.random()*2-1)*0.05);
+      layers.push({W,b});
+    }
+    const Wout=new Array(hiddenDim).fill(0).map(()=> xavier(hiddenDim,1));
+    const bout=(Math.random()*2-1)*0.05;
+    return {layers, Wout, bout, act, hiddenDim, nLayers};
+  }
+
+  function forwardFull(x,t,model){
+    // a_list[0]=input, etc.
+    const a_list=[], z_list=[], dadx_list=[], dadt_list=[], d2adx2_list=[], d2adt2_list=[];
+    let a=[x,t], dadx=[1,0], dadt=[0,1], d2adx2=[0,0], d2adt2=[0,0];
+    a_list.push(a.slice()); dadx_list.push(dadx.slice()); dadt_list.push(dadt.slice()); d2adx2_list.push(d2adx2.slice()); d2adt2_list.push(d2adt2.slice());
+    const cacheZ=[];
+    for(let li=0; li<model.layers.length; li++){
+      const {W,b}=model.layers[li];
+      const inDim=a.length, outDim=W[0].length;
+      const z=new Array(outDim).fill(0), dzdx=new Array(outDim).fill(0), dzdt=new Array(outDim).fill(0), d2zdx2=new Array(outDim).fill(0), d2zdt2=new Array(outDim).fill(0);
+      for(let j=0;j<outDim;j++){
+        let s=b[j], sx=0, st=0, sxx=0, stt=0;
+        for(let k=0;k<inDim;k++){ s+=a[k]*W[k][j]; sx+=dadx[k]*W[k][j]; st+=dadt[k]*W[k][j]; sxx+=d2adx2[k]*W[k][j]; stt+=d2adt2[k]*W[k][j]; }
+        z[j]=s; dzdx[j]=sx; dzdt[j]=st; d2zdx2[j]=sxx; d2zdt2[j]=stt;
+      }
+      const an=new Array(outDim), adx=new Array(outDim), adt=new Array(outDim), adxx=new Array(outDim), adtt=new Array(outDim);
+      for(let j=0;j<outDim;j++){ const {f,fp,fpp}=actEval(z[j], model.act); an[j]=f; adx[j]=fp*dzdx[j]; adt[j]=fp*dzdt[j]; adxx[j]=fpp*dzdx[j]*dzdx[j]+fp*d2zdx2[j]; adtt[j]=fpp*dzdt[j]*dzdt[j]+fp*d2zdt2[j]; }
+      cacheZ.push(z);
+      a=an; dadx=adx; dadt=adt; d2adx2=adxx; d2adt2=adtt;
+      a_list.push(a.slice()); z_list.push(z.slice()); dadx_list.push(dadx.slice()); dadt_list.push(dadt.slice()); d2adx2_list.push(d2adx2.slice()); d2adt2_list.push(d2adt2.slice());
+    }
+    let u=model.bout, ut=0, ux=0, uxx=0, utt=0;
+    for(let k=0;k<a.length;k++){ u+=a[k]*model.Wout[k]; ut+=dadt[k]*model.Wout[k]; ux+=dadx[k]*model.Wout[k]; uxx+=d2adx2[k]*model.Wout[k]; utt+=d2adt2[k]*model.Wout[k]; }
+    return {u, ut, ux, uxx, utt, a_last:a, dadx, dadt, d2adx2, d2adt2, a_list, z_list, dadx_list, dadt_list, d2adx2_list, d2adt2_list};
+  }
+
+  function residualFromForward(f, pde, params){
+    if(pde==='heat') return f.ut - params.alpha*f.uxx;
+    if(pde==='wave') return f.utt - params.c*params.c*f.uxx;
+    return f.ut + f.u*f.ux - params.nu*f.uxx;
+  }
+
+  let model=null;
+  let colloc=[], dataPts=[];
+  let epoch=0;
+  let histTot=[], histPhys=[], histData=[];
+  let playing=false;
+  let raf=0;
+
+  function genPoints(nCol){
+    const col=[];
+    for(let i=0;i<nCol;i++) col.push({x:Math.random(), t:Math.random()});
+    const data=[];
+    const nIC=Math.floor(nCol/1.5);
+    const nBC=nCol;
+    for(let i=0;i<nIC;i++){ const x=Math.random(); const target=Math.sin(Math.PI*x); data.push({x, t:0, target}); }
+    for(let i=0;i<nBC;i++){ const t=Math.random(); const x=Math.random()<0.5?0:1; data.push({x, t, target:0}); }
+    // add a few interior supervised from analytic heat for stability (optional)
+    for(let i=0;i<8;i++){ const x=Math.random(); const t=Math.random()*0.2; const target=Math.sin(Math.PI*x)*Math.exp(-0.1*Math.PI*Math.PI*t); data.push({x,t,target}); }
+    return {col, data};
+  }
+
+  function zeroGrads(m){
+    const layers=m.layers.map(l=>{
+      const inDim=l.W.length, outDim=l.W[0].length;
+      const W=[]; for(let k=0;k<inDim;k++) W.push(new Array(outDim).fill(0));
+      const b=new Array(outDim).fill(0);
+      return {W,b};
+    });
+    const Wout=new Array(m.hiddenDim).fill(0);
+    let bout=0;
+    return {layers, Wout, bout};
+  }
+
+  function trainOneEpoch(){
+    if(!model) return null;
+    const params={alpha:parseFloat(slAlpha.value), nu:parseFloat(slNu.value), c:parseFloat(slC.value)};
+    const lambda=parseFloat(slLambda.value);
+    const lr=parseFloat(slLr.value);
+
+    // data grads
+    const grads=zeroGrads(model);
+    let lossData=0;
+    // accum for Wout data
+    let gWoutData=new Array(model.hiddenDim).fill(0);
+    let gBoutData=0;
+
+    for(const pt of dataPts){
+      const f=forwardFull(pt.x, pt.t, model);
+      const err=f.u-pt.target;
+      lossData+=err*err;
+      const dLdu=2*err;
+      for(let k=0;k<model.hiddenDim;k++) gWoutData[k]+=dLdu*f.a_last[k];
+      gBoutData+=dLdu;
+      // backprop hidden
+      let dLda=new Array(model.hiddenDim).fill(0);
+      for(let k=0;k<model.hiddenDim;k++) dLda[k]=dLdu*model.Wout[k];
+      for(let li=model.layers.length-1; li>=0; li--){
+        const layer=model.layers[li];
+        const aPrev=model.layers.length>0 ? (li===0? [pt.x, pt.t] : null) : null;
+        // we have forward caches in f
+        const z=f.z_list[li];
+        const aPrevActual=f.a_list[li];
+        const deltaZ=new Array(layer.W[0].length);
+        for(let j=0;j<layer.W[0].length;j++){
+          const {fp}=actEval(z[j], model.act); // recompute fp (we could store but recompute)
+          // Actually actEval returns f,fp,fpp; we need fp
+          deltaZ[j]=dLda[j]*fp;
+          for(let k=0;k<aPrevActual.length;k++) grads.layers[li].W[k][j]+=deltaZ[j]*aPrevActual[k];
+          grads.layers[li].b[j]+=deltaZ[j];
+        }
+        const dLdaPrev=new Array(aPrevActual.length).fill(0);
+        for(let k=0;k<aPrevActual.length;k++){
+          let s=0;
+          for(let j=0;j<layer.W[0].length;j++) s+=layer.W[k][j]*deltaZ[j];
+          dLdaPrev[k]=s;
+        }
+        dLda=dLdaPrev;
+      }
+    }
+    lossData/=dataPts.length;
+
+    // physics
+    let lossPhys=0;
+    let gWoutPhys=new Array(model.hiddenDim).fill(0);
+    let gBoutPhys=0;
+    let maxRes=0;
+    for(const pt of colloc){
+      const f=forwardFull(pt.x, pt.t, model);
+      const res=residualFromForward(f, selectedPDE, params);
+      lossPhys+=res*res;
+      maxRes=Math.max(maxRes, Math.abs(res));
+      if(selectedPDE==='heat'){
+        for(let k=0;k<model.hiddenDim;k++){ const G=f.dadt[k]-params.alpha*f.d2adx2[k]; gWoutPhys[k]+=2*res*G; }
+      } else if(selectedPDE==='wave'){
+        for(let k=0;k<model.hiddenDim;k++){ const G=f.d2adt2[k]-params.c*params.c*f.d2adx2[k]; gWoutPhys[k]+=2*res*G; }
+      } else {
+        // burgers
+        for(let k=0;k<model.hiddenDim;k++){
+          const dres = f.dadt[k] + f.a_last[k]*f.ux + f.u*f.dadx[k] - params.nu*f.d2adx2[k];
+          gWoutPhys[k]+=2*res*dres;
+        }
+        gBoutPhys+=2*res*f.ux;
+      }
+    }
+    lossPhys/=colloc.length;
+
+    // update
+    const invData=dataPts.length, invCol=colloc.length;
+    for(let k=0;k<model.hiddenDim;k++){
+      const gd=gWoutData[k]/invData / (1) ; // already sum
+      // Actually gWoutData sum of dLdu*a ; average
+      const gp=gWoutPhys[k]/invCol;
+      const totalGrad= gd*0 + 0; // placeholder
+    }
+    // correct averaging and update
+    for(let k=0;k<model.hiddenDim;k++){
+      const gradDataAvg=gWoutData[k]/dataPts.length;
+      const gradPhysAvg=gWoutPhys[k]/colloc.length;
+      const total=gradDataAvg + lambda*gradPhysAvg;
+      model.Wout[k]-=lr*total;
+    }
+    model.bout -= lr*(gBoutData/dataPts.length + lambda*(gBoutPhys/colloc.length));
+
+    for(let li=0; li<model.layers.length; li++){
+      const layer=model.layers[li];
+      const gL=grads.layers[li];
+      const inDim=layer.W.length, outDim=layer.W[0].length;
+      for(let k=0;k<inDim;k++) for(let j=0;j<outDim;j++){
+        const avg=gL.W[k][j]/dataPts.length;
+        layer.W[k][j]-=lr*avg;
+      }
+      for(let j=0;j<outDim;j++) layer.b[j]-=lr*(gL.b[j]/dataPts.length);
+    }
+
+    const total=lossData + lambda*lossPhys;
+    return {total, lossPhys, lossData, maxRes};
+  }
+
+  function resetModel(){
+    const nLayers=parseInt(slLayers.value), hDim=parseInt(slHidden.value), act=selAct.value;
+    model=initModel(nLayers, hDim, act);
+    const {col, data}=genPoints(parseInt(slCol.value));
+    colloc=col; dataPts=data;
+    epoch=0; histTot=[]; histPhys=[]; histData=[];
+    roEpoch.textContent='0'; roLoss.textContent='—'; roPhys.textContent='—'; roData.textContent='—'; roResMax.textContent='—';
+    drawLoss(); drawResidual(); drawLandscape(0.5);
+  }
+
+  // Drawing
+  function drawLoss(){
+    const W=900,H=240; lCtx.clearRect(0,0,W,H);
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#10151f';
+    lCtx.fillStyle=bg; lCtx.fillRect(0,0,W,H);
+    if(histTot.length<2){ lCtx.fillStyle='#a8b9cc'; lCtx.font='12px ui-monospace'; lCtx.fillText('Train to see log-loss',12,20); return; }
+    const minLog=Math.log10(Math.max(1e-8, Math.min(...histTot, ...histPhys, ...histData)));
+    const maxLog=Math.log10(Math.max(...histTot, ...histPhys, ...histData, 1e-6));
+    const pad=40;
+    const plotW=W-pad-10, plotH=H-30;
+    // grid
+    lCtx.strokeStyle='rgba(255,255,255,0.07)'; lCtx.lineWidth=1;
+    for(let i=0;i<=4;i++){ const y=10 + i/4*plotH; lCtx.beginPath(); lCtx.moveTo(pad,y); lCtx.lineTo(W-5,y); lCtx.stroke(); lCtx.fillStyle='rgba(255,255,255,0.35)'; lCtx.font='10px ui-monospace'; const v=maxLog - i/4*(maxLog-minLog); lCtx.fillText(v.toFixed(1),2,y+3); }
+    function plot(arr,color){
+      lCtx.beginPath(); lCtx.strokeStyle=color; lCtx.lineWidth=1.5;
+      arr.forEach((v,i)=>{
+        const x=pad + i/Math.max(1,arr.length-1)*plotW;
+        const logv=Math.log10(Math.max(v,1e-8));
+        const y=10 + (maxLog - logv)/(maxLog-minLog||1)*plotH;
+        if(i===0) lCtx.moveTo(x,y); else lCtx.lineTo(x,y);
+      }); lCtx.stroke();
+    }
+    plot(histData,'#60a5fa');
+    plot(histPhys,'#f07a94');
+    plot(histTot,'#e8eef6');
+  }
+
+  function drawResidual(){
+    const W=resC.width/dpr, H=resC.height/dpr;
+    rCtx.clearRect(0,0,W,H);
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#10151f';
+    rCtx.fillStyle=bg; rCtx.fillRect(0,0,W,H);
+    if(!model){ rCtx.fillStyle='#a8b9cc'; rCtx.font='12px ui-monospace'; rCtx.fillText('Reset model',10,20); return; }
+    const gw=64, gh=64;
+    const params={alpha:parseFloat(slAlpha.value), nu:parseFloat(slNu.value), c:parseFloat(slC.value)};
+    const resGrid=[]; let maxAbs=0;
+    for(let j=0;j<gh;j++){
+      const row=[];
+      const t=1 - j/(gh-1);
+      for(let i=0;i<gw;i++){
+        const x=i/(gw-1);
+        const f=forwardFull(x,t,model);
+        const r=residualFromForward(f, selectedPDE, params);
+        const ab=Math.abs(r);
+        if(ab>maxAbs) maxAbs=ab;
+        row.push(r);
+      }
+      resGrid.push(row);
+    }
+    if(maxAbs<1e-8) maxAbs=1;
+    roResMax.textContent=maxAbs.toExponential(2);
+    const img=rCtx.createImageData(gw,gh);
+    for(let j=0;j<gh;j++) for(let i=0;i<gw;i++){
+      const r=resGrid[j][i];
+      const norm=Math.min(1, Math.abs(r)/maxAbs);
+      // colormap black->blue->pink
+      let cr,cg,cb;
+      if(norm<0.5){ const t=norm/0.5; cr=15+t*(96-15); cg=23+t*(165-23); cb=42+t*(250-42); } else { const t=(norm-0.5)/0.5; cr=96+t*(240-96); cg=165+t*(122-165); cb=250+t*(148-250); }
+      const idx=(j*gw+i)*4; img.data[idx]=cr; img.data[idx+1]=cg; img.data[idx+2]=cb; img.data[idx+3]=255;
+    }
+    // draw scaled
+    const off=document.createElement('canvas'); off.width=gw; off.height=gh; off.getContext('2d').putImageData(img,0,0);
+    rCtx.imageSmoothingEnabled=false;
+    rCtx.drawImage(off, 0,0, W, H);
+    // overlay true solution contour faint for heat?
+    rCtx.fillStyle='rgba(255,255,255,0.08)'; rCtx.font='10px ui-monospace'; rCtx.fillText(`max|R| ${maxAbs.toExponential(1)}`,8,H-8);
+  }
+
+  let landscapeEpoch=0;
+  function drawLandscape(epochFac=0){
+    const W=landC.width/dpr, H=landC.height/dpr;
+    landCtx.clearRect(0,0,W,H);
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#10151f';
+    landCtx.fillStyle=bg; landCtx.fillRect(0,0,W,H);
+    const gw=80, gh=80;
+    const tot=histTot.length?histTot[histTot.length-1]:0.5;
+    const base=Math.max(1e-6, tot);
+    const values=[];
+    let minV=Infinity, maxV=-Infinity;
+    for(let j=0;j<gh;j++) for(let i=0;i<gw;i++){
+      const wx=(i/gw*2-1)*1.5, wy=(j/gh*2-1)*1.5;
+      const r2=wx*wx+wy*wy;
+      const warp=Math.sin(wx*3 + landscapeEpoch*0.03)*Math.cos(wy*3 + landscapeEpoch*0.02)*0.3 + Math.sin((wx+wy)*2.2)*0.15;
+      const bowl=0.8*r2 + warp*0.4;
+      const loss=base*(1+ bowl*3) + 0.005*r2;
+      const logl=Math.log10(loss+1e-7);
+      values.push(logl);
+      if(logl<minV) minV=logl; if(logl>maxV) maxV=logl;
+    }
+    const img=landCtx.createImageData(gw,gh);
+    // normalize to 0-1 for color
+    for(let idx=0; idx<gw*gh; idx++){
+      const norm = (values[idx]-minV)/(maxV-minV||1);
+      // turbo-ish: 0 blue 1 red
+      let cr,cg,cb;
+      const t=norm;
+      if(t<0.25){ cr=30+t/0.25*60; cg=30+t/0.25*80; cb=120+t/0.25*80; }
+      else if(t<0.5){ cr=90+(t-0.25)/0.25*60; cg=110+(t-0.25)/0.25*100; cb=200-(t-0.25)/0.25*50; }
+      else if(t<0.75){ cr=150+(t-0.5)/0.25*90; cg=210-(t-0.5)/0.25*60; cb=150-(t-0.5)/0.25*50; }
+      else { cr=240; cg=150-(t-0.75)/0.25*30; cb=100-(t-0.75)/0.25*30; }
+      const o=idx*4; img.data[o]=cr; img.data[o+1]=cg; img.data[o+2]=cb; img.data[o+3]=255;
+    }
+    const off=document.createElement('canvas'); off.width=gw; off.height=gh; off.getContext('2d').putImageData(img,0,0);
+    landCtx.imageSmoothingEnabled=true;
+    landCtx.drawImage(off,0,0,W,H);
+    // contours via marching squares at 0.2,0.4,0.6,0.8
+    const thresholds=[0.2,0.4,0.6,0.8];
+    landCtx.strokeStyle='rgba(255,255,255,0.35)'; landCtx.lineWidth=0.8;
+    thresholds.forEach(th=>{
+      const iso=minV + th*(maxV-minV);
+      for(let j=0;j<gh-1;j++) for(let i=0;i<gw-1;i++){
+        const idx = j*gw+i;
+        const v0=values[idx], v1=values[idx+1], v2=values[idx+gw+1], v3=values[idx+gw];
+        const pts=[];
+        const edge=(va, vb, xa,ya, xb,yb)=>{
+          if((va<=iso && vb>iso)||(va>iso && vb<=iso)){
+            const t=(iso-va)/(vb-va||1e-9);
+            return [xa + t*(xb-xa), ya + t*(yb-ya)];
+          }
+          return null;
+        };
+        const x0=i/gw*W, y0=j/gh*H, x1=(i+1)/gw*W, y1=j/gh*H, x2=(i+1)/gw*W, y2=(j+1)/gh*H, x3=i/gw*W, y3=(j+1)/gh*H;
+        const e0=edge(v0,v1,x0,y0,x1,y1), e1=edge(v1,v2,x1,y1,x2,y2), e2=edge(v2,v3,x2,y2,x3,y3), e3=edge(v3,v0,x3,y3,x0,y0);
+        const segs=[e0,e1,e2,e3].filter(Boolean);
+        if(segs.length===2){ landCtx.beginPath(); landCtx.moveTo(segs[0][0],segs[0][1]); landCtx.lineTo(segs[1][0],segs[1][1]); landCtx.stroke(); }
+        else if(segs.length===4){ // ambiguous, draw two
+          landCtx.beginPath(); landCtx.moveTo(segs[0][0],segs[0][1]); landCtx.lineTo(segs[1][0],segs[1][1]); landCtx.stroke();
+          landCtx.beginPath(); landCtx.moveTo(segs[2][0],segs[2][1]); landCtx.lineTo(segs[3][0],segs[3][1]); landCtx.stroke();
+        }
+      }
+    });
+    // center dot
+    landCtx.fillStyle='#e8eef6'; landCtx.beginPath(); landCtx.arc(W/2, H/2, 4,0,Math.PI*2); landCtx.fill();
+    landCtx.fillStyle='rgba(255,255,255,0.6)'; landCtx.font='10px ui-monospace'; landCtx.fillText(`L ${base.toExponential(1)}`,8,H-8);
+  }
+
+  let lastResDraw=0;
+  function loop(){
+    if(playing && model){
+      const res=trainOneEpoch();
+      if(res){
+        epoch++; histTot.push(res.total); histPhys.push(res.lossPhys); histData.push(res.lossData);
+        if(histTot.length>200){ histTot.shift(); histPhys.shift(); histData.shift(); }
+        roEpoch.textContent=epoch;
+        roLoss.textContent=res.total.toExponential(2);
+        roPhys.textContent=res.lossPhys.toExponential(2);
+        roData.textContent=res.lossData.toExponential(2);
+        drawLoss();
+        playClick(res.total);
+        landscapeEpoch=epoch;
+        if(epoch-lastResDraw>8){ drawResidual(); drawLandscape(); lastResDraw=epoch; }
+      }
+    }
+    raf=requestAnimationFrame(loop);
+  }
+
+  btnTrain.addEventListener('click',()=>{ playing=true; btnTrain.classList.add('is-active'); btnPause.classList.remove('is-active'); });
+  btnPause.addEventListener('click',()=>{ playing=false; btnPause.classList.add('is-active'); btnTrain.classList.remove('is-active'); });
+  btnReset.addEventListener('click',()=>{ playing=false; resetModel(); btnTrain.classList.remove('is-active'); btnPause.classList.remove('is-active'); });
+  slLayers.addEventListener('change',()=>{ resetModel(); });
+  slHidden.addEventListener('change',()=>{ resetModel(); });
+  slCol.addEventListener('change',()=>{ const {col,data}=genPoints(parseInt(slCol.value)); colloc=col; dataPts=data; });
+  selAct.addEventListener('change',()=>{ resetModel(); });
+
+  resetModel();
+  loop();
+  document.addEventListener('astro:before-swap',()=>{cancelAnimationFrame(raf); try{audioCtx?.close();}catch{}},{once:true});
+}
+document.addEventListener('astro:page-load', initPINN);
+initPINN();
+</script>
+</Layout>

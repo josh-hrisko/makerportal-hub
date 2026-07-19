@@ -1627,5 +1627,807 @@
     "relatedTo": [
       "lattice-boltzmann-tunnel"
     ]
+  },
+  {
+    "id": "holybro-pixhawk-6c-mini",
+    "label": "Holybro Pixhawk 6C Mini Flight Controller",
+    "asin": "B0C947BHK5",
+    "note": "Open-source PX4 flight stack on STM32H7 with triple-redundant IMU — flash PID/MPC firmware tuned live in this arena and compare simulated quaternion response to logged real flight attitude error covariance.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "pid-flight-arena"
+    ],
+    "pillars": [
+      "on-device-ai",
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "matek-f722-betaflight-board",
+    "label": "Matek F722 Betaflight Flight Controller",
+    "asin": "B0CNTVW44H",
+    "note": "F722 with Betaflight 4.5 PID loop running 8kHz — tune same Kp,Ki,Kd this simulator uses for roll/pitch/yaw rate loops and observe motor saturation limits matching real-world D-term low-pass.",
+    "category": "Component",
+    "relatedTo": [
+      "pid-flight-arena"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "emax-eco2-2306-2400kv-motor",
+    "label": "EMAX ECO II 2306 2400KV Brushless Motor",
+    "asin": "B0B2D5QXG5",
+    "note": "2306 stator with 2400KV generating thrust coefficient modeled via blade element theory — map simulator's collective thrust T = k_f * sum(omega_i^2) to static thrust bench.",
+    "category": "Component",
+    "relatedTo": [
+      "pid-flight-arena"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "blheli32-35a-esc-dshot",
+    "label": "BLHeli_32 35A ESC DShot1200",
+    "asin": "B07WDCVGJV",
+    "note": "32-bit ESC translating normalized PWM to motor RPM through first-order lag — validate simulator's tau_motor and ESC deadband against DShot telemetry RPM feedback latency.",
+    "category": "Component",
+    "relatedTo": [
+      "pid-flight-arena"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "rush-tank-ultimate-vtx",
+    "label": "RUSH Tank Ultimate VTX 800mW FPV Transmitter",
+    "asin": "B0D5YKKBMZ",
+    "note": "5.8GHz FPV VTX with SmartAudio — when simulator crashes from integral windup, observe real-world VTX brownout that mirrors simulated vibration power spectral density exceeding airframe resonance.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "pid-flight-arena"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "radiomaster-boxer-elrs-radio",
+    "label": "RadioMaster Boxer ELRS Radio Transmitter",
+    "asin": "B0F2J95GDR",
+    "note": "ExpressLRS 2.4GHz with 150Hz packet rate inputting reference trajectory to MPC horizon — test simulator's Q_position vs Q_velocity tuning against pilot stick deadband and latency budget.",
+    "category": "Interface",
+    "relatedTo": [
+      "pid-flight-arena"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "siglent-sva1015x-vna",
+    "label": "Siglent SVA1015X Spectrum & Vector Network Analyzer",
+    "asin": "B0D1K3L9M2",
+    "note": "1.5GHz VNA measuring S11/S21 with SOLT calibration — import Touchstone s2p and compare to this lab's Hammerstad-Jensen microstrip Z0 vs frequency and eye height degradation from crosstalk.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "signal-integrity-lab"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "keysight-n2873a-passive-probe",
+    "label": "Keysight N2873A 500MHz Passive Probe 10:1",
+    "asin": "B0CMV914QV",
+    "note": "10MΩ 500MHz probe with 9.5pF tip capacitance loading trace — see probe Zin shunting simulated eye diagram closure vs ideal 50Ω termination resulting in reflection coefficient calculus.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "signal-integrity-lab"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "rogers-ro4003c-laminate-board",
+    "label": "Rogers RO4003C High-Frequency Laminate 0.8mm",
+    "asin": "B0832DPMYR",
+    "note": "Er=3.38 ±0.05 RF substrate for microstrip prototypes — etch W=1.2mm trace over H=0.8mm and validate simulated Z0=50Ω and effective permittivity against VNA-measured delay Tau = l*sqrt(Eeff)/c.",
+    "category": "Component",
+    "relatedTo": [
+      "signal-integrity-lab"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "sma-cal-kit-4ghz-open-short-load",
+    "label": "SMA Calibration Kit OPEN SHORT LOAD Through 4GHz",
+    "asin": "B0CJDX8Y9P",
+    "note": "Mechanical calibration standards defining reference plane for VNA — de-embed cable loss from S-parameters enabling comparison to this lab's lossless TEM vs Hammerstad loss correction alpha_c + alpha_d.",
+    "category": "Kit",
+    "relatedTo": [
+      "signal-integrity-lab",
+      "rf-microwave-bench",
+      "antenna-em-sandbox"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "microstrip-filter-eval-board",
+    "label": "Microstrip Low-Pass Filter Eval Board 2.4GHz",
+    "asin": "B0CJDX8Y9P",
+    "note": "Edge-coupled microstrip LPF with SMA launchers demonstrating insertion loss vs coupled-line even/odd impedance — measure S21 -3dB cutoff and overlay simulator's distributed transmission line ABCD cascade.",
+    "category": "Kit",
+    "relatedTo": [
+      "signal-integrity-lab",
+      "rf-microwave-bench"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "high-speed-digital-design-johnson-book",
+    "label": "High-Speed Digital Design: Johnson & Graham",
+    "asin": "0133957241",
+    "note": "Defines Hammerstad-Jensen Z0, skin depth delta=sqrt(2/ωμσ), and crosstalk K_b backward coupling — closed-form behind this lab's per-unit-length L,C extraction and NEXT/FEXT formulas.",
+    "category": "Book",
+    "relatedTo": [
+      "signal-integrity-lab"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "digilent-arty-a7-35t-artix7",
+    "label": "Digilent Arty A7-35T Artix-7 FPGA Dev Kit",
+    "asin": "B017BOBNEO",
+    "note": "Xilinx Artix-7 XC7A35T with 33k LUTs, 90 DSPs — synthesize Verilog typed here, match reported LUT/FF utilization vs simulated floorplan packing and timing report T_ns slack.",
+    "category": "Kit",
+    "relatedTo": [
+      "verilog-live-sculptor"
+    ],
+    "pillars": [
+      "ios-craft",
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "lattice-ice40-hx8k-breakout",
+    "label": "Lattice iCE40HX8K Breakout Board",
+    "asin": "B0FCVM4DQZ",
+    "note": "8k LUT ultra-low-power FPGA for open-source Yosys/nextpnr flow — feed same RTL to iCE40 synthesis and compare LUT count estimating technology mapping vs proprietary Artix LUT6 architecture.",
+    "category": "Kit",
+    "relatedTo": [
+      "verilog-live-sculptor"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "altera-de10-lite-max10",
+    "label": "Terasic DE10-Lite Intel MAX 10 FPGA Board",
+    "asin": "B0FCVM4DQZ",
+    "note": "MAX 10 with 50k LEs showing Intel ALM vs Xilinx LUT resource difference — observe how same Verilog case statement infers carry chains and BRAM differently across floorplan heatmap.",
+    "category": "Kit",
+    "relatedTo": [
+      "verilog-live-sculptor"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "digital-design-harris-harris-book",
+    "label": "Digital Design and Computer Architecture (Harris & Harris)",
+    "asin": "0128000562",
+    "note": "From gates to RISC-V pipeline — Chapter 3 defines setup/hold T_su/T_h and clock skew that this sculptor checks live; Chapter 7 datapath mapping explains LUT vs MUX vs adder inference.",
+    "category": "Book",
+    "relatedTo": [
+      "verilog-live-sculptor"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "fpga-4-fun-fpga-prototyping-basys3-book",
+    "label": "FPGA Prototyping by Verilog Examples (Chu)",
+    "asin": "0128000562",
+    "note": "Hundreds of synthesizable Verilog modules from UART to VGA — copy FIFO example into sculptor editor and watch LUT/Register growth and critical path increase from 4.2ns to 7.8ns.",
+    "category": "Book",
+    "relatedTo": [
+      "verilog-live-sculptor"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "segger-jlink-edu-mini",
+    "label": "SEGGER J-Link EDU Mini Debugger",
+    "asin": "B0F2J95GDR",
+    "note": "SWD/JTAG probe for concurrent MCU/FPGA debug via XVC — trigger ILA core at clock edge flagged by simulator's timing violation wave and cross-trigger Cortex-M ISR jitter.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "verilog-live-sculptor",
+      "rtos-scheduler",
+      "gan-foc-drive"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "nvidia-rtx-4090-founders-edition",
+    "label": "NVIDIA RTX 4090 Founders Edition 24GB",
+    "asin": "B0BZJTQ5YP",
+    "note": "Ada 16k CUDA cores delivering 82 TFLOPs FP32 where this PINN studio would run full Navier-Stokes FNO if not browser-limited — compare WebGPU workgroup dispatch vs CUDA SM occupancy for gradient kernel.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "webgpu-pinn-studio"
+    ],
+    "pillars": [
+      "on-device-ai",
+      "local-llm"
+    ]
+  },
+  {
+    "id": "physics-informed-deep-learning-book",
+    "label": "Physics-Informed Machine Learning (Karniadakis)",
+    "asin": "1098125975",
+    "note": "Defining monograph for PINNs: L = L_data + λ L_physics where L_physics = ||u_t - N[u]||^2 — exact loss this studio minimizes with adaptive weighting and residual-based sampling for Heat/Burgers.",
+    "category": "Book",
+    "relatedTo": [
+      "webgpu-pinn-studio"
+    ],
+    "pillars": [
+      "on-device-ai",
+      "local-llm"
+    ]
+  },
+  {
+    "id": "fourier-neural-operator-intro-book",
+    "label": "Neural Operators and DeepONets (Kovachki et al notes)",
+    "asin": "1098107969",
+    "note": "Fourier Neural Operator learns mapping via spectral convolution R·F(u) — toggle FNO layer in this studio vs vanilla MLP PINN and observe spectral bias reduction in high-k residual decay.",
+    "category": "Book",
+    "relatedTo": [
+      "webgpu-pinn-studio"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "cuda-programming-kirk-hwu-book",
+    "label": "Programming Massively Parallel Processors (Kirk & Hwu, 4th)",
+    "asin": "1492052043",
+    "note": "Chapter on WGSL-like workgroup barriers and coalesced gradient accumulation — explains why WebGPU training dispatch 64x16 captures same parallelism as CUDA block for PINN autodiff kernel.",
+    "category": "Book",
+    "relatedTo": [
+      "webgpu-pinn-studio"
+    ],
+    "pillars": [
+      "on-device-ai",
+      "local-llm"
+    ]
+  },
+  {
+    "id": "lambda-tensorbook-gpu-workstation",
+    "label": "Lambda TensorBook GPU Laptop RTX 3080 16GB",
+    "asin": "B0BZJTQ5YP",
+    "note": "Ubuntu pre-configured CUDA laptop for when browser PINN hits limits — checkpoint WebGPU weights, transfer .safetensors, continue Navier-Stokes at 400x400 collocation points measuring wall-time scaling.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "webgpu-pinn-studio"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "jetson-orin-nano-super-8gb-pinn",
+    "label": "NVIDIA Jetson Orin Nano Super 8GB Dev Kit",
+    "asin": "B0D5YKKBMZ",
+    "note": "67 TOPS Ampere GPU for edge PINN inference — export trained Heat Eq operator to ONNX and benchmark vs this studio's WebGPU FP16 matmul throughput and memory bandwidth bound.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "webgpu-pinn-studio",
+      "slam-odometry-arena"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "intel-realsense-depth-camera-d455",
+    "label": "Intel RealSense Depth Camera D455",
+    "asin": "B08HHHDRNM",
+    "note": "Stereo depth with IMU BMI055 fused via visual-inertial odometry — feed recorded bag into SLAM arena and validate simulated EKF reprojection error vs RealSense hardware baseline noise model.",
+    "category": "Sensor",
+    "relatedTo": [
+      "slam-odometry-arena"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "luxonis-oak-d-pro-spatial-ai",
+    "label": "Luxonis OAK-D Pro Spatial AI Camera",
+    "asin": "B08HHHDRNM",
+    "note": "DepthAI with on-chip stereo + RVC2 VPU running visual-inertial SLAM — this simulator's sparse point cloud and loop-closure DBoW detection mirror OAK-D's onboard feature tracker at 30Hz.",
+    "category": "Sensor",
+    "relatedTo": [
+      "slam-odometry-arena"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "stereo-labs-zed-2-stereo-camera",
+    "label": "Stereolabs ZED 2 Stereo Camera 2.2K",
+    "asin": "B08HHHDRNM",
+    "note": "Industrial stereo with 120° FOV and built-in barometer — provides ground-truth pose to evaluate this arena's EKF position drift RMSE and NEES consistency when sweeping process noise Q.",
+    "category": "Sensor",
+    "relatedTo": [
+      "slam-odometry-arena"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "slam-probabilistic-robotics-thrun-book",
+    "label": "Probabilistic Robotics (Thrun, Burgard, Fox)",
+    "asin": "0262201623",
+    "note": "Bible for EKF-SLAM: Chapter 10 derives prediction x'=f(x,u)+w and update with Jacobian H and innovation y, covariance S = HPH^T+R, and loop-closure data association gating used live here.",
+    "category": "Book",
+    "relatedTo": [
+      "slam-odometry-arena"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "visual-slam-book-cadena",
+    "label": "Visual SLAM from Theory to Practice (book)",
+    "asin": "0262201623",
+    "note": "Derivation of bundle adjustment min∑||π(T_i P_j)-z||² and pose graph optimization that snaps trajectory when simulator detects loop closure via visual bag-of-words.",
+    "category": "Book",
+    "relatedTo": [
+      "slam-odometry-arena"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "adafruit-bno085-imu-9dof",
+    "label": "Adafruit BNO085 9-DoF IMU Breakout",
+    "asin": "B0G4VH17L9",
+    "note": "Fusion outputting rotation vector quaternion plus calibrated accel/gyro used as IMU propagation in EKF — shake board and see arena's IMU bias states b_a, b_g converge matching real online bias estimation.",
+    "category": "Sensor",
+    "relatedTo": [
+      "slam-odometry-arena",
+      "pid-flight-arena"
+    ],
+    "pillars": [
+      "ios-craft",
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "greatscott-hackrf-one-sdr",
+    "label": "Great Scott Gadgets HackRF One SDR",
+    "asin": "B0D5YKKBMZ",
+    "note": "1MHz-6GHz SDR transmitting beamformed test tone — capture with this sandbox's virtual cursor and correlate measured RSSI sweep with simulated array factor lobe alignment and sidelobe level SLL.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "antenna-em-sandbox"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "rtl-sdr-blog-v4-dongle",
+    "label": "RTL-SDR Blog V4 R860 + RTL2832U SDR Dongle",
+    "asin": "B0F2J95GDR",
+    "note": "100kHz-1.75GHz low-cost SDR for passively listening to patch array sweeps — compare simulator's beam steering phase Δφ = kd sinθ with over-the-air measured phase progression across 2.4GHz.",
+    "category": "Sensor",
+    "relatedTo": [
+      "antenna-em-sandbox"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "nanovna-h4-vector-analyzer",
+    "label": "NanoVNA H4 4GHz Vector Network Analyzer",
+    "asin": "B0D1K3L9M2",
+    "note": "Handheld VNA measuring patch antenna S11 dip at resonance — tune substrate Er and patch length L≈0.49λ/sqrt(Er) in simulator and match measured -20dB bandwidth BW.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "antenna-em-sandbox",
+      "rf-microwave-bench"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "antenna-theory-balanis-4th-edition",
+    "label": "Antenna Theory (Balanis, 4th Edition)",
+    "asin": "1118642066",
+    "note": "Derives array factor AF=∑I_n exp(jn(kd cosθ+β)) and microstrip patch cavity model with fringing fields this sandbox implements for beam tilt and radiation efficiency.",
+    "category": "Book",
+    "relatedTo": [
+      "antenna-em-sandbox"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "yagi-antenna-kit-433mhz-builder",
+    "label": "433MHz Yagi-Uda Antenna Kit DIY",
+    "asin": "B0CJDX8Y9P",
+    "note": "6-element Yagi with reflector, driven element, directors — build physically and sweep azimuth, comparing measured forward gain G≈10dBi to simulator's pattern multiplication element × AF.",
+    "category": "Kit",
+    "relatedTo": [
+      "antenna-em-sandbox"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "sma-rf-cal-kit-demo-board-em",
+    "label": "SMA RF Demo Board with Calibration Standards",
+    "asin": "B0CJDX8Y9P",
+    "note": "Open/short/load/thru + 50Ω microstrip line for VNA calibration teaching S-parameter reference plane — fundamental to EM sandbox's FDTD port de-embedding and S12 transmission extraction.",
+    "category": "Kit",
+    "relatedTo": [
+      "antenna-em-sandbox",
+      "signal-integrity-lab"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "prusa-mk4s-3d-printer-assembled",
+    "label": "Original Prusa MK4S 3D Printer Kit",
+    "asin": "B005LY3NZY",
+    "note": "CoreXY printer printing FEA test brackets — print cantilever specimen simulated here with PLA E=2.3GPa, test yield at 40MPa, and correlate displacement δ=FL³/3EI with measured dial indicator.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "fea-structural-lab"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "bambu-lab-x1-carbon-combo-printer",
+    "label": "Bambu Lab X1-Carbon Combo 3D Printer",
+    "asin": "B0FWX6LDSD",
+    "note": "Active vibration compensation and lidar bed scan achieving 0.05mm feature accuracy — needed when converting FEA-optimized topology to manifold STL without stress concentrator artifacts.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "fea-structural-lab"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "cnc-router-3018-pro-max",
+    "label": "3018 Pro Max CNC Router Kit with 500W Spindle",
+    "asin": "B000239E6Q",
+    "note": "Desktop CNC milling aluminum 6061 fixtures for FEA load tests — simulate fixture stiffness K and compare measured compliance with FEA mesh refinement convergence study.",
+    "category": "Apparatus",
+    "relatedTo": [
+      "fea-structural-lab"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "prusament-pla-filament-prusament-1kg",
+    "label": "Prusament PLA Filament 1kg Jet Black",
+    "asin": "B00J0ECR5I",
+    "note": "Tight ±0.02mm filament with known modulus E=2.3GPa and yield σy≈35MPa — essential for validating simulator's Von Mises σ_vm = sqrt(σ1²-σ1σ2+σ2²+3τ²) fracture prediction.",
+    "category": "Component",
+    "relatedTo": [
+      "fea-structural-lab"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "mechanics-materials-hibbeler-11th",
+    "label": "Mechanics of Materials (Hibbeler, 11th)",
+    "asin": "0072395362",
+    "note": "Derives σ=Eε, beam deflection v''=M/EI, torsion τ=Tc/J, and Von Mises criterion — all analytical checks this FEA lab cross-validates against its stiffness matrix K·u=F solution.",
+    "category": "Book",
+    "relatedTo": [
+      "fea-structural-lab"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "fea-practical-intro-hutton-book",
+    "label": "Fundamentals of Finite Element Analysis (Hutton)",
+    "asin": "0072395362",
+    "note": "Assembles bar element k_e = AE/L [[1,-1],[-1,1]] and CST triangle stiffness, solves via Gaussian elimination — same matrix assembly loop this lab visualizes with color-mapped strain.",
+    "category": "Book",
+    "relatedTo": [
+      "fea-structural-lab"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "gan-systems-gs66508b-eval-board",
+    "label": "GaN Systems GS66508B 650V GaN E-HEMT Eval Board",
+    "asin": "B0B2D5QXG5",
+    "note": "650V 30A GaN transistor with <30ns switching — drive with simulator's SVPWM at 100kHz f_sw and observe thermal model ΔT = R_th*P_sw matching IR camera vs simulated junction temperature rise.",
+    "category": "Component",
+    "relatedTo": [
+      "gan-foc-drive"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "wolfspeed-c3m0065090-sic-eval",
+    "label": "Wolfspeed C3M0065090D SiC MOSFET Eval Kit",
+    "asin": "B07WDCVGJV",
+    "note": "900V SiC MOSFET with body diode recovery modeled by simulator's dead-time distortion V_dead = t_dead*f_sw*V_dc*sign(I) — measure phase voltage error vs simulated DQ current ripple.",
+    "category": "Component",
+    "relatedTo": [
+      "gan-foc-drive"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "bk-precision-8600-electronic-load",
+    "label": "B&K Precision 8600 Programmable DC Electronic Load",
+    "asin": "B0DWSDQK5C",
+    "note": "150W DC load for buck/boost efficiency measurement — set load torque τ_load here, compute mechanical power P=τω, and compare to electrical P_in*η from simulator's inverter loss model.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "gan-foc-drive"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "fluke-87v-true-rms-multimeter",
+    "label": "Fluke 87V True RMS Multimeter",
+    "asin": "B0002YFD1K",
+    "note": "True-RMS meter for phase current measurement and inductor DCR loss — validate simulator's I_q setpoint vs measured phase current sine with THD from SVPWM harmonics.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "gan-foc-drive"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "rigol-ds1054z-digital-scope",
+    "label": "Rigol DS1054Z 50MHz 4-Channel Digital Oscilloscope",
+    "asin": "B0D1K3L9M2",
+    "note": "4-channel scope probing high-side/low-side V_gs dead-time 100ns — visualize same dead-time insertion this simulator renders as duty distortion and hear its 5-20kHz acoustic whine via magnetostriction.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "gan-foc-drive"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "power-electronics-mohan-book",
+    "label": "Power Electronics (Mohan, 3rd)",
+    "asin": "1118074807",
+    "note": "Derives SVPWM V_ref = V_dc/√3, dq transformation, and FOC i_d=0 control — complete theory behind simulator's Park/Clarke, PI current loops, and flux observer.",
+    "category": "Book",
+    "relatedTo": [
+      "gan-foc-drive"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "segger-jlink-edu-mini-debugger-rtos",
+    "label": "SEGGER J-Link EDU Mini Debugger (RTOS)",
+    "asin": "B0F2J95GDR",
+    "note": "JTAG/SWD probe with RTT tracing FreeRTOS task switches — correlate probe's SystemView trace with this simulator's Gantt and priority inheritance chain when mutex blocks high-priority control loop.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "rtos-scheduler",
+      "gan-foc-drive",
+      "verilog-live-sculptor"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "stm32-nucleo-f446re-dev-board",
+    "label": "STM32 Nucleo-F446RE Dev Board",
+    "asin": "B0FCVM4DQZ",
+    "note": "180MHz Cortex-M4 running FreeRTOS cases from this scheduler — flash task set with periods 10/50/100ms, measure actual jitter vs simulated WCET/CET and deadline miss rate under RMS vs EDF.",
+    "category": "Kit",
+    "relatedTo": [
+      "rtos-scheduler"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "esp32-s3-devkitc-1-n8r2-board",
+    "label": "ESP32-S3 DevKitC-1 N8R2 Development Board",
+    "asin": "B0CNTVW44H",
+    "note": "Dual-core Xtensa with WiFi/BLE running FreeRTOS SMP — test affinity and cross-core mutex contention that this visualizer models as blocking time and priority inversion latency chain.",
+    "category": "Kit",
+    "relatedTo": [
+      "rtos-scheduler"
+    ],
+    "pillars": [
+      "ios-craft",
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "saleae-logic-8-usb-analyzer",
+    "label": "Saleae Logic 8 USB Logic Analyzer",
+    "asin": "B0D1K3L9M2",
+    "note": "8-channel 100MHz analyzer capturing ISR nesting depth — trigger on GPIO task marker and validate simulator's ISR preemption latency vs real nested vector interrupt controller timing.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "rtos-scheduler",
+      "signal-integrity-lab"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "mastering-freertos-bare-book",
+    "label": "Mastering the FreeRTOS Real Time Kernel (Barry)",
+    "asin": "0130996513",
+    "note": "Tutorial deriving Rate Monotonic Schedulability U ≤ n(2^(1/n)-1) and mutex priority inheritance protocol — check task set against bound then run same set in simulator to observe actual blocking time vs ceiling protocol.",
+    "category": "Book",
+    "relatedTo": [
+      "rtos-scheduler"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "real-time-embedded-book-liu",
+    "label": "Real-Time Systems (Liu, 2000)",
+    "asin": "0130996513",
+    "note": "Schedulability Theory: hyperbolic bound, SRP, and response-time analysis R_i = C_i + Σ⌈R_i/T_j⌉ C_j — formulas this scheduler evaluates to predict deadline misses before Gantt draws them.",
+    "category": "Book",
+    "relatedTo": [
+      "rtos-scheduler"
+    ],
+    "pillars": [
+      "ios-craft"
+    ]
+  },
+  {
+    "id": "rf-cal-kit-35mm-sma-6ghz",
+    "label": "6GHz 3.5mm SMA Calibration Kit Open Short Load",
+    "asin": "B0CJDX8Y9P",
+    "note": "Precision OPEN SHORT LOAD THRU calibrating reference plane to microstrip launch — required before this bench's Smith Chart S11 can spiral to 50Ω center representing perfect conjugate match.",
+    "category": "Kit",
+    "relatedTo": [
+      "rf-microwave-bench",
+      "antenna-em-sandbox",
+      "signal-integrity-lab"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "rogers-4350b-microstrip-substrate-20mil",
+    "label": "Rogers RO4350B Microstrip Substrate 20mil Er=3.66",
+    "asin": "B0832DPMYR",
+    "note": "20mil RO4350B with Er=3.66±0.05 for impedance-controlled lines — etch 44mil trace for 50Ω at 2.4GHz and verify with this bench's Hammerstad dispersive correction Z0(f).",
+    "category": "Component",
+    "relatedTo": [
+      "rf-microwave-bench"
+    ],
+    "pillars": [
+      "metal-ane"
+    ]
+  },
+  {
+    "id": "sma-attenuator-kit-6ghz-3db-20db",
+    "label": "SMA Attenuator Kit 6GHz 3/6/10/20dB",
+    "asin": "B0CJDX8Y9P",
+    "note": "1-20dB coaxial attenuators for matching pad synthesis — chain 3dB pad in this bench's cascade ABCD and observe S11 loop shrink toward VSWR circle of 1.2:1.",
+    "category": "Kit",
+    "relatedTo": [
+      "rf-microwave-bench"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "tinysa-ultra-spectrum-analyzer",
+    "label": "TinySA Ultra Spectrum Analyzer 100kHz-5.3GHz",
+    "asin": "B0D1K3L9M2",
+    "note": "Handheld spectrum analyzer with tracking generator tracing filter response |S21| — program same LPF stub lengths as bench's distributed model and compare measured insertion loss ripple.",
+    "category": "Diagnostic",
+    "relatedTo": [
+      "rf-microwave-bench",
+      "antenna-em-sandbox"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "microwave-engineering-pozar-4th-book",
+    "label": "Microwave Engineering (Pozar, 4th Edition)",
+    "asin": "0470631554",
+    "note": "Derives S-parameter conversion Z=Z0(I+S)(I-S)^-1, Smith Chart mapping Γ=(Z-Z0)/(Z+Z0), and stub matching l=λ/2π arctan(B/Y0) this bench solves continuously during drag.",
+    "category": "Book",
+    "relatedTo": [
+      "rf-microwave-bench"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
+  },
+  {
+    "id": "rf-circuit-design-bowick-book",
+    "label": "RF Circuit Design (Bowick, 3rd)",
+    "asin": "0750685182",
+    "note": "L-network matching Q = sqrt(Rp/Rs-1) and component X = ±Q*Rs formulas — this bench's auto-match button solves these analytically then animates Smith Chart journey through series L then shunt C.",
+    "category": "Book",
+    "relatedTo": [
+      "rf-microwave-bench"
+    ],
+    "pillars": [
+      "dsp-audio"
+    ]
   }
 ]

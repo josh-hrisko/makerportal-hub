@@ -1,0 +1,865 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l => l.relatedTo?.includes('gan-foc-drive')).map(resolveAffiliateLink);
+
+const title = 'GaN FOC Drive — SVPWM GaN/SiC Inverter + Field-Oriented Motor Lab | MakerPortal';
+const description = 'Interactive GaN/SiC inverter with SVPWM and field-oriented control. Tune Vdc, Iq/Id, f_sw, dead-time, see Clarke/Park, stator flux rotation, dead-time distortion Vdead = td·fsw·Vdc·sign(I), thermal ΔT = Rth·Psw. Audio whine pitch-tracked to fe = p·ωm/2π.';
+const canonical = new URL('/playground/gan-foc-drive', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'GaN FOC Drive',
+  url: canonical.toString(),
+  applicationCategory: 'EngineeringApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'GaN FOC Drive', item: canonical.toString() }
+  ]
+};
+const faqs = [
+  { q: 'What does FOC with id = 0 mean?', a: 'For a surface PM motor Ld≈Lq, torque Te=1.5·p·ψm·iq + 1.5·p·(Ld-Lq)·id·iq reduces to 1.5·p·ψm·iq when id=0. Setting id_sp=0 puts all stator current into torque-producing q-axis, keeps the stator flux |ψs| = sqrt((Ld·id+ψm)²+(Lq·iq)²) minimal and maximizes efficiency below base speed. Field weakening uses id<0 to oppose ψm and extend speed.' },
+  { q: 'How do Clarke and Park transforms work?', a: 'Clarke: 3-phase ia,ib,ic (ia+ib+ic=0) → αβ0: iα=2/3·(ia-0.5·ib-0.5·ic), iβ=2/3·(√3/2·ib-√3/2·ic), power/amplitude variant. Park rotates αβ by electrical angle θe: id=iα·cosθe+iβ·sinθe, iq=-iα·sinθe+iβ·cosθe. This locks the reference to the rotor so AC sinusoids become DC setpoints the PI can regulate. Inverse Park does vdq → vαβ for SVPWM.' },
+  { q: 'What is SVPWM limit Vref = Vdc/√3 and the hexagon?', a: 'A two-level inverter can only output 6 active vectors V1..V6 at 60° steps plus two zeros. Their tips form a hexagon radius 2·Vdc/3 (amplitude invariant). The largest inscribed circle for linear modulation is Vdc/√3. Modulation index M=Vref/(Vdc/√3). T1=√3·Tsw·Vref/Vdc·sin(60°-θ), T2=√3·Tsw·Vref/Vdc·sinθ, T0=Tsw-T1-T2. Over M>1 we saturate to hexagon edge — six-step.' },
+  { q: 'Why does dead-time cause voltage distortion?', a: 'To avoid shoot-through both FETs are off for td. Current freewheels through body diode, clamping phase voltage to ±Vdc/2 opposite sign of current. Average error per switching period averages to V_dead = td·fsw·Vdc·sign(I). It appears as 5th/7th harmonics, zero-crossing distortion, and torque ripple. GaN needs 10-80 ns vs Si IGBT 1-3 µs, so V_dead drops 10-30× at same fsw, enabling 50-100 kHz silent drives.' },
+  { q: 'How is temperature rise and audio modeled?', a: 'Conduction Pcond = 3·Irms²·Rds(on). Switching Esw≈Vdc·|I|·(tr+tf)/2 per edge, Psw≈ fsw·Vdc·Iavg·(tr+tf). Total P = Pcond+Psw, ΔT=Rth·P filtered τ_th≈2s. Junction Tj=Tamb+ΔT. Audio: electrical freq fe=p·ωm/2π. Motor whine = carrier at fcarrier=clamp(5000+fe·55 + 1200·|Te|/Tmax,5000,20000) Hz, amp modulated by |iq| and switching sidebands at fsw ± k·fe. GaN high fsw pushes carrier above 15 kHz where human sensitivity rolls off.' }
+];
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const coreTS = `// FOC core — Clarke, Park, SVPWM, PMSM dq model
+type DQ = { d:number; q:number };
+type AB = { a:number; b:number };
+
+const SQRT3 = Math.sqrt(3);
+
+// Clarke amplitude-invariant (ia+ib+ic=0)
+function clarke(ia:number, ib:number, ic:number): AB {
+  return { a: (2/3)*(ia - 0.5*ib - 0.5*ic), b: (2/3)*(SQRT3/2*ib - SQRT3/2*ic) };
+}
+function invClarke(ab:AB): [number,number,number] {
+  const ia = ab.a;
+  const ib = -0.5*ab.a + SQRT3/2*ab.b;
+  const ic = -0.5*ab.a - SQRT3/2*ab.b;
+  return [ia, ib, ic];
+}
+function park(ab:AB, theta:number): DQ {
+  const c=Math.cos(theta), s=Math.sin(theta);
+  return { d: ab.a*c + ab.b*s, q: -ab.a*s + ab.b*c };
+}
+function invPark(dq:DQ, theta:number): AB {
+  const c=Math.cos(theta), s=Math.sin(theta);
+  return { a: dq.d*c - dq.q*s, b: dq.d*s + dq.q*c };
+}
+
+function svpwm(valpha:number, vbeta:number, Vdc:number, fsw:number){
+  const Vref = Math.hypot(valpha, vbeta);
+  const Vlim = Vdc / Math.sqrt(3); // linear limit
+  const V = Math.min(Vref, Vlim);
+  let ang = Math.atan2(vbeta, valpha); // 0..2pi
+  if(ang<0) ang+=2*Math.PI;
+  const sector = Math.floor(ang / (Math.PI/3)) + 1; // 1..6
+  const theta = ang - (sector-1)*(Math.PI/3); // 0..60deg
+  const T = 1/fsw;
+  const T1 = Math.sqrt(3)*T*V/Vdc*Math.sin(Math.PI/3 - theta);
+  const T2 = Math.sqrt(3)*T*V/Vdc*Math.sin(theta);
+  const T0 = Math.max(0, T - T1 - T2);
+  const mod = V / Vlim;
+  return { Vref, Vlim: V, mod, ang, sector, theta, T1, T2, T0, T };
+}
+
+// dead-time voltage error per phase
+function vDead(td:number, fsw:number, Vdc:number, i:number): number {
+  // V_dead = td * fsw * Vdc * sign(I)  (average over Ts)
+  return td * fsw * Vdc * Math.sign(i);
+}
+
+// PMSM dq electrical dynamics
+function dqDeriv(id:number,iq:number,vd:number,vq:number,we:number,R:number,L:number,psi:number){
+  const didt = (vd - R*id + we*L*iq)/L;
+  const diqt = (vq - R*iq - we*L*id - we*psi)/L;
+  return { didt, diqt };
+}
+function torque(p:number, psi:number, iq:number, Ld:number, Lq:number, id:number){
+  return 1.5 * p * (psi*iq + (Ld - Lq)*id*iq);
+}
+
+// PI + feedforward
+function piFOC(e:number, int:number, Kp:number, Ki:number, we:number, L:number, iq:number, extra=0){
+  return Kp*e + Ki*int + we*L*iq + extra;
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="GaN FOC Drive — SVPWM Inverter + Motor"
+    lead="GaN/SiC three-phase inverter driving a PMSM with field-oriented control. Tune Vdc, Iq*/Id*, f_sw up to 100 kHz, dead-time ns, torque load, p, Rs/Ls. Watch stator flux spin, 3-phase currents, Clarke/Park live, SVPWM hexagon with sector times, dead-time distortion V_dead=td·fsw·Vdc·sign(I), thermal ΔT=Rth·Psw and hear whine pitch-tracked to fe=p·ωm/2π."
+    pillarHint="power-electronics"
+  >
+    <section class="border-b border-border" aria-labelledby="gan-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <button id="btn-enable" class="pill-btn is-active">Enable Drive</button>
+          <button id="btn-brake" class="pill-btn">Brake 1.5 Nm</button>
+          <button id="btn-reset" class="pill-btn">Reset rotor</button>
+          <label class="ml-2 flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-audio" type="checkbox" checked /> Audio whine 5-20 kHz</label>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-distort" type="checkbox" checked /> Dead-time</label>
+          <span id="fault-ind" class="ml-auto font-mono text-[0.7rem] font-bold text-primary-cta"></span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Inverter & Motor Tuning</h3>
+            <div class="mt-4 space-y-5">
+              <div>
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">DC-link & FOC setpoint — Iq torque, Id flux</p>
+                <label class="control-label mt-2"><span>Vdc V</span><output id="out-vdc">48</output><input id="sl-vdc" type="range" min="12" max="80" step="1" value="48"/></label>
+                <label class="control-label"><span>Iq* A torque</span><output id="out-iq">6.0</output><input id="sl-iq" type="range" min="-15" max="15" step="0.1" value="6.0"/></label>
+                <label class="control-label"><span>Id* A field</span><output id="out-id">0.0</output><input id="sl-id" type="range" min="-6" max="6" step="0.1" value="0"/></label>
+                <label class="control-label"><span>Load torque Nm</span><output id="out-tload">0.20</output><input id="sl-tload" type="range" min="0" max="2.5" step="0.02" value="0.2"/></label>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">GaN/SiC Switching — dead-time & f_sw</p>
+                <label class="control-label mt-2"><span>f_sw kHz</span><output id="out-fsw">20</output><input id="sl-fsw" type="range" min="5" max="100" step="1" value="20"/></label>
+                <label class="control-label"><span>t_dead ns</span><output id="out-td">120</output><input id="sl-td" type="range" min="0" max="500" step="5" value="120"/></label>
+                <label class="control-label"><span>Rds_on mΩ</span><output id="out-rds">12</output><input id="sl-rds" type="range" min="3" max="80" step="1" value="12"/></label>
+                <label class="control-label"><span>Rth K/W</span><output id="out-rth">0.8</output><input id="sl-rth" type="range" min="0.1" max="3" step="0.05" value="0.8"/></label>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Motor — PMSM SPMSM</p>
+                <label class="control-label mt-2"><span>pole pairs p</span><output id="out-p">7</output><input id="sl-p" type="range" min="2" max="14" step="1" value="7"/></label>
+                <label class="control-label"><span>Rs Ω</span><output id="out-rs">0.35</output><input id="sl-rs" type="range" min="0.05" max="2" step="0.01" value="0.35"/></label>
+                <label class="control-label"><span>Ls mH</span><output id="out-ls">0.80</output><input id="sl-ls" type="range" min="0.15" max="5" step="0.05" value="0.8"/></label>
+                <label class="control-label"><span>ψm Wb</span><output id="out-psim">0.043</output><input id="sl-psim" type="range" min="0.01" max="0.14" step="0.001" value="0.043"/></label>
+                <label class="control-label"><span>J kg·m²</span><output id="out-J">0.0020</output><input id="sl-J" type="range" min="0.0003" max="0.01" step="0.0001" value="0.002"/></label>
+              </div>
+              <div class="rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.70rem] leading-[1.5]">
+                <div class="flex justify-between"><span>ω_m rpm</span><span id="read-wrpm">—</span></div>
+                <div class="flex justify-between"><span>fe Hz = p·ωm/2π</span><span id="read-fe">—</span></div>
+                <div class="flex justify-between"><span>Te Nm</span><span id="read-te">—</span></div>
+                <div class="flex justify-between"><span>id / iq A</span><span id="read-idq">—</span></div>
+                <div class="flex justify-between"><span>ia pk A</span><span id="read-ipk">—</span></div>
+                <div class="flex justify-between"><span>Vd / Vq V</span><span id="read-vdq">—</span></div>
+                <div class="flex justify-between"><span>Mod M / sector</span><span id="read-mod">—</span></div>
+                <div class="flex justify-between"><span>V_dead V</span><span id="read-vdead">—</span></div>
+                <div class="flex justify-between"><span>Pcond / Psw W</span><span id="read-ploss">—</span></div>
+                <div class="flex justify-between"><span>ΔT °C / η %</span><span id="read-therm">—</span></div>
+                <div class="flex justify-between"><span>T1 T2 T0 µs</span><span id="read-tims">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Stator flux rotation — αβ + dq frame (ψs)</p>
+                <canvas id="flux-canvas" width="520" height="520" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <div class="mt-2 font-mono text-[0.64rem] text-muted-text">Green: stator ψs, Orange: rotor ψm, Blue: αβ, White: dq rotating. θe = ∫ωe.</div>
+              </div>
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">SVPWM hexagon — Vref = Vdc/√3 limit, sector T1/T2</p>
+                <canvas id="svpwm-canvas" width="520" height="520" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <div class="mt-2 font-mono text-[0.64rem] text-muted-text">Yellow: Vref, gray hex: 2·Vdc/3 vectors V1-V6, inner circle Vdc/√3, red haze dead-time.</div>
+              </div>
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">3-phase currents — Clarke/Park live (ia,ib,ic & id,iq)</p>
+                <canvas id="current-canvas" width="720" height="360" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <div class="mt-2 flex gap-3 font-mono text-[0.62rem]"><span class="text-[#f87171]">— ia</span><span class="text-[#fbbf24]">— ib</span><span class="text-[#34d399]">— ic</span><span class="text-[#60a5fa]">— id</span><span class="text-[#a78bfa]">— iq</span><span id="clarke-read" class="ml-auto text-muted-text">Park θ —</span></div>
+              </div>
+              <div class="rounded-[16px] border border-border bg-card-bg p-4">
+                <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">Thermal rise — ΔT=Rth·Psw, Psw≈fsw·Esw, efficiency</p>
+                <canvas id="thermal-canvas" width="720" height="360" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+                <div class="mt-2 font-mono text-[0.62rem] text-muted-text">Esw≈Vdc·|I|·(tr+tf)/2, Pcond=I²Rds, LPF τ_th=2s. GaN tr=15ns tf=10ns.</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="readout"><dt>Electrical θe</dt><dd id="ro-theta">—</dd></div>
+              <div class="readout"><dt>Inverter Vαβ</dt><dd id="ro-vab">—</dd></div>
+              <div class="readout"><dt>Switching loss Esw</dt><dd id="ro-esw">— µJ</dd></div>
+              <div class="readout"><dt>FOC loop dt</dt><dd id="ro-dt">0.25 ms</dd></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of the GaN FOC drive</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="font-[650]">Power stage → FOC chain</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-decimal list-inside">
+              <li><strong class="text-primary-text">GaN half-bridges:</strong> 3× half-bridge, Vdc 12-80 V, 2-level. GaN HEMT Rds(on) 3-80 mΩ, tr 15 ns tf 10 ns vs Si 80 ns. Dead-time td 0-500 ns inserts blanking to avoid shoot-through.</li>
+              <li><strong class="text-primary-text">SVPWM:</strong> Given vdq commands from PI, inverse Park → vαβ, SVPWM computes sector 1-6, T1,T2,T0 duty. Linear limit circle Vdc/√3 inside hexagon radius 2·Vdc/3.</li>
+              <li><strong class="text-primary-text">Dead-time distortion:</strong> Body diode conduction clamps phase to opposite rail, average error V_dead = td·fsw·Vdc·sign(I). Modeled as additive ΔVαβ via Clarke of per-phase V_dead·sign(i).</li>
+              <li><strong class="text-primary-text">PMSM motor:</strong> SPMSM Ld≈Lq=Ls. Electrical vd = R·id + L·did/dt - ωe·L·iq, vq = R·iq + L·diq/dt + ωe·L·id + ωe·ψm. Torque Te=1.5·p·ψm·iq (id=0).</li>
+              <li><strong class="text-primary-text">Mechanical:</strong> J·dωm/dt = Te - Tload - B·ωm, ωe = p·ωm, θe = ∫ωe dt. Inertia J tunes how fast speed ramps.</li>
+              <li><strong class="text-primary-text">Loss / thermal:</strong> Pcond=3·Irms²·Rds, Psw≈ Σ Vdc·|i|·(tr+tf)/2·fsw, Rth models heatsink, first-order LPF τ=2 s → ΔT=Rth·P, Tj=Tamb+ΔT.</li>
+            </ol>
+            <div class="mt-5 math-card">
+              <p class="math-label">Dead-time & thermal</p>
+              <Math math="V_{dead}=t_{dead}\,f_{sw}\,V_{dc}\,sign(I),\quad \Delta T = R_{th}\,P_{sw},\; P_{sw}\approx f_{sw}E_{sw}" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">Reducing td from 2 µs Si to 80 ns GaN cuts distortion voltage ~25×, enabling silent 40-100 kHz operation.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-[650]">Controls & sensing visualization</h3>
+            <ul class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-disc list-inside">
+              <li>Flux canvas: stator flux ψs = L·Is + ψm rotor, dq frame rotating at θe. When id=0, ψs leads ψm by 90° (iq axis).</li>
+              <li>Currents canvas: 1000-sample rolling buffer ~2 electrical periods. Shows ia,ib,ic sinusoids, plus id,iq decoded live. Dead-time shows as zero-crossing flattening.</li>
+              <li>SVPWM canvas: hexagon V1(100)..V6(101) active, zeros V0,V7 center. Vref yellow dot, T1/T2 arrows along two bounding vectors, red halo width ∝ V_dead/Vref.</li>
+              <li>Thermal canvas: stacked area Pcond vs Psw, line Tj progression, efficiency η=Pmech/(Pmech+Ploss). Over-temp >120 °C flags fault.</li>
+              <li>Audio: 2 oscillators: carrier fe_hz = p·ωm/2π. Audible f = 5k + fe·55 + 1.2k·|Te| + fsw_mod (fsw>20k gives ultrasonic sideband folded). Gain ∝ torque+speed.</li>
+              <li>FOC PI: Kp≈L·bw, Ki≈R·bw, bw≈ 2π·400 Hz default. Decoupling feedforward ωe·L·I removes cross-axis.</li>
+            </ul>
+            <div class="mt-5 math-card">
+              <p class="math-label">PMSM dq model (SPMSM)</p>
+              <Math math="v_d=R i_d+L\frac{di_d}{dt}-\omega_e L i_q,\; v_q=R i_q+L\frac{di_q}{dt}+\omega_e L i_d+\omega_e\psi_m" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">Discretized semi-implicit Euler at 4 kHz control, 0.25 ms.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations of motion</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Clarke / Park transforms</p>
+            <Math math="i_\alpha=\tfrac23(i_a-\tfrac12 i_b-\tfrac12 i_c),\; i_\beta=\tfrac23(\tfrac{\sqrt3}{2}i_b-\tfrac{\sqrt3}{2}i_c)" display />
+            <Math math="\begin{bmatrix}i_d\\ i_q\end{bmatrix}=\begin{bmatrix}c_\theta & s_\theta\\ -s_\theta & c_\theta\end{bmatrix}\begin{bmatrix}i_\alpha\\ i_\beta\end{bmatrix},\; \theta_e=p\theta_m" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">Amplitude invariant preserves peak sinusoid as dq DC.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">FOC id=0 & SVPWM</p>
+            <Math math="T_e=\tfrac32 p[\psi_m i_q+(L_d-L_q)i_d i_q],\; V_{ref}\le V_{dc}/\sqrt3" display />
+            <Math math="T_1=\sqrt3 T_s\frac{V_{ref}}{V_{dc}}\sin(60^\circ-\theta),\; T_2=\sqrt3 T_s\frac{V_{ref}}{V_{dc}}\sin\theta" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">MTPA id=0 for SPMSM, field weakening id negative above base speed.</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Switching, power, audio</p>
+            <Math math="E_{sw}\approx \tfrac12 V_{dc}|I|(t_r+t_f),\; P_{sw}=f_{sw}E_{sw},\; \Delta T=R_{th}P" display />
+            <Math math="f_e=\frac{p\omega_m}{2\pi},\; f_{aud}=5k+55 f_e+1.2k|T_e|,\; f_{side}=f_{sw}\pm k f_e" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">fe is electrical, fsw is ultrasonic carrier GaN pushes >30 kHz.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+          </div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(
+            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted);transition:all 0.15s}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.pill-btn:hover{border-color:var(--mp-border-strong);color:var(--mp-text)}
+.readout{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 55%,transparent);padding:0.65rem 0.8rem}
+.readout dt{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--mp-muted)}
+.readout dd{margin-top:0.2rem;font-size:0.88rem;font-weight:600;color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.math-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initGanFoc(){
+  const fluxC = document.getElementById('flux-canvas');
+  const curC = document.getElementById('current-canvas');
+  const svpwmC = document.getElementById('svpwm-canvas');
+  const thermC = document.getElementById('thermal-canvas');
+  if(!fluxC || fluxC.dataset.init) return;
+  fluxC.dataset.init='true';
+  const ctxF = fluxC.getContext('2d');
+  const ctxI = curC.getContext('2d');
+  const ctxS = svpwmC.getContext('2d');
+  const ctxT = thermC.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  function prep(c){
+    const W0=c.width, H0=c.height;
+    c.width=W0*dpr; c.height=H0*dpr;
+    c.style.width=W0+'px'; c.style.height=H0+'px';
+    const ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {W:W0, H:H0};
+  }
+  const gF=prep(fluxC), gI=prep(curC), gS=prep(svpwmC), gTh=prep(thermC);
+
+  // UI refs
+  const slVdc=document.getElementById('sl-vdc'), slIq=document.getElementById('sl-iq'), slId=document.getElementById('sl-id'), slTload=document.getElementById('sl-tload');
+  const slFsw=document.getElementById('sl-fsw'), slTd=document.getElementById('sl-td'), slRds=document.getElementById('sl-rds'), slRth=document.getElementById('sl-rth');
+  const slP=document.getElementById('sl-p'), slRs=document.getElementById('sl-rs'), slLs=document.getElementById('sl-ls'), slPsim=document.getElementById('sl-psim'), slJ=document.getElementById('sl-J');
+  const outVdc=document.getElementById('out-vdc'), outIq=document.getElementById('out-iq'), outId=document.getElementById('out-id'), outTload=document.getElementById('out-tload');
+  const outFsw=document.getElementById('out-fsw'), outTd=document.getElementById('out-td'), outRds=document.getElementById('out-rds'), outRth=document.getElementById('out-rth');
+  const outP=document.getElementById('out-p'), outRs=document.getElementById('out-rs'), outLs=document.getElementById('out-ls'), outPsim=document.getElementById('out-psim'), outJ=document.getElementById('out-J');
+  const btnEn=document.getElementById('btn-enable'), btnBrake=document.getElementById('btn-brake'), btnReset=document.getElementById('btn-reset');
+  const chkAudio=document.getElementById('chk-audio'), chkDist=document.getElementById('chk-distort'), faultInd=document.getElementById('fault-ind');
+  const readWrpm=document.getElementById('read-wrpm'), readFe=document.getElementById('read-fe'), readTe=document.getElementById('read-te');
+  const readIdq=document.getElementById('read-idq'), readIpk=document.getElementById('read-ipk'), readVdq=document.getElementById('read-vdq');
+  const readMod=document.getElementById('read-mod'), readVdead=document.getElementById('read-vdead'), readPloss=document.getElementById('read-ploss');
+  const readTherm=document.getElementById('read-therm'), readTims=document.getElementById('read-tims');
+  const roTheta=document.getElementById('ro-theta'), roVab=document.getElementById('ro-vab'), roEsw=document.getElementById('ro-esw');
+  const clarkeRead=document.getElementById('clarke-read');
+
+  function updOut(){
+    outVdc.textContent=slVdc.value; outIq.textContent=parseFloat(slIq.value).toFixed(1); outId.textContent=parseFloat(slId.value).toFixed(1);
+    outTload.textContent=parseFloat(slTload.value).toFixed(2); outFsw.textContent=slFsw.value; outTd.textContent=slTd.value;
+    outRds.textContent=slRds.value; outRth.textContent=slRth.value; outP.textContent=slP.value;
+    outRs.textContent=parseFloat(slRs.value).toFixed(2); outLs.textContent=parseFloat(slLs.value).toFixed(2); outPsim.textContent=parseFloat(slPsim.value).toFixed(3); outJ.textContent=parseFloat(slJ.value).toFixed(4);
+  }
+  [slVdc,slIq,slId,slTload,slFsw,slTd,slRds,slRth,slP,slRs,slLs,slPsim,slJ].forEach(e=>e.addEventListener('input',updOut)); updOut();
+
+  // State
+  let enabled=false, brake=false;
+  let theta_m=0, omega_m=0, theta_e=0, omega_e=0;
+  let id=0, iq=0, ia=0, ib=0, ic=0;
+  let int_d=0, int_q=0;
+  let v_d=0, v_q=0, v_alpha=0, v_beta=0;
+  let T_junc=25, T_hist=[], Ploss_hist=[];
+  let t=0;
+  let currentBuf=[]; // {ia,ib,ic,id,iq}
+  const BUF_LEN=900;
+
+  const SQRT3=Math.sqrt(3);
+  function clarke(a,b,c){ return {a:(2/3)*(a-0.5*b-0.5*c), b:(2/3)*(SQRT3/2*b - SQRT3/2*c)}; }
+  function invClarke(ab){ const ia=ab.a, ib=-0.5*ab.a+SQRT3/2*ab.b, ic=-0.5*ab.a - SQRT3/2*ab.b; return [ia,ib,ic]; }
+  function park(ab,th){ const c=Math.cos(th), s=Math.sin(th); return {d:ab.a*c+ab.b*s, q:-ab.a*s+ab.b*c}; }
+  function invPark(dq,th){ const c=Math.cos(th), s=Math.sin(th); return {a:dq.d*c - dq.q*s, b:dq.d*s + dq.q*c}; }
+  function svpwmCalc(va,vb,Vdc,fsw){
+    const Vref=Math.hypot(va,vb);
+    const Vlim=Vdc/1.7320508075688772;
+    const V=Math.min(Vref,Vlim*0.999);
+    let ang=Math.atan2(vb,va); if(ang<0) ang+=2*Math.PI;
+    const sector=Math.floor(ang/(Math.PI/3))+1;
+    const th=ang - (sector-1)*(Math.PI/3);
+    const Ts=1/fsw;
+    const T1=Math.sqrt(3)*Ts*V/Vdc*Math.sin(Math.PI/3 - th);
+    const T2=Math.sqrt(3)*Ts*V/Vdc*Math.sin(th);
+    const T0=Math.max(0, Ts - T1 - T2);
+    return {Vref, Vlim, V, mod:V/Vlim, ang, sector, th, T1,T2,T0, Ts};
+  }
+
+  // Audio
+  let audioCtx=null, master=null, oscWhine=null, oscSide=null, gainWhine=null, gainSide=null, filt=null;
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    master=audioCtx.createGain(); master.gain.value=0; master.connect(audioCtx.destination);
+    oscWhine=audioCtx.createOscillator(); oscWhine.type='sawtooth'; oscWhine.frequency.value=6000;
+    oscSide=audioCtx.createOscillator(); oscSide.type='sine'; oscSide.frequency.value=8000;
+    const g1=audioCtx.createGain(); g1.gain.value=0; gainWhine=g1;
+    const g2=audioCtx.createGain(); g2.gain.value=0; gainSide=g2;
+    filt=audioCtx.createBiquadFilter(); filt.type='bandpass'; filt.frequency.value=7000; filt.Q.value=0.7;
+    oscWhine.connect(g1); g1.connect(filt); filt.connect(master);
+    oscSide.connect(g2); g2.connect(master);
+    oscWhine.start(); oscSide.start();
+    return audioCtx;
+  }
+  function updateAudio(fe, Te, Iqmag, fsw){
+    if(!chkAudio.checked || !audioCtx) return;
+    audioCtx.resume();
+    const fe_c=Math.max(5, Math.min(400, fe));
+    const torqueAbs=Math.abs(Te);
+    const f_aud = 5000 + fe_c*55 + torqueAbs*1200; // 5-20k map
+    const f_aud_clamped=Math.min(19000, Math.max(5000, f_aud));
+    // switching sideband audible alias if fsw high we create beating
+    const f_side = fsw>20000 ? fsw%8000+6000 : fsw; // fold ultrasonic down for audibility demo
+    try{
+      oscWhine.frequency.linearRampToValueAtTime(f_aud_clamped, audioCtx.currentTime+0.05);
+      oscSide.frequency.linearRampToValueAtTime(Math.min(16000, f_side + fe_c*1.2), audioCtx.currentTime+0.08);
+      const amp = enabled ? 0.03 + Iqmag*0.005 + torqueAbs*0.02 : 0;
+      gainWhine.gain.linearRampToValueAtTime(Math.min(0.18, amp), audioCtx.currentTime+0.08);
+      gainSide.gain.linearRampToValueAtTime(enabled? amp*0.35:0, audioCtx.currentTime+0.08);
+      filt.frequency.linearRampToValueAtTime(f_aud_clamped, audioCtx.currentTime+0.08);
+      const mg = enabled? 0.2 + Iqmag*0.01:0;
+      master.gain.linearRampToValueAtTime(mg, audioCtx.currentTime+0.1);
+    }catch{}
+  }
+
+  function reset(){
+    theta_m=0; omega_m=0; theta_e=0; omega_e=0; id=0; iq=0; int_d=0; int_q=0;
+    T_junc=25; T_hist=[]; Ploss_hist=[]; currentBuf=[]; t=0; faultInd.textContent='';
+  }
+
+  btnEn.addEventListener('click',()=>{
+    enabled=!enabled;
+    btnEn.textContent=enabled?'Drive Enabled ✓ — Disable':'Enable Drive';
+    btnEn.classList.toggle('is-active', enabled);
+    if(enabled) ensureAudio();
+    if(!enabled){ try{master.gain.value=0;}catch{} }
+  });
+  btnBrake.addEventListener('mousedown',()=>{brake=true;}); btnBrake.addEventListener('mouseup',()=>{brake=false;});
+  btnBrake.addEventListener('touchstart',()=>{brake=true;}); btnBrake.addEventListener('touchend',()=>{brake=false;});
+  btnReset.addEventListener('click', reset);
+
+  const dt=0.00025; // 0.25 ms control loop = 4kHz
+  let accum=0, last=performance.now(), raf=0;
+  const tr=15e-9, tf_sw=10e-9;
+
+  function loop(now){
+    raf=requestAnimationFrame(loop);
+    const frameDt=Math.min(0.05,(now-last)/1000); last=now;
+    accum+=frameDt;
+    let steps=0;
+    while(accum>=dt && steps<20){
+      // Params from UI
+      const Vdc=parseFloat(slVdc.value), Iq_star=parseFloat(slIq.value), Id_star=parseFloat(slId.value);
+      const T_load_base=parseFloat(slTload.value), p=parseInt(slP.value), Rs=parseFloat(slRs.value), Ls=parseFloat(slLs.value)/1000, psi=parseFloat(slPsim.value), J=parseFloat(slJ.value);
+      const fsw=parseFloat(slFsw.value)*1000, td=parseFloat(slTd.value)*1e-9, Rds=parseFloat(slRds.value)/1000, Rth=parseFloat(slRth.value);
+      const B=0.0005;
+      const T_load = brake? T_load_base+1.5 : T_load_base;
+      // FOC PI - simple bandwidth tuning
+      const bw=400*2*Math.PI; // 400 Hz current loop
+      const Kp = Ls*bw;
+      const Ki = Rs*bw; // rough parallel
+      const Kp_d=Kp, Kp_q=Kp, Ki_d=Ki*0.8, Ki_q=Ki*0.8;
+
+      if(enabled){
+        const ed=Id_star - id;
+        const eq=Iq_star - iq;
+        int_d+=ed*dt; int_q+=eq*dt;
+        int_d=Math.max(-10, Math.min(10, int_d));
+        int_q=Math.max(-12, Math.min(12, int_q));
+        // feedforward decoupling + back-emf
+        const we = omega_e;
+        v_d = Kp_d*ed + Ki_d*int_d - we*Ls*iq;
+        v_q = Kp_q*eq + Ki_q*int_q + we*Ls*id + we*psi;
+      } else {
+        v_d=0; v_q=0; int_d*=0.995; int_q*=0.995;
+        id*=0.999; iq*=0.999;
+      }
+
+      // inverse Park
+      const ab_cmd=invPark({d:v_d,q:v_q}, theta_e);
+      v_alpha=ab_cmd.a; v_beta=ab_cmd.b;
+
+      // SVPWM -> may saturate
+      const sv=svpwmCalc(v_alpha, v_beta, Vdc, fsw);
+      const Vlim=sv.Vlim;
+      let va_cmd=v_alpha, vb_cmd=v_beta;
+      if(sv.Vref>Vlim){
+        const scale=Vlim/sv.Vref;
+        va_cmd*=scale; vb_cmd*=scale; v_alpha=va_cmd; v_beta=vb_cmd;
+        // back convert to dq for integral anti-windup scaling
+        const dq_sat=park({a:va_cmd,b:vb_cmd}, theta_e);
+        v_d=dq_sat.d; v_q=dq_sat.q;
+      }
+
+      // dead-time distortion: compute phase currents estimate first using previous i? Need actual ia,ib,ic to get sign
+      // Compute ia,ib,ic from id,iq before distortion
+      let [ia_est, ib_est, ic_est]=invClarke({a:va_cmd?0:0,b:0}); // placeholder we already have id,iq to compute actual phase
+      // actual phase from dq id,iq
+      const ab_cur=invPark({d:id,q:iq}, theta_e);
+      [ia, ib, ic]=invClarke(ab_cur);
+
+      // dead-time V per phase
+      let vDeadA=0,vDeadB=0,vDeadC=0;
+      if(chkDist.checked){
+        const signA=Math.sign(ia)||0, signB=Math.sign(ib)||0, signC=Math.sign(ic)||0;
+        vDeadA=td*fsw*Vdc*signA;
+        vDeadB=td*fsw*Vdc*signB;
+        vDeadC=td*fsw*Vdc*signC;
+      }
+      const clDead=clarke(vDeadA, vDeadB, vDeadC);
+      // subtract dead-time from commanded (inverter loses volt)
+      let va_eff=va_cmd - clDead.a;
+      let vb_eff=vb_cmd - clDead.b;
+
+      // electrical dynamics using effective voltage
+      const didt = ( (park({a:va_eff,b:vb_eff}, theta_e).d) - Rs*id + omega_e*Ls*iq)/Ls;
+      const diqt = ( (park({a:va_eff,b:vb_eff}, theta_e).q) - Rs*iq - omega_e*Ls*id - omega_e*psi)/Ls;
+      id += didt*dt;
+      iq += diqt*dt;
+
+      // more accurate phase from updated id,iq
+      const ab_upd=invPark({d:id,q:iq}, theta_e);
+      [ia,ib,ic]=invClarke(ab_upd);
+
+      // torque
+      const Te = 1.5 * p * (psi*iq); // SPMSM
+      // mech
+      const domega = (Te - T_load - B*omega_m)/J;
+      omega_m += domega*dt;
+      if(!enabled && Math.abs(omega_m)<0.01) omega_m*=0.9;
+      theta_m += omega_m*dt;
+      omega_e = p*omega_m;
+      theta_e += omega_e*dt;
+      theta_e = theta_e % (2*Math.PI);
+      if(theta_e<0) theta_e+=2*Math.PI;
+
+      // thermal & losses
+      const Ipk = Math.hypot(id,iq);
+      const Irms = Ipk/Math.SQRT2;
+      const Pcond = 3*Irms*Irms*Rds; // conduction
+      // switching: sum per phase
+      const Iavg = (Math.abs(ia)+Math.abs(ib)+Math.abs(ic))/3;
+      const Psw_inst = Vdc * Iavg * (tr+tf_sw) * fsw; // ~ few W
+      // total
+      const Ptot = Pcond + Psw_inst;
+      // thermal LPF
+      const tau_th=2.0;
+      const alpha=dt/tau_th;
+      const deltaT_target=Rth*Ptot;
+      const T_target=25+deltaT_target;
+      T_junc += (T_target - T_junc)*alpha*30; // speed up filter for UI, not физич exactly but视觉
+      // efficiency
+      const Pmech = Te*omega_m;
+      const Pel = Math.abs(v_d*id + v_q*iq);
+      const eff = Pel>1 ? Math.max(0, Math.min(0.99, Pmech / (Pmech+Ptot+0.5))) : 0;
+
+      // store hist
+      t+=dt;
+      currentBuf.push({ia,ib,ic,id,iq, t, va:va_eff, vb:vb_eff, Te, fe:omega_e/(2*Math.PI), mod:sv.mod, Pcond, Psw:Psw_inst, Tj:T_junc, eff});
+      if(currentBuf.length>BUF_LEN) currentBuf.shift();
+      T_hist.push({t, Tj:T_junc, Ptot});
+      if(T_hist.length>300) T_hist.shift();
+
+      // fault
+      if(T_junc>125) faultInd.textContent='OT '+T_junc.toFixed(0)+'°C'; else if(Ptot>120) faultInd.textContent='P high'; else if(Vlim>0 && sv.mod>0.99) faultInd.textContent='Overmod '+ (sv.mod*100).toFixed(0)+'%'; else faultInd.textContent='';
+
+      accum-=dt; steps++;
+    }
+
+    // Rendering
+    const latest=currentBuf[currentBuf.length-1];
+    if(latest){
+      const Vdc=parseFloat(slVdc.value), fsw=parseFloat(slFsw.value)*1000, td=parseFloat(slTd.value)*1e-9;
+      const p=parseInt(slP.value);
+      // readouts
+      readWrpm.textContent=(omega_m*60/(2*Math.PI)).toFixed(0)+' rpm';
+      readFe.textContent=latest.fe.toFixed(1)+' Hz';
+      readTe.textContent=latest.Te.toFixed(3);
+      readIdq.textContent=id.toFixed(2)+' / '+iq.toFixed(2);
+      readIpk.textContent=Math.hypot(id,iq).toFixed(2);
+      readVdq.textContent=v_d.toFixed(1)+' / '+v_q.toFixed(1);
+      const svLatest=svpwmCalc(v_alpha, v_beta, Vdc, fsw);
+      readMod.textContent=svLatest.mod.toFixed(3)+' / '+svLatest.sector;
+      readVdead.textContent=(td*fsw*Vdc).toFixed(2)+' Vpk';
+      readPloss.textContent=latest.Pcond.toFixed(2)+' / '+latest.Psw.toFixed(2);
+      readTherm.textContent=(latest.Tj-25).toFixed(1)+' / '+(latest.eff*100).toFixed(1);
+      readTims.textContent=(svLatest.T1*1e6).toFixed(1)+' / '+(svLatest.T2*1e6).toFixed(1)+' / '+(svLatest.T0*1e6).toFixed(1);
+      roTheta.textContent=theta_e.toFixed(3)+' rad';
+      roVab.textContent=v_alpha.toFixed(1)+'/'+v_beta.toFixed(1);
+      roEsw.textContent=(Vdc*((Math.abs(ia)+Math.abs(ib)+Math.abs(ic))/3)*(tr+tf_sw)/2*1e6).toFixed(2);
+      clarkeRead.textContent='θe '+(theta_e*57.3).toFixed(1)+'°  fe '+latest.fe.toFixed(1);
+      // audio update intermittently
+      if(t%0.05<dt) updateAudio(latest.fe, latest.Te, Math.hypot(id,iq), fsw);
+    }
+
+    drawFlux(ctxF, gF, theta_e, id, iq, parseFloat(slPsim.value), parseFloat(slLs.value)/1000);
+    drawCurrent(ctxI, gI, currentBuf);
+    drawSVPWM(ctxS, gS, v_alpha, v_beta, parseFloat(slVdc.value), parseFloat(slFsw.value)*1000, parseFloat(slTd.value)*1e-9, chkDist.checked?currentBuf[currentBuf.length-1]:null);
+    drawThermal(ctxT, gTh, T_hist, currentBuf);
+
+  }
+
+  function drawFlux(ctx, g, th_e, id_, iq_, psi, Ls){
+    const W=g.W, H=g.H;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    const cx=W/2, cy=H/2, R=Math.min(W,H)*0.38;
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,R*0.5,0,Math.PI*2); ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+    // labels αβ
+    ctx.fillStyle='rgba(168,180,200,0.7)'; ctx.font='10px ui-monospace';
+    ctx.fillText('α', cx+R+6, cy+3); ctx.fillText('β', cx+3, cy-R-6);
+    // rotor flux ψm
+    const psiR=R*0.6;
+    const rotX=Math.cos(th_e)*psiR, rotY=Math.sin(th_e)*psiR;
+    // orange rotor
+    ctx.strokeStyle='#fb923c'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+rotX, cy - rotY); ctx.stroke();
+    ctx.fillStyle='#fb923c'; ctx.beginPath(); ctx.arc(cx+rotX, cy-rotY,5,0,Math.PI*2); ctx.fill();
+    // dq frame rotates with rotor
+    const dqLen=R*0.42;
+    const d_x=Math.cos(th_e)*dqLen, d_y=Math.sin(th_e)*dqLen;
+    const q_x=Math.cos(th_e+Math.PI/2)*dqLen, q_y=Math.sin(th_e+Math.PI/2)*dqLen;
+    ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+d_x, cy - d_y); ctx.stroke();
+    ctx.strokeStyle='#60a5fa'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+q_x, cy - q_y); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='11px ui-monospace'; ctx.fillText('d', cx+d_x*1.08, cy - d_y*1.08);
+    ctx.fillStyle='#60a5fa'; ctx.fillText('q (Te)', cx+q_x*1.12, cy - q_y*1.12);
+    // stator flux ψs = ψm + L*i_d on d + L*i_q on q?
+    // Approx vector: ψd = Ls*id + psi, ψq = Ls*iq
+    const psid = Ls*id_ + psi;
+    const psiq = Ls*iq_;
+    const psi_s_mag=Math.hypot(psid, psiq);
+    const scaleFlux = R*0.7 / Math.max(psi, psi_s_mag*1.2);
+    // ψs rotated to αβ: psid along d, psiq along q
+    const psi_alpha = psid*Math.cos(th_e) - psiq*Math.sin(th_e);
+    const psi_beta = psid*Math.sin(th_e) + psiq*Math.cos(th_e);
+    const sx=cx + psi_alpha*scaleFlux;
+    const sy=cy - psi_beta*scaleFlux;
+    ctx.strokeStyle='#4ade80'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(sx,sy); ctx.stroke();
+    ctx.fillStyle='#4ade80'; ctx.beginPath(); ctx.arc(sx,sy,4,0,Math.PI*2); ctx.fill();
+    // circle of flux trajectory
+    ctx.strokeStyle='rgba(74,222,128,0.25)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(cx,cy, Math.hypot(sx-cx, sy-cy),0,Math.PI*2); ctx.stroke();
+    // center dot
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,2,0,Math.PI*2); ctx.fill();
+    // info
+    ctx.fillStyle='rgba(200,220,230,0.9)'; ctx.font='10px ui-monospace';
+    ctx.fillText('ψm='+psi.toFixed(3)+' Wb', 10, H-28);
+    ctx.fillText('ψs='+psi_s_mag.toFixed(3)+' Wb ∠'+(Math.atan2(psid,psiq)*57.3).toFixed(1)+'°',10,H-14);
+  }
+
+  function drawCurrent(ctx,g, buf){
+    const W=g.W, H=g.H;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    if(buf.length<10) return;
+    const padL=36, padR=10, padT=14, padB=18;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){ const y=padT+i/4*plotH; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); }
+    ctx.strokeStyle='rgba(255,255,255,0.04)'; for(let i=0;i<=8;i++){ const x=padL+i/8*plotW; ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke(); }
+    // zero line
+    ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.moveTo(padL, padT+plotH/2); ctx.lineTo(W-padR, padT+plotH/2); ctx.stroke();
+    // find max current for scaling
+    let maxI=0; buf.forEach(s=>{ maxI=Math.max(maxI, Math.abs(s.ia), Math.abs(s.ib), Math.abs(s.ic), Math.abs(s.id), Math.abs(s.iq)); });
+    maxI=Math.max(1, maxI*1.15);
+    function yOf(current){ return padT+plotH/2 - (current/maxI)*plotH*0.42; }
+    function xOf(idx){ return padL + idx/buf.length*plotW; }
+    // draw lines
+    const colors={ia:'#f87171', ib:'#fbbf24', ic:'#34d399', id:'#60a5fa', iq:'#a78bfa'};
+    ['ia','ib','ic'].forEach(k=>{
+      ctx.strokeStyle=colors[k]; ctx.lineWidth=1.4; ctx.beginPath();
+      buf.forEach((s,i)=>{ const x=xOf(i), y=yOf(s[k]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+      ctx.stroke();
+    });
+    // id,iq dashed
+    ['id','iq'].forEach(k=>{
+      ctx.strokeStyle=colors[k]; ctx.lineWidth=1.1; ctx.setLineDash([5,3]); ctx.beginPath();
+      buf.forEach((s,i)=>{ const x=xOf(i), y=yOf(s[k]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+      ctx.stroke(); ctx.setLineDash([]);
+    });
+    // y labels
+    ctx.fillStyle='rgba(200,210,225,0.7)'; ctx.font='10px ui-monospace';
+    ctx.fillText(maxI.toFixed(1)+' A', 4, padT+8);
+    ctx.fillText('0', 4, padT+plotH/2+3);
+    ctx.fillText('-'+maxI.toFixed(1), 4, padT+plotH-4);
+  }
+
+  function drawSVPWM(ctx,g, va,vb,Vdc,fsw,td, latest){
+    const W=g.W, H=g.H;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    const cx=W/2, cy=H/2+8, R=Math.min(W,H)*0.36;
+    const hexR= R*1.12; // radius to vertices of voltage hex = 2*Vdc/3 ?? in display we map Vdc/√3 to inner circle
+    // Convert voltage to display: Vdc/√3 = R*? Actually we map Vlim = Vdc/√3 to radius R
+    // So hexagon vertex radius = 2*Vdc/3 =? Ratio (2/3)/(1/√3)= 2/√3≈1.1547
+    const Vlim=Vdc/1.732;
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+    // hex
+    const verts=[];
+    for(let k=0;k<6;k++){
+      const ang=k*Math.PI/3; // V1 at 0 deg
+      const rv=hexR;
+      verts.push({x:cx+Math.cos(ang)*rv, y:cy - Math.sin(ang)*rv, ang});
+    }
+    ctx.strokeStyle='rgba(180,190,210,0.32)'; ctx.lineWidth=1.6; ctx.beginPath();
+    verts.forEach((v,i)=>{ if(i===0) ctx.moveTo(v.x,v.y); else ctx.lineTo(v.x,v.y); });
+    ctx.closePath(); ctx.stroke();
+    // fill sectors alternating
+    for(let k=0;k<6;k++){
+      ctx.fillStyle=k%2?'rgba(255,255,255,0.02)':'rgba(255,255,255,0.04)';
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(verts[k].x, verts[k].y); ctx.lineTo(verts[(k+1)%6].x, verts[(k+1)%6].y); ctx.closePath(); ctx.fill();
+    }
+    // inner circle Vlim
+    ctx.strokeStyle='rgba(250,204,21,0.5)'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+    // axes
+    ctx.strokeStyle='rgba(255,255,255,0.09)'; ctx.beginPath(); ctx.moveTo(cx-R*1.2,cy); ctx.lineTo(cx+R*1.2,cy); ctx.moveTo(cx,cy-R*1.2); ctx.lineTo(cx,cy+R*1.2); ctx.stroke();
+    // vectors V1..V6
+    ctx.font='11px ui-monospace'; ctx.fillStyle='rgba(200,210,225,0.8)';
+    verts.forEach((v,i)=>{
+      ctx.strokeStyle='rgba(148,163,184,0.7)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(v.x,v.y); ctx.stroke();
+      ctx.fillText('V'+(i+1), v.x+ (v.x>cx?4:-18), v.y+(v.y>cy?12:-6));
+    });
+    // Vref
+    const Vref=Math.hypot(va,vb);
+    let ang=Math.atan2(vb,va); if(ang<0) ang+=2*Math.PI;
+    const displayR = Vlim>0? (Vref/Vlim)*R : 0;
+    const vx=cx+Math.cos(ang)*displayR, vy=cy - Math.sin(ang)*displayR;
+    // sector highlight
+    const sector=Math.floor(ang/(Math.PI/3));
+    const sA=verts[sector], sB=verts[(sector+1)%6];
+    if(sA && sB){
+      ctx.fillStyle='rgba(250,204,21,0.11)'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(sA.x,sA.y); ctx.lineTo(sB.x,sB.y); ctx.closePath(); ctx.fill();
+      // T1/T2 arrows
+      // compute T1,T2 fraction
+      const Ts=1/fsw;
+      let th=ang - sector*Math.PI/3;
+      const T1=Math.sqrt(3)*Ts*Vref/Vdc*Math.sin(Math.PI/3 - th);
+      const T2=Math.sqrt(3)*Ts*Vref/Vdc*Math.sin(th);
+      const f1=T1/Ts, f2=T2/Ts;
+      // draw along edges proportional
+      const p1x=cx + (sA.x-cx)*f1, p1y=cy + (sA.y-cy)*f1;
+      const p2x=cx + (sB.x-cx)*f2, p2y=cy + (sB.y-cy)*f2;
+      ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(p1x,p1y); ctx.stroke();
+      ctx.strokeStyle='#f87171'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(p2x,p2y); ctx.stroke();
+    }
+    // dead-time halo
+    if(latest){
+      const vdead=td*fsw*Vdc;
+      const haloR = (vdead/(Vlim||1))*R;
+      ctx.strokeStyle='rgba(248,113,113,0.55)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(vx,vy, Math.max(3, haloR*1.2),0,Math.PI*2); ctx.stroke();
+    }
+    // Vref dot
+    ctx.fillStyle='#facc15'; ctx.beginPath(); ctx.arc(vx,vy,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(vx,vy,1.8,0,Math.PI*2); ctx.fill();
+    // labels
+    ctx.fillStyle='rgba(220,230,240,0.85)'; ctx.font='10px ui-monospace';
+    ctx.fillText('Vdc='+Vdc.toFixed(0)+' V  fsw='+(fsw/1000).toFixed(0)+' kHz', 10, H-26);
+    ctx.fillText('Vref='+Vref.toFixed(1)+' V  |  mod '+(Vref/(Vlim||1)).toFixed(2)+'  sec '+(sector+1), 10, H-12);
+  }
+
+  function drawThermal(ctx,g, thHist, curBuf){
+    const W=g.W,H=g.H;
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    const padL=40, padR=10, padT=14, padB=22;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){ const y=padT+i/4*plotH; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); }
+    for(let i=0;i<=6;i++){ const x=padL+i/6*plotW; ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke(); }
+    if(curBuf.length<4) return;
+    let maxP=0; curBuf.forEach(s=>{maxP=Math.max(maxP, s.Pcond, s.Psw);}); maxP=Math.max(1, maxP*1.6);
+    let maxT=0; thHist.forEach(h=>maxT=Math.max(maxT,h.Tj)); maxT=Math.max(45, maxT*1.1);
+    // but dual axis: left Power W, right Temp C. Simplify: map power 0..maxP to bottom half?, we will stack
+    // draw Pcond area
+    ctx.fillStyle='rgba(96,165,250,0.28)'; ctx.beginPath();
+    curBuf.forEach((s,i)=>{
+      const x=padL + i/curBuf.length*plotW;
+      const y=padT+plotH - (s.Pcond/maxP)*plotH*0.92;
+      if(i===0) ctx.moveTo(x, padT+plotH); ctx.lineTo(x,y);
+      if(i===curBuf.length-1){ ctx.lineTo(x, padT+plotH); ctx.closePath();}
+    }); ctx.fill();
+    ctx.strokeStyle='#60a5fa'; ctx.lineWidth=1.2; ctx.beginPath();
+    curBuf.forEach((s,i)=>{ const x=padL+i/curBuf.length*plotW; const y=padT+plotH - (s.Pcond/maxP)*plotH*0.92; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.stroke();
+
+    // Psw
+    ctx.fillStyle='rgba(251,146,60,0.24)'; ctx.beginPath();
+    curBuf.forEach((s,i)=>{
+      const x=padL+i/curBuf.length*plotW;
+      const yCond=padT+plotH - (s.Pcond/maxP)*plotH*0.92;
+      const yTot=padT+plotH - ((s.Pcond+s.Psw)/maxP)*plotH*0.92;
+      if(i===0){ ctx.moveTo(x,yCond); }
+      ctx.lineTo(x,yTot);
+    });
+    for(let i=curBuf.length-1;i>=0;i--){ const s=curBuf[i]; const x=padL+i/curBuf.length*plotW; const y=padT+plotH - (s.Pcond/maxP)*plotH*0.92; ctx.lineTo(x,y); }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#fb923c'; ctx.lineWidth=1.2; ctx.beginPath();
+    curBuf.forEach((s,i)=>{ const x=padL+i/curBuf.length*plotW; const y=padT+plotH - ((s.Pcond+s.Psw)/maxP)*plotH*0.92; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);}); ctx.stroke();
+
+    // Tj line mapped to same plotH but secondary 0..maxT => 25..maxT maps bottom->top?
+    if(thHist.length>2){
+      ctx.strokeStyle='#facc15'; ctx.lineWidth=1.3; ctx.beginPath();
+      thHist.forEach((h,i)=>{
+        const x=padL + i/thHist.length*plotW;
+        // map Tj 25..maxT -> bottom..top*0.2..0.9
+        const norm=(h.Tj-25)/(maxT-25||1);
+        const y=padT+plotH - norm*plotH*0.9;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }); ctx.stroke();
+    }
+    ctx.fillStyle='rgba(200,210,225,0.75)'; ctx.font='10px ui-monospace';
+    ctx.fillText('P max '+maxP.toFixed(1)+' W',4,padT+8);
+    ctx.fillText('Tj '+(thHist[thHist.length-1]?.Tj.toFixed(1)||'25')+'°C', W-padR-70, padT+12);
+    ctx.fillStyle='#60a5fa'; ctx.fillText('Pcond', padL+4, padT+14);
+    ctx.fillStyle='#fb923c'; ctx.fillText('Psw', padL+50, padT+14);
+    ctx.fillStyle='#facc15'; ctx.fillText('Tj', padL+85, padT+14);
+    // efficiency text
+    const latest=curBuf[curBuf.length-1];
+    if(latest){
+      ctx.fillStyle='rgba(220,230,240,0.9)';
+      ctx.fillText('η '+(latest.eff*100).toFixed(1)+'%  Pmech '+ (latest.Te*(latest.fe*2*Math.PI/(parseInt(slP.value)||7))).toFixed(1)+' W', 10, H-6);
+    }
+  }
+
+  loop(performance.now());
+  document.addEventListener('astro:before-swap',()=>{cancelAnimationFrame(raf); try{audioCtx?.close();}catch{}},{once:true});
+}
+document.addEventListener('astro:page-load', initGanFoc);
+initGanFoc();
+</script>
+</Layout>

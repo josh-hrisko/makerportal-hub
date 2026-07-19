@@ -1,0 +1,619 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import PlaygroundShell from '../../components/PlaygroundShell.astro';
+import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import Math from '../../components/Math.astro';
+import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+
+const gear = affiliateLinks.filter(l => l.relatedTo?.includes('pid-flight-arena')).map(resolveAffiliateLink);
+
+const title = 'PID & MPC Flight Arena — 3D Quadrotor with Quaternion RK4 | MakerPortal';
+const description = 'Tune PID and MPC for a 3D quadrotor simulated with quaternion dynamics and RK4. Live force vectors, coordinate path tracing, crash shake, and motor whine mapped to thrust.';
+const canonical = new URL('/playground/pid-flight-arena', Astro.site);
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'PID & MPC Flight Arena',
+  url: canonical.toString(),
+  applicationCategory: 'EngineeringApplication',
+  operatingSystem: 'Any (browser-based)',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.makerportal.ai' },
+    { '@type': 'ListItem', position: 2, name: 'Playground', item: 'https://www.makerportal.ai/playground' },
+    { '@type': 'ListItem', position: 3, name: 'PID & MPC Flight Arena', item: canonical.toString() }
+  ]
+};
+const faqs = [
+  { q: 'Why quaternions and not Euler angles?', a: 'Euler angles suffer gimbal lock when pitch approaches ±90° and their composition depends on order. Quaternions are unit 4-vectors q=(w,x,y,z) that rotate via q⊗[0,ω]⊗q* without singularities. The flight dynamics integrate q̇ = 0.5 q ⊗ [0, ω_body] and renormalize |q|=1 every step to prevent drift. Roll/pitch/yaw readouts are derived from q only for the pilot display.' },
+  { q: 'How is the MPC blending with PID?', a: 'For hover-linearized dynamics ẋ=Ax+Bu, MPC minimizes J=∑ xᵀQx + uᵀRu over horizon N. With diagonal Q_pos, R_thrust, the unconstrained solution collapses to LQR gain K = (R+BᵀPB)^-1 BᵀPA from DARE. We pre-solve K analytically for the 1D altitude subsystem and blend K·x with PID output proportionally to MPC authority slider. Increasing Q/R weight ratio makes MPC more aggressive on position error.' },
+  { q: 'What does crash detection do numerically?', a: 'Collision when z ≤ 0.05 m. Velocity decay uses restitution e=0.2, so v_z⁺ = -e·v_z⁻, v_xy⁺ = (1-0.4)·v_xy⁻. Integrated shaking energy E = m·|v|² triggers viewport CSS shake amplitude A = clamp(E/40,0,8) px and cuts motor commands to zero for 0.8s, forcing integral unwind.' },
+  { q: 'How accurate is RK4 here?', a: 'RK4 is 4th-order accurate with global error O(dt⁴). At dt=0.004s (250 Hz control loop) energy drift over 30s hover is <0.2%. Euler would artificially dampen high-Q roll oscillations and destabilize Ki buildup. Quaternion integration additionally normalizes after each RK4 stage.' },
+  { q: 'How to tune without instability?', a: 'Start with Ki=0, Kd=0. Increase Kp until 10-15% overshoot. Add Kd ≈ Kp·0.15 to damp overshoot. Finally add Ki ≈ Kp/8 but clamp integrator to thrust margin to avoid windup. For MPC, increase Q_pos slowly - too high causes aggressive collective that saturates motors, heard as maximum motor whine pitch.' }
+];
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+};
+
+const coreTS = `// Quadrotor state: pos, vel, quat q=(w,x,y,z), omega
+type State = { p: Vec3; v: Vec3; q: Quat; w: Vec3; };
+type Quat = { w:number; x:number; y:number; z:number; };
+type Vec3 = { x:number; y:number; z:number; };
+
+function quatMul(a:Quat,b:Quat):Quat{
+  return { w:a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z,
+           x:a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y,
+           y:a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x,
+           z:a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w };
+}
+function quatNorm(q:Quat){ const n=Math.hypot(q.w,q.x,q.y,q.z)||1; return {w:q.w/n,x:q.x/n,y:q.y/n,z:q.z/n}; }
+function quatDeriv(q:Quat, w:Vec3):Quat{
+  const omega:Quat={w:0,x:w.x,y:w.y,z:w.z};
+  const qd=quatMul(q, omega);
+  return {w:qd.w*0.5,x:qd.x*0.5,y:qd.y*0.5,z:qd.z*0.5};
+}
+function rk4(f:(s:State)=>StateDeriv, s:State, dt:number):State {
+  const k1=f(s), s2=add(s,scale(k1,dt/2));
+  const k2=f(s2), s3=add(s,scale(k2,dt/2));
+  const k3=f(s3), s4=add(s,scale(k3,dt));
+  const k4=f(s4);
+  return add(s, scale(combine(k1,k2,k3,k4), dt/6));
+}`;
+---
+
+<Layout title={title} description={description} canonical={canonical}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  </Fragment>
+
+  <PlaygroundShell
+    title="PID & MPC Flight Arena"
+    lead="A 3-D rigid-body quadrotor simulated with unit quaternions and RK4 in your browser. Tune Kₚ,Kᵢ,K_d and MPC Q/R weights live, throw wind gusts, watch force arrows and coordinate paths, feel crash shake, and hear motor whine pitch-tracked to thrust commands."
+    pillarHint="on-device-ai"
+  >
+    <section class="border-b border-border" aria-labelledby="flight-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-10 sm:px-8 lg:px-10">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <button id="btn-arm" class="pill-btn is-active">Disarm → Arm</button>
+          <button id="btn-gust" class="pill-btn">💨 Gust 4 N</button>
+          <button id="btn-reset" class="pill-btn">Reset hover</button>
+          <label class="ml-2 flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-mpc" type="checkbox" /> MPC assist</label>
+          <label class="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-muted-text"><input id="chk-audio" type="checkbox" checked /> Audio whine</label>
+          <span id="crash-ind" class="ml-auto font-mono text-[0.7rem] font-bold text-primary-cta"></span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+          <div class="rounded-[16px] border border-border bg-card-bg p-4">
+            <h3 class="font-semibold text-[0.95rem]">Controller Tuning</h3>
+            <div class="mt-4 space-y-5">
+              <div>
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Altitude PID — z error → collective</p>
+                <label class="control-label mt-2"><span>Kp</span><output id="out-kp-z">1.80</output><input id="sl-kp-z" type="range" min="0.1" max="5" step="0.05" value="1.8"/></label>
+                <label class="control-label"><span>Ki</span><output id="out-ki-z">0.30</output><input id="sl-ki-z" type="range" min="0" max="2" step="0.02" value="0.3"/></label>
+                <label class="control-label"><span>Kd</span><output id="out-kd-z">1.20</output><input id="sl-kd-z" type="range" min="0" max="4" step="0.05" value="1.2"/></label>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Attitude — roll/pitch rate</p>
+                <label class="control-label mt-2"><span>Kp_rp</span><output id="out-kp-rp">3.5</output><input id="sl-kp-rp" type="range" min="0.5" max="8" step="0.1" value="3.5"/></label>
+                <label class="control-label"><span>Kd_rp</span><output id="out-kd-rp">0.25</output><input id="sl-kd-rp" type="range" min="0" max="1" step="0.01" value="0.25"/></label>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">MPC Weights — J = xᵀQx + uᵀRu</p>
+                <label class="control-label mt-2"><span>Q pos</span><output id="out-q">2.0</output><input id="sl-q" type="range" min="0.1" max="10" step="0.1" value="2.0"/></label>
+                <label class="control-label"><span>R thrust</span><output id="out-r">0.5</output><input id="sl-r" type="range" min="0.05" max="3" step="0.05" value="0.5"/></label>
+                <label class="control-label"><span>Horizon N</span><output id="out-N">12</output><input id="sl-N" type="range" min="4" max="24" step="1" value="12"/></label>
+              </div>
+              <div class="border-t border-border pt-3">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Setpoint</p>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                  <label class="block"><span class="font-mono text-[0.6rem]">X m</span><input id="in-set-x" type="number" value="0" step="0.5" class="tool-input"/></label>
+                  <label class="block"><span class="font-mono text-[0.6rem]">Y m</span><input id="in-set-y" type="number" value="0" step="0.5" class="tool-input"/></label>
+                  <label class="block"><span class="font-mono text-[0.6rem]">Z m</span><input id="in-set-z" type="number" value="2" step="0.5" class="tool-input"/></label>
+                </div>
+              </div>
+              <div class="rounded-[12px] border border-border bg-elevated/40 p-3 font-mono text-[0.70rem] leading-[1.4]">
+                <div class="flex justify-between"><span>Pos</span><span id="read-pos">—</span></div>
+                <div class="flex justify-between"><span>Vel m/s</span><span id="read-vel">—</span></div>
+                <div class="flex justify-between"><span>RPY deg</span><span id="read-rpy">—</span></div>
+                <div class="flex justify-between"><span>Thrust N</span><span id="read-thrust">—</span></div>
+                <div class="flex justify-between"><span>Mot %</span><span id="read-mot">—</span></div>
+                <div class="flex justify-between"><span>Integrator</span><span id="read-int">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="min-w-0 space-y-4">
+            <div class="rounded-[16px] border border-border bg-card-bg p-4">
+              <p class="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-text">3D flight viewport — top-down + side, force vectors</p>
+              <canvas id="flight-canvas" width="960" height="540" class="mt-3 block w-full rounded-[10px] bg-canvas border border-border"></canvas>
+              <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[0.68rem] text-muted-text">
+                <span>Space: thrust</span><span>Arrows: forces</span><span>Blue trail: path</span><span>Red: crash energy</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div class="readout"><dt>Quaternion |q|</dt><dd id="ro-qnorm">1.000</dd></div>
+              <div class="readout"><dt>Energy J (MPC)</dt><dd id="ro-j">—</dd></div>
+              <div class="readout"><dt>Loop dt</dt><dd id="ro-dt">4.00 ms @250Hz</dd></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border" aria-labelledby="anatomy-title">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 id="anatomy-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Anatomy of the arena</h2>
+        <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2">
+          <div>
+            <h3 class="font-[650]">Quaternion rigid body & PID/MPC</h3>
+            <ol class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-decimal list-inside">
+              <li><strong class="text-primary-text">State:</strong> p,v ∈ ℝ³, q∈ℍ unit, ω∈ℝ³ body rates. Mass m=1.02 kg, I=diag(0.01,0.012,0.02).</li>
+              <li><strong class="text-primary-text">Dynamics:</strong> m·ṗ = v, m·ṽ = R(q)·[0,0,T]ᵀ - mg + F_gust, q̇=½ q⊗[0,ω], I·ω̇=τ - ω×Iω.</li>
+              <li><strong class="text-primary-text">PID altitude:</strong> e_z = z_sp−z, T = m(g+Kp e + Ki∫e + Kd ė). Clamped to [0.2mg, 2.2mg].</li>
+              <li><strong class="text-primary-text">Attitude:</strong> outer x/y PID → desired roll/pitch, inner P-D tracks via τ.</li>
+              <li><strong class="text-primary-text">MPC LQR:</strong> Q=diag(Qpos), R=R_thrust, K_lqr from DARE for hover double integrator.</li>
+            </ol>
+            <div class="mt-5 math-card">
+              <p class="math-label">Quaternion derivative</p>
+              <Math math="\dot{q}=\frac12 q \otimes \begin{bmatrix}0\\ \omega_x\\ \omega_y\\ \omega_z\end{bmatrix},\quad |q|=1" display />
+              <p class="mt-2 text-[0.74rem] text-muted-text">Gimbal-lock-free attitude propagated by RK4 then renormalized.</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-[650]">Visual-audio coupling</h3>
+            <ul class="mt-4 space-y-3 text-[0.88rem] leading-[1.6] text-muted-text list-disc list-inside">
+              <li>Canvas shows quad X frame: 4 rotors, shadow, force arrows: green thrust, red gravity, cyan PID correction.</li>
+              <li>Trajectory trail: 400-point buffer fading alpha, blue = normal, red when |v| impact high.</li>
+              <li>Crash shake: CSS translate random proportional to kinetic energy, cuts thrust 0.8s.</li>
+              <li>Audio: 4 motor oscillators at f_i = 80 + 350·(ω_i/ω_max). Master gain = thrust/hover. Stereo panning L/R maps roll.</li>
+              <li>MPC readouts: J cost adds position and control penalty, displayed live.</li>
+            </ul>
+            <div class="mt-5 math-card">
+              <p class="math-label">MPC Cost</p>
+              <Math math="J=\sum_{k=0}^{N-1} x_k^T Q x_k + u_k^T R u_k,\quad u^*=-K_{lqr}x" display />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Equations of motion</h2>
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Force balance</p>
+            <Math math="m\ddot{p}=R(q)\begin{bmatrix}0\\0\\T\end{bmatrix} - m g e_3 + F_{gust}" display />
+            <p class="text-[0.78rem] text-muted-text mt-2">Collective thrust rotated to world via R(q).</p>
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">Moment & gyro</p>
+            <Math math="I\dot{\omega}= \tau - \omega\times I\omega" display />
+          </div>
+          <div class="rounded-[16px] border border-border bg-elevated/40 p-5">
+            <p class="font-mono text-[0.6rem] uppercase">PID</p>
+            <Math math="u=K_p e + K_i\int e dt + K_d \dot{e}" display />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 lg:px-10">
+        <h2 class="text-[1.1rem] font-[650]">Core solver — TypeScript</h2>
+        <div class="mt-3 overflow-x-auto rounded-[14px] [&_pre]:!m-0 [&_pre]:!rounded-[14px] [&_pre]:!p-4 [&_pre]:text-[0.78rem]">
+          <Code code={coreTS} lang="ts" theme="github-dark" />
+        </div>
+      </div>
+    </section>
+
+    {gear.length>0 && (
+      <section class="border-b border-border" aria-labelledby="gear-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div><h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">Take This to Hardware</h2><AffiliateDisclosure class="mt-3 max-w-2xl" /></div>
+          </div>
+          <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {gear.map(item=>(
+              <a href={item.url} target="_blank" rel="sponsored noopener noreferrer" class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]">
+                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+                  {item.image ? <img src={item.image} alt="" width="480" height="360" loading="lazy" class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]" /> : <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">{item.category}</div>}
+                  {item.price && <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">{item.price}</span>}
+                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">{item.category}</span>
+                </div>
+                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p class="mt-6 text-[0.78rem] text-muted-text">More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></p>
+        </div>
+      </section>
+    )}
+
+    <section class="border-b border-border">
+      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+        <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">FAQ</h2>
+        <div class="mt-8 divide-y divide-border border-y border-border">
+          {faqs.map(f=>(
+            <details class="group py-4"><summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.98rem] font-semibold text-primary-text">{f.q}<span class="text-muted-text group-open:rotate-180 transition-transform">⌄</span></summary><p class="mt-3 text-[0.88rem] leading-[1.65] text-muted-text">{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </PlaygroundShell>
+</Layout>
+
+<style>
+.pill-btn{border-radius:9999px;border:1px solid var(--mp-border);background:var(--mp-elevated);padding:0.38rem 0.9rem;font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--mp-muted);transition:all 0.15s}
+.pill-btn.is-active{background:color-mix(in srgb,var(--mp-cta) 14%,var(--mp-elevated));border-color:var(--mp-cta);color:var(--mp-text)}
+.pill-btn:hover{border-color:var(--mp-border-strong);color:var(--mp-text)}
+.readout{border:1px solid var(--mp-border);border-radius:12px;background:color-mix(in srgb,var(--mp-elevated) 55%,transparent);padding:0.65rem 0.8rem}
+.readout dt{font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--mp-muted)}
+.readout dd{margin-top:0.2rem;font-size:0.88rem;font-weight:600;color:var(--mp-text)}
+.control-label{display:grid;grid-template-columns:1fr auto;gap:0.25rem 0.75rem;align-items:center;font-family:var(--font-mono);font-size:0.68rem;color:var(--mp-muted)}
+.control-label input[type=range]{grid-column:1/-1}
+.tool-input{margin-top:0.25rem;display:block;width:100%;border-radius:10px;border:1px solid var(--mp-border);background:var(--mp-canvas);padding:0.35rem 0.5rem;font-size:0.82rem;color:var(--mp-text)}
+.math-card{border:1px solid var(--mp-border);border-radius:14px;background:color-mix(in srgb,var(--mp-elevated) 48%,transparent);padding:0.9rem 1rem}
+.math-label{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.11em;color:var(--mp-muted)}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+</style>
+
+<script>
+// @ts-nocheck
+function initFlight(){
+  const canvas = document.getElementById('flight-canvas');
+  if(!canvas || canvas.dataset.init) return;
+  canvas.dataset.init='true';
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  const W0 = canvas.width, H0=canvas.height;
+  canvas.width=W0*dpr; canvas.height=H0*dpr;
+  canvas.style.width=W0+'px'; canvas.style.height=H0+'px';
+  ctx.scale(dpr,dpr);
+  const W=W0, H=H0;
+
+  // UI
+  const slKpZ=document.getElementById('sl-kp-z'), slKiZ=document.getElementById('sl-ki-z'), slKdZ=document.getElementById('sl-kd-z');
+  const slKpRp=document.getElementById('sl-kp-rp'), slKdRp=document.getElementById('sl-kd-rp');
+  const slQ=document.getElementById('sl-q'), slR=document.getElementById('sl-r'), slN=document.getElementById('sl-N');
+  const outKpZ=document.getElementById('out-kp-z'), outKiZ=document.getElementById('out-ki-z'), outKdZ=document.getElementById('out-kd-z');
+  const outKpRp=document.getElementById('out-kp-rp'), outKdRp=document.getElementById('out-kd-rp');
+  const outQ=document.getElementById('out-q'), outR=document.getElementById('out-r'), outN=document.getElementById('out-N');
+  const inSetX=document.getElementById('in-set-x'), inSetY=document.getElementById('in-set-y'), inSetZ=document.getElementById('in-set-z');
+  const btnArm=document.getElementById('btn-arm'), btnGust=document.getElementById('btn-gust'), btnReset=document.getElementById('btn-reset');
+  const chkMPC=document.getElementById('chk-mpc'), chkAudio=document.getElementById('chk-audio');
+  const crashInd=document.getElementById('crash-ind');
+  const readPos=document.getElementById('read-pos'), readVel=document.getElementById('read-vel'), readRpy=document.getElementById('read-rpy');
+  const readThrust=document.getElementById('read-thrust'), readMot=document.getElementById('read-mot'), readInt=document.getElementById('read-int');
+  const roQnorm=document.getElementById('ro-qnorm'), roJ=document.getElementById('ro-j');
+
+  function updOutputs(){
+    outKpZ.textContent=slKpZ.value; outKiZ.textContent=slKiZ.value; outKdZ.textContent=slKdZ.value;
+    outKpRp.textContent=slKpRp.value; outKdRp.textContent=slKdRp.value;
+    outQ.textContent=slQ.value; outR.textContent=slR.value; outN.textContent=slN.value;
+  }
+  [slKpZ,slKiZ,slKdZ,slKpRp,slKdRp,slQ,slR,slN].forEach(el=>el.addEventListener('input',updOutputs));
+  updOutputs();
+
+  // State
+  let armed=false;
+  let t=0;
+  const m=1.02, g=9.81;
+  const I={x:0.01,y:0.012,z:0.02};
+  const kf=1.2e-5, km=0.016; // thrust and torque coefficients
+  const arm=0.18; // meter arm length
+  let state={
+    p:{x:0,y:0,z:2},
+    v:{x:0,y:0,z:0},
+    q:{w:1,x:0,y:0,z:0},
+    w:{x:0,y:0,z:0}
+  };
+  let integral={z:0, x:0, y:0};
+  let prevErr={z:0};
+  let trail=[];
+  let crashTimer=0;
+  let gust={x:0,y:0,z:0, t:0};
+
+  function quatMul(a,b){
+    return {w:a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z,
+            x:a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y,
+            y:a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x,
+            z:a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w};
+  }
+  function quatConj(q){return {w:q.w,x:-q.x,y:-q.y,z:-q.z};}
+  function quatNorm(q){const n=Math.hypot(q.w,q.x,q.y,q.z)||1; return {w:q.w/n,x:q.x/n,y:q.y/n,z:q.z/n};}
+  function rotateVec(q, v){
+    const qv={w:0,x:v.x,y:v.y,z:v.z};
+    const tmp=quatMul(q,qv);
+    const res=quatMul(tmp,quatConj(q));
+    return {x:res.x,y:res.y,z:res.z};
+  }
+  function quatToEuler(q){
+    const sinr=2*(q.w*q.x+q.y*q.z), cosr=1-2*(q.x*q.x+q.y*q.y);
+    const roll=Math.atan2(sinr,cosr);
+    const sinp=2*(q.w*q.y - q.z*q.x);
+    const pitch=Math.abs(sinp)>=1? Math.sign(sinp)*Math.PI/2 : Math.asin(sinp);
+    const siny=2*(q.w*q.z+q.x*q.y), cosy=1-2*(q.y*q.y+q.z*q.z);
+    const yaw=Math.atan2(siny,cosy);
+    return {roll,pitch,yaw};
+  }
+
+  function dynamics(st, ctrl){
+    // ctrl: {thrust, tau:{x,y,z}}
+    const thrustVecBody={x:0,y:0,z:ctrl.thrust};
+    const thrustWorld=rotateVec(st.q, thrustVecBody);
+    const ax=(thrustWorld.x + gust.x)/m;
+    const ay=(thrustWorld.y + gust.y)/m;
+    const az=(thrustWorld.z + gust.z)/m - g;
+    // angular dynamics
+    const Iw={x:I.x*st.w.x, y:I.y*st.w.y, z:I.z*st.w.z};
+    const cross={x:st.w.y*Iw.z - st.w.z*Iw.y, y:st.w.z*Iw.x - st.w.x*Iw.z, z:st.w.x*Iw.y - st.w.y*Iw.x};
+    const tau=ctrl.tau;
+    const dw={x:(tau.x - cross.x)/I.x, y:(tau.y - cross.y)/I.y, z:(tau.z - cross.z)/I.z};
+    // quat deriv
+    const omegaQuat={w:0,x:st.w.x,y:st.w.y,z:st.w.z};
+    const qdotTmp=quatMul(st.q, omegaQuat);
+    const qdot={w:qdotTmp.w*0.5,x:qdotTmp.x*0.5,y:qdotTmp.y*0.5,z:qdotTmp.z*0.5};
+    return {
+      dp: st.v,
+      dv: {x:ax,y:ay,z:az},
+      dq: qdot,
+      dw: dw
+    };
+  }
+  function addState(st, deriv, dt){
+    return {
+      p:{x:st.p.x + deriv.dp.x*dt, y:st.p.y + deriv.dp.y*dt, z:st.p.z + deriv.dp.z*dt},
+      v:{x:st.v.x + deriv.dv.x*dt, y:st.v.y + deriv.dv.y*dt, z:st.v.z + deriv.dv.z*dt},
+      q:quatNorm({w:st.q.w + deriv.dq.w*dt, x:st.q.x + deriv.dq.x*dt, y:st.q.y + deriv.dq.y*dt, z:st.q.z + deriv.dq.z*dt}),
+      w:{x:st.w.x + deriv.dw.x*dt, y:st.w.y + deriv.dw.y*dt, z:st.w.z + deriv.dw.z*dt}
+    };
+  }
+  function rk4Step(st, ctrl, dt){
+    const k1=dynamics(st,ctrl);
+    const s2=addState(st,k1,dt/2);
+    const k2=dynamics(s2,ctrl);
+    const s3=addState(st,k2,dt/2);
+    const k3=dynamics(s3,ctrl);
+    const s4=addState(st,k3,dt);
+    const k4=dynamics(s4,ctrl);
+    const dp={x:(k1.dp.x+2*k2.dp.x+2*k3.dp.x+k4.dp.x)/6, y:(k1.dp.y+2*k2.dp.y+2*k3.dp.y+k4.dp.y)/6, z:(k1.dp.z+2*k2.dp.z+2*k3.dp.z+k4.dp.z)/6};
+    const dv={x:(k1.dv.x+2*k2.dv.x+2*k3.dv.x+k4.dv.x)/6, y:(k1.dv.y+2*k2.dv.y+2*k3.dv.y+k4.dv.y)/6, z:(k1.dv.z+2*k2.dv.z+2*k3.dv.z+k4.dv.z)/6};
+    const dq={w:(k1.dq.w+2*k2.dq.w+2*k3.dq.w+k4.dq.w)/6, x:(k1.dq.x+2*k2.dq.x+2*k3.dq.x+k4.dq.x)/6, y:(k1.dq.y+2*k2.dq.y+2*k3.dq.y+k4.dq.y)/6, z:(k1.dq.z+2*k2.dq.z+2*k3.dq.z+k4.dq.z)/6};
+    const dw={x:(k1.dw.x+2*k2.dw.x+2*k3.dw.x+k4.dw.x)/6, y:(k1.dw.y+2*k2.dw.y+2*k3.dw.y+k4.dw.y)/6, z:(k1.dw.z+2*k2.dw.z+2*k3.dw.z+k4.dw.z)/6};
+    return {
+      p:{x:st.p.x+dp.x*dt, y:st.p.y+dp.y*dt, z:st.p.z+dp.z*dt},
+      v:{x:st.v.x+dv.x*dt, y:st.v.y+dv.y*dt, z:st.v.z+dv.z*dt},
+      q:quatNorm({w:st.q.w+dq.w*dt,x:st.q.x+dq.x*dt,y:st.q.y+dq.y*dt,z:st.q.z+dq.z*dt}),
+      w:{x:st.w.x+dw.x*dt,y:st.w.y+dw.y*dt,z:st.w.z+dw.z*dt}
+    };
+  }
+
+  function computeControl(st, setp, dt){
+    if(!armed || crashTimer>0){ return {thrust:0, tau:{x:0,y:0,z:0}, motors:[0,0,0,0], J:0}; }
+    const KpZ=parseFloat(slKpZ.value), KiZ=parseFloat(slKiZ.value), KdZ=parseFloat(slKdZ.value);
+    const KpRp=parseFloat(slKpRp.value), KdRp=parseFloat(slKdRp.value);
+    const Qp=parseFloat(slQ.value), R=parseFloat(slR.value);
+    // altitude PID
+    const ez=setp.z - st.p.z;
+    integral.z += ez*dt;
+    integral.z=Math.max(-3,Math.min(3,integral.z));
+    const dez=(ez - prevErr.z)/dt;
+    prevErr.z=ez;
+    let thrust_cmd = m*(g + KpZ*ez + KiZ*integral.z + KdZ*dez);
+    // MPC blending for altitude: simple LQR gain for double integrator: K = [sqrt(Q/R), sqrt(2)*... approx]
+    let Jmpc=0;
+    if(chkMPC.checked){
+      const K_lqr=Math.sqrt(Qp/Math.max(0.05,R));
+      const Kd_lqr=Math.sqrt(2*K_lqr);
+      const mpc_correction = K_lqr*ez + Kd_lqr*(-st.v.z);
+      thrust_cmd += m*mpc_correction*0.6;
+      Jmpc = Qp*ez*ez + R*thrust_cmd*thrust_cmd*0.001;
+    }
+    thrust_cmd=Math.max(0.2*m*g, Math.min(2.2*m*g, thrust_cmd));
+    // lateral outer loop to desired roll/pitch
+    const ex=setp.x - st.p.x;
+    const ey=setp.y - st.p.y;
+    integral.x+=ex*dt*0.3; integral.y+=ey*dt*0.3;
+    integral.x=Math.max(-2,Math.min(2,integral.x)); integral.y=Math.max(-2,Math.min(2,integral.y));
+    const desiredPitch = Math.max(-0.5,Math.min(0.5, 0.15*ex + 0.02*integral.x - 0.08*st.v.x));
+    const desiredRoll = Math.max(-0.5,Math.min(0.5, -0.15*ey -0.02*integral.y + 0.08*st.v.y));
+    const eul=quatToEuler(st.q);
+    const erRoll=desiredRoll - eul.roll;
+    const erPitch=desiredPitch - eul.pitch;
+    const erYaw=0 - eul.yaw;
+    const tauX = KpRp*erRoll - KdRp*st.w.x;
+    const tauY = KpRp*erPitch - KdRp*st.w.y;
+    const tauZ = 1.2*erYaw - 0.15*st.w.z;
+    // motor mixing: thrust to 4 motors square law approx
+    const hover = m*g/4;
+    // moment mixing matrix inverse for X config
+    const rollMix = tauX/(arm)/2;
+    const pitchMix = tauY/(arm)/2;
+    const yawMix = tauZ/4;
+    let m1 = (thrust_cmd/4 + rollMix + pitchMix + yawMix);
+    let m2 = (thrust_cmd/4 - rollMix + pitchMix - yawMix);
+    let m3 = (thrust_cmd/4 - rollMix - pitchMix + yawMix);
+    let m4 = (thrust_cmd/4 + rollMix - pitchMix - yawMix);
+    const motors=[m1,m2,m3,m4].map(v=>Math.max(0,Math.min(m*g/1.8, v)));
+    // recalc from saturated
+    const thrustActual = motors.reduce((a,b)=>a+b,0);
+    const tauActual={x:tauX, y:tauY, z:tauZ}; // simplified
+    return {thrust:thrustActual, tau:tauActual, motors, J:Jmpc};
+  }
+
+  // Audio
+  let audioCtx=null, masterGain=null, motorGains=[], motorOsc=[];
+  function ensureAudio(){
+    if(audioCtx) return audioCtx;
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain(); masterGain.gain.value=0; masterGain.connect(audioCtx.destination);
+    for(let i=0;i<4;i++){
+      const o=audioCtx.createOscillator(); o.type='sawtooth';
+      const g=audioCtx.createGain(); g.gain.value=0;
+      const p=audioCtx.createStereoPanner(); p.pan.value=(i%2?0.4:-0.4);
+      const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=400; f.Q.value=1;
+      o.connect(f); f.connect(g); g.connect(p); p.connect(masterGain);
+      o.frequency.value=80; o.start();
+      motorOsc.push(o); motorGains.push(g);
+    }
+    return audioCtx;
+  }
+  function updateAudio(motors, thrust){
+    if(!chkAudio.checked) return;
+    const ctx=ensureAudio(); ctx.resume();
+    const maxThrust=m*g/1.2;
+    const base=80;
+    motors.forEach((thr,i)=>{
+      const rpmNorm=thr/maxThrust;
+      const freq=base + rpmNorm*420 + i*5;
+      try{
+        motorOsc[i].frequency.linearRampToValueAtTime(freq, ctx.currentTime+0.04);
+        motorGains[i].gain.linearRampToValueAtTime(0.02 + rpmNorm*0.06, ctx.currentTime+0.04);
+      }catch{}
+    });
+    const thrustNorm=thrust/(m*g);
+    masterGain.gain.linearRampToValueAtTime(armed? 0.18*thrustNorm:0, ctx.currentTime+0.08);
+  }
+
+  function reset(){
+    state={p:{x:0,y:0,z:2}, v:{x:0,y:0,z:0}, q:{w:1,x:0,y:0,z:0}, w:{x:0,y:0,z:0}};
+    integral={z:0,x:0,y:0}; prevErr={z:0}; trail=[]; crashTimer=0; t=0; crashInd.textContent='';
+  }
+
+  btnArm.addEventListener('click',()=>{
+    armed=!armed;
+    btnArm.textContent=armed?'Armed ✓ — Click to Disarm':'Disarm → Arm';
+    btnArm.classList.toggle('is-active',armed);
+    if(armed) ensureAudio();
+    if(!armed){ motorGains.forEach(g=>{ try{g.gain.value=0;}catch{} }); }
+  });
+  btnReset.addEventListener('click', reset);
+  btnGust.addEventListener('click',()=>{
+    gust={x:(Math.random()-0.5)*6, y:(Math.random()-0.5)*6, z:(Math.random()-0.5)*2, t:1.2};
+  });
+
+  let last=performance.now(); let raf=0; let accum=0; const dt=0.004;
+  function loop(now){
+    raf=requestAnimationFrame(loop);
+    const frameDt=Math.min(0.05,(now-last)/1000); last=now;
+    if(gust.t>0){ gust.t-=frameDt; if(gust.t<=0) gust={x:0,y:0,z:0,t:0}; }
+    if(crashTimer>0) crashTimer-=frameDt;
+    accum+=frameDt;
+    let lastCtrl=null;
+    while(accum>=dt){
+      const setp={x:parseFloat(inSetX.value)||0, y:parseFloat(inSetY.value)||0, z:parseFloat(inSetZ.value)||2};
+      const ctrl=computeControl(state,setp,dt);
+      lastCtrl=ctrl;
+      state=rk4Step(state,ctrl,dt);
+      // ground collision
+      if(state.p.z<0.05){
+        const impact=Math.hypot(state.v.x,state.v.y,state.v.z);
+        if(impact>0.6){
+          crashTimer=0.8;
+          crashInd.textContent='CRASH '+impact.toFixed(1)+' m/s';
+          // bounce
+          state.v.z = Math.abs(state.v.z)*0.2;
+          state.v.x*=0.6; state.v.y*=0.6;
+          state.p.z=0.06;
+        } else {
+          state.p.z=0.05; state.v.z=Math.max(0,state.v.z);
+        }
+      }
+      t+=dt; accum-=dt;
+    }
+    // trail
+    if(armed || trail.length===0 || Math.hypot(state.p.x-trail[trail.length-1]?.x, state.p.y-trail[trail.length-1]?.y)>0.05){
+      trail.push({x:state.p.x,y:state.p.y,z:state.p.z, t});
+      if(trail.length>400) trail.shift();
+    }
+    // readouts
+    readPos.textContent=`${state.p.x.toFixed(2)},${state.p.y.toFixed(2)},${state.p.z.toFixed(2)}`;
+    readVel.textContent=`${state.v.x.toFixed(2)},${state.v.y.toFixed(2)},${state.v.z.toFixed(2)}`;
+    const eul=quatToEuler(state.q);
+    readRpy.textContent=`${(eul.roll*57.3).toFixed(1)},${(eul.pitch*57.3).toFixed(1)},${(eul.yaw*57.3).toFixed(1)}`;
+    if(lastCtrl){
+      readThrust.textContent=lastCtrl.thrust.toFixed(2)+' N';
+      readMot.textContent=lastCtrl.motors.map(m=>Math.round(m/(m*9.81/4)*100)+'%').join(' ');
+      roJ.textContent=lastCtrl.J.toFixed(3);
+      updateAudio(lastCtrl.motors,lastCtrl.thrust);
+    }
+    readInt.textContent=integral.z.toFixed(2);
+    const qn=Math.hypot(state.q.w,state.q.x,state.q.y,state.q.z); roQnorm.textContent=qn.toFixed(4);
+
+    // drawing
+    const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    for(let i=0;i<=10;i++){ const x=i/10*W; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for(let i=0;i<=6;i++){ const y=i/6*H; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    // target cross
+    const setp={x:parseFloat(inSetX.value)||0, y:parseFloat(inSetY.value)||0};
+    const tx=W/2 + setp.x*40, ty=H/2 - setp.y*40;
+    ctx.strokeStyle='#f07a94'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(tx-12,ty); ctx.lineTo(tx+12,ty); ctx.moveTo(tx,ty-12); ctx.lineTo(tx,ty+12); ctx.stroke(); ctx.setLineDash([]);
+    // trail
+    ctx.beginPath(); ctx.lineWidth=2; ctx.strokeStyle='#3C888F88';
+    trail.forEach((pt,i)=>{
+      const px=W/2 + pt.x*40, py=H/2 - pt.y*40;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }); ctx.stroke();
+    // drone body projection
+    const cx=W/2 + state.p.x*40, cy=H/2 - state.p.y*40;
+    const scale=14 + state.p.z*3;
+    const yaw=eul.yaw, roll=eul.roll, pitch=eul.pitch;
+    // shake on crash
+    let shakeX=0,shakeY=0;
+    if(crashTimer>0){
+      const amp=6*crashTimer; shakeX=(Math.random()-0.5)*amp; shakeY=(Math.random()-0.5)*amp;
+      canvas.style.transform=`translate(${shakeX}px,${shakeY}px)`;
+    } else canvas.style.transform='';
+    // arms
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(yaw);
+    ctx.strokeStyle='#e8eef6'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(-scale, -scale); ctx.lineTo(scale, scale); ctx.moveTo(scale,-scale); ctx.lineTo(-scale,scale); ctx.stroke();
+    // motors
+    const motorPos=[[-scale,-scale],[scale,-scale],[scale,scale],[-scale,scale]];
+    motorPos.forEach((pos,i)=>{
+      const thr=lastCtrl? lastCtrl.motors[i]/(m*g/4):0;
+      const r=5+thr*6;
+      ctx.beginPath(); ctx.fillStyle=i%2?'#71b9e3':'#f07a94'; ctx.globalAlpha=0.9;
+      ctx.arc(pos[0],pos[1],r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+      // prop spin line
+      ctx.beginPath(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.moveTo(pos[0]-r,pos[1]); ctx.lineTo(pos[0]+r,pos[1]); ctx.stroke();
+    });
+    ctx.restore();
+    // force arrows
+    const thrustArrowLen = (lastCtrl? lastCtrl.thrust:0)*2;
+    ctx.strokeStyle='#4ade80'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx, cy - thrustArrowLen); ctx.stroke();
+    // velocity arrow
+    ctx.strokeStyle='#60a5fa'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+state.v.x*18, cy - state.v.y*18); ctx.stroke();
+    // altitude bar
+    const altH=Math.max(0,Math.min(H, state.p.z*40));
+    ctx.fillStyle='#f07a94'; ctx.fillRect(W-18, H - altH - 10, 10, altH);
+    ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='10px ui-monospace'; ctx.fillText(state.p.z.toFixed(1)+'m', W-36, H- altH -12);
+  }
+  loop(performance.now());
+
+  document.addEventListener('astro:before-swap',()=>{ cancelAnimationFrame(raf); try{audioCtx?.close();}catch{} },{once:true});
+}
+document.addEventListener('astro:page-load', initFlight);
+initFlight();
+</script>
+</Layout>
