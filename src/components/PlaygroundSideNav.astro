@@ -170,6 +170,7 @@
 
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const HEADER_OFFSET = 80;
+      const focusManagedHeadings = [];
 
       let activeLink = null;
       const setActive = (link) => {
@@ -211,6 +212,18 @@
           const top = heading.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
           window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'instant' : 'smooth' });
           history.pushState(null, '', `#${heading.id}`);
+          // Keyboard focus-handoff: move focus to the target heading so
+          // :focus-within releases and the panel collapses for keyboard users.
+          // Mouse users remain hovered, so the panel stays open until mouseleave.
+          try {
+            if (!heading.hasAttribute('tabindex')) {
+              heading.setAttribute('tabindex', '-1');
+              focusManagedHeadings.push(heading);
+            }
+            heading.focus({ preventScroll: true });
+          } catch (_) {
+            try { heading.focus(); } catch (_) {}
+          }
         });
 
         return { heading, link };
@@ -245,12 +258,30 @@
 
       on(window, 'scroll', requestCompute, { passive: true });
       on(window, 'resize', requestCompute, { passive: true });
+      // Escape-to-collapse: blur focused link inside the rail so
+      // :focus-within releases. Cheap affordance, compatible with the
+      // global Escape handlers in Layout.astro (no stopPropagation).
+      on(document, 'keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const ae = document.activeElement;
+        if (ae && navContainer.contains(ae)) {
+          ae.blur();
+        }
+      });
       computeActive();
 
       teardownInstance = () => {
         removers.forEach((off) => off());
         removers.length = 0;
         setActive(null);
+        // Clean up any tabindex="-1" we injected for the focus handoff.
+        // Preserves view-transition idempotency — next page gets fresh headings.
+        for (const h of focusManagedHeadings) {
+          try {
+            if (h.getAttribute('tabindex') === '-1') h.removeAttribute('tabindex');
+          } catch (_) {}
+        }
+        focusManagedHeadings.length = 0;
       };
     };
 
