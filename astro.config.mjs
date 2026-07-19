@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import vercel from '@astrojs/vercel';
+import { unified } from '@astrojs/markdown-remark';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 
@@ -42,9 +43,11 @@ export default defineConfig({
       // contrast palette keeps comments and punctuation at WCAG AA contrast.
       theme: 'github-dark-high-contrast',
     },
-    rehypePlugins: [
-      rehypeSlug,
-      [rehypeAutolinkHeadings, { behavior: 'wrap', properties: { className: ['heading-anchor'] } }],
-    ],
+    processor: unified({
+      rehypePlugins: [
+        rehypeSlug,
+        [rehypeAutolinkHeadings, { behavior: 'wrap', properties: { className: ['heading-anchor'] } }],
+      ],
+    }),
   },
 });
