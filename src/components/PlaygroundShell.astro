@@ -1,6 +1,5 @@
 ---
 import { pillarMeta, fallbackPillar } from '../data/trends';
-import PlaygroundSideNav from './PlaygroundSideNav.astro';
 
 
 interface Props {
@@ -51,8 +50,6 @@ const pillarInfo = pillarHint ? (pillarMeta[pillarHint] ?? fallbackPillar) : nul
     )}
   </div>
 </section>
-
-<PlaygroundSideNav />
 
 <slot />
 

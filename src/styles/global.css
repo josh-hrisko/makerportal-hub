@@ -859,6 +859,12 @@
   }
 }
 
+/* Side-nav anchor offset – ensures native hash jumps land below fixed header (80px + buffer) */
+#main-content h2[id],
+#main-content h3[id] {
+  scroll-margin-top: 88px;
+}
+
 /* Efficiency — content-visibility for below-fold heavy sections (gear 50 items, tools, shop products, apps grid, playground) */
 #tools, #gear, #products, #trending, #apps, #playground,
 #apps-showcase, #playground-showcase, #trending-strip, #gear-picks {

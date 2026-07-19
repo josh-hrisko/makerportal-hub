@@ -95,9 +95,9 @@ const tools = [
     </Fragment>
   </HubShell>
 
-  <section class="border-b border-border">
+  <section class="border-b border-border" aria-labelledby="topics-title">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
-      <h2 class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Topics</h2>
+      <h2 id="topics-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Topics</h2>
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         {topics.map((t) => (
           <a href="/blog" class="group rounded-[20px] border border-border bg-card-bg p-5 transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated">

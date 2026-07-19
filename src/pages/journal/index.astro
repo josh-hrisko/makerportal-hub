@@ -267,7 +267,7 @@ const newCounts = new Map<string, number>();
         <div id="pillars" class="scroll-mt-24">
           <div class="flex items-center gap-2">
             <span class="size-2 rounded-full bg-primary-cta"></span>
-            <h3 class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Topic Pillars</h3>
+            <h2 id="pillars-title" class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Topic Pillars</h2>
           </div>
           <p class="mt-3 text-[0.9rem] leading-[1.65] text-muted-text">
             Our automated scanner searches developer networks (Hacker News, Dev.to, GitHub, arXiv, Lobste.rs, and curated Bluesky voices) specifically matching the core pillars of our software engineering studio:
@@ -297,7 +297,7 @@ const newCounts = new Map<string, number>();
           <div id="scoring" class="scroll-mt-24">
             <div class="flex items-center gap-2">
               <span class="size-2 rounded-full bg-primary-cta"></span>
-              <h3 class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Scoring & Gating Formula</h3>
+              <h2 id="scoring-title" class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Scoring & Gating Formula</h2>
             </div>
             <p class="mt-3 text-[0.9rem] leading-[1.65] text-muted-text">
               Candidates are filtered through strict substance and relevance checks before receiving a consolidated score. The ranking weight calculation is completely transparent:
@@ -325,7 +325,7 @@ const newCounts = new Map<string, number>();
           <div id="schedule" class="scroll-mt-24">
             <div class="flex items-center gap-2">
               <span class="size-2 rounded-full bg-primary-cta"></span>
-              <h3 class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Auto-Publish Schedule</h3>
+              <h2 id="schedule-title" class="text-[clamp(1.15rem,2.2vw,1.4rem)] font-bold tracking-tight text-primary-text">Auto-Publish Schedule</h2>
             </div>
             <p class="mt-3 text-[0.9rem] leading-[1.65] text-muted-text">
               The ingestion pipeline runs as a daily automated GitHub Action at <strong class="font-semibold text-primary-text">14:00 UTC</strong>. If the gating algorithm flags zero high-relevance items, the day is skipped to prevent low-signal spam. All historical daily reports are archived statically with permanent URLs.
