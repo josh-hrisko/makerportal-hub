@@ -307,6 +307,16 @@ export function totalPattern(thetaRad: number, N: number, spacingLambda: number,
       </div>
     </section>
 
+    <div id="antenna-success-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Beam locked · Aha moment</p>
+      <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text">Optimized! High directivity + listener aligned.</p>
+      <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">Your array hits &gt;8 dBi with &lt;20° HPBW. Export geometry and fab the patch.</p>
+      <div class="mt-3 flex gap-2">
+        <button id="antenna-toast-cta" type="button" class="pointer-events-auto inline-flex items-center justify-center rounded-full bg-primary-text px-4 py-2 text-[0.82rem] font-semibold text-canvas hover:opacity-90">Order antenna PCB ↓</button>
+        <button id="antenna-toast-dismiss" type="button" class="pointer-events-auto rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text hover:text-primary-text">Dismiss</button>
+      </div>
+    </div>
+
     <ExportGate
       simulator="antenna-em-sandbox"
       fileName="antenna-array.json"
@@ -454,7 +464,7 @@ function initAntenna(){
       return ct<=0 ? 0.08 : Math.pow(ct,1.5);
     }
     // yagi
-    return ct<=0 ? 0.04 : 0.12 + 0.88* Math.pow((1+ct)/2,0.9) * Math.pow(Math.max(0,ct),2.2);
+    return ct<=0 ? 0.04 : 0.12 + 0.88 * Math.pow((1+ct)/2,0.9) * Math.pow(Math.max(0,ct),2.2);
   }
 
   // compute polar pattern array 720 points from -180..180
@@ -922,6 +932,48 @@ function initAntenna(){
     wCtx.fillText(`λ=${lambda.toFixed(3)}m d=${d.toFixed(3)}m steer ${steer}° spanX ${spanX.toFixed(2)}m spanY ${spanY.toFixed(2)}m t=${tAcc.toFixed(1)}`, 10, 16);
   }
 
+  // --- Aha-moment CTA: optimized antenna gain/alignment (Priority 4) ---
+  const antennaAha = { tAligned: 0, shown: false };
+  function checkAntennaAha(align, metrics, dt){
+    try {
+      const highGain = metrics && metrics.DdBi > 8 && metrics.hpbw < 30;
+      const aligned = align > 0.90;
+      if ((highGain && aligned) || align > 0.95) {
+        antennaAha.tAligned += dt;
+        if (antennaAha.tAligned > 2.0 && !antennaAha.shown) {
+          const toast = document.getElementById('antenna-success-toast');
+          if (toast) {
+            toast.classList.remove('hidden');
+            toast.style.display = 'flex';
+            toast.style.flexDirection = 'column';
+            try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_moment', sim: 'antenna-em-sandbox', metric: 'high_gain_aligned', gain_dBi: metrics?.DdBi, align } })); } catch {}
+          }
+          antennaAha.shown = true;
+        }
+      } else {
+        antennaAha.tAligned = Math.max(0, antennaAha.tAligned - dt*0.5);
+      }
+    } catch {}
+  }
+  try {
+    const antCta = document.getElementById('antenna-toast-cta');
+    const antDismiss = document.getElementById('antenna-toast-dismiss');
+    if (antCta) {
+      antCta.addEventListener('click', () => {
+        const fab = document.querySelector('.fab-order-panel');
+        const target = fab || document.getElementById('kit-title') || document.querySelector('.export-gate');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_cta_click', sim: 'antenna-em-sandbox' } })); } catch {}
+      });
+    }
+    if (antDismiss) {
+      antDismiss.addEventListener('click', () => {
+        const el = document.getElementById('antenna-success-toast');
+        if (el) { el.classList.add('hidden'); el.style.display='none'; }
+      });
+    }
+  } catch {}
+
   function recompute(){
     const params = calcParams();
     lastParams=params;
@@ -964,6 +1016,7 @@ function initAntenna(){
     roAlign.textContent = align.toFixed(3);
     barAlign.style.width = (align*100).toFixed(0)+'%';
     updateAudio(align, cursorThetaDeg);
+    checkAntennaAha(align, metrics, 0.05);
 
     drawPolar();
     drawLobe();
@@ -993,10 +1046,8 @@ function initAntenna(){
     const cxW = W/2, cyW=W/2;
     const px = (x*scaleW - cxW);
     const py = (y*scaleW - cyW);
-    // angle: atan2(px, -py) ??? We used sinθ = px/r, cosθ = -py/r? Actually earlier: x=cx+r sinθ, y=cy - r cosθ => sinθ = (x-cx)/r, cosθ = (cy - y)/r
     const ang = Math.atan2(px, -(py)); // rad, gives θ
     let deg = ang*180/Math.PI;
-    // wrap to -180..180
     if(deg>180) deg-=360; if(deg<-180) deg+=360;
     cursorThetaDeg=deg;
     roCursorAng.textContent = deg.toFixed(1)+'°';
@@ -1007,6 +1058,7 @@ function initAntenna(){
       roAlign.textContent = align.toFixed(3);
       barAlign.style.width = (align*100).toFixed(0)+'%';
       updateAudio(align, deg);
+      try { checkAntennaAha(align, lastMetrics, 0.05); } catch {}
     }
     drawPolar();
   });

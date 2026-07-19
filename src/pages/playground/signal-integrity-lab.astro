@@ -169,6 +169,16 @@ export function s11(gammaL:number, beta:number, len:number){
       </div>
     </section>
 
+    <div id="si-success-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Low |Γ| · Aha moment</p>
+      <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text">Matched! |Γ| &lt; 0.10 — eye wide open.</p>
+      <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">Your Z₀≈ZL minimizes reflection. Export stackup CSV and order the tuned coupon.</p>
+      <div class="mt-3 flex gap-2">
+        <button id="si-toast-cta" type="button" class="pointer-events-auto inline-flex items-center justify-center rounded-full bg-primary-text px-4 py-2 text-[0.82rem] font-semibold text-canvas hover:opacity-90">Order tuned board ↓</button>
+        <button id="si-toast-dismiss" type="button" class="pointer-events-auto rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text hover:text-primary-text">Dismiss</button>
+      </div>
+    </div>
+
     <ExportGate
       simulator="signal-integrity-lab"
       fileName="stackup-sweep.csv"
@@ -269,6 +279,48 @@ function initSI(){
     }
   }
 
+  // --- Aha-moment: low |Γ| <0.10 for 1.5s → toast CTA to fab/kit (Priority 4) ---
+  const siAha = { tLow: 0, shown: false, lastGamma: 1 };
+  function checkSiAha(gammaAbs, dt){
+    try {
+      if (Math.abs(gammaAbs) < 0.10) {
+        siAha.tLow += dt;
+        if (siAha.tLow > 1.5 && !siAha.shown) {
+          const toast = document.getElementById('si-success-toast');
+          if (toast) {
+            toast.classList.remove('hidden');
+            toast.style.display = 'flex';
+            toast.style.flexDirection = 'column';
+            try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_moment', sim: 'signal-integrity-lab', metric: 'low_gamma', gamma: gammaAbs } })); } catch {}
+          }
+          siAha.shown = true;
+        }
+      } else {
+        siAha.tLow = Math.max(0, siAha.tLow - dt*0.7);
+      }
+      siAha.lastGamma = gammaAbs;
+    } catch {}
+  }
+  try {
+    const siCta = document.getElementById('si-toast-cta');
+    const siDismiss = document.getElementById('si-toast-dismiss');
+    if (siCta) {
+      siCta.addEventListener('click', () => {
+        const fab = document.querySelector('.fab-order-panel');
+        const kit = document.getElementById('kit-title');
+        const target = fab || kit || document.querySelector('.export-gate');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_cta_click', sim: 'signal-integrity-lab' } })); } catch {}
+      });
+    }
+    if (siDismiss) {
+      siDismiss.addEventListener('click', () => {
+        const el = document.getElementById('si-success-toast');
+        if (el) { el.classList.add('hidden'); el.style.display='none'; }
+      });
+    }
+  } catch {}
+
   function compute(){
     const W=parseFloat(slW.value), H=parseFloat(slH.value), T=parseFloat(slT.value), Er=parseFloat(slEr.value), L=parseFloat(slL.value), ZL=parseFloat(slZL.value), F=parseFloat(slF.value), gap=parseFloat(slGap.value);
     const {Z0, eff}=microstrip(W,H,T,Er);
@@ -297,6 +349,7 @@ function initSI(){
     drawSmith(gammaC,beta,L);
     drawSweep(W,H,T,Er,ZL,L);
     drawEye(gammaC, xtalk, eyeH);
+    checkSiAha(s11mag, 0.016);
   }
 
   let t=0;

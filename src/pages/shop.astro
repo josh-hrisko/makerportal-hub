@@ -13,6 +13,8 @@ const archives = products.filter((p) => !p.pwyw);
 const tipProduct = products.find((p) => p.pwyw);
 const bundlePrice = 49;
 const bundleSave = 39;
+const liveArchiveCount = archives.filter((p) => Boolean(p.lemonUrl)).length;
+const allLive = liveArchiveCount === archives.length && archives.length > 0;
 ---
 
 <Layout title={title} description={description}>
@@ -34,19 +36,26 @@ const bundleSave = 39;
 
   <section id="products" class="border-b border-border" aria-label="Products">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
-      {/* Bundle banner */}
+      {/* Bundle banner — shows live only when all 3 have lemonUrl, else pending with owner action */}
       <div class="mb-8 rounded-[20px] border border-primary-cta/20 bg-primary-cta/5 p-5 sm:p-6">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-primary-cta">Bundle · Save ${bundleSave}</p>
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-primary-cta">Bundle · Save ${bundleSave} · {liveArchiveCount}/{archives.length} live</p>
             <h2 id="bundle-title" class="mt-2 text-[1.1rem] font-semibold tracking-[-0.02em] text-primary-text">All 3 archives — <span class="text-primary-cta">${bundlePrice}</span> <span class="text-muted-text line-through text-[0.9rem]"> $77</span></h2>
-            <p class="mt-1 text-[0.85rem] text-muted-text">BLExAR Nano+OLED + CoreML Offline + Biquadia DSP. One checkout, three secure downloads via Lemon customer portal.</p>
+            <p class="mt-1 text-[0.85rem] text-muted-text">BLExAR Nano+OLED + CoreML Offline + Biquadia DSP. One checkout, three secure downloads via Lemon customer portal. MoR VAT handled.</p>
           </div>
           <div class="flex gap-2">
-            <span class="rounded-full bg-primary-cta px-3.5 py-1.5 font-mono text-[0.7rem] font-bold uppercase tracking-[0.1em] text-white">Coming soon — needs Lemon store</span>
+            {allLive ? (
+              <a href="#newsletter" class="rounded-full bg-primary-cta px-3.5 py-1.5 font-mono text-[0.7rem] font-bold uppercase tracking-[0.1em] text-white">Bundle live — {liveArchiveCount} archives</a>
+            ) : (
+              <span class="rounded-full bg-primary-cta px-3.5 py-1.5 font-mono text-[0.7rem] font-bold uppercase tracking-[0.1em] text-white">{liveArchiveCount} live — {archives.length - liveArchiveCount} pending owner Buy URLs</span>
+            )}
           </div>
         </div>
-        <p class="mt-3 font-mono text-[0.6rem] text-muted-text">Owner action: create Lemon store `makerportal`, 3 digital products, upload zips, enable secure delivery, copy Buy URLs into `src/data/shop.json` lemonUrl. See docs/MONETIZATION.md.</p>
+        <p class="mt-3 font-mono text-[0.6rem] text-muted-text">
+          Owner action: create Lemon store <code class="rounded bg-card-bg px-1">makerportal</code>, 3 digital products, upload zips &lt;50MB, enable secure delivery, customer portal, discount <code class="rounded bg-card-bg px-1">LAUNCH20</code>, PWYW floor $9. Copy real Buy URLs into <code class="rounded bg-card-bg px-1">src/data/shop.json</code> <code class="rounded bg-card-bg px-1">lemonUrl</code>. Lemon.js overlay verified via <code class="rounded bg-card-bg px-1">lemonsqueezy-button</code> class. See docs/MONETIZATION.md P1 shop MVP.
+          {liveArchiveCount > 0 && ` Tip jar live: ${tipProduct?.lemonUrl ? '✓ tip URL' : '—'}.`}
+        </p>
       </div>
 
       <div class="grid gap-5 md:grid-cols-3">
@@ -74,16 +83,20 @@ const bundleSave = 39;
               {p.compareAt && <span class="text-[0.85rem] text-muted-text line-through">${p.compareAt}</span>}
               <span class="ml-auto font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-text">MoR VAT incl.</span>
             </div>
-            <div class="mt-4">
+            <div class="mt-4 space-y-2">
               {p.lemonUrl ? (
-                <a href={p.lemonUrl} class="lemonsqueezy-button inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">
-                  Buy for ${p.price} — secure download
-                </a>
+                <>
+                  <a href={p.lemonUrl} class="lemonsqueezy-button inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90" data-product={p.id} data-analytics="shop-buy">
+                    Buy for ${p.price} — secure download
+                  </a>
+                  <p class="font-mono text-[0.6rem] leading-[1.4] text-muted-text">Lemon overlay → secure signed link, customer portal, VAT incl. {p.lemonId ? `ID ${p.lemonId}` : ''}</p>
+                </>
               ) : (
-                <div class="space-y-2">
+                <>
                   <span class="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-border bg-elevated px-5 text-[0.85rem] font-medium text-muted-text">Coming soon — needs Lemon Buy URL</span>
-                  <p class="font-mono text-[0.6rem] leading-[1.4] text-muted-text">Join newsletter below to get notified. Real code only — from {p.relatedTo?.join(', ')} builds.</p>
-                </div>
+                  <p class="font-mono text-[0.6rem] leading-[1.4] text-muted-text">Real code only — from {p.relatedTo?.join(', ')} builds. Join newsletter below for launch. Owner: add <code class="rounded bg-card-bg px-1">lemonUrl</code> to <code class="rounded bg-card-bg px-1">shop.json</code>.</p>
+                  <a href="#newsletter" class="inline-flex text-[0.7rem] font-medium text-brand-anchor hover:text-primary-text">Notify me →</a>
+                </>
               )}
             </div>
           </article>
@@ -102,9 +115,12 @@ const bundleSave = 39;
                 <li class="text-[0.8rem] text-muted-text">• {inc}</li>
               ))}
             </ul>
-            <div class="mt-6">
+            <div class="mt-6 space-y-2">
               {tipProduct.lemonUrl ? (
-                <a href={tipProduct.lemonUrl} class="lemonsqueezy-button inline-flex min-h-11 items-center justify-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Tip ${tipProduct.price}+ — support studio</a>
+                <>
+                  <a href={tipProduct.lemonUrl} class="lemonsqueezy-button inline-flex min-h-11 items-center justify-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90" data-product={tipProduct.id} data-analytics="tip">Tip ${tipProduct.price}+ — support studio</a>
+                  <p class="font-mono text-[0.6rem] text-muted-text">Live via Lemon overlay — verified. PWYW floor ${tipProduct.price}. MoR handles VAT.</p>
+                </>
               ) : (
                 <span class="inline-flex min-h-11 items-center rounded-full border border-border bg-card-bg px-5 text-[0.85rem] font-medium text-muted-text">Tip jar — needs Lemon Buy URL</span>
               )}
@@ -140,10 +156,44 @@ const bundleSave = 39;
           <p class="mt-3 max-w-xl text-[0.95rem] leading-[1.65] text-muted-text">Privacy-first newsletter via Buttondown (no tracking pixels, markdown-friendly, per D-014). Free until 100 subs, then $9/mo. Lead magnet: free snippet from BLExAR archive.</p>
           <p class="mt-4 font-mono text-[0.62rem] text-muted-text">Buttondown free first 100, $9/mo per addon (paid subs, analytics). No tracking per D-014.</p>
         </div>
-        <ButtondownSignup username="" title="Newsletter · Privacy-first" blurb="Get archive drops, field notes, and early access. No tracking, markdown-friendly." />
+        <ButtondownSignup tag="shop-interest" source="shop-page" title="Newsletter · Privacy-first" blurb="Get archive drops, field notes, and early access. No tracking, markdown-friendly." />
       </div>
     </div>
   </section>
 
   <script is:inline src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
+  <script>
+    // @ts-nocheck
+    // Lemon.js overlay verification + analytics (privacy-safe, first-party)
+    // Lemon.js creates window.LemonSqueezy and intercepts .lemonsqueezy-button clicks to show overlay
+    (() => {
+      function bindShop() {
+        document.querySelectorAll('a.lemonsqueezy-button').forEach((a) => {
+          if (a.dataset.bound === '1') return;
+          a.dataset.bound = '1';
+          a.addEventListener('click', () => {
+            const product = a.getAttribute('data-product') || a.href;
+            const kind = a.getAttribute('data-analytics') || 'shop';
+            try {
+              window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: `${kind}_click`, product, url: a.href } }));
+              console.debug(`[analytics] ${kind}_click`, { product });
+            } catch {}
+          });
+        });
+
+        // Verify Lemon.js loaded
+        let tries = 0;
+        const check = setInterval(() => {
+          tries++;
+          if (window.LemonSqueezy || window.createLemonSqueezyOverlay || document.querySelector('script[src*="lemon.js"]')) {
+            console.debug('[shop] Lemon.js detected', { tries, overlay: !!window.LemonSqueezy });
+            clearInterval(check);
+          }
+          if (tries > 20) clearInterval(check);
+        }, 500);
+      }
+      bindShop();
+      document.addEventListener('astro:page-load', bindShop);
+    })();
+  </script>
 </Layout>

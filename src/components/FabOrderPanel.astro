@@ -4,16 +4,10 @@
  * Only renders when a real referral / shared-project URL exists.
  * If both merchants are missing, renders nothing (G2 stub compliance).
  *
- * Stack: per handoff Priority 2 — export CSV/gerber/stackup → order on PCBWay/JLCPCB.
- * Yield: Shared Projects pay 10% PCB + 10% SMT; referral ~5%. Higher than Amazon electronics.
- *
- * Usage:
- *   <FabOrderPanel simulator="signal-integrity-lab" exportLabel="Export stackup CSV" />
- *   JS must dispatch event `fab-export-ready` with detail {filename, blobUrl}
- *   or set data-export-ready="true" on panel via external script.
- *
- * Owner ask: When PCBWay/JLCPCB IDs land, fill constants in src/data/affiliate-links.ts
- * (PCBWAY_REFERRAL_CODE, PCBWAY_SHARED_PROJECTS, JLCPCB_REFERRAL_CODE).
+ * Stack: Priority 1 — SI/Antenna/Verilog export → fab. Referral LIVE 2026-07-19 (g/VJp6Xm = $5 free + $10 coupon + 5% first order).
+ * Shared Projects pending — needs real KiCad/Gerbers, roadmap deferred until traffic (see docs/FAB-ROADMAP-SHARED.md future).
+ * JLCPCB shelved — same audience, low ROI until 10k sessions.
+ * Yield: Shared 10% PCB + 10% SMT > referral 5% > Amazon electronics 1-2.5%.
  */
 import {
   PCBWAY_REFERRAL_CODE,

@@ -299,6 +299,16 @@ function wrapAngle(a:number){ return Math.atan2(Math.sin(a), Math.cos(a)); }`;
       </div>
     </section>
 
+    <div id="slam-success-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[380px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Loop closure · Aha moment</p>
+      <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text">Loop closed! Map snap corrected drift.</p>
+      <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">BoW similarity >0.72 triggered pose-graph snap. Export trajectory + build edge stack with ZED-F9P RTK.</p>
+      <div class="mt-3 flex gap-2">
+        <button id="slam-toast-cta" type="button" class="pointer-events-auto inline-flex items-center justify-center rounded-full bg-primary-text px-4 py-2 text-[0.82rem] font-semibold text-canvas hover:opacity-90">View SLAM edge stack ↓</button>
+        <button id="slam-toast-dismiss" type="button" class="pointer-events-auto rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text hover:text-primary-text">Dismiss</button>
+      </div>
+    </div>
+
     <ExportGate
       simulator="slam-odometry-arena"
       fileName="slam-trajectory.csv"
@@ -706,6 +716,41 @@ function initSLAM(){
     return {sim: bestSim>0?bestSim:0, trigger:false, matched:null};
   }
 
+  // --- Aha-moment CTA: successful loop closure → toast CTA to kit (Priority 4) ---
+  const slamAha = { shown: false, count: 0 };
+  function checkSlamAha(drift){
+    try {
+      if (!slamAha.shown && loopCount >= 1) {
+        const toast = document.getElementById('slam-success-toast');
+        if (toast) {
+          toast.classList.remove('hidden');
+          toast.style.display = 'flex';
+          toast.style.flexDirection = 'column';
+          try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_moment', sim: 'slam-odometry-arena', metric: 'loop_closure', drift } })); } catch {}
+        }
+        slamAha.shown = true;
+      }
+    } catch {}
+  }
+  try {
+    const slamCta = document.getElementById('slam-toast-cta');
+    const slamDismiss = document.getElementById('slam-toast-dismiss');
+    if (slamCta) {
+      slamCta.addEventListener('click', () => {
+        const kit = document.getElementById('kit-title');
+        const target = kit || document.querySelector('.gear-grid') || document.querySelector('.export-gate');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_cta_click', sim: 'slam-odometry-arena' } })); } catch {}
+      });
+    }
+    if (slamDismiss) {
+      slamDismiss.addEventListener('click', () => {
+        const el = document.getElementById('slam-success-toast');
+        if (el) { el.classList.add('hidden'); el.style.display='none'; }
+      });
+    }
+  } catch {}
+
   function applyLoopClosure(matched, drift){
     const dx=matched.mu[0]-mu[0];
     const dy=matched.mu[1]-mu[1];
@@ -742,6 +787,8 @@ function initSLAM(){
     setTimeout(()=>{ if(flashTimer<0.1) loopFlash.textContent=''; }, 2200);
     // audio
     playSnap(dx,dy,drift);
+    // Aha-moment trigger
+    try { checkSlamAha(drift); } catch {}
   }
 
   // Drawing helpers

@@ -25,15 +25,17 @@ export const PCBWAY_BASE = 'https://www.pcbway.com';
 export const JLCPCB_BASE = 'https://jlcpcb.com';
 
 /**
- * PCBWay referral / Shared Project param. Empty until owner supplies:
- * - PCBWay referral URL (e.g. https://www.pcbway.com/setinvite.aspx?inviteid=XXXX)
- * - or Shared Project URLs (10% PCB + 10% SMT when others order)
- * Leave empty to keep CTA hidden (G2 acceptance: blocked with clear ask).
+ * PCBWay referral / Shared Project param.
+ * Referral LIVE 2026-07-19: https://pcbway.com/g/VJp6Xm (5% first order + $10 coupon).
+ * Shared Projects (10% PCB + 10% SMT) still pending — needs real boards, roadmap docs/FAB-ROADMAP-SHARED.md.
+ * JLCPCB shelved — same audience, low ROI until traffic.
  */
-export const PCBWAY_REFERRAL_CODE: string = ''; // e.g. inviteid or full referral path — owner to fill
+export const PCBWAY_REFERRAL_CODE: string = 'https://pcbway.com/g/VJp6Xm';
 export const PCBWAY_SHARED_PROJECTS: Record<string, string> = {
-  // simId -> shared project URL placeholder
-  // 'signal-integrity-lab': 'https://www.pcbway.com/project/shareproject/...',
+  // Shared Projects pending — roadmap, not fake URLs
+  // 'signal-integrity-lab': 'https://www.pcbway.com/project/shareproject/SI_50_Ohm_Coupon_...',
+  // 'antenna-em-sandbox': 'https://www.pcbway.com/project/shareproject/Patch_2.4GHz_...',
+  // 'verilog-live-sculptor': 'https://www.pcbway.com/project/shareproject/FPGA_Carrier_...',
 };
 
 /** JLCPCB Brand Advocate / referral. Empty until owner approval lands. */
