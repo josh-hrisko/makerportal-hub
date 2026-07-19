@@ -1,165 +1,165 @@
 {
-  "generatedAt": "2026-07-19T12:52:49.287Z",
+  "generatedAt": "2026-07-19T16:43:19.175Z",
   "cities": [
     {
       "name": "San Francisco",
       "lat": 37.7749,
       "lon": -122.4194,
-      "tempC": 12.6,
-      "weatherCode": 45,
-      "windKph": 7.2,
-      "humidity": 97,
-      "observedAt": "2026-07-19T12:45"
+      "tempC": 14.5,
+      "weatherCode": 3,
+      "windKph": 6.8,
+      "humidity": 91,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "New York",
       "lat": 40.7128,
       "lon": -74.006,
-      "tempC": 22.4,
+      "tempC": 26.4,
       "weatherCode": 0,
-      "windKph": 17.1,
-      "humidity": 78,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 18.8,
+      "humidity": 40,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "London",
       "lat": 51.5074,
       "lon": -0.1278,
-      "tempC": 21.9,
-      "weatherCode": 1,
-      "windKph": 13,
-      "humidity": 31,
-      "observedAt": "2026-07-19T12:45"
+      "tempC": 22.5,
+      "weatherCode": 2,
+      "windKph": 11.5,
+      "humidity": 30,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Paris",
       "lat": 48.8566,
       "lon": 2.3522,
-      "tempC": 23.6,
+      "tempC": 24,
       "weatherCode": 3,
-      "windKph": 11.5,
-      "humidity": 35,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 10.9,
+      "humidity": 31,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Berlin",
       "lat": 52.52,
       "lon": 13.405,
-      "tempC": 19.8,
-      "weatherCode": 3,
-      "windKph": 15.8,
-      "humidity": 53,
-      "observedAt": "2026-07-19T12:45"
+      "tempC": 16.9,
+      "weatherCode": 80,
+      "windKph": 16.2,
+      "humidity": 71,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Tokyo",
       "lat": 35.6762,
       "lon": 139.6503,
-      "tempC": 26,
+      "tempC": 24.6,
       "weatherCode": 0,
-      "windKph": 2.3,
-      "humidity": 87,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 2.4,
+      "humidity": 95,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Sydney",
       "lat": -33.8688,
       "lon": 151.2093,
-      "tempC": 11.1,
-      "weatherCode": 1,
-      "windKph": 3.8,
-      "humidity": 88,
-      "observedAt": "2026-07-19T12:45"
+      "tempC": 10,
+      "weatherCode": 3,
+      "windKph": 6,
+      "humidity": 97,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "São Paulo",
       "lat": -23.5505,
       "lon": -46.6333,
-      "tempC": 19.9,
+      "tempC": 24.5,
       "weatherCode": 0,
-      "windKph": 13,
-      "humidity": 48,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 16.2,
+      "humidity": 32,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Cape Town",
       "lat": -33.9249,
       "lon": 18.4241,
-      "tempC": 14,
-      "weatherCode": 51,
-      "windKph": 14,
-      "humidity": 97,
-      "observedAt": "2026-07-19T12:45"
+      "tempC": 12.5,
+      "weatherCode": 0,
+      "windKph": 3.2,
+      "humidity": 98,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Mumbai",
       "lat": 19.076,
       "lon": 72.8777,
-      "tempC": 26.4,
-      "weatherCode": 80,
-      "windKph": 17.6,
-      "humidity": 89,
-      "observedAt": "2026-07-19T12:45"
+      "tempC": 26,
+      "weatherCode": 53,
+      "windKph": 11.5,
+      "humidity": 93,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Dubai",
       "lat": 25.2048,
       "lon": 55.2708,
-      "tempC": 36.2,
+      "tempC": 33.7,
       "weatherCode": 0,
-      "windKph": 13.2,
-      "humidity": 58,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 3.8,
+      "humidity": 75,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Reykjavik",
       "lat": 64.1466,
       "lon": -21.9426,
-      "tempC": 11.2,
+      "tempC": 11.5,
       "weatherCode": 3,
-      "windKph": 13,
-      "humidity": 97,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 14,
+      "humidity": 96,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Singapore",
       "lat": 1.3521,
       "lon": 103.8198,
-      "tempC": 27.6,
+      "tempC": 26.4,
       "weatherCode": 0,
-      "windKph": 5.5,
-      "humidity": 76,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 3.2,
+      "humidity": 86,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Mexico City",
       "lat": 19.4326,
       "lon": -99.1332,
-      "tempC": 12.9,
-      "weatherCode": 3,
-      "windKph": 0.6,
-      "humidity": 100,
-      "observedAt": "2026-07-19T12:45"
+      "tempC": 19.5,
+      "weatherCode": 1,
+      "windKph": 2.3,
+      "humidity": 60,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Moscow",
       "lat": 55.7558,
       "lon": 37.6173,
-      "tempC": 27.2,
+      "tempC": 24.8,
       "weatherCode": 0,
-      "windKph": 6.6,
-      "humidity": 34,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 4.3,
+      "humidity": 44,
+      "observedAt": "2026-07-19T16:30"
     },
     {
       "name": "Nairobi",
       "lat": -1.2921,
       "lon": 36.8219,
-      "tempC": 26.7,
+      "tempC": 22.2,
       "weatherCode": 2,
-      "windKph": 6.9,
-      "humidity": 33,
-      "observedAt": "2026-07-19T12:45"
+      "windKph": 8.1,
+      "humidity": 50,
+      "observedAt": "2026-07-19T16:30"
     }
   ]
 }
