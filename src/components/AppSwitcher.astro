@@ -31,18 +31,19 @@ const {
   current,
   compact = false,
   variant = compact ? 'pill' : 'card',
-  showLegacyBadge = false,
   class: className,
   limit = 6,
   title = 'Studio catalog',
 } = Astro.props as Props;
 
+const displayLimit = variant === 'card' ? 6 : limit;
+
 const navLinks = getAppNavLinks();
-const related = current ? getRelatedApps(current, limit) : apps.slice(0, limit);
+const related = current ? getRelatedApps(current, displayLimit) : apps.slice(0, displayLimit);
 // For pill we want short list, for card we want curated but not overwhelming
 const displayList = current
   ? related
-  : navLinks.slice(0, limit).map((l) => apps.find((a) => a.title === l.title)!).filter(Boolean);
+  : navLinks.slice(0, displayLimit).map((l) => apps.find((a) => a.title === l.title)!).filter(Boolean);
 
 const total = apps.length;
 const externalCount = apps.filter((a) => a.external).length;
@@ -137,16 +138,16 @@ const internalCount = total - externalCount;
               aria-hidden="true"
             ></span>
             <span class="tracking-[-0.01em] truncate">{app.title}</span>
-            {showLegacyBadge && app.external && (
-              <span class="ml-auto sm:ml-0.5 shrink-0 rounded-full bg-elevated px-1.5 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">Legacy</span>
-            )}
           </a>
         );
       })}
       {displayList.length < total && (
-        <span class="inline-flex items-center gap-1 rounded-full border border-dashed border-border bg-transparent px-3 py-1.5 font-mono text-[0.68rem] text-muted-text/70">
-          +{total - displayList.length} more
-        </span>
+        <a
+          href="/apps"
+          class="inline-flex items-center gap-1 rounded-full border border-dashed border-border/80 bg-transparent px-3 py-1.5 font-mono text-[0.68rem] font-semibold text-muted-text hover:border-primary-text hover:text-primary-text hover:bg-elevated transition-colors"
+        >
+          +{total - displayList.length} more →
+        </a>
       )}
     </div>
 

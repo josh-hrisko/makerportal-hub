@@ -116,19 +116,41 @@ const breadcrumbSchema = {
 
       <div class="mt-12 rounded-[20px] border border-border bg-elevated/60 px-5 py-5 sm:px-6">
         <p class="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted-text">Product hosts • inter-app navigation</p>
-        <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 text-[0.9rem]">
-          {apps.map((app) => (
-            <li class="flex items-center gap-1.5 min-w-0 rounded-full border border-border/40 bg-card-bg/60 px-3 py-1.5 transition-colors hover:border-border hover:bg-card-bg">
-              <a
-                href={app.url}
-                class="flex items-center gap-1 min-w-0 font-medium text-muted-text transition-colors hover:text-primary-text"
-              >
-                <span class="truncate">{app.title}</span> <span class="shrink-0 text-muted-text/60">↗</span>
-              </a>
-              {app.external && <span class="ml-auto shrink-0 rounded-full bg-elevated px-1.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Legacy</span>}
-            </li>
-          ))}
-        </ul>
+
+        <div class="mt-6 space-y-6">
+          <div>
+            <h3 class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text mb-2.5">On-device Stack (makerportal.ai)</h3>
+            <ul class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 text-[0.85rem]">
+              {apps.filter(app => !app.external).map((app) => (
+                <li class="flex items-center gap-1.5 min-w-0 rounded-full border border-border/40 bg-card-bg/60 px-3 py-1.5 transition-colors hover:border-border hover:bg-card-bg">
+                  <a
+                    href={app.url}
+                    class="flex items-center gap-1 min-w-0 font-medium text-muted-text transition-colors hover:text-primary-text"
+                  >
+                    <span class="truncate">{app.title}</span> <span class="shrink-0 text-muted-text/60">↗</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text mb-2.5">Legacy ecosystem bridge (makersportal.com)</h3>
+            <ul class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6 text-[0.85rem]">
+              {apps.filter(app => app.external).map((app) => (
+                <li class="flex items-center gap-1.5 min-w-0 rounded-full border border-border/40 bg-card-bg/60 px-3 py-1.5 transition-colors hover:border-border hover:bg-card-bg">
+                  <a
+                    href={app.url}
+                    class="flex items-center gap-1 min-w-0 font-medium text-muted-text transition-colors hover:text-primary-text"
+                  >
+                    <span class="truncate">{app.title}</span> <span class="shrink-0 text-muted-text/60">↗</span>
+                  </a>
+                  <span class="ml-auto shrink-0 rounded-full bg-elevated px-1.5 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">Legacy</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
         <div class="mt-8 border-t border-border pt-6">
           <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Future-proof AppSwitcher — drop into subdomains</p>
           <div class="mt-4">

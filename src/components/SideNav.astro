@@ -33,7 +33,7 @@ const {
   data-root={rootId}
   data-track-id={trackId}
   data-pagefind-ignore
-  class="fixed right-4 top-1/2 z-40 hidden w-[46px] -translate-y-1/2 flex-col items-end gap-3 overflow-hidden rounded-[20px] border border-border bg-card-bg/60 p-3.5 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.12)] backdrop-blur-[14px] transition-all duration-300 ease-out hover:w-56 hover:bg-card-bg/90 focus-within:w-56 focus-within:bg-card-bg/90 group/sidenav 2xl:flex"
+  class="fixed right-3 top-1/2 z-40 hidden w-[42px] -translate-y-1/2 flex-col items-end gap-3 overflow-hidden rounded-[20px] border border-border bg-card-bg/60 p-3 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.12)] backdrop-blur-[14px] transition-all duration-300 ease-out hover:w-48 hover:bg-card-bg/90 focus-within:w-48 focus-within:bg-card-bg/90 group/sidenav 2xl:flex"
   aria-label="Table of contents"
 >
   <div class="flex w-full items-center justify-end border-b border-border/40 pb-2 text-[0.62rem] font-bold uppercase tracking-[0.14em] text-muted-text/80 whitespace-nowrap min-h-6">
@@ -74,6 +74,7 @@ const {
     text-overflow: ellipsis;
     padding-right: 0.75rem;
     pointer-events: none;
+    max-width: 125px; /* Clamp to prevent overflow in narrower w-48 panel */
   }
   #site-side-nav:hover .side-nav-label,
   #site-side-nav:focus-within .side-nav-label,
@@ -117,6 +118,26 @@ const {
     box-shadow: 0 0 6px color-mix(in srgb, var(--mp-cta) 60%, transparent);
     transform: scale(1.2);
   }
+  
+  /* Tighter layout rules when many headings are displayed */
+  #site-side-nav.has-many-items,
+  #playground-side-nav.has-many-items {
+    gap: 0.5rem !important;
+  }
+  #site-side-nav.has-many-items .side-nav-link,
+  #playground-side-nav.has-many-items .side-nav-link {
+    padding: 0.2rem 0 !important;
+  }
+  #site-side-nav.has-many-items .side-nav-dot,
+  #playground-side-nav.has-many-items .side-nav-dot {
+    width: 0.35rem;
+    height: 0.35rem;
+  }
+  #site-side-nav.has-many-items .side-nav-link.is-active .side-nav-dot,
+  #playground-side-nav.has-many-items .side-nav-link.is-active .side-nav-dot {
+    transform: scale(1.1);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .side-nav-link,
     .side-nav-label,
@@ -192,6 +213,12 @@ const {
       const selector = navContainer.getAttribute('data-selector') || 'h2';
       const rootId = navContainer.getAttribute('data-root') || 'main-content';
 
+      const mainContent = document.getElementById('main-content');
+      if (mainContent && mainContent.getAttribute('data-toc') === 'false') {
+        navContainer.style.display = 'none';
+        return;
+      }
+
       const scope = document.getElementById(rootId) || document;
       const rawHeadings = Array.from(scope.querySelectorAll(selector));
       const usedIds = new Set();
@@ -202,6 +229,7 @@ const {
       for (const h of rawHeadings) {
         if (h.classList.contains('sr-only')) continue;
         if (h.closest('header') || h.closest('footer')) continue;
+        if (h.getAttribute('data-toc-priority') === 'false') continue;
         // Auto-generate id if missing (supports blog markdown without rehype-slug)
         if (!h.id) {
           const base = slugify(cleanLabel(h) || h.textContent || 'section');
@@ -219,6 +247,12 @@ const {
       if (headings.length < minHeadings || headings.length > maxHeadings) {
         navContainer.style.display = 'none';
         return;
+      }
+
+      if (headings.length > 5) {
+        navContainer.classList.add('has-many-items');
+      } else {
+        navContainer.classList.remove('has-many-items');
       }
 
       track.innerHTML = '';
