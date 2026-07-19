@@ -115,7 +115,7 @@ Hardware and equipment utilized inside the studio for engineering and testing: [
 - [Shure MV7+ Podcast Dynamic Microphone with Stand – OBS Certified, Enhanced Audio, LED Panel, USB-C & XLR Outputs, Auto Level Mode, Digital Pop Filter – for Podcasting, Streaming, and Recording, Black](https://www.amazon.com/dp/B0CTJ8BSWN?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($319.00 USD): USB/XLR hybrid mic used building and testing nymic. (Category: Microphone)
 - [Audio-Technica ATH-M50X Professional Studio Monitor Headphones, Black, Professional Grade, Critically Acclaimed, with Detachable Cable](https://www.amazon.com/dp/B00HVLUR86?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($159.00 USD): Reference monitoring headphones used for akous's binaural audio testing. (Category: Headphones)
 - [Deep Learning (Adaptive Computation and Machine Learning series)](https://www.amazon.com/dp/0262035618?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($61.00 USD): Foundational deep-learning textbook referenced while building itria. (Category: Book)
-- [SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25](https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($251.38 USD): Portable SSD used for studio project storage and backups. (Category: Storage)
+- [SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25](https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1) ($250.99 USD): Portable SSD used for studio project storage and backups. (Category: Storage)
 
 ## Technical Stack
 

@@ -429,7 +429,7 @@ curated developer hardware and equipment specifications:
 ### SANDISK 1TB Extreme Portable SSD (New Model) - up to 2000MB/s Transfer speeds, USB Type-C connectivity, Reliable Durability - Black - SDSSDE70-1T00-G25
 - **URL:** https://www.amazon.com/dp/B0GMWYYRQL?tag=engineersport-20&linkCode=ogi&th=1&psc=1
 - **Category:** Storage
-- **Curated Price:** $251.38 USD
+- **Curated Price:** $250.99 USD
 - **Curated Notes:** Portable SSD used for studio project storage and backups.
 
 
