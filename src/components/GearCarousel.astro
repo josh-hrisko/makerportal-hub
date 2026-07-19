@@ -1,0 +1,243 @@
+---
+import { pillarMeta, fallbackPillar } from '../data/trends';
+import type { ResolvedAffiliateLink } from '../data/affiliate-links';
+
+interface Props {
+  gear: ResolvedAffiliateLink[];
+}
+
+const { gear } = Astro.props;
+---
+
+{gear.length > 0 && (
+  <div class="carousel-container relative group/carousel mt-8">
+    <!-- Progress bar -->
+    <div class="carousel-progress-bar-container absolute top-[-6px] left-0 w-full h-[2px] bg-border/20 z-20 pointer-events-none opacity-0 group-hover/carousel:opacity-100 focus-within:opacity-100 transition-opacity duration-300">
+      <div class="carousel-progress-bar h-full bg-primary-cta w-0"></div>
+    </div>
+    
+    <!-- Desktop navigation buttons -->
+    <button class="carousel-btn carousel-btn-prev absolute left-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Previous items">
+      <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <button class="carousel-btn carousel-btn-next absolute right-4 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center size-9 rounded-full bg-card-bg border border-border text-primary-text opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100 transition-all hover:scale-105" aria-label="Next items">
+      <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </button>
+
+    <div class="carousel-wrap -mx-5 sm:mx-0">
+      <div class="carousel-track" aria-label="Gear picks" role="list">
+        {gear.map((item, index) => (
+          <article role="listitem" class="snap-card hub-card surface-card group relative flex w-[220px] flex-col overflow-hidden rounded-[20px] border bg-card-bg sm:w-[250px] carousel-stagger" style={`--stagger-index: ${index}`}>
+            <div class="relative aspect-square w-full overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-4 sm:p-5 shimmer-placeholder">
+              {item.image ? (
+                <img 
+                  src={item.image} 
+                  alt={item.title} 
+                  width={250} 
+                  height={250} 
+                  loading="lazy" 
+                  decoding="async" 
+                  onload="this.parentElement.classList.remove('shimmer-placeholder')" 
+                  class="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.03] drop-shadow-[0_8px_16px_rgba(0,0,0,0.08)]" 
+                />
+              ) : (
+                <div class="grid h-full w-full place-items-center bg-elevated/40 text-muted-text/50 font-mono text-[0.6rem] uppercase tracking-[0.14em] border border-dashed border-border/60 rounded-[14px]">
+                  {item.category}
+                </div>
+              )}
+              {item.price && (
+                <span class="absolute right-2.5 top-2.5 inline-flex items-center rounded-full border border-border bg-canvas/95 px-2 py-0.5 font-mono text-[0.62rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
+                  {item.price}
+                </span>
+              )}
+              <span class="pointer-events-none absolute bottom-2 right-2.5 rounded-full bg-elevated/80 border border-border/40 px-2 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.1em] text-muted-text/75 backdrop-blur">
+                {item.category}
+              </span>
+            </div>
+            <div class="flex flex-1 flex-col p-4">
+              <h3 class="line-clamp-2 text-[0.88rem] font-semibold leading-[1.35] tracking-[-0.01em] text-primary-text transition-colors group-hover:text-primary-cta">
+                <a href={item.url} target="_blank" rel="noopener noreferrer sponsored">{item.title}</a>
+              </h3>
+              <p class="mt-2 line-clamp-3 text-[0.76rem] leading-[1.5] text-muted-text/80">{item.note}</p>
+              
+              <div class="mt-auto pt-4 flex flex-col gap-2">
+                {(item.pillars ?? []).length > 0 && (
+                  <div class="flex flex-wrap items-center gap-1">
+                    {(item.pillars ?? []).slice(0, 2).map((p) => {
+                      const pillar = pillarMeta[p] ?? fallbackPillar;
+                      return (
+                        <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated/40 px-1.5 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.08em] text-muted-text">
+                          <span class="size-1 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                          {pillar.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+                <div class="flex items-center justify-between mt-1">
+                  {item.price ? (
+                    <span class="text-[0.85rem] font-bold tracking-tight text-primary-text">{item.price} <span class="font-mono text-[0.58rem] font-normal text-muted-text">{item.currency}</span></span>
+                  ) : <span class="text-[0.7rem] text-muted-text">Amazon</span>}
+                  <a href={item.url} target="_blank" rel="noopener noreferrer sponsored" class="inline-flex items-center gap-1 rounded-full bg-primary-text px-2.5 py-1 text-[0.68rem] font-semibold text-canvas transition-opacity hover:opacity-90">View ↗</a>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const initCarousels = () => {
+      const containers = document.querySelectorAll('.carousel-container');
+      containers.forEach((container) => {
+        const track = container.querySelector('.carousel-track');
+        const prevBtn = container.querySelector('.carousel-btn-prev');
+        const nextBtn = container.querySelector('.carousel-btn-next');
+        const progressBar = container.querySelector('.carousel-progress-bar');
+        const wrap = container.querySelector('.carousel-wrap');
+
+        if (!track) return;
+        if (track.dataset.carouselInitialized === 'true') return;
+        track.dataset.carouselInitialized = 'true';
+
+        const updateScrollState = () => {
+          const scrollLeft = track.scrollLeft;
+          const scrollWidth = track.scrollWidth;
+          const clientWidth = track.clientWidth;
+          const maxScroll = scrollWidth - clientWidth;
+          const canScroll = maxScroll > 2;
+
+          if (progressBar) {
+            progressBar.parentElement.style.display = canScroll ? '' : 'none';
+            const pct = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
+            progressBar.style.width = `${pct}%`;
+          }
+
+          if (wrap) {
+            wrap.classList.toggle('at-start', scrollLeft <= 2);
+            wrap.classList.toggle('at-end', scrollLeft >= maxScroll - 2);
+          }
+
+          if (prevBtn) {
+            prevBtn.style.display = canScroll ? '' : 'none';
+            prevBtn.disabled = scrollLeft <= 2;
+            prevBtn.classList.toggle('opacity-50', scrollLeft <= 2);
+          }
+          if (nextBtn) {
+            nextBtn.style.display = canScroll ? '' : 'none';
+            nextBtn.disabled = scrollLeft >= maxScroll - 2;
+            nextBtn.classList.toggle('opacity-50', scrollLeft >= maxScroll - 2);
+          }
+        };
+
+        track.addEventListener('scroll', updateScrollState, { passive: true });
+        updateScrollState();
+
+        window.addEventListener('load', updateScrollState, { once: true });
+        if (window.ResizeObserver) {
+          const ro = new ResizeObserver(updateScrollState);
+          ro.observe(track);
+        }
+
+        if (prevBtn && nextBtn) {
+          const scrollAmount = () => track.clientWidth * 0.75;
+          prevBtn.addEventListener('click', () => {
+            track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+          });
+          nextBtn.addEventListener('click', () => {
+            track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+          });
+        }
+
+        let isHovered = false;
+        container.addEventListener('mouseenter', () => { isHovered = true; });
+        container.addEventListener('mouseleave', () => { isHovered = false; });
+
+        container.setAttribute('tabindex', '0');
+        container.setAttribute('aria-roledescription', 'carousel');
+
+        const handleKeyDown = (e) => {
+          const isFocused = container.contains(document.activeElement);
+          if ((isHovered || isFocused) && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+            e.preventDefault();
+            const dir = e.key === 'ArrowRight' ? 1 : -1;
+            const card = track.querySelector('.snap-card');
+            const amount = card ? card.clientWidth + 16 : 220;
+            track.scrollBy({ left: dir * amount, behavior: 'smooth' });
+          }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        let isDown = false;
+        let startX = 0;
+        let scrollLeftStart = 0;
+        let velocity = 0;
+        let lastTime = 0;
+        let lastX = 0;
+        let rafId = null;
+
+        track.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'touch') return;
+          isDown = true;
+          track.classList.add('active');
+          track.style.scrollSnapType = 'none';
+          startX = e.pageX - track.offsetLeft;
+          scrollLeftStart = track.scrollLeft;
+          lastTime = Date.now();
+          lastX = e.pageX;
+          velocity = 0;
+          if (rafId) cancelAnimationFrame(rafId);
+        });
+
+        const handlePointerUp = () => {
+          if (!isDown) return;
+          isDown = false;
+          track.classList.remove('active');
+          track.style.scrollSnapType = 'x mandatory';
+
+          if (Math.abs(velocity) > 0.5) {
+            let momentum = velocity * 15;
+            const step = () => {
+              track.scrollLeft -= momentum;
+              momentum *= 0.92;
+              if (Math.abs(momentum) > 0.5 && !isDown) {
+                rafId = requestAnimationFrame(step);
+              } else {
+                updateScrollState();
+              }
+            };
+            rafId = requestAnimationFrame(step);
+          } else {
+            updateScrollState();
+          }
+        };
+
+        track.addEventListener('pointerleave', handlePointerUp);
+        track.addEventListener('pointerup', handlePointerUp);
+
+        track.addEventListener('pointermove', (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const x = e.pageX - track.offsetLeft;
+          const walk = (x - startX) * 1.5;
+          track.scrollLeft = scrollLeftStart - walk;
+
+          const now = Date.now();
+          const dt = now - lastTime;
+          if (dt > 0) {
+            velocity = (e.pageX - lastX) / dt;
+          }
+          lastTime = now;
+          lastX = e.pageX;
+        });
+      });
+    };
+
+    initCarousels();
+  })();
+</script>

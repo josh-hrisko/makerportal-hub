@@ -3,9 +3,9 @@ import { Code } from 'astro:components';
 import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
+import GearCarousel from '../../components/GearCarousel.astro';
 import Math from '../../components/Math.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
-import { pillarMeta, fallbackPillar } from '../../data/trends';
 
 const title = 'Cone Breakup Explorer — Piston Range, Breakup & Resonances | MakerPortal';
 const description =
@@ -441,62 +441,7 @@ const computeDisplacement = (r, theta, f, fb, mode) => {
             <div class="h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
           </div>
 
-          <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {gear.map((item) => (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="sponsored noopener noreferrer"
-                class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
-              >
-                <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt=""
-                      width="480"
-                      height="360"
-                      loading="lazy"
-                      decoding="async"
-                      class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
-                    />
-                  ) : (
-                    <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
-                      {item.category}
-                    </div>
-                  )}
-                  {item.price && (
-                    <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
-                      {item.price}
-                    </span>
-                  )}
-                  <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
-                    {item.category}
-                  </span>
-                </div>
-
-                <div class="flex flex-1 flex-col p-4 sm:p-4.5">
-                  <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text transition-colors group-hover/card:text-primary-cta">
-                    {item.title}
-                  </h4>
-                  <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
-                  {(item.pillars ?? []).length > 0 && (
-                    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3.5">
-                      {(item.pillars ?? []).slice(0, 2).map((p) => {
-                        const pillar = pillarMeta[p] ?? fallbackPillar;
-                        return (
-                          <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
-                            <span class="size-1 rounded-full" style={{ background: pillar.color }} aria-hidden="true"></span>
-                            {pillar.label}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </a>
-            ))}
-          </div>
+          <GearCarousel gear={gear} />
           <p class="mt-6 text-[0.78rem] text-muted-text">More gear across every app: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">the full Gear list →</a></p>
         </div>
       </section>
