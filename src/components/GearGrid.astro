@@ -1,0 +1,74 @@
+---
+import AffiliateDisclosure from './AffiliateDisclosure.astro';
+import type { ResolvedAffiliateLink } from '../data/affiliate-links';
+
+interface Props {
+  gear: ResolvedAffiliateLink[];
+  title?: string;
+  headingId?: string;
+}
+
+const {
+  gear,
+  title = 'Take This to Hardware',
+  headingId = 'gear-title',
+} = Astro.props;
+---
+
+{gear.length > 0 && (
+  <section class="border-b border-border" aria-labelledby={headingId}>
+    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 id={headingId} class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">{title}</h2>
+          <AffiliateDisclosure class="mt-3 max-w-2xl" />
+        </div>
+      </div>
+      <slot name="before-grid" />
+      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {gear.map((item) => (
+          <a
+            href={item.url}
+            target="_blank"
+            rel="sponsored noopener noreferrer"
+            data-gear-id={item.id}
+            data-merchant={item.merchant}
+            class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+          >
+            <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt=""
+                  width="480"
+                  height="360"
+                  loading="lazy"
+                  class="h-full w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.10)] transition-transform duration-500 group-hover/card:scale-[1.05]"
+                />
+              ) : (
+                <div class="grid h-full w-full place-items-center rounded-[14px] border border-dashed border-border bg-elevated/50 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted-text">
+                  {item.category}
+                </div>
+              )}
+              {item.price && (
+                <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold text-primary-text shadow-sm backdrop-blur">
+                  {item.price}
+                </span>
+              )}
+              <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
+                {item.merchant === 'amazon' ? item.category : item.merchant}
+              </span>
+            </div>
+            <div class="flex flex-1 flex-col p-4 sm:p-4.5">
+              <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
+              <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+      <p class="mt-6 text-[0.78rem] text-muted-text">
+        More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a>
+      </p>
+    </div>
+  </section>
+)}

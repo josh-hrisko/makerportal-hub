@@ -6,7 +6,11 @@ Replaces `HANDOFF-MONETIZATION.md` + `MONETIZATION-STRATEGY-2026-07-15.md` + ad-
 
 - **Shop:** Lemon Squeezy MoR — 5%+50¢, zero monthly, secure signed downloads, VAT/GST handled, customer portal, bundles, discount codes. Acquired by Stripe 2024, future is Stripe Managed Payments (MoR persists). Gumroad fallback (10%+50c direct) worse. Stripe Payment Links rejected — pushes tax to seller.
 - **Email:** Buttondown — privacy-first mode (no tracking pixels), markdown-friendly. Free first 100, $9/mo per addon (paid subs, analytics, sponsorships). Substack rejected — tracking pixels + ecosystem lock-in.
-- **Affiliate:** Amazon Associates tag `engineersport-20`, 50 real picks (mined from makersportal.com, audit trail `AFFILIATE-CANDIDATES.md`), disclosure + `rel="sponsored"`. Live enrichment via Creators API v3.1 (build-time → committed JSON → PR, D-015).
+- **Affiliate (approved paths):**
+  1. **Amazon Associates** — tag `engineersport-20`. Curated ASINs in `affiliate-links.json`, live title/image/price via Creators API → `amazon-catalog.json` (build-time, D-015). Books/tools preferred over thin electronics margins.
+  2. **SparkFun Affiliate** — code `rOtrc44SZw` (`?ref=` on sparkfun.com). **10% on SparkFun Originals** only; third-party (Pi, Jetson, Teensy) still linked for UX but may pay $0. URL helper: `buildSparkFunUrl()` in `affiliate-links.ts`.
+  3. *(Pending)* PCBWay / JLCPCB — not live until referral IDs land.
+  - Disclosure + `rel="sponsored"` on all outbound affiliate CTAs. Integrity: `npm run amazon:audit` + `amazon:smoke` (wired into `npm run check`).
 - **Trends → Signals Journal:** Daily digest `trends-digest.yml` 14:00 UTC, gated pipeline + thumbnails self-hosted (D-012/D-013/D-017). **Auto-publishes** each day directly to `/journal/YYYY-MM-DD` (D-022) — gate tests, not a PR, are the pre-publish gate; latest entry also feeds `/resources#trending` and re-ranks gear. Bluesky + HN only (Reddit disabled, D-023).
 
 Hard constraints: never fabricate usage, no auto-discovery/auto-publish of *products or blog content* without a human-review gate (the trends *signal digest* auto-publishes curated public links gated by the pipeline tests — D-022 — which is distinct from generating content/product recommendations), no runtime API calls, no second payment processor without discussion, verify slugs/titles, check rendered output on volume changes (Playwright).
@@ -80,9 +84,11 @@ New source worth prototyping when this resumes: **Wikipedia's pageviews/current-
 
 ## Checklist next session
 
-- [ ] Re-test `AssociateNotEligible` after 2026-07-17
-- [ ] Merge trend PR #2
-- [ ] Owner selects archives
+- [x] Amazon Creators API catalog live (163 ASINs refreshed 2026-07-19)
+- [x] SparkFun Affiliate live — code `rOtrc44SZw`, 14 products, multi-merchant model
+- [ ] Owner: PCBWay referral + JLCPCB Brand Advocate
+- [ ] Export soft-gate (email) on T0 sims
+- [ ] Owner selects Lemon archives
 - [ ] Ship shop MVP + newsletter embed
 - [ ] Upgrade /advertise copy
 - [ ] After 2-3 cycles tune `keywords.mjs`

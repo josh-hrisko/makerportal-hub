@@ -1,0 +1,83 @@
+[
+  {
+    "id": "pid-hover-stack",
+    "simulator": "pid-flight-arena",
+    "title": "Hover-ready flight stack",
+    "blurb": "Betaflight stack + ELRS radio + SparkFun ICM-20948 IMU — take PID gains from the arena to a real quad bench. IMU earns SparkFun Originals commission.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "speedybee-f405-v4-stack", "qty": 1 },
+      { "linkId": "radiomaster-boxer-elrs-radio", "qty": 1 },
+      { "linkId": "sf-icm20948-9dof", "qty": 1 },
+      { "linkId": "sf-thing-plus-esp32", "qty": 1, "optional": true },
+      { "linkId": "bno055-9dof-imu-adafruit", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "si-vna-starter",
+    "simulator": "signal-integrity-lab",
+    "title": "SI / S-parameter starter",
+    "blurb": "NanoVNA + SMA SOL cal kit + Johnson’s Black Magic — measure what the microstrip model predicts.",
+    "merchant": "amazon",
+    "items": [
+      { "linkId": "nanovna-h4-vector-analyzer", "qty": 1 },
+      { "linkId": "sma-cal-kit-4ghz-open-short-load", "qty": 1 },
+      { "linkId": "high-speed-digital-design-johnson-book", "qty": 1 },
+      { "linkId": "hiletgo-usb-logic-analyzer-8ch", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "rf-bench-starter",
+    "simulator": "rf-microwave-bench",
+    "title": "RF bench starter",
+    "blurb": "NanoVNA + SOL cal + Bowick — close the loop on RF Bench plots. Add TinySA or Pozar when you need spectrum / deeper theory.",
+    "merchant": "amazon",
+    "items": [
+      { "linkId": "nanovna-h4-vector-analyzer", "qty": 1 },
+      { "linkId": "sma-cal-kit-4ghz-open-short-load", "qty": 1 },
+      { "linkId": "rf-circuit-design-bowick-book", "qty": 1 },
+      { "linkId": "tinysa-ultra-spectrum-analyzer", "qty": 1, "optional": true },
+      { "linkId": "microwave-engineering-pozar-4th-book", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "rtos-lab-stack",
+    "simulator": "rtos-scheduler",
+    "title": "RTOS lab stack (SparkFun-first)",
+    "blurb": "Teensy 4.0 + RedBoard Plus + logic analyzer — schedule real tasks after you tune the simulator. Prefer SparkFun Originals (RedBoard) for the 10% path.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "sf-teensy-4-0", "qty": 1 },
+      { "linkId": "sf-redboard-plus", "qty": 1 },
+      { "linkId": "hiletgo-usb-logic-analyzer-8ch", "qty": 1 },
+      { "linkId": "sf-pro-micro-rp2350", "qty": 1, "optional": true },
+      { "linkId": "stm32-nucleo-f446re-dev-board", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "fea-mech-lab",
+    "simulator": "fea-structural-lab",
+    "title": "From FEA to moving hardware",
+    "blurb": "SparkFun does not stock Prusa/Bambu printers — use XRP + Inventor’s Kit for real mechanical load paths, plus PLA for printed fixtures.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "sf-xrp-kit", "qty": 1 },
+      { "linkId": "sf-inventors-kit-v41", "qty": 1 },
+      { "linkId": "hatchbox-pla-filament-1kg-black", "qty": 1 },
+      { "linkId": "fea-practical-intro-hutton-book", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "slam-edge-stack",
+    "simulator": "slam-odometry-arena",
+    "title": "SLAM / odometry edge stack",
+    "blurb": "Jetson + SparkFun ZED-F9P RTK + ICM-20948 — outdoor pose and onboard mapping. ZED-F9P and ICM are SparkFun Originals (10%).",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "sf-jetson-orin-nano", "qty": 1 },
+      { "linkId": "sf-gps-rtk-zed-f9p", "qty": 1 },
+      { "linkId": "sf-icm20948-9dof", "qty": 1 },
+      { "linkId": "intel-realsense-depth-camera-d455", "qty": 1, "optional": true }
+    ]
+  }
+]

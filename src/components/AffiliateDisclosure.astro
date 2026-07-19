@@ -1,5 +1,5 @@
 ---
-import { AMAZON_ASSOCIATE_TAG } from '../data/affiliate-links';
+import { AMAZON_ASSOCIATE_TAG, SPARKFUN_AFFILIATE_CODE } from '../data/affiliate-links';
 
 export interface Props {
   class?: string;
@@ -8,5 +8,9 @@ const { class: className = '' } = Astro.props;
 ---
 
 <p class={`text-[0.8rem] leading-[1.6] text-muted-text ${className}`}>
-  <strong class="font-semibold text-primary-text">Affiliate disclosure:</strong> Some links below are Amazon Associate links (tag <code>{AMAZON_ASSOCIATE_TAG}</code>). If you buy through them we may earn a commission at no extra cost to you — we only recommend gear we actually use. Full policy in our <a href="/privacy#affiliates" class="text-brand-anchor hover:text-primary-text">disclosure</a>.
+  <strong class="font-semibold text-primary-text">Affiliate disclosure:</strong>
+  Some links below are affiliate links — Amazon Associates (tag <code>{AMAZON_ASSOCIATE_TAG}</code>)
+  and/or SparkFun Affiliate (<code>ref={SPARKFUN_AFFILIATE_CODE}</code>, 10% on SparkFun Originals).
+  If you buy through them we may earn a commission at no extra cost to you — we only recommend gear we actually use.
+  Full policy in our <a href="/privacy#affiliates" class="text-brand-anchor hover:text-primary-text">disclosure</a>.
 </p>

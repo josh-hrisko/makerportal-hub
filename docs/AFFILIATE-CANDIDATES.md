@@ -1,15 +1,41 @@
 # Affiliate candidate tracker
 
-Working reference — not a data source the site reads. Each numbered line is
-a clean product name meant to be copy/pasted straight into Amazon's search
-bar (or SiteStripe) to find the listing and generate the link. Paste the
-result on that item's **Affiliate link:** line — a bare ASIN is fine.
+Working reference — not a data source the site reads. Amazon rows: paste
+ASIN / SiteStripe link. SparkFun rows: product path on sparkfun.com (live
+links use `buildSparkFunUrl` + code `rOtrc44SZw`).
+
+**Approved live merchants:** Amazon Associates (`engineersport-20`) · SparkFun Affiliate (`rOtrc44SZw`, 10% Originals).
 
 **Status key:**
-- Confirmed — pulled from your own `makersportal.com` posts (real, used-in-practice) or already live in `affiliate-links.json`.
-- Suggested — my best-judgment candidate for a category you named (USB mic, AI/ML book, etc.) — not yet confirmed you own/use this exact model. Swap it for whatever you actually use, or delete the entry.
+- Confirmed — live in `affiliate-links.json`.
+- Suggested — candidate not yet shipped.
 
 Add, edit, or delete entries freely — this file is yours.
+
+---
+
+## SparkFun Affiliate (live 2026-07-19) — code `rOtrc44SZw`
+
+Commission: **10% on SparkFun Originals only**. Third-party (Pi, Jetson, Teensy) still linked for convenience; may pay $0.
+
+| id | Product path | Originals? | Sims |
+| :--- | :--- | :---: | :--- |
+| sf-raspberry-pi-5-8gb | raspberry-pi-5-8gb.html | no | slam, rtos, pinn |
+| sf-raspberry-pi-5-4gb | raspberry-pi-5-4gb.html | no | rtos |
+| sf-redboard-plus | sparkfun-redboard-plus.html | yes | rtos, gan |
+| sf-teensy-4-0 | teensy-4-0.html | no | rtos, gan, pid |
+| sf-thing-plus-rp2350 | sparkfun-thing-plus-rp2350.html | yes | rtos |
+| sf-thing-plus-esp32 | sparkfun-thing-plus-esp32-wroom-usb-c.html | yes | pid, rtos |
+| sf-inventors-kit-v41 | sparkfun-inventor-s-kit-v4-1-2.html | yes | fea, rtos |
+| sf-xrp-kit | experiential-robotics-platform-xrp-kit.html | yes | fea, slam, pid |
+| sf-jetson-orin-nano | nvidia-jetson-orin-nano-developer-kit.html | no | slam, pinn |
+| sf-gps-rtk-zed-f9p | sparkfun-gps-rtk-sma-breakout-zed-f9p-qwiic.html | yes | slam, antenna |
+| sf-icm20948-9dof | sparkfun-9dof-imu-breakout-icm-20948-qwiic.html | yes | pid, slam |
+| sf-pro-micro-rp2350 | sparkfun-pro-micro-rp2350.html | yes | rtos |
+| sf-micromod-main-single | sparkfun-micromod-main-board-single.html | yes | verilog, rtos |
+| sf-openlog | sparkfun-openlog.html | yes | gan, rtos |
+
+**Note:** SparkFun catalog has **no Prusa/Bambu 3D printers** (checked 2026-07). FEA path uses XRP + Inventor’s Kit + Amazon PLA instead.
 
 ---
 

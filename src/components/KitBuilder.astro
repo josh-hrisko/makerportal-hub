@@ -1,0 +1,151 @@
+---
+import type { ResolvedKit } from '../data/kits';
+import { formatUsd } from '../data/kits';
+
+interface Props {
+  kit: ResolvedKit;
+}
+
+const { kit } = Astro.props;
+const initialTotal = kit.requiredTotal;
+const ctaUrl = kit.items.find((i) => !i.optional)?.link.url ?? kit.items[0]?.link.url ?? '/resources#gear';
+---
+
+<div
+  class="kit-builder mt-8 overflow-hidden rounded-[22px] border border-border bg-card-bg"
+  data-kit-id={kit.id}
+  data-kit-merchant={kit.merchant}
+>
+  <div class="border-b border-border bg-elevated/40 px-5 py-4 sm:px-6">
+    <p class="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">Build this lab</p>
+    <h3 class="mt-1 text-[1.15rem] font-[650] tracking-[-0.02em] text-primary-text">{kit.title}</h3>
+    <p class="mt-1.5 max-w-2xl text-[0.88rem] leading-[1.55] text-muted-text">{kit.blurb}</p>
+  </div>
+
+  <ul class="divide-y divide-border" role="list">
+    {kit.items.map((item) => (
+      <li
+        class="kit-row flex flex-wrap items-center gap-3 px-5 py-3.5 sm:px-6"
+        data-link-id={item.linkId}
+        data-unit={item.unitPrice ?? ''}
+        data-qty={item.qty}
+        data-optional={item.optional ? '1' : '0'}
+      >
+        <label class="flex min-w-0 flex-1 items-start gap-3">
+          <input
+            type="checkbox"
+            class="kit-include mt-1 size-4 accent-[var(--mp-cta)]"
+            checked={!item.optional}
+            disabled={!item.optional}
+            aria-label={`Include ${item.link.label}`}
+          />
+          <span class="min-w-0">
+            <a
+              href={item.link.url}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+              class="text-[0.92rem] font-semibold text-primary-text hover:text-brand-anchor"
+            >
+              {item.link.label}
+            </a>
+            {item.optional && (
+              <span class="ml-2 rounded-full border border-border px-1.5 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.1em] text-muted-text">
+                optional
+              </span>
+            )}
+            <span class="mt-0.5 block font-mono text-[0.7rem] text-muted-text">
+              {item.link.price ?? 'See listing'} · qty {item.qty}
+            </span>
+          </span>
+        </label>
+        <span class="kit-line-total font-mono text-[0.85rem] font-semibold text-primary-text">
+          {item.unitPrice != null ? formatUsd(item.unitPrice * item.qty) : '—'}
+        </span>
+      </li>
+    ))}
+  </ul>
+
+  <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-elevated/30 px-5 py-4 sm:px-6">
+    <div>
+      <p class="font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">Estimated total</p>
+      <p class="kit-total text-[1.35rem] font-[650] tracking-tight text-primary-text" data-initial={initialTotal ?? ''}>
+        {formatUsd(initialTotal)}
+      </p>
+      <p class="mt-0.5 text-[0.72rem] text-muted-text">Prices from Amazon catalog cache · may change</p>
+    </div>
+    <a
+      href={ctaUrl}
+      target="_blank"
+      rel="sponsored noopener noreferrer"
+      class="kit-cta inline-flex min-h-11 items-center justify-center rounded-full bg-primary-text px-5 text-[0.88rem] font-semibold text-canvas transition-opacity hover:opacity-90"
+      data-kit-cta
+    >
+      Open primary listing ↗
+    </a>
+  </div>
+</div>
+
+<script>
+  function parseMoney(el: HTMLElement): number | null {
+    const u = el.dataset.unit;
+    if (u === '' || u == null) return null;
+    const n = parseFloat(u);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function format(n: number | null): string {
+    if (n == null) return '—';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+  }
+
+  function bindKit(root: HTMLElement) {
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const rows = [...root.querySelectorAll<HTMLElement>('.kit-row')];
+    const totalEl = root.querySelector<HTMLElement>('.kit-total');
+    const cta = root.querySelector<HTMLAnchorElement>('[data-kit-cta]');
+
+    const recalc = () => {
+      let sum = 0;
+      let ok = true;
+      let primaryUrl: string | null = null;
+
+      for (const row of rows) {
+        const cb = row.querySelector<HTMLInputElement>('.kit-include');
+        const included = cb?.checked ?? true;
+        const unit = parseMoney(row);
+        const qty = parseInt(row.dataset.qty || '1', 10) || 1;
+        const lineEl = row.querySelector<HTMLElement>('.kit-line-total');
+        const link = row.querySelector<HTMLAnchorElement>('a');
+
+        if (included) {
+          if (unit == null) ok = false;
+          else sum += unit * qty;
+          if (!primaryUrl && link?.href) primaryUrl = link.href;
+        }
+
+        if (lineEl) {
+          lineEl.textContent = included && unit != null ? format(unit * qty) : included ? '—' : '—';
+          lineEl.style.opacity = included ? '1' : '0.4';
+        }
+        row.style.opacity = included ? '1' : '0.55';
+      }
+
+      if (totalEl) totalEl.textContent = format(ok ? sum : null);
+      if (cta && primaryUrl) cta.href = primaryUrl;
+    };
+
+    for (const row of rows) {
+      row.querySelector('.kit-include')?.addEventListener('change', recalc);
+    }
+    recalc();
+  }
+
+  function init() {
+    document.querySelectorAll<HTMLElement>('.kit-builder').forEach(bindKit);
+  }
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
