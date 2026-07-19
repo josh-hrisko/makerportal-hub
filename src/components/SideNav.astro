@@ -2,6 +2,8 @@
 interface Props {
   /** Minimum headings required to show nav (default 2) */
   minHeadings?: number;
+  /** Maximum headings before hiding to avoid giant bar (default 8) */
+  maxHeadings?: number;
   /** CSS selector for headings to include (default "h2") – ids auto-generated if missing */
   selector?: string;
   /** Root element id to scope query (default "main-content") */
@@ -15,6 +17,7 @@ interface Props {
 }
 const {
   minHeadings = 2,
+  maxHeadings = 8,
   selector = 'h2',
   rootId = 'main-content',
   title = 'On this page',
@@ -25,6 +28,7 @@ const {
 <nav
   id={navId}
   data-min-headings={String(minHeadings)}
+  data-max-headings={String(maxHeadings)}
   data-selector={selector}
   data-root={rootId}
   data-track-id={trackId}
@@ -184,6 +188,7 @@ const {
       if (!track) return;
 
       const minHeadings = parseInt(navContainer.getAttribute('data-min-headings') || '2', 10);
+      const maxHeadings = parseInt(navContainer.getAttribute('data-max-headings') || '8', 10);
       const selector = navContainer.getAttribute('data-selector') || 'h2';
       const rootId = navContainer.getAttribute('data-root') || 'main-content';
 
@@ -211,7 +216,7 @@ const {
         headings.push(h);
       }
 
-      if (headings.length < minHeadings) {
+      if (headings.length < minHeadings || headings.length > maxHeadings) {
         navContainer.style.display = 'none';
         return;
       }

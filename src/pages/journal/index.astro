@@ -151,12 +151,12 @@ const newCounts = new Map<string, number>();
                           <span class="font-mono text-[0.6rem] text-muted-text">{items.length} signals</span>
                         </div>
 
-                        <h2 class="mt-4 text-[clamp(1.15rem,2.2vw,1.5rem)] font-bold leading-[1.25] tracking-[-0.02em] text-primary-text">
+                        <h3 class="mt-4 text-[clamp(1.15rem,2.2vw,1.5rem)] font-bold leading-[1.25] tracking-[-0.02em] text-primary-text">
                           <a href={`/journal/${dStr}`} class="group/title inline-flex items-center gap-2 hover:text-primary-cta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor focus-visible:ring-offset-2 focus-visible:ring-offset-card-bg rounded">
                             <span>{formatDate(dStr)}</span>
                             <span aria-hidden="true" class="translate-y-[1px] text-[0.9em] opacity-60 transition-transform group-hover/title:translate-x-0.5 group-hover/title:opacity-100">→</span>
                           </a>
-                        </h2>
+                        </h3>
 
                         <p class="mt-2 max-w-[42ch] text-[0.9rem] leading-[1.6] text-muted-text">
                           {formatShort(dStr)} scan captured <strong class="font-semibold text-primary-text">{items.length}</strong> developer signals. Top pillar {topTag ? <span class="inline-flex items-center gap-1"><span class="size-1.5 rounded-full" style={`background:${accentCol}`}></span> {pillarOf(topTag).label}</span> : 'mixed'}.

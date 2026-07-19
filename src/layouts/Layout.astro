@@ -302,7 +302,8 @@ const organizationSchema = {
                 </button>
                 {(() => {
                   const hasMany = item.columns?.some((c) => c.links.length > 6);
-                  const panelWidth = hasMany ? 'w-[min(94vw,52rem)]' : 'w-[min(92vw,42rem)]';
+                  // Keep panel compact (42rem) even when many – avoids busy 52rem mega
+                  const panelWidth = 'w-[min(92vw,42rem)]';
                   return (
                     <div
                       id={`mega-${item.id}`}
@@ -311,15 +312,17 @@ const organizationSchema = {
                       hidden
                     >
                       <div class="surface-card overflow-hidden rounded-[22px] border p-5 shadow-xl">
-                        <div class:list={['grid gap-6', item.featured ? (hasMany ? 'lg:grid-cols-[1.15fr_0.85fr]' : 'sm:grid-cols-[1fr_0.85fr]') : '']}>
-                          <div class:list={['grid gap-6', (item.columns?.length ?? 0) > 1 ? 'sm:grid-cols-2' : '']}>
+                        <div class:list={['grid gap-6', item.featured ? 'sm:grid-cols-[1fr_0.85fr]' : '']}>
+                          <div class:list={['grid gap-6', (item.columns?.length ?? 0) > 1 ? (hasMany ? '' : 'sm:grid-cols-2') : '']}>
                             {item.columns?.map((col) => {
                               const isMany = col.links.length > 6;
+                              // Clean UI: show max 6 items, rest via "All X →" footer link
+                              const displayLinks = isMany ? col.links.slice(0, 6) : col.links;
                               return (
-                                <div class:list={[isMany ? 'sm:col-span-2' : '']}>
+                                <div>
                                   <p class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">{col.title} {isMany ? `· ${col.links.length}` : ''}</p>
-                                  <ul class:list={['mt-3', isMany ? 'grid grid-cols-1 gap-1.5 sm:grid-cols-2' : 'space-y-1']} role="list">
-                                    {col.links.map((link) => {
+                                  <ul class="mt-3 space-y-1" role="list">
+                                    {displayLinks.map((link) => {
                                       const childActive = isActive(link.href);
                                       return (
                                         <li>
