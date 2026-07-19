@@ -1,0 +1,410 @@
+---
+/**
+ * ExportGate — soft email gate for simulator exports.
+ *
+ * Free path: watermarked file (footer includes makerportal.ai branding)
+ * Gated path: clean file after email capture + localStorage unlock per sim.
+ *
+ * No hard auth, no Clerk, privacy-first: email stored only in localStorage
+ * (and optionally forwarded to Buttondown if username configured).
+ *
+ * Wiring:
+ *  1. Place <ExportGate simulator="rtos-scheduler" fileName="FreeRTOSConfig.h" ... />
+ *  2. In sim page JS, register getter:
+ *     window.__MP_EXPORT_GETTERS__ = window.__MP_EXPORT_GETTERS__ || {};
+ *     window.__MP_EXPORT_GETTERS__['rtos-scheduler'] = () => `...file content...`;
+ *     (getter called on download click, so always fresh)
+ *  3. Optionally listen for mp:export-unlocked event to refresh UI.
+ *
+ * Analytics (privacy-safe, first-party):
+ *   - mp:analytics custom event with {event: 'export_gate_unlock', sim}
+ *   - mp:analytics {event: 'export_download', sim, variant: 'free'|'clean'}
+ *   - fab-export-ready fired when file becomes downloadable (FE→Fab flow)
+ *
+ * G3 acceptance: ExportGate on ≥3 sims (RTOS config, SI CSV, SLAM trajectory, PID JSON).
+ *
+ * Docs: see docs/MONETIZATION.md Channel C — soft PRO / list gates.
+ */
+interface Props {
+  simulator: string;
+  fileName?: string;
+  mimeType?: string;
+  title?: string;
+  description?: string;
+  watermarkText?: string;
+  fileExtension?: string;
+  compact?: boolean;
+}
+
+const {
+  simulator,
+  fileName,
+  mimeType = 'text/plain',
+  title = 'Export this lab',
+  description = 'Free watermarked file instantly. Unlock clean export via email — soft gate, no hard paywall. We store unlock in localStorage per sim.',
+  watermarkText = 'Export from makerportal.ai — free watermarked build. Unlock clean via email for BOM + kit.',
+  fileExtension,
+  compact = false,
+} = Astro.props;
+
+const inferredExt = fileExtension || fileName?.split('.').pop() || 'txt';
+const displayName = fileName || `${simulator}.${inferredExt}`;
+const watermarkComment = inferredExt === 'h' || inferredExt === 'c' || inferredExt === 'cpp' || inferredExt === 'js' || inferredExt === 'ts'
+  ? `// ${watermarkText}\n// Get clean: unlock at makerportal.ai/playground/${simulator}`
+  : inferredExt === 'json'
+    ? `\n/* ${watermarkText} — makerportal.ai/playground/${simulator} */`
+    : `\n# ${watermarkText} — makerportal.ai/playground/${simulator}`;
+
+const storageKeyUnlock = `mp_export_unlock_${simulator}`;
+const storageKeyEmail = `mp_export_email_${simulator}`;
+---
+
+<section class="export-gate border-b border-border" data-sim={simulator} data-file={displayName} data-mime={mimeType} data-watermark={watermarkComment} aria-labelledby={`export-gate-${simulator}`}>
+  <div class:list={["mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10", compact ? "py-8 sm:py-10" : "py-12 sm:py-16"]}>
+    <div class="rounded-[20px] border border-border bg-card-bg overflow-hidden">
+      <div class="flex flex-wrap items-start justify-between gap-4 border-b border-border bg-elevated/40 px-5 py-4 sm:px-6">
+        <div>
+          <p class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">Export · Soft gate</p>
+          <h3 id={`export-gate-${simulator}`} class="mt-1 text-[1.05rem] font-[650] tracking-[-0.015em] text-primary-text">{title}</h3>
+          <p class="mt-1 max-w-2xl text-[0.84rem] leading-[1.5] text-muted-text">{description}</p>
+        </div>
+        <span id={`export-unlocked-badge-${simulator}`} class="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.08em] text-emerald-600">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Clean unlocked
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_340px]">
+        <!-- Left: what you get -->
+        <div class="space-y-4">
+          <div class="rounded-[12px] border border-border bg-canvas p-4">
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-muted-text">File · {displayName}</p>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <code class="rounded-md border border-border bg-elevated px-2 py-1 font-mono text-[0.75rem]">{displayName}</code>
+              <span class="rounded-full border border-border bg-elevated/60 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted-text">{mimeType}</span>
+              <span class="text-[0.7rem] text-muted-text">+ watermark line on free path</span>
+            </div>
+            <p class="mt-3 text-[0.8rem] leading-[1.5] text-muted-text">
+              Free download adds a small footer: <code class="rounded bg-elevated px-1 py-0.5 font-mono text-[0.7rem]">{watermarkComment.slice(0, 64)}…</code>
+              Clean export removes footer. Both are generated fresh from your current sim tuning.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              data-variant="free"
+              data-sim={simulator}
+              class="export-download-btn inline-flex items-center justify-center rounded-full border border-border bg-elevated px-4 py-2.5 text-[0.86rem] font-semibold text-primary-text transition-all hover:border-[var(--mp-border-strong)]"
+            >
+              ↓ Free (watermarked)
+            </button>
+            <button
+              type="button"
+              data-variant="clean"
+              data-sim={simulator}
+              class="export-download-btn inline-flex items-center justify-center rounded-full bg-primary-text px-5 py-2.5 text-[0.86rem] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled
+            >
+              ↓ Clean (unlock via email)
+            </button>
+          </div>
+
+          <p class="text-[0.68rem] leading-[1.5] text-muted-text">
+            Privacy: email stays in your browser localStorage (<code>{storageKeyEmail}</code>) + unlock flag (<code>{storageKeyUnlock}</code>). If Buttondown username is configured, we also POST to Buttondown (privacy-first mode, no tracking pixels per D-014). See <a href="/privacy#affiliates" class="underline">privacy → affiliates & email</a>.
+          </p>
+        </div>
+
+        <!-- Right: email unlock -->
+        <div class="rounded-[14px] border border-border bg-elevated/30 p-4 space-y-3">
+          <p class="font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted-text">Unlock clean export</p>
+
+          <div id={`export-gate-form-${simulator}`} class="space-y-2.5">
+            <label class="block">
+              <span class="font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted-text">Email</span>
+              <input
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder="you@lab.edu"
+                class="export-email-input mt-1 block w-full rounded-[12px] border border-border bg-canvas px-3.5 py-2.5 font-mono text-[0.85rem] text-primary-text placeholder:text-muted-text/50 focus:border-[var(--mp-border-strong)] focus:outline-none focus:ring-2 focus:ring-brand-anchor/20"
+                data-sim={simulator}
+              />
+            </label>
+
+            <button
+              type="button"
+              data-action="unlock"
+              data-sim={simulator}
+              class="inline-flex w-full items-center justify-center rounded-full bg-primary-text px-5 py-2.5 text-[0.86rem] font-semibold text-canvas transition-opacity hover:opacity-90"
+            >
+              Unlock clean export
+            </button>
+
+            <p class="text-[0.68rem] leading-[1.45] text-muted-text">
+              Soft gate — no hard paywall, no Clerk. We email you the BOM + kit list (if you opt into newsletter). Unsubscribe anytime. RSS at <a href="/rss.xml" class="text-brand-anchor">/rss.xml</a>.
+            </p>
+
+            <div id={`export-gate-status-${simulator}`} class="hidden rounded-[10px] border border-border bg-canvas px-3 py-2 font-mono text-[0.7rem] leading-[1.4]"></div>
+          </div>
+
+          <div id={`export-gate-unlocked-panel-${simulator}`} class="hidden space-y-2 rounded-[12px] border border-emerald-500/20 bg-emerald-500/5 p-3">
+            <p class="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-emerald-700">✓ Unlocked — clean exports enabled</p>
+            <p class="text-[0.75rem] leading-[1.5] text-muted-text">
+              Stored in <code class="rounded bg-elevated px-1 py-0.5">{storageKeyUnlock}</code>.
+              Clean file omits watermark. Re-lock via browser devtools → localStorage.
+            </p>
+            <button type="button" data-action="relock" data-sim={simulator} class="text-[0.7rem] underline text-muted-text hover:text-primary-text">Lock again (testing)</button>
+          </div>
+
+          <div class="rounded-[10px] border border-dashed border-border bg-canvas/70 px-3 py-2 font-mono text-[0.6rem] leading-[1.4] text-muted-text">
+            <span class="font-semibold uppercase">Export → Fab bonus</span>
+            <span class="ml-1">After export, your tuned stackup can be ordered via PCBWay/JLCPCB CTA (when live) — see /privacy#affiliates for live merchants.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // @ts-nocheck
+  // ExportGate client runtime — per handoff Channel C
+  (() => {
+    const GLOBAL_GETTERS_KEY = '__MP_EXPORT_GETTERS__';
+
+    function getGetters() {
+      // @ts-ignore
+      if (!window[GLOBAL_GETTERS_KEY]) window[GLOBAL_GETTERS_KEY] = {};
+      // @ts-ignore
+      return window[GLOBAL_GETTERS_KEY];
+    }
+
+    function isUnlocked(sim) {
+      try {
+        return localStorage.getItem(`mp_export_unlock_${sim}`) === '1';
+      } catch { return false; }
+    }
+
+    function setUnlocked(sim, email) {
+      try {
+        localStorage.setItem(`mp_export_unlock_${sim}`, '1');
+        if (email) localStorage.setItem(`mp_export_email_${sim}`, email);
+      } catch {}
+    }
+
+    function clearUnlock(sim) {
+      try {
+        localStorage.removeItem(`mp_export_unlock_${sim}`);
+      } catch {}
+    }
+
+    function getEmail(sim) {
+      try {
+        return localStorage.getItem(`mp_export_email_${sim}`) || '';
+      } catch { return ''; }
+    }
+
+    function buildContent(sim, watermark) {
+      const getters = getGetters();
+      const fn = getters[sim];
+      let content = '';
+      if (typeof fn === 'function') {
+        try {
+          content = String(fn() || '');
+        } catch (e) {
+          content = `// export getter error for ${sim}: ${e}\n`;
+        }
+      }
+      if (!content) {
+        content = `// ${sim} export — ${new Date().toISOString()}\n// Tuning exported from makerportal.ai/playground/${sim}\n// Getter not yet registered — placeholder content\n`;
+      }
+      if (watermark) {
+        const panel = document.querySelector(`.export-gate[data-sim="${sim}"]`);
+        const wm = panel?.getAttribute('data-watermark') || `\n# makerportal.ai ${sim}`;
+        content = content.trimEnd() + '\n' + wm + '\n';
+      }
+      return content;
+    }
+
+    function triggerDownload(sim, variant) {
+      const panel = document.querySelector(`.export-gate[data-sim="${sim}"]`);
+      const rawName = panel?.getAttribute('data-file') || `${sim}.txt`;
+      const mime = panel?.getAttribute('data-mime') || 'text/plain';
+      const isFree = variant === 'free';
+      const watermark = isFree ? (panel?.getAttribute('data-watermark') || '') : '';
+      const content = buildContent(sim, isFree);
+
+      const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = isFree ? rawName.replace(/(\.[^.]+)$/, '.free$1') : rawName;
+      if (isFree && !a.download.includes('.free')) {
+        // ensure free suffix for .h etc: foo.free.h -> tooling expects? Keep simple: prepend free-
+        a.download = `free-${rawName}`;
+      }
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 800);
+
+      // Analytics (privacy-safe)
+      try {
+        window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'export_download', sim, variant } }));
+        // Optional console for debugging
+        console.debug(`[analytics] export_download`, { sim, variant, file: a.download });
+      } catch {}
+
+      // Notify fab panel that export is ready → enables PCB order CTA progression
+      try {
+        window.dispatchEvent(new CustomEvent('fab-export-ready', { detail: { sim, filename: a.download, variant } }));
+      } catch {}
+
+      // Toast-ish status
+      const statusEl = document.getElementById(`export-gate-status-${sim}`);
+      if (statusEl) {
+        statusEl.classList.remove('hidden');
+        statusEl.classList.remove('border-red-300', 'text-red-600');
+        statusEl.classList.add('border-emerald-500/30', 'text-emerald-700');
+        statusEl.textContent = `✓ Downloaded ${a.download} (${variant}) — ${content.length} bytes`;
+        setTimeout(() => statusEl.classList.add('hidden'), 4000);
+      }
+    }
+
+    function bindOne(panel) {
+      if (!panel) return;
+      if (panel.dataset.bound === '1') return;
+      panel.dataset.bound = '1';
+      const sim = panel.dataset.sim;
+      if (!sim) return;
+
+      const emailInput = panel.querySelector('.export-email-input');
+      const unlockBtn = panel.querySelector('[data-action="unlock"]');
+      const relockBtn = panel.querySelector('[data-action="relock"]');
+      const freeBtn = panel.querySelector('[data-variant="free"]');
+      const cleanBtn = panel.querySelector('[data-variant="clean"]');
+      const badge = document.getElementById(`export-unlocked-badge-${sim}`);
+      const formWrap = document.getElementById(`export-gate-form-${sim}`);
+      const unlockedPanel = document.getElementById(`export-gate-unlocked-panel-${sim}`);
+      const statusEl = document.getElementById(`export-gate-status-${sim}`);
+
+      function refreshUI() {
+        const unlocked = isUnlocked(sim);
+        if (emailInput) emailInput.value = getEmail(sim);
+        if (badge) {
+          badge.classList.toggle('hidden', !unlocked);
+          badge.classList.toggle('inline-flex', unlocked);
+        }
+        if (formWrap) formWrap.classList.toggle('hidden', unlocked);
+        if (unlockedPanel) unlockedPanel.classList.toggle('hidden', !unlocked);
+        if (cleanBtn) {
+          cleanBtn.disabled = !unlocked;
+          cleanBtn.textContent = unlocked ? '↓ Clean (unlocked)' : '↓ Clean (unlock via email)';
+          cleanBtn.classList.toggle('opacity-40', !unlocked);
+        }
+      }
+
+      function doUnlock() {
+        const email = (emailInput?.value || '').trim();
+        if (!email || !email.includes('@') || !email.includes('.')) {
+          if (statusEl) {
+            statusEl.classList.remove('hidden');
+            statusEl.textContent = '⚠ Please enter a valid email (e.g. you@lab.edu)';
+            statusEl.classList.add('border-red-300', 'text-red-600');
+          }
+          return;
+        }
+        setUnlocked(sim, email);
+        refreshUI();
+        if (statusEl) {
+          statusEl.classList.remove('hidden');
+          statusEl.classList.remove('border-red-300', 'text-red-600');
+          statusEl.classList.add('border-emerald-500/30', 'text-emerald-700');
+          statusEl.textContent = `✓ Unlocked clean export for ${sim} as ${email}. Download clean now.`;
+        }
+
+        // Analytics
+        try {
+          window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'export_gate_unlock', sim, email_domain: email.split('@')[1] } }));
+          window.dispatchEvent(new CustomEvent('mp:export-unlocked', { detail: { sim, email } }));
+          console.debug(`[analytics] export_gate_unlock`, { sim });
+        } catch {}
+
+        // If Buttondown username configured via data attribute or global, attempt soft POST (no-cors, privacy-first)
+        try {
+          // Look for optional Buttondown data attr on panel
+          const btnUser = panel.getAttribute('data-buttondown-user') || (window.__MP_BUTTONDOWN_USER__ || '');
+          if (btnUser) {
+            const fd = new FormData();
+            fd.append('email', email);
+            // tag by sim
+            fd.append('tag', sim);
+            // Use no-cors fire-and-forget to Buttondown embed endpoint (Buttondown supports POST)
+            fetch(`https://buttondown.com/api/emails/embed-subscribe/${btnUser}`, { method: 'POST', body: fd, mode: 'no-cors' }).catch(() => {});
+          }
+        } catch {}
+
+        // Auto-trigger clean download after unlock for delight
+        setTimeout(() => triggerDownload(sim, 'clean'), 400);
+      }
+
+      if (unlockBtn) unlockBtn.addEventListener('click', doUnlock);
+      if (emailInput) {
+        emailInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            doUnlock();
+          }
+        });
+      }
+      if (relockBtn) {
+        relockBtn.addEventListener('click', () => {
+          clearUnlock(sim);
+          refreshUI();
+          if (statusEl) {
+            statusEl.classList.remove('hidden');
+            statusEl.textContent = `Locked ${sim} again (testing).`;
+          }
+        });
+      }
+
+      if (freeBtn) freeBtn.addEventListener('click', () => triggerDownload(sim, 'free'));
+      if (cleanBtn) cleanBtn.addEventListener('click', () => {
+        if (!isUnlocked(sim)) {
+          if (statusEl) {
+            statusEl.classList.remove('hidden');
+            statusEl.textContent = 'Clean locked — enter email to unlock.';
+          }
+          emailInput?.focus();
+          return;
+        }
+        triggerDownload(sim, 'clean');
+      });
+
+      // Initial UI
+      refreshUI();
+    }
+
+    function bindAll() {
+      document.querySelectorAll('.export-gate').forEach(bindOne);
+    }
+
+    // Expose helper for sim pages
+    // @ts-ignore
+    window.MPExportGate = {
+      isUnlocked,
+      setUnlocked,
+      clearUnlock,
+      triggerDownload,
+      register: (sim, fn) => {
+        const getters = getGetters();
+        getters[sim] = fn;
+      }
+    };
+
+    bindAll();
+    document.addEventListener('astro:page-load', bindAll);
+  })();
+</script>

@@ -9,17 +9,24 @@ Replaces `HANDOFF-MONETIZATION.md` + `MONETIZATION-STRATEGY-2026-07-15.md` + ad-
 - **Affiliate (approved paths):**
   1. **Amazon Associates** — tag `engineersport-20`. Curated ASINs in `affiliate-links.json`, live title/image/price via Creators API → `amazon-catalog.json` (build-time, D-015). Books/tools preferred over thin electronics margins.
   2. **SparkFun Affiliate** — code `rOtrc44SZw` (`?ref=` on sparkfun.com). **10% on SparkFun Originals** only; third-party (Pi, Jetson, Teensy) still linked for UX but may pay $0. URL helper: `buildSparkFunUrl()` in `affiliate-links.ts`.
-  3. *(Pending)* PCBWay / JLCPCB — not live until referral IDs land.
-  - Disclosure + `rel="sponsored"` on all outbound affiliate CTAs. Integrity: `npm run amazon:audit` + `amazon:smoke` (wired into `npm run check`).
+  3. **PCBWay / JLCPCB** — **stub-ready but not live** (no referral IDs shipped per G2 gate). Helpers `buildPcbWayUrl()` / `buildJlcUrl()`, `isFabLive()`, `FabOrderPanel.astro` export-adjacent CTA on SI / Antenna / Verilog (renders nothing until IDs land). Owner ask still open.
+  4. **Interactive kits** — `kits.json` + `KitBuilder.astro` — 10 kits live (6 original + 4 new: gan-foc-starter, antenna-rf-starter, verilog-fpga-starter, pinn-edge-stack). GearGrid capped at 6 cards to reduce decision paralysis, merchant badges (★ Original 10%).
+  5. **Soft export gate** — `ExportGate.astro` — free watermarked + clean after email unlock (localStorage `mp_export_unlock_{sim}` + `mp_export_email_{sim}`). Wired on 6 sims: RTOS FreeRTOSConfig.h, SI stackup CSV, SLAM trajectory CSV, PID gains JSON, Antenna array JSON, Verilog RTL + timing. Analytics events `export_gate_unlock`, `export_download`, `gear_click`, `kit_cta_click`, `fab_*_click` as first-party `mp:analytics` CustomEvent (no ad pixels).
+  - Disclosure + `rel="sponsored"` on all outbound affiliate CTAs. Integrity: `npm run amazon:audit` + `amazon:smoke` (wired into `npm run check`). Privacy disclosure includes fab pending notice + export gate localStorage handling.
 - **Trends → Signals Journal:** Daily digest `trends-digest.yml` 14:00 UTC, gated pipeline + thumbnails self-hosted (D-012/D-013/D-017). **Auto-publishes** each day directly to `/journal/YYYY-MM-DD` (D-022) — gate tests, not a PR, are the pre-publish gate; latest entry also feeds `/resources#trending` and re-ranks gear. Bluesky + HN only (Reddit disabled, D-023).
 
 Hard constraints: never fabricate usage, no auto-discovery/auto-publish of *products or blog content* without a human-review gate (the trends *signal digest* auto-publishes curated public links gated by the pipeline tests — D-022 — which is distinct from generating content/product recommendations), no runtime API calls, no second payment processor without discussion, verify slugs/titles, check rendered output on volume changes (Playwright).
 
-## Current state
+## Current state (2026-07-19 post GearGrid rollup + ExportGate)
 
-- 50 gear items live on `/resources#gear`, grouped collapsible, trending re-ranked (D-017), 1724px height verified vs 5500px flat-list incident
-- `amazon-catalog.json` empty until `AssociateNotEligible` clears after 2026-07-17 — re-test command documented
-- Shop placeholder, email not built, /advertise copy only, blog 3 posts
+- 177 affiliate links (163 Amazon unique ASINs + 14 SparkFun) — smoke 70 cards across 10 sims (29 SparkFun), 0 collisions
+- Gear: `/resources#gear` grouped collapsible, trending re-ranked (D-017). All 10 sims now use `GearGrid` (capped 6, merchant badges) + `KitBuilder` (10 kits: pid-hover-stack, si-vna-starter, rf-bench-starter, rtos-lab-stack, fea-mech-lab, slam-edge-stack, gan-foc-starter, antenna-rf-starter, verilog-fpga-starter, pinn-edge-stack). PID success-toast CTA → scroll to kit on stable hover 2s.
+- Amazon catalog live (163 ASINs refreshed 2026-07-19) — `AssociateNotEligible` cleared after 48h window, but still handle graceful fallback
+- SparkFun live code `rOtrc44SZw` — 10 kits reference Originals for yield
+- PCBWay/JLCPCB: stub-ready (`buildPcbWayUrl`, `buildJlcUrl`, `isFabLive()`, `FabOrderPanel.astro` on SI/Antenna/Verilog) — no fake IDs, returns empty base until owner supplies IDs. Acceptance G2 = blocked with clear owner ask + stub not linked (compliant).
+- ExportGate live on 6 sims: RTOS FreeRTOSConfig.h, SI stackup CSV, SLAM trajectory CSV, PID gains JSON + toast, Antenna array JSON, Verilog RTL — soft gate, localStorage unlock per sim, Buttondown optional POST, watermark line `makerportal.ai` footer.
+- Conversion: gear capping 6, merchant Original badge (★ 10%), `mp:analytics` events for kit_cta_click, gear_click, export_gate_unlock, export_download, fab_*_click — first-party, no pixels.
+- Shop placeholder, /advertise copy only, blog 3 posts — newsletter form on /blog etc still TODO (ButtondownSignup needs username)
 
 ## Pricing research (verified)
 
@@ -82,13 +89,17 @@ New source worth prototyping when this resumes: **Wikipedia's pageviews/current-
 - Second processor (violates D-014)
 - SearchItems auto-discovery (violates D-015)
 
-## Checklist next session
+## Checklist next session (updated 2026-07-19)
 
 - [x] Amazon Creators API catalog live (163 ASINs refreshed 2026-07-19)
 - [x] SparkFun Affiliate live — code `rOtrc44SZw`, 14 products, multi-merchant model
-- [ ] Owner: PCBWay referral + JLCPCB Brand Advocate
-- [ ] Export soft-gate (email) on T0 sims
+- [x] GearGrid on all 10 sims (was 6/10) + 10 kits live (was 6)
+- [x] ExportGate soft-gate on 6 sims (RTOS/SI/SLAM/PID/Antenna/Verilog) — free watermark + clean unlock via email + localStorage
+- [x] PCBWay/JLCPCB stub-ready — helpers + FabOrderPanel + isFabLive() — blocked until owner IDs (no fake IDs) — G2 compliant
+- [x] Conversion polish — cap 6, merchant badges (★ Original 10%), PID toast → kit, analytics events mp:*
+- [x] Privacy disclosure updated (2026-07-19) + AffiliateDisclosure multi-merchant + fab pending note
+- [ ] Owner: PCBWay referral URL / Shared Project URLs + JLCPCB Brand Advocate coupon/terms (still blocked, clear ask)
 - [ ] Owner selects Lemon archives
-- [ ] Ship shop MVP + newsletter embed
+- [ ] Ship shop MVP + Buttondown username for newsletter embed (ExportGate currently localStorage soft gate; Buttondown POST is optional fire-and-forget when username present)
 - [ ] Upgrade /advertise copy
 - [ ] After 2-3 cycles tune `keywords.mjs`

@@ -4,6 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import GearGrid from '../../components/GearGrid.astro';
 import KitBuilder from '../../components/KitBuilder.astro';
+import ExportGate from '../../components/ExportGate.astro';
 import Math from '../../components/Math.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
 import { kitForSimulator } from '../../data/kits';
@@ -257,6 +258,15 @@ function wrapAngle(a:number){ return Math.atan2(Math.sin(a), Math.cos(a)); }`;
         </div>
       </div>
     </section>
+
+    <ExportGate
+      simulator="slam-odometry-arena"
+      fileName="slam-trajectory.csv"
+      mimeType="text/csv"
+      title="Export EKF trajectory + landmarks"
+      description="Robot poses (x,y,θ), covariance diag, loop-closure events as CSV — free watermarked, clean after email. Great for validating against RealSense D455 bag + ZED-F9P RTK ground truth."
+      fileExtension="csv"
+    />
 
     <GearGrid gear={gear}>
       {kit && <KitBuilder slot="before-grid" kit={kit} />}
@@ -925,6 +935,62 @@ function initSLAM(){
 
   initWorld();
   loop(performance.now());
+
+  // ExportGate — trajectory CSV
+  try {
+    const reg = () => {
+      if (window.MPExportGate) {
+        window.MPExportGate.register('slam-odometry-arena', () => {
+          // Attempt to use live mu if available
+          let csv = `t,x,y,theta,gt_x,gt_y,gt_theta,ate_m,seen_landmarks,loop_trigger,note\n`;
+          // Fallback: single snapshot + sim params
+          try {
+            const now = new Date().toISOString();
+            // mu is inside closure, may not be accessible here if minified? Use global fallback
+            // We attempt to read from closure via last known pose if available through window
+            const poses = window.__MP_SLAM_POSES__ || [];
+            if (poses.length) {
+              poses.forEach((p,i) => {
+                csv += `${i},${p.x.toFixed(3)},${p.y.toFixed(3)},${p.theta.toFixed(4)},${(p.gt_x ?? '').toString()},${(p.gt_y ?? '').toString()},${(p.gt_theta ?? '').toString()},${(p.ate ?? '').toString()},${p.seen ?? ''},${p.loop?'1':'0'},${p.note||''}\n`;
+              });
+            } else {
+              csv += `0,${mu?mu[0].toFixed(3):'0'},${mu?mu[1].toFixed(3):'0'},${mu?mu[2].toFixed(4):'0'},${truePose?truePose.x.toFixed(3):''},${truePose?truePose.y.toFixed(3):''},${truePose?truePose.theta.toFixed(4):''},${truePose && mu ? Math.hypot(truePose.x-mu[0],truePose.y-mu[1]).toFixed(3):''},${landmarks?landmarks.length:''},${loopInfo&&loopInfo.trigger?'1':'0'},export ${now}\n`;
+              csv += `# Fallback: poses array not buffered — integrate __MP_SLAM_POSES__ pushing in loop for full history\n`;
+            }
+          } catch (e) {
+            csv += `0,0,0,0,,,,\n# error ${e}\n`;
+          }
+          csv += `# Generated ${new Date().toISOString()} by makerportal.ai/playground/slam-odometry-arena\n`;
+          csv += `# Suggest: RealSense D455 + ZED-F9P RTK (SparkFun Originals) for ground truth capture\n`;
+          return csv;
+        });
+      }
+    };
+    reg();
+    document.addEventListener('astro:page-load', reg);
+
+    // Buffer poses into global for richer exports
+    try {
+      window.__MP_SLAM_POSES__ = window.__MP_SLAM_POSES__ || [];
+      const origLoop = loop;
+      // Monkey patch: push pose each frame via separate ticker
+      setInterval(() => {
+        try {
+          if (!mu || !truePose) return;
+          const arr = window.__MP_SLAM_POSES__;
+          if (arr.length > 600) arr.shift();
+          arr.push({
+            x: mu[0], y: mu[1], theta: mu[2],
+            gt_x: truePose.x, gt_y: truePose.y, gt_theta: truePose.theta,
+            ate: Math.hypot(truePose.x-mu[0], truePose.y-mu[1]),
+            seen: landmarks ? landmarks.filter((_,i)=>seen[i]).length : 0,
+            loop: !!(loopInfo && loopInfo.trigger),
+            note: ''
+          });
+        } catch {}
+      }, 250);
+    } catch {}
+  } catch {}
 
   document.addEventListener('astro:before-swap',()=>{ cancelAnimationFrame(raf); try{audioCtx?.close();}catch{} },{once:true});
 }

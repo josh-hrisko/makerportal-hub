@@ -20,6 +20,26 @@ export const SPARKFUN_AFFILIATE_CODE = 'rOtrc44SZw';
 
 export const SPARKFUN_BASE = 'https://www.sparkfun.com';
 
+/** PCBWay / JLCPCB — pending owner referral IDs. Stub-ready, no fake IDs shipped. */
+export const PCBWAY_BASE = 'https://www.pcbway.com';
+export const JLCPCB_BASE = 'https://jlcpcb.com';
+
+/**
+ * PCBWay referral / Shared Project param. Empty until owner supplies:
+ * - PCBWay referral URL (e.g. https://www.pcbway.com/setinvite.aspx?inviteid=XXXX)
+ * - or Shared Project URLs (10% PCB + 10% SMT when others order)
+ * Leave empty to keep CTA hidden (G2 acceptance: blocked with clear ask).
+ */
+export const PCBWAY_REFERRAL_CODE: string = ''; // e.g. inviteid or full referral path — owner to fill
+export const PCBWAY_SHARED_PROJECTS: Record<string, string> = {
+  // simId -> shared project URL placeholder
+  // 'signal-integrity-lab': 'https://www.pcbway.com/project/shareproject/...',
+};
+
+/** JLCPCB Brand Advocate / referral. Empty until owner approval lands. */
+export const JLCPCB_REFERRAL_CODE: string = ''; // coupon / referral param — owner to fill
+export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exists
+
 export type AffiliateMerchant =
   | 'amazon'
   | 'sparkfun'
@@ -47,6 +67,51 @@ export function buildSparkFunUrl(path: string): string {
   const url = new URL(base);
   url.searchParams.set('ref', SPARKFUN_AFFILIATE_CODE);
   return url.toString();
+}
+
+export function buildPcbWayUrl(pathOrUrl: string): string {
+  // If full shared-project URL already provided (owner), return as-is
+  if (!pathOrUrl) {
+    if (PCBWAY_REFERRAL_CODE) {
+      // Generic referral landing — if inviteid style
+      if (PCBWAY_REFERRAL_CODE.startsWith('http')) return PCBWAY_REFERRAL_CODE;
+      return `${PCBWAY_BASE}/setinvite.aspx?inviteid=${PCBWAY_REFERRAL_CODE}`;
+    }
+    return `${PCBWAY_BASE}/`;
+  }
+  if (pathOrUrl.startsWith('http')) return pathOrUrl;
+  const base = `${PCBWAY_BASE}/${pathOrUrl.replace(/^\//, '')}`;
+  if (PCBWAY_REFERRAL_CODE && !PCBWAY_REFERRAL_CODE.startsWith('http')) {
+    const url = new URL(base);
+    url.searchParams.set('from', PCBWAY_REFERRAL_CODE);
+    return url.toString();
+  }
+  return base;
+}
+
+export function buildJlcUrl(pathOrUrl?: string): string {
+  if (!pathOrUrl) {
+    if (JLCPCB_SPONSORSHIP_URL) return JLCPCB_SPONSORSHIP_URL;
+    if (JLCPCB_REFERRAL_CODE) {
+      if (JLCPCB_REFERRAL_CODE.startsWith('http')) return JLCPCB_REFERRAL_CODE;
+      return `${JLCPCB_BASE}/?from=${JLCPCB_REFERRAL_CODE}`;
+    }
+    return `${JLCPCB_BASE}/`;
+  }
+  if (pathOrUrl.startsWith('http')) return pathOrUrl;
+  const base = `${JLCPCB_BASE}/${pathOrUrl.replace(/^\//, '')}`;
+  if (JLCPCB_REFERRAL_CODE && !JLCPCB_REFERRAL_CODE.startsWith('http')) {
+    const url = new URL(base);
+    url.searchParams.set('ref', JLCPCB_REFERRAL_CODE);
+    return url.toString();
+  }
+  return base;
+}
+
+export function isFabLive(): { pcbway: boolean; jlcpcb: boolean } {
+  const pcbway = Boolean(PCBWAY_REFERRAL_CODE || Object.keys(PCBWAY_SHARED_PROJECTS).length > 0);
+  const jlcpcb = Boolean(JLCPCB_REFERRAL_CODE || JLCPCB_SPONSORSHIP_URL);
+  return { pcbway, jlcpcb };
 }
 
 export type AffiliateLink = {
@@ -131,6 +196,32 @@ export function resolveAffiliateLink(link: AffiliateLink): ResolvedAffiliateLink
       price: formatMoney(link.price),
       currency: link.currency ?? 'USD',
       url: path ? buildSparkFunUrl(path) : `${SPARKFUN_BASE}/?ref=${SPARKFUN_AFFILIATE_CODE}`,
+    };
+  }
+
+  if (merchant === 'pcbway') {
+    const path = link.externalUrl ?? '';
+    return {
+      ...link,
+      merchant: 'pcbway',
+      title: link.label,
+      image: link.image,
+      price: formatMoney(link.price),
+      currency: link.currency ?? 'USD',
+      url: path ? buildPcbWayUrl(path) : buildPcbWayUrl(''),
+    };
+  }
+
+  if (merchant === 'jlcpcb') {
+    const path = link.externalUrl ?? '';
+    return {
+      ...link,
+      merchant: 'jlcpcb',
+      title: link.label,
+      image: link.image,
+      price: formatMoney(link.price),
+      currency: link.currency ?? 'USD',
+      url: path ? buildJlcUrl(path) : buildJlcUrl(),
     };
   }
 

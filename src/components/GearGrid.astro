@@ -6,34 +6,78 @@ interface Props {
   gear: ResolvedAffiliateLink[];
   title?: string;
   headingId?: string;
+  maxItems?: number;
 }
 
 const {
   gear,
   title = 'Take This to Hardware',
   headingId = 'gear-title',
+  maxItems = 6,
 } = Astro.props;
+
+// Sort by yield + relevance: SparkFun Originals first (10%), then other SparkFun, PCBWay/JLCPCB (fab 10%), then books, then amazon tools/electronics.
+// Also prioritize sparkfunOriginal flag.
+function merchantRank(g: ResolvedAffiliateLink): number {
+  if (g.merchant === 'sparkfun' && (g as any).sparkfunOriginal) return 0;
+  if (g.merchant === 'sparkfun') return 1;
+  if (g.merchant === 'pcbway' || g.merchant === 'jlcpcb') return 2;
+  if (g.category === 'Book') return 3;
+  if (g.merchant === 'amazon') return 4;
+  return 5;
+}
+
+const sorted = [...gear].sort((a, b) => {
+  const ra = merchantRank(a), rb = merchantRank(b);
+  if (ra !== rb) return ra - rb;
+  // secondary: category stability
+  return (a.category || '').localeCompare(b.category || '');
+});
+
+const capped = sorted.slice(0, maxItems);
+const overflow = Math.max(0, gear.length - capped.length);
+
+function merchantLabel(m: string): string {
+  if (m === 'sparkfun') return 'SparkFun';
+  if (m === 'pcbway') return 'PCBWay';
+  if (m === 'jlcpcb') return 'JLCPCB';
+  if (m === 'amazon') return 'Amazon';
+  return m;
+}
+
+function badgeClass(m: string, original?: boolean): string {
+  if (m === 'sparkfun' && original) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700';
+  if (m === 'sparkfun') return 'bg-orange-500/10 border-orange-500/30 text-orange-700';
+  if (m === 'pcbway') return 'bg-blue-500/10 border-blue-500/30 text-blue-700';
+  if (m === 'jlcpcb') return 'bg-purple-500/10 border-purple-500/30 text-purple-700';
+  if (m === 'amazon') return 'bg-elevated/70 border-border text-muted-text/70';
+  return 'bg-elevated/70 border-border text-muted-text/70';
+}
 ---
 
-{gear.length > 0 && (
-  <section class="border-b border-border" aria-labelledby={headingId}>
+{capped.length > 0 && (
+  <section class="gear-grid border-b border-border" aria-labelledby={headingId} data-max={maxItems} data-total={gear.length}>
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 id={headingId} class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em]">{title}</h2>
           <AffiliateDisclosure class="mt-3 max-w-2xl" />
+          {gear.length > maxItems && (
+            <p class="mt-2 font-mono text-[0.68rem] text-muted-text">Showing {capped.length} top picks (capped from {gear.length} to reduce decision paralysis) — full list at <a href="/resources#gear" class="underline">/resources#gear</a></p>
+          )}
         </div>
       </div>
       <slot name="before-grid" />
       <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {gear.map((item) => (
+        {capped.map((item) => (
           <a
             href={item.url}
             target="_blank"
             rel="sponsored noopener noreferrer"
             data-gear-id={item.id}
             data-merchant={item.merchant}
-            class="group/card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
+            data-original={item.sparkfunOriginal ? '1' : '0'}
+            class="group/card gear-card relative flex flex-col overflow-hidden rounded-[22px] border border-border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)]"
           >
             <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
               {item.image ? (
@@ -55,20 +99,65 @@ const {
                   {item.price}
                 </span>
               )}
+              <span class={`pointer-events-none absolute left-3 top-3 inline-flex items-center rounded-full border px-2.5 py-1 font-mono text-[0.55rem] font-semibold uppercase tracking-[0.08em] backdrop-blur ${badgeClass(item.merchant, item.sparkfunOriginal)}`}>
+                {item.sparkfunOriginal ? '★ ' : ''}{merchantLabel(item.merchant)} {item.merchant === 'sparkfun' && item.sparkfunOriginal ? '· 10%' : ''}
+              </span>
               <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
-                {item.merchant === 'amazon' ? item.category : item.merchant}
+                {item.category}
               </span>
             </div>
             <div class="flex flex-1 flex-col p-4 sm:p-4.5">
               <h4 class="line-clamp-2 text-[1.02rem] font-semibold leading-[1.32] tracking-[-0.015em] text-primary-text">{item.title}</h4>
               <p class="mt-1.5 line-clamp-3 text-[0.84rem] leading-[1.55] text-muted-text">{item.note}</p>
+              {item.sparkfunOriginal && (
+                <p class="mt-2 inline-flex w-fit items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-emerald-700">Original · 10% commission</p>
+              )}
             </div>
           </a>
         ))}
       </div>
-      <p class="mt-6 text-[0.78rem] text-muted-text">
-        More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a>
-      </p>
+      <div class="mt-6 flex flex-wrap items-center gap-3 text-[0.78rem] text-muted-text">
+        <span>More gear: <a href="/resources#gear" class="text-brand-anchor hover:text-primary-text">full Gear list →</a></span>
+        {overflow > 0 && (
+          <span class="font-mono text-[0.7rem]">+{overflow} more items curated — see /resources for complete BOM.</span>
+        )}
+      </div>
     </div>
   </section>
 )}
+
+<script>
+  // @ts-nocheck
+  // Privacy-safe first-party analytics for gear clicks + KitBuilder
+  function bindGear() {
+    document.querySelectorAll('.gear-card').forEach((card) => {
+      if ((card as HTMLElement).dataset.bound === '1') return;
+      (card as HTMLElement).dataset.bound = '1';
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-gear-id') || 'unknown';
+        const merchant = card.getAttribute('data-merchant') || 'amazon';
+        try {
+          window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'gear_click', id, merchant } }));
+          console.debug('[analytics] gear_click', { id, merchant });
+        } catch {}
+      });
+    });
+
+    document.querySelectorAll('.kit-builder [data-kit-cta], .kit-builder a').forEach((el) => {
+      if (el.dataset.bound === '1') return;
+      el.dataset.bound = '1';
+      el.addEventListener('click', () => {
+        const kitRoot = el.closest('.kit-builder');
+        const kitId = kitRoot?.getAttribute('data-kit-id') || 'unknown-kit';
+        try {
+          window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'kit_cta_click', kitId } }));
+          console.debug('[analytics] kit_cta_click', { kitId });
+        } catch {}
+      });
+    });
+  }
+
+  bindGear();
+  document.addEventListener('astro:page-load', bindGear);
+</script>
+

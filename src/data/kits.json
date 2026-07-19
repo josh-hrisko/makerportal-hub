@@ -79,5 +79,64 @@
       { "linkId": "sf-icm20948-9dof", "qty": 1 },
       { "linkId": "intel-realsense-depth-camera-d455", "qty": 1, "optional": true }
     ]
+  },
+  {
+    "id": "gan-foc-starter",
+    "simulator": "gan-foc-drive",
+    "title": "GaN FOC bench starter",
+    "blurb": "Teensy 4.0 + RedBoard Plus + OpenLog + logic analyzer — close the loop from SVPWM simulation to phase-current capture. RedBoard & OpenLog are SparkFun Originals (10%).",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "sf-redboard-plus", "qty": 1 },
+      { "linkId": "sf-teensy-4-0", "qty": 1 },
+      { "linkId": "sf-openlog", "qty": 1 },
+      { "linkId": "hiletgo-usb-logic-analyzer-8ch", "qty": 1 },
+      { "linkId": "fluke-87v-true-rms-multimeter", "qty": 1, "optional": true },
+      { "linkId": "oscilloscope-function-generator-kit", "qty": 1, "optional": true },
+      { "linkId": "power-electronics-mohan-book", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "antenna-rf-starter",
+    "simulator": "antenna-em-sandbox",
+    "title": "Antenna & RF sounder starter",
+    "blurb": "NanoVNA-H4 + SOL cal + RTL-SDR + TinySA — measure AF, S11, and over-the-air beam steering phase Δφ = kd sinθ₀.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "nanovna-h4-vector-analyzer", "qty": 1 },
+      { "linkId": "sma-cal-kit-4ghz-open-short-load", "qty": 1 },
+      { "linkId": "rtl-sdr-blog-v4-dongle", "qty": 1 },
+      { "linkId": "tinysa-ultra-spectrum-analyzer", "qty": 1, "optional": true },
+      { "linkId": "antenna-theory-balanis-4th-edition", "qty": 1, "optional": true },
+      { "linkId": "sf-gps-rtk-zed-f9p", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "verilog-fpga-starter",
+    "simulator": "verilog-live-sculptor",
+    "title": "Verilog → FPGA hardware path",
+    "blurb": "Arty A7-35T Artix-7 + SparkFun MicroMod + Thing Plus RP2350 — synthesize live, validate timing with real LUT/FF utilization. MicroMod & RP2350 are SparkFun Originals (10%).",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "digilent-arty-a7-35t-artix7", "qty": 1 },
+      { "linkId": "sf-micromod-main-single", "qty": 1 },
+      { "linkId": "sf-thing-plus-rp2350", "qty": 1 },
+      { "linkId": "digital-design-harris-harris-book", "qty": 1, "optional": true },
+      { "linkId": "fpga-prototyping-verilog-chu", "qty": 1, "optional": true }
+    ]
+  },
+  {
+    "id": "pinn-edge-stack",
+    "simulator": "webgpu-pinn-studio",
+    "title": "PINN / edge-ML compute stack",
+    "blurb": "Jetson Orin Nano Super + Pi 5 8GB via SparkFun — run quantized PINN / TinyML models sized in-studio. Pair with Chip Huyen's systems book.",
+    "merchant": "mixed",
+    "items": [
+      { "linkId": "sf-jetson-orin-nano", "qty": 1 },
+      { "linkId": "sf-raspberry-pi-5-8gb", "qty": 1, "optional": true },
+      { "linkId": "book-designing-ml-systems", "qty": 1 },
+      { "linkId": "book-hands-on-ml", "qty": 1, "optional": true },
+      { "linkId": "cuda-programming-kirk-hwu-book", "qty": 1, "optional": true }
+    ]
   }
 ]

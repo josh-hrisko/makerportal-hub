@@ -4,6 +4,8 @@ import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import GearGrid from '../../components/GearGrid.astro';
 import KitBuilder from '../../components/KitBuilder.astro';
+import ExportGate from '../../components/ExportGate.astro';
+import FabOrderPanel from '../../components/FabOrderPanel.astro';
 import Math from '../../components/Math.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
 import { kitForSimulator } from '../../data/kits';
@@ -126,6 +128,17 @@ export function s11(gammaL:number, beta:number, len:number){
         </div>
       </div>
     </section>
+
+    <ExportGate
+      simulator="signal-integrity-lab"
+      fileName="stackup-sweep.csv"
+      mimeType="text/csv"
+      title="Export stackup + S-parameter sweep"
+      description="Tuned W/H/Er/T/L plus Hammerstad-Jensen Z₀/ε_eff sweep as CSV — free with watermark footer, clean after email unlock. Feed to PCBWay Shared Project for 10% fab credit path."
+      fileExtension="csv"
+    />
+
+    <FabOrderPanel simulator="signal-integrity-lab" exportLabel="Export stackup CSV" />
 
     <GearGrid gear={gear}>
       {kit && <KitBuilder slot="before-grid" kit={kit} />}
@@ -362,6 +375,48 @@ function initSI(){
     compute();
   }
   compute(); loop();
+
+  // Register export getter for SI Lab — stackup + sweep CSV
+  try {
+    const reg = () => {
+      if (window.MPExportGate) {
+        window.MPExportGate.register('signal-integrity-lab', () => {
+          const W = parseFloat(slW.value), H = parseFloat(slH.value), T = parseFloat(slT.value), Er = parseFloat(slEr.value), L = parseFloat(slL.value), ZL = parseFloat(slZL.value), F = parseFloat(slF.value), gap = parseFloat(slGap.value);
+          const {Z0, eff} = microstrip(W,H,T,Er);
+          const Td = L * Math.sqrt(eff) / 0.3;
+          const gamma = (ZL - Z0)/(ZL+Z0);
+          let csv = `param,value,unit,note\n`;
+          csv += `W,${W},mm,trace width\n`;
+          csv += `H,${H},mm,substrate height\n`;
+          csv += `T,${T},um,copper thickness\n`;
+          csv += `Er,${Er},,dielectric constant\n`;
+          csv += `L,${L},mm,trace length\n`;
+          csv += `ZL,${ZL},ohm,load termination\n`;
+          csv += `F,${F},GHz,frequency\n`;
+          csv += `Z0,${Z0.toFixed(3)},ohm,Hammerstad-Jensen\n`;
+          csv += `eff,${eff.toFixed(4)},,effective dielectric\n`;
+          csv += `Td,${Td.toFixed(1)},ps,propagation delay\n`;
+          csv += `Gamma,${gamma.toFixed(4)},,reflection coef (ZL-Z0)/(ZL+Z0)\n`;
+          csv += `gap,${gap},mm,crosstalk gap\n`;
+          csv += `\nFreq_GHz,S11_dB_est,S21_dB_est,Z0_ohm,Note\n`;
+          for (let f=0.1; f<=6.0; f+=0.2) {
+            const {Z0:fZ0, eff:fEff} = microstrip(W,H,T,Er);
+            const beta = 2*Math.PI*f*1e9/(3e8/Math.sqrt(fEff));
+            const g = (ZL-fZ0)/(ZL+fZ0);
+            const s11 = 20*Math.log10(Math.max(1e-3, Math.abs(g)));
+            const s21 = (-0.5*f).toFixed(2);
+            csv += `${f.toFixed(2)},${s11.toFixed(2)},${s21},${fZ0.toFixed(2)},sweep estimate\n`;
+          }
+          csv += `\n# Generated ${new Date().toISOString()} by makerportal.ai/playground/signal-integrity-lab\n`;
+          csv += `# Suggested BOM: NanoVNA-H4 + SMA SOL kit + JLCPCB/PCBWay order — stackup W=${W} H=${H} Er=${Er} T=${T}um\n`;
+          return csv;
+        });
+      }
+    };
+    reg();
+    document.addEventListener('astro:page-load', reg);
+  } catch {}
+
   document.addEventListener('astro:before-swap',()=>{cancelAnimationFrame(raf); try{audioCtx?.close();}catch{}},{once:true});
 }
 document.addEventListener('astro:page-load', initSI);

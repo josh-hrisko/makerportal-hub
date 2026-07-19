@@ -3,8 +3,8 @@ import Layout from '../layouts/Layout.astro';
 
 const title = 'Privacy Policy — MakerPortal';
 const description =
-  'How MakerPortal handles data on the hub and in our apps. On-device first where possible, transparent cloud disclosure for agentic features like AuraLinter. Affiliate disclosure.';
-const updated = 'July 13, 2026';
+  'How MakerPortal handles data on the hub and in our apps. On-device first where possible, transparent cloud disclosure for agentic features like AuraLinter. Affiliate disclosure + export soft-gate.';
+const updated = 'July 19, 2026';
 ---
 
 <Layout title={title} description={description}>
@@ -36,10 +36,19 @@ const updated = 'July 13, 2026';
         <p>Some resource, playground, or shop links are affiliate links. If you purchase through them, we may earn a commission at no extra cost to you. We only recommend tools we believe are useful. Affiliate relationships never require us to share your personal browsing data with partners beyond what the merchant’s own checkout requires.</p>
         <p class="mt-3"><strong class="text-primary-text">Approved partners today:</strong></p>
         <ul class="mt-2 list-disc space-y-1.5 pl-5">
-          <li><strong>Amazon Associates</strong> — tag <code>engineersport-20</code>. Commission varies by category (often ~1–4.5% on books/tools/electronics).</li>
+          <li><strong>Amazon Associates</strong> — tag <code>engineersport-20</code>. Commission varies by category (often ~1–4.5% on books/tools/electronics). 24h cookie; Creators API cache is build-time only, no runtime calls (D-015).</li>
           <li><strong>SparkFun Affiliate</strong> — referral code <code>rOtrc44SZw</code> (<code>?ref=</code> on sparkfun.com URLs). <strong>10% on SparkFun Original products</strong>; third-party catalog items (e.g. Raspberry Pi boards, Jetson, Teensy) are tracked but may pay $0 under SparkFun’s program rules.</li>
         </ul>
-        <p class="mt-3">Links use <code>rel="sponsored noopener noreferrer"</code>. We do not use undisclosed native ads. Future partners (PCB fab houses, distributors) will be listed here before links go live.</p>
+        <p class="mt-3 text-[0.9rem]">Pending (not live — no referral IDs shipped): <strong>PCBWay</strong> Shared Projects / referral (10% PCB + 10% SMT on shared projects, ~5% referral) — needs owner referral URL / Shared Project URLs; <strong>JLCPCB</strong> Brand Advocate / referral — needs owner approval + coupon terms. Code is stub-ready in <code>src/data/affiliate-links.ts</code> + <code>FabOrderPanel.astro</code> but returns empty until IDs land (G2 acceptance). See <code>docs/MONETIZATION.md</code> for owner ask.</p>
+        <p class="mt-2">Links use <code>rel="sponsored noopener noreferrer"</code>. We do not use undisclosed native ads.</p>
+
+        <h3 class="mt-8 text-[1.1rem] font-semibold">Export gate & email (soft list)</h3>
+        <p class="mt-2">Simulator exports (RTOS FreeRTOSConfig.h, SI stackup CSV, SLAM trajectory CSV, PID gains JSON, antenna array JSON, Verilog RTL) have two paths:</p>
+        <ul class="mt-2 list-disc space-y-1.5 pl-5">
+          <li><strong>Free:</strong> watermarked file (small footer <code>makerportal.ai</code> brand line) — always available, no email.</li>
+          <li><strong>Clean:</strong> watermark removed after soft email unlock. Email is stored in <code>localStorage</code> key <code>mp_export_email_{"{sim}"}</code> + unlock flag <code>mp_export_unlock_{"{sim}"}</code> per simulator. If Buttondown username is configured, we also POST to Buttondown embed endpoint (<code>privacy-first mode</code>, no tracking pixels per D-014) with tag = sim id.</li>
+        </ul>
+        <p class="mt-2">No hard paywall, no Clerk. You can re-lock via DevTools → Application → Local Storage. Analytics events <code>export_gate_unlock</code>, <code>export_download</code>, <code>gear_click</code>, <code>kit_cta_click</code>, <code>fab_*_click</code> are first-party <code>CustomEvent('mp:analytics')</code> — privacy-safe, no third-party ad pixels.</p>
 
         <h2>Contact</h2>
         <p>Privacy questions: <a href="/contact">Contact the studio</a>.</p>

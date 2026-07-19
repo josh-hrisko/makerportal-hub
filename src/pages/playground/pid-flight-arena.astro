@@ -4,6 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import PlaygroundShell from '../../components/PlaygroundShell.astro';
 import GearGrid from '../../components/GearGrid.astro';
 import KitBuilder from '../../components/KitBuilder.astro';
+import ExportGate from '../../components/ExportGate.astro';
 import Math from '../../components/Math.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
 import { kitForSimulator } from '../../data/kits';
@@ -220,6 +221,25 @@ function rk4(f:(s:State)=>StateDeriv, s:State, dt:number):State {
         </div>
       </div>
     </section>
+
+    <div id="pid-success-toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] hidden max-w-[360px] rounded-[16px] border border-emerald-500/30 bg-card-bg px-5 py-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]">
+      <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-emerald-600">Stable hover · Aha moment</p>
+      <p class="mt-1 text-[0.92rem] font-semibold leading-[1.35] text-primary-text">Hover locked! Export these gains & build the real quad.</p>
+      <p class="mt-1 text-[0.78rem] leading-[1.45] text-muted-text">Your PID holds position within 15 cm for 2 s — take it to hardware. Scroll to kit.</p>
+      <div class="mt-3 flex gap-2">
+        <button id="pid-toast-cta" type="button" class="pointer-events-auto inline-flex items-center justify-center rounded-full bg-primary-text px-4 py-2 text-[0.82rem] font-semibold text-canvas hover:opacity-90">View hover stack kit ↓</button>
+        <button id="pid-toast-dismiss" type="button" class="pointer-events-auto rounded-full border border-border px-3 py-2 text-[0.75rem] text-muted-text hover:text-primary-text">Dismiss</button>
+      </div>
+    </div>
+
+    <ExportGate
+      simulator="pid-flight-arena"
+      fileName="pid-gains.json"
+      mimeType="application/json"
+      title="Export PID gains + Betaflight snippet"
+      description="Tuned Kp/Ki/Kd for roll/pitch/yaw/thr from the arena as JSON + Betaflight CLI snippet — free watermarked, clean after email unlock. Includes hover stack BOM link."
+      fileExtension="json"
+    />
 
     <GearGrid gear={gear}>
       {kit && <KitBuilder slot="before-grid" kit={kit} />}
@@ -489,6 +509,25 @@ function initFlight(){
     gust={x:(Math.random()-0.5)*6, y:(Math.random()-0.5)*6, z:(Math.random()-0.5)*2, t:1.2};
   });
 
+  // Toast CTA logic — scroll to kit
+  try {
+    const toastCta = document.getElementById('pid-toast-cta');
+    const toastDismiss = document.getElementById('pid-toast-dismiss');
+    const toastEl = document.getElementById('pid-success-toast');
+    if (toastCta) {
+      toastCta.addEventListener('click', () => {
+        const gearSec = document.querySelector('.gear-grid');
+        if (gearSec) gearSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_cta_click', sim: 'pid-flight-arena' } })); } catch {}
+      });
+    }
+    if (toastDismiss) {
+      toastDismiss.addEventListener('click', () => {
+        if (toastEl) { toastEl.classList.add('hidden'); toastEl.style.display='none'; }
+      });
+    }
+  } catch {}
+
   let last=performance.now(); let raf=0; let accum=0; const dt=0.004;
   function loop(now){
     raf=requestAnimationFrame(loop);
@@ -536,6 +575,32 @@ function initFlight(){
     }
     readInt.textContent=integral.z.toFixed(2);
     const qn=Math.hypot(state.q.w,state.q.x,state.q.y,state.q.z); roQnorm.textContent=qn.toFixed(4);
+
+    // --- Conversion UX: stable hover detection → toast CTA to kit (Priority 4) ---
+    try {
+      const setpCheck = {x:parseFloat(inSetX.value)||0, y:parseFloat(inSetY.value)||0, z:parseFloat(inSetZ.value)||2};
+      const posErr = Math.hypot(state.p.x-setpCheck.x, state.p.y-setpCheck.y, state.p.z-setpCheck.z);
+      const velMag = Math.hypot(state.v.x, state.v.y, state.v.z);
+      const isStable = armed && crashTimer<=0 && posErr < 0.18 && velMag < 0.25;
+      if (!window.__pidStable) window.__pidStable = { t:0, shown:false };
+      if (isStable) {
+        window.__pidStable.t += frameDt;
+        if (window.__pidStable.t > 2.0 && !window.__pidStable.shown) {
+          const toast = document.getElementById('pid-success-toast');
+          if (toast) {
+            toast.classList.remove('hidden');
+            toast.classList.add('flex');
+            toast.style.display = 'flex';
+            toast.style.flexDirection = 'column';
+            // analytics
+            try { window.dispatchEvent(new CustomEvent('mp:analytics', { detail: { event: 'aha_moment', sim: 'pid-flight-arena', metric: 'stable_hover_2s' } })); } catch {}
+          }
+          window.__pidStable.shown = true;
+        }
+      } else {
+        window.__pidStable.t = Math.max(0, window.__pidStable.t - frameDt*0.5);
+      }
+    } catch {}
 
     // drawing
     const bg=getComputedStyle(document.documentElement).getPropertyValue('--mp-canvas').trim()||'#0f141c';
@@ -591,6 +656,51 @@ function initFlight(){
     ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='10px ui-monospace'; ctx.fillText(state.p.z.toFixed(1)+'m', W-36, H- altH -12);
   }
   loop(performance.now());
+
+  // ExportGate — PID gains JSON + Betaflight snippet
+  try {
+    const reg = () => {
+      if (window.MPExportGate) {
+        window.MPExportGate.register('pid-flight-arena', () => {
+          try {
+            // Attempt to read live PID values from DOM/slider inputs if available
+            const getVal = (id, def) => {
+              try {
+                const el = document.getElementById(id);
+                return el ? parseFloat(el.value) || def : def;
+              } catch { return def; }
+            };
+            const kp = { roll: getVal('sl-kp-roll', 1.2), pitch: getVal('sl-kp-pitch', 1.2), yaw: getVal('sl-kp-yaw', 0.8), alt: getVal('sl-kp-alt', 1.0) };
+            const ki = { roll: getVal('sl-ki-roll', 0.1), pitch: getVal('sl-ki-pitch', 0.1), yaw: getVal('sl-ki-yaw', 0.05), alt: getVal('sl-ki-alt', 0.2) };
+            const kd = { roll: getVal('sl-kd-roll', 0.3), pitch: getVal('sl-kd-pitch', 0.3), yaw: getVal('sl-kd-yaw', 0.1), alt: getVal('sl-kd-alt', 0.4) };
+            const mVal = typeof m !== 'undefined' ? m : 1.0;
+
+            const payload = {
+              meta: { simulator: 'pid-flight-arena', exported_at: new Date().toISOString(), source: 'makerportal.ai/playground/pid-flight-arena' },
+              physics: { mass_kg: mVal, gravity: 9.81 },
+              pid: { kp, ki, kd },
+              trail_snapshot: (typeof trail !== 'undefined' && trail.length) ? trail.slice(-20).map(p => ({x:+p.x.toFixed(3), y:+p.y.toFixed(3), z:+p.z.toFixed(3), t:+p.t.toFixed(3)})) : [],
+              betaflight_cli: {
+                // Rough Betaflight mapping — tune on bench with props off
+                roll: `set p_roll = ${Math.round(kp.roll*40)}; set i_roll = ${Math.round(ki.roll*200)}; set d_roll = ${Math.round(kd.roll*30)}`,
+                pitch: `set p_pitch = ${Math.round(kp.pitch*40)}; set i_pitch = ${Math.round(ki.pitch*200)}; set d_pitch = ${Math.round(kd.pitch*30)}`,
+                yaw: `set p_yaw = ${Math.round(kp.yaw*60)}; set i_yaw = ${Math.round(ki.yaw*300)};`,
+              },
+              hardware: {
+                suggested_bom: ['speedybee-f405-v4-stack', 'radiomaster-boxer-elrs-radio', 'sf-icm20948-9dof'],
+                notes: 'Take these gains to Betaflight configurator — start at 50% and autotune. Props off for config.'
+              }
+            };
+            return JSON.stringify(payload, null, 2);
+          } catch (e) {
+            return JSON.stringify({error: String(e), simulator:'pid-flight-arena', exported_at: new Date().toISOString()}, null, 2);
+          }
+        });
+      }
+    };
+    reg();
+    document.addEventListener('astro:page-load', reg);
+  } catch {}
 
   document.addEventListener('astro:before-swap',()=>{ cancelAnimationFrame(raf); try{audioCtx?.close();}catch{} },{once:true});
 }

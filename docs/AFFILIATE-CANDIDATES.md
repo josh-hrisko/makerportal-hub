@@ -4,7 +4,15 @@ Working reference — not a data source the site reads. Amazon rows: paste
 ASIN / SiteStripe link. SparkFun rows: product path on sparkfun.com (live
 links use `buildSparkFunUrl` + code `rOtrc44SZw`).
 
-**Approved live merchants:** Amazon Associates (`engineersport-20`) · SparkFun Affiliate (`rOtrc44SZw`, 10% Originals).
+**Approved live merchants:** Amazon Associates (`engineersport-20`) · SparkFun Affiliate (`rOtrc44SZw`, 10% Originals). **Pending stub-ready:** PCBWay referral / Shared Projects (10% PCB + 10% SMT) + JLCPCB Brand Advocate — no fake IDs shipped; code ready in `affiliate-links.ts` + `FabOrderPanel.astro`, hidden until owner supplies referral URLs.
+
+**Owner ask — PCBWay / JLCPCB (blocking G2):**
+- PCBWay: referral URL format `https://www.pcbway.com/setinvite.aspx?inviteid=XXXX` or Shared Project URLs e.g. `https://www.pcbway.com/project/shareproject/...` per sim (SI Lab, Antenna, Verilog). Fill `PCBWAY_REFERRAL_CODE` + `PCBWAY_SHARED_PROJECTS[simId]` in `affiliate-links.ts`.
+- JLCPCB: Brand Advocate / free PCB sponsorship terms + coupon codes + any CTA assets. Fill `JLCPCB_REFERRAL_CODE` / `JLCPCB_SPONSORSHIP_URL`.
+- Once IDs land: update `privacy.astro` #affiliates list, `AffiliateDisclosure.astro`, `docs/MONETIZATION.md` live merchant list, and verify `npm run check` still passes (non-Amazon path requires `externalUrl`).
+- Do NOT hardcode fake PCBWay invite IDs — acceptance requires empty gear over wrong ASINs principle.
+
+**Current sim kits (10 live):** pid-hover-stack, si-vna-starter, rf-bench-starter, rtos-lab-stack, fea-mech-lab, slam-edge-stack, gan-foc-starter, antenna-rf-starter, verilog-fpga-starter, pinn-edge-stack — all use existing link ids only.
 
 **Status key:**
 - Confirmed — live in `affiliate-links.json`.
@@ -342,8 +350,16 @@ Note: MPU9250 (`mpu9250-imu`) and Arduino Uno R3 (`elegoo-arduino-uno-r3`) were 
 
 ---
 
+### PCBWay / JLCPCB — owner-gated next (2026-07-19)
+
+- **PCBWay:** Shared Projects pay 10% PCB + 10% SMT when others order that design; separate referral ~5% + coupons. Ideal flow: sim exports Gerbers/stackup → “Order this board on PCBWay” with shared-project or referral link. Placement: SI Lab, Antenna EM, Verilog Sculptor export-adjacent, not random banners.
+- **JLCPCB:** Referral program coupon-heavy; Brand Advocate / free PCB sponsorship / co-brand is high-leverage path for content site. Do not invent a % commission. CTA copy: “Order PCB” / “Sponsor boards” only after owner has real terms.
+- **Status:** Code stub-ready (`buildPcbWayUrl`, `buildJlcUrl`, `isFabLive()`, `FabOrderPanel.astro`) — renders nothing until real URLs exist. G2 acceptance = blocked with clear owner ask + stub not linked = compliant (no fake IDs).
+- **Owner action:** supply URLs, then uncomment/add link rows in `affiliate-links.json` with `merchant: pcbway|jlcpcb`, `externalUrl: <real project URL>`, no ASIN, update privacy + monetization docs.
+
 ### Next steps
 1. Copy each numbered line into Amazon search / SiteStripe to find the real listing and generate the link.
 2. Paste the result on that item's Affiliate link line — a bare ASIN is fine.
 3. Edit freely — delete anything that doesn't fit, fix any Suggested item (37-44, 46-52 especially) to match what you actually use.
 4. Once a batch is ready, tell me and I'll turn the confirmed entries into affiliate-links.json entries (with relatedTo/pillars set per section) — same review-before-ship posture as everything else in this pipeline (see docs/DECISIONS.md D-011/D-015).
+5. For PCBWay/JLCPCB: do NOT invent referral IDs; wait for owner. Prefer empty gear over wrong ASINs.
