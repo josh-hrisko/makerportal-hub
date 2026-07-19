@@ -114,3 +114,5 @@ No. Separate provider TTFB and total response time from browser decode, scheduli
 Chunks arrive according to the network, not the audio clock. Convert them to audio buffers and schedule them against one increasing context-time cursor with a measured jitter policy.
 
 The fastest way to make this concrete is to [run the DSP sandbox](/playground/elevenlabs-dsp-sandbox), listen to the graph, and export the measurement envelope. For the other side of MakerPortal's voice stack—generated DSP that must pass a real compiler and stability harness—step through [AuraLinter's verification loop](/playground/agentic-dsp-pipeline).
+
+More voice tooling lives in [Resources · Gear](/resources#gear) and the full [Playground catalog](/playground) — the [Voice Synthesis Workstation kit](/playground/elevenlabs-dsp-sandbox) lists the physical mic/monitor/interface side of this pipeline under the same Gear cap.

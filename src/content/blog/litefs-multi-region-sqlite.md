@@ -102,3 +102,5 @@ No. Replication is asynchronous. The proxy's transaction-position cookie can mak
 No. They are a visible physics model using distance, fiber speed, and route stretch. Use them to reason about placement, then validate a deployment with measurements.
 
 Open the [multi-region SQLite lab](/playground/fly-edge-db-lab), move the primary, and watch which path actually changes. If the same system also runs bursty verification jobs, the [client-versus-serverless GPU lab](/playground/modal-gpu-benchmarker) applies the same discipline to compute: keep fixed overhead separate from work time, and leave missing measurements blank.
+
+For hardware context, [Resources · Gear](/resources#gear) lists the Pi + SSD home replica lab behind the Fly Edge Lab stack, and [/playground](/playground) groups the edge and RTOS instruments together.

@@ -120,3 +120,5 @@ Use deterministic nonzero inputs, read selected results back, compare them with 
 Show a compatibility state and keep unrelated controls usable. Never turn missing browser support into a guessed bar.
 
 Run the [browser benchmark](/playground/modal-gpu-benchmarker) to see the chart stay empty until you submit work. The page includes the current deployable Modal function, but deployment remains BYO-workspace so no shared credential or unmetered public GPU endpoint ships in this static site.
+
+Related surfaces: [Resources · Gear](/resources#gear) groups the Jetson/Pi bench hardware used to reproduce this tradeoff on device, and [/playground](/playground) collects the broader WebGPU and on-device AI lab list — including the [PINN training studio](/playground/webgpu-pinn-studio) for the GPU compute side.

@@ -104,9 +104,11 @@ rejected push; inspect the remote commit before resolving any overlap.
   100 accessibility / 100 best practices / 100 SEO; the vector lab matched it.
   TBT was 0 ms and CLS was 0–0.00014. Treat these as local test-machine results,
   not population-wide performance data.
-- Reconciled build: 85 generated HTML files, 84 Pagefind pages, and 16,834
-  indexed words. Re-run the commands below before trusting these counts after
-  new templates/content.
+- Reconciled build: 85 generated HTML files, 84 Pagefind pages, and 16,838
+  indexed words (2026-07-19 frontier check after cross-link pass; previous
+  16,834 → 16,838 reflects three added resource cross-links, no template change).
+  Re-run the commands below before trusting these counts after new
+  templates/content.
 
 ## Known residual risks
 
