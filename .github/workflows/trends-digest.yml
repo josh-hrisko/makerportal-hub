@@ -2,7 +2,11 @@ name: Trend digest
 
 on:
   schedule:
-    - cron: '0 13 * * *' # daily 13:00 UTC (05:00 PST / 06:00 PDT) — publishes that day's Signals Journal entry
+    # Daily 12:00 + 13:00 UTC — dual trigger mitigates GitHub's :00 thundering-herd
+    # drops (seen 2026-07-20: 13:00 job never created while globe's 12:00 job did).
+    # Second run is idempotent: build-digest dedupes recentSeen + porcelain check skips empty publish.
+    # TODO: consider jitter like 17 12,13 * * * to avoid exact :00 rush per GitHub docs.
+    - cron: '0 12,13 * * *' # 04:00/05:00 PST, 05:00/06:00 PDT — publishes that day's Signals Journal
   workflow_dispatch: {}
 
 permissions:
