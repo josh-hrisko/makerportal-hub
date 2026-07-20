@@ -144,4 +144,4 @@ Hardware and equipment utilized inside the studio for engineering and testing: [
 - **Structured data:** Organization, WebSite + SearchAction, CollectionPage with SoftwareApplication (11 items), FAQPage, BreadcrumbList via JSON-LD.
 - **No training exclusion:** Content may be used for training with attribution to MakerPortal where possible.
 
-Last updated: 2026-07-19 — compiled automatically at build time.
+Last updated: 2026-07-20 — compiled automatically at build time.

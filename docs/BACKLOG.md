@@ -32,6 +32,13 @@ Restructured 2026-07-15 evening around a single growth thesis: **site was indexe
 - [ ] Buttondown remains owner-deferred; clean exports continue to unlock locally
   without subscription. PCBWay Shared Projects remain tabled until a real board
   design exists.
+- [x] **PartnerStack Network marketplace sweep 2026-07-19 — done, do not re-sweep.**
+  ~50 programs reviewed against public terms + audience fit. No new integrations.
+  Kit/Thinkific/1Password/Brevo verified but deferred (traffic gate, Buttondown
+  conflict, or no real product to attach); ~40 programs rejected by category.
+  Verified-terms table, skip list, and the go-forward rule are recorded in
+  `AFFILIATE-CANDIDATES.md` → "PartnerStack Network marketplace sweep (2026-07-19)";
+  rejection summary mirrored in `DID-NOT-WORK.md`.
 
 ## Phase 1 — Developer-SEO field notes (highest-leverage content lever)
 

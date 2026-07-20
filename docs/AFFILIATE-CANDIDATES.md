@@ -372,6 +372,35 @@ Note: MPU9250 (`mpu9250-imu`) and Arduino Uno R3 (`elegoo-arduino-uno-r3`) were 
 - **Rejected — Modal, Fly.io, Supabase, Neon, Cloudflare, Sentry:** No verified public affiliate program with stable commission. Prior sweep considered DevRel credit-grant / free-token path for Modal/Fly — owner explicitly rejected 2026-07-19. Labs remain educational only (`modal-gpu-benchmarker`, `fly-edge-db-lab`). Do not pursue credit grants, do not tailor outreach, do not request workspace/org handles. Future agents must not re-open credit-engine path without explicit owner reversal. PartnerStack + Pinecone are the only approved SaaS affiliate avenues.
 - **Rule:** Only established, stable affiliate programs with public terms and persistent destination URLs. No free-token / credit-grant / ephemeral promo programs.
 
+### PartnerStack Network marketplace sweep (2026-07-19) — do not re-sweep
+
+Owner reviewed the full PartnerStack Network Marketplace (~50 programs) on 2026-07-19. Verdict: **no new integrations now.** The marketplace is B2B-SaaS; this site's audience is builders (embedded, DSP/audio, iOS, on-device AI, privacy-first), and traffic is near-zero (Search Console recheck ~2026-07-29), so every program's near-term expected value is ~$0 and several programs reject new/low-traffic sites outright. Do not re-sweep the marketplace or re-research the rejected categories below without an explicit owner request.
+
+**Verified against public program pages (2026-07-19):**
+
+| Program | Verified public terms | Network | Status for this site |
+| :--- | :--- | :--- | :--- |
+| Kit (ex-ConvertKit) | 50% commission for 12 months; tiers add +10/15/20% lifetime recurring at 10/50/100 referrals/yr (kit.com/affiliate) | PartnerStack | Strongest marketplace fit (creator email). Deferred — owner runs Buttondown; only honest path is a real comparison field note, and only after a traffic baseline exists. |
+| Thinkific | 30% lifetime recurring (Plus: flat $150/mo), 90-day cookie, $25 min payout (thinkific.com/affiliates) | PartnerStack | Only if a real course product ever ships. Not before. |
+| 1Password | Public program runs on CJ, not PartnerStack: $2/signup + 25% of first payment, $2 min (1password.com/affiliate) | CJ (PS listing also exists) | Privacy-arch pillar fit. Confirm which network the PS listing honors before applying. |
+| Brevo | Fixed commission, 90-day cookie; **rejects new sites without traffic**, requires domain-matching professional email (brevo.com/affiliates) | PartnerStack | Traffic-gated — do not apply yet. |
+| Webflow | 50% rev share up to 12 months, 90-day cookie; **rejects low-traffic sites**, requires publishing content within 30 days of acceptance (webflow.com/affiliates) | PartnerStack | Skip — weak fit (site hand-codes Astro) plus traffic gate. |
+| ElevenLabs | Marketplace lists 22% for first 12 months — matches the live deal exactly | PartnerStack | Already live. Marketplace copy validated as accurate. |
+
+PartnerStack payout mechanics (via Thinkific's public FAQ): monthly payouts ~13th, 30-day reconciliation hold, $25 minimum, PayPal or Stripe. Joining the PartnerStack Network is free and non-binding; each program approves separately and issues its own destination URL, which then goes into `affiliate-links.ts` + `/privacy` in the same change (established ElevenLabs pattern).
+
+**Unverified (marketplace copy only, no public page confirmed):** Riverside (up to 25%), Descript ($25 flat), Optery (30%/12mo), Tidio, Gorgias, Glide, Unbounce, Circle, LearnWorlds, ActiveCampaign. All need audience-with-a-business intent the site doesn't pull yet; revisit only with real products (course, recording/podcast) or explicit owner request.
+
+**Rejected categories (do not re-research):**
+- HR/payroll/fintech/accounting (Deel, Gusto, Melio, Papaya, Airwallex, Aspire, QuickBooks, Xero) — eye-catching payouts, zero audience intent. QuickBooks' listed offer is a customer discount, not cash commission — against the commission-not-discount norm.
+- Sales/CRM (Apollo, Pipedrive, Close, CallRail, monday.com, Clutch, Ignition, Aircall) — B2B sales tools this audience doesn't buy.
+- Enterprise security (Tenable) — enterprise sales cycle, no self-serve conversion.
+- Consumer antivirus/identity (Bitdefender, Aura) — coupon-site spam vertical; brand risk on a privacy-first site.
+- Bright Data — proxy/data-collection network; clashes with the D-011 anti-scraping-abuse stance and the privacy-arch pillar.
+- Misc off-pillar/tiny payouts — AdCreative.ai, Manychat, SocialBee, Superfiliate, SPS Revenue Recovery, Tapstitch, Landingi, Format, VisualCV, Trainual, Sendcloud, Sunsama, Beautiful.ai, Emergent, doola.
+
+**Rule for any future SaaS affiliate:** it must (1) be on the approved stable list (PartnerStack network or direct equivalent with public terms + persistent destination URL — no credit-grant/free-token programs), (2) attach to a real lab/note/product the way ElevenLabs did — no banners, (3) pass the own/use confirmation norm of this file, and (4) wait for a traffic baseline (Search Console recheck) before applying to programs that gate on traffic.
+
 ### Next steps
 1. Copy each numbered line into Amazon search / SiteStripe to find the real listing and generate the link.
 2. Paste the result on that item's Affiliate link line — a bare ASIN is fine.

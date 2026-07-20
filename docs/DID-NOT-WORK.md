@@ -67,3 +67,17 @@
   No Modal/Fly free compute token pitches, no billing-alert-less pilot with
   spend risk. Labs remain educational, not monetized. `DEVREL-PITCHES-SAAS-GPU.md`
   is marked deprecated so future agents do not re-open.
+
+## Affiliate research
+
+- **PartnerStack Network Marketplace swept 2026-07-19 (~50 programs) — do not
+  re-sweep.** Only Kit, Thinkific, 1Password, and Brevo passed public-terms
+  verification plus audience fit, and all four are deferred: Brevo/Webflow-style
+  programs gate on existing traffic (recheck ~2026-07-29), Kit conflicts with the
+  Buttondown choice unless framed as an honest comparison note, Thinkific needs a
+  real course product first. Rejected categories — HR/payroll/fintech/accounting,
+  sales/CRM, enterprise security, consumer antivirus/identity, proxy networks
+  (Bright Data), off-pillar one-offs — have zero audience intent or clash with the
+  privacy-first stance; re-researching them is wasted effort. Full verified-terms
+  table, unverified list, and the go-forward rule live in
+  `AFFILIATE-CANDIDATES.md` → "PartnerStack Network marketplace sweep (2026-07-19)".
