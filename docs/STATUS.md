@@ -77,6 +77,11 @@ Current commercial state:
 - Shop/Lemon Squeezy remains owner-gated by real product archives/account setup.
 - No aggregate social-proof counter is shipped because no privacy-compatible
   aggregate source exists.
+- PartnerStack Network Marketplace (~50 programs) was swept 2026-07-19 with no
+  new integrations: Kit/Thinkific/1Password/Brevo verified but deferred
+  (traffic gate, Buttondown conflict, or no real product to attach), the rest
+  rejected by category. Recorded in `AFFILIATE-CANDIDATES.md` + `DID-NOT-WORK.md`
+  so the routes are not re-researched.
 
 ## Automated pipelines
 
@@ -109,7 +114,9 @@ rejected push; inspect the remote commit before resolving any overlap.
 - Reconciled build: 85 generated HTML files, 84 Pagefind pages, and 16,842
   indexed words (2026-07-19 stable-affiliate-only decision; 16,834 → 16,838
   cross-links, 16,842 after docs/privacy sync to reject credit grants).
-  Re-run the commands below before trusting these counts after new
+  Re-verified 2026-07-19 after the marketplace-sweep docs commit: 84 pages,
+  16,843 words (+1 is llms.txt build date-stamp regeneration, no content
+  change). Re-run the commands below before trusting these counts after new
   templates/content.
 
 ## Known residual risks
@@ -150,6 +157,7 @@ template or rebuild Pagefind.
 
 ## Recent coherent commits
 
+- `0c54f91` — PartnerStack marketplace sweep recorded; rejected routes fenced off
 - `234daa5` — browser hardening and privacy fixes
 - `c7b101e` — growth surfaces, field notes, DevRel drafts
 - `bdc3c41` — local vector retrieval recall lab and Pinecone path
