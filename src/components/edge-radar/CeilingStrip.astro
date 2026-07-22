@@ -1,8 +1,9 @@
 ---
 /**
- * Frontier Edge AI Hardware Memory Allocation & Context Pressure Simulator.
- * Interactive visual canvas showing how model tensor weights, KV cache context buffers,
- * and runtime overhead fit into real hardware memory banks (7 MiB MCU → 6.5 GiB SBC).
+ * Edge AI Hardware Memory Containment & Context Pressure Inspector.
+ * Uses Event Delegation for bulletproof client-side reactivity and domain-grounded
+ * architectural class filtering (so 7B models report clean class boundaries on MCUs
+ * rather than nonsensical 98,000% overflow numbers).
  */
 interface BoardLite {
   id: string;
@@ -53,21 +54,39 @@ function classBadge(c: string) {
 const defaultModel = models[0] || { id: 'default', runtimeBytes: 100 * MIB, fileBytes: 80 * MIB, format: 'GGUF' };
 const componentId = `simulator-${Math.random().toString(36).substring(2, 7)}`;
 
-// Initial SSR simulation calculations (2048 tokens baseline)
 const defaultSeqLen = 2048;
 
-function calcAllocations(mBytes: number, fBytes: number, ceiling: number, seqLen: number) {
+// Domain-grounded fit evaluator: handles class mismatch gracefully
+function evaluateBoardFit(mBytes: number, fBytes: number, board: BoardLite, seqLen: number) {
+  const ceiling = board.modelCeilingBytes;
+  
+  // MCU & Accelerator Class Boundary Check:
+  // If model is > 32 MB and board ceiling is <= 16 MB, flag as Class Mismatch rather than 90,000% overflow
+  if (fBytes > 32 * MIB && ceiling <= 16 * MIB) {
+    return {
+      status: 'incompatible' as const,
+      isCompatible: false,
+      reason: board.class === 'accelerator' 
+        ? 'Edge TPU model cache ceiling (8 MB TFLite graph limit)' 
+        : 'Microcontroller RAM ceiling (Requires sub-16 MiB TinyML model)',
+      weightsPct: 100,
+      kvPct: 0,
+      overheadPct: 0,
+      totalPct: 0,
+      total: fBytes,
+      diff: fBytes - ceiling,
+    };
+  }
+
   const weights = fBytes;
-  const overhead = Math.max(fBytes * 0.12, 512 * 1024); // runtime overhead
-  // KV Cache scales with sequence length and model capacity
+  const overhead = Math.max(fBytes * 0.12, 512 * 1024);
   const baseKvRatio = ceiling < 32 * MIB ? 0.08 : 0.04;
   const kvCache = Math.max(mBytes * baseKvRatio * (seqLen / 2048), 256 * 1024);
   const total = weights + overhead + kvCache;
 
   const totalPct = Math.round((total / ceiling) * 100);
-
-  // Proportional segment widths relative to TOTAL required memory (up to 100% of container)
   const normDenom = Math.max(total, ceiling);
+
   const weightsPct = Math.min((weights / normDenom) * 100, 100);
   const overheadPct = Math.min((overhead / normDenom) * 100, 100);
   const kvPct = Math.min((kvCache / normDenom) * 100, 100);
@@ -79,6 +98,9 @@ function calcAllocations(mBytes: number, fBytes: number, ceiling: number, seqLen
   const diff = Math.abs(ceiling - total);
 
   return {
+    status,
+    isCompatible: true,
+    reason: '',
     weights,
     overhead,
     kvCache,
@@ -87,26 +109,32 @@ function calcAllocations(mBytes: number, fBytes: number, ceiling: number, seqLen
     weightsPct,
     overheadPct,
     kvPct,
-    status,
     diff,
   };
 }
 
-const boardSimulations = boards.map((b) => ({
+const initialBoardSims = boards.map((b) => ({
   board: b,
   badge: classBadge(b.class),
   shortName: shortBoardName(b),
-  sim: calcAllocations(defaultModel.runtimeBytes, defaultModel.fileBytes, b.modelCeilingBytes, defaultSeqLen),
+  sim: evaluateBoardFit(defaultModel.runtimeBytes, defaultModel.fileBytes, b, defaultSeqLen),
 }));
 
-// Clean payload for client script
-const modelsPayload = models.map((m) => ({
+// Clean payload for inline JS script
+const modelsJson = JSON.stringify(models.map((m) => ({
   id: m.id,
   runtimeBytes: m.runtimeBytes,
   fileBytes: m.fileBytes,
   quant: m.quant ?? 'Q4_K_M',
   format: m.format,
-}));
+})));
+
+const boardsJson = JSON.stringify(boards.map((b) => ({
+  id: b.id,
+  name: b.name,
+  class: b.class,
+  modelCeilingBytes: b.modelCeilingBytes,
+})));
 ---
 
 <div class="w-full overflow-hidden rounded-[24px] border border-border bg-card-bg shadow-md" id={componentId}>
@@ -116,10 +144,10 @@ const modelsPayload = models.map((m) => ({
       <div>
         <div class="flex items-center gap-2 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-primary-text">
           <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          Hardware Memory Allocation & Context Pressure Simulator
+          Hardware RAM Containment & Context Pressure Simulator
         </div>
         <p class="mt-1 text-[0.85rem] leading-[1.5] text-muted-text max-w-3xl">
-          Drag the context slider or select different models below. Watch how tensor weights, runtime overhead, and expanding KV cache context buffers occupy real hardware memory banks in real time.
+          Select any scanned model and adjust the context slider to simulate tensor weights, runtime overhead, and expanding KV cache memory occupation across hardware targets.
         </p>
       </div>
       {/* Visual Legend */}
@@ -128,7 +156,7 @@ const modelsPayload = models.map((m) => ({
         <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-cyan-400"></span> KV Cache</span>
         <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-slate-500"></span> Overhead</span>
         <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-amber-500"></span> Tight (80-100%)</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-red-500"></span> Overflow (&gt;100%)</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-red-500"></span> Exceeds (&gt;100%)</span>
       </div>
     </div>
 
@@ -139,7 +167,7 @@ const modelsPayload = models.map((m) => ({
         <span class="block font-mono text-[0.6rem] font-bold uppercase tracking-wider text-muted-text mb-2">
           1. Select Model Weights:
         </span>
-        <div class="flex flex-wrap items-center gap-1.5">
+        <div class="flex flex-wrap items-center gap-1.5" id={`${componentId}-model-pills`}>
           {models.map((m, idx) => {
             const nameLabel = m.id.split('/')[1] || m.id;
             const isSelected = idx === 0;
@@ -147,7 +175,7 @@ const modelsPayload = models.map((m) => ({
               <button
                 type="button"
                 data-model-idx={idx}
-                class={`model-sim-btn rounded-full border px-3 py-1 font-mono text-[0.62rem] transition-all cursor-pointer ${
+                class={`sim-pill-btn rounded-full border px-3 py-1 font-mono text-[0.62rem] transition-all cursor-pointer ${
                   isSelected
                     ? 'active border-primary-text bg-primary-text font-bold text-canvas shadow-xs'
                     : 'border-border bg-canvas text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text'
@@ -188,11 +216,11 @@ const modelsPayload = models.map((m) => ({
     </div>
   </div>
 
-  {/* Active Simulation Headline Banner */}
+  {/* Active Simulation Summary Banner */}
   <div class="border-b border-border bg-canvas/90 px-6 py-3 flex flex-wrap items-center justify-between gap-3 font-mono text-[0.68rem]">
     <div class="flex items-center gap-2">
-      <span class="text-muted-text">Active Simulation:</span>
-      <span class="font-bold text-primary-text" id={`${componentId}-active-model-name`}>
+      <span class="text-muted-text">Active Model:</span>
+      <span class="font-bold text-primary-text" id={`${componentId}-active-name`}>
         {defaultModel.id}
       </span>
       <span class="text-muted-text">({defaultModel.format}{defaultModel.quant ? ` · ${defaultModel.quant}` : ''})</span>
@@ -206,9 +234,9 @@ const modelsPayload = models.map((m) => ({
 
   {/* Hardware Memory Topology Vessels (5 Rows) */}
   <div class="p-6 space-y-4">
-    {boardSimulations.map((item) => (
+    {initialBoardSims.map((item) => (
       <div
-        class="sim-board-card rounded-[16px] border border-border bg-elevated/40 p-4 transition-all hover:border-[var(--mp-border-strong)] shadow-xs"
+        class="sim-card rounded-[16px] border border-border bg-elevated/40 p-4 transition-all hover:border-[var(--mp-border-strong)] shadow-xs"
         data-board-id={item.board.id}
         data-ceiling-bytes={item.board.modelCeilingBytes}
       >
@@ -236,52 +264,42 @@ const modelsPayload = models.map((m) => ({
           </div>
         </div>
 
-        {/* Multi-Segmented Memory Progress Bar */}
+        {/* Multi-Segmented Memory Track */}
         <div class="relative h-7 w-full rounded-xl bg-canvas border border-border overflow-hidden flex">
-          {/* 80% Safety Line Marker */}
-          <div
-            class="absolute top-0 bottom-0 w-[2px] bg-amber-500/80 z-20"
-            style="left: 80%;"
-            title="80% Recommended Safety Threshold"
-          ></div>
+          <div class="absolute top-0 bottom-0 w-[2px] bg-amber-500/80 z-20" style="left: 80%;" title="80% Safety Threshold"></div>
 
-          {/* Segment 1: Tensors (Emerald) */}
-          <div
-            class="sim-seg-weights h-full bg-emerald-500 transition-all duration-200"
-            style={`width: ${item.sim.weightsPct}%;`}
-            title={`Tensors: ${fmtBytes(item.sim.weights)}`}
-          ></div>
-
-          {/* Segment 2: KV Cache (Cyan) */}
-          <div
-            class="sim-seg-kv h-full bg-cyan-400 transition-all duration-200"
-            style={`width: ${item.sim.kvPct}%;`}
-            title={`KV Cache: ${fmtBytes(item.sim.kvCache)}`}
-          ></div>
-
-          {/* Segment 3: Overhead (Slate/Cyan-dark) */}
-          <div
-            class="sim-seg-overhead h-full bg-slate-500/70 transition-all duration-200"
-            style={`width: ${item.sim.overheadPct}%;`}
-            title={`Overhead: ${fmtBytes(item.sim.overhead)}`}
-          ></div>
+          {item.sim.isCompatible ? (
+            <>
+              <div class="sim-seg-weights h-full bg-emerald-500 transition-all duration-200" style={`width: ${item.sim.weightsPct}%;`}></div>
+              <div class="sim-seg-kv h-full bg-cyan-400 transition-all duration-200" style={`width: ${item.sim.kvPct}%;`}></div>
+              <div class="sim-seg-overhead h-full bg-slate-500/70 transition-all duration-200" style={`width: ${item.sim.overheadPct}%;`}></div>
+            </>
+          ) : (
+            <div class="h-full w-full bg-elevated/80 flex items-center justify-center font-mono text-[0.62rem] text-muted-text italic px-3">
+              Architectural Class Limit Exceeded
+            </div>
+          )}
         </div>
 
         {/* Vessel Footprint & Headroom Verdict Footer */}
         <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[0.66rem]">
-          <div class="flex items-center gap-3">
-            <span>
-              Total Load: <strong class="text-primary-text sim-occupied-label">{fmtBytes(item.sim.total)} ({item.sim.totalPct}%)</strong>
-            </span>
+          <div>
+            {item.sim.isCompatible ? (
+              <span>Total Load: <strong class="text-primary-text sim-occupied-label">{fmtBytes(item.sim.total!)} ({item.sim.totalPct}%)</strong></span>
+            ) : (
+              <span class="text-muted-text font-medium">Class: <strong class="text-amber-600 dark:text-amber-400">Not Fittable (Size &gt; MCU / TPU Ceiling)</strong></span>
+            )}
           </div>
 
           <div class="sim-verdict-badge font-bold">
-            {item.sim.status === 'fits' ? (
+            {!item.sim.isCompatible ? (
+              <span class="text-muted-text font-normal">{item.sim.reason}</span>
+            ) : item.sim.status === 'fits' ? (
               <span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · {fmtBytes(item.sim.diff)} Free Headroom</span>
             ) : item.sim.status === 'tight' ? (
               <span class="text-amber-600 dark:text-amber-400">⚠️ Tight · {fmtBytes(item.sim.diff)} Margin</span>
             ) : (
-              <span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +{fmtBytes(item.sim.diff)} ({item.sim.totalPct}%)</span>
+              <span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +{fmtBytes(item.sim.diff)}</span>
             )}
           </div>
         </div>
@@ -292,31 +310,20 @@ const modelsPayload = models.map((m) => ({
   {/* Simulator Footer Notes */}
   <div class="border-t border-border bg-elevated/30 px-6 py-3 font-mono text-[0.62rem] text-muted-text flex flex-wrap items-center justify-between gap-2">
     <span>
-      Simulation arithmetic: Total Memory = Tensor Weights + Runtime Overhead (12%) + KV Cache (scaled to sequence length).
+      Domain evaluation: Models exceeding micro-architecture ceilings (7-16 MiB) display clean class boundaries rather than fabricated overflow metrics.
     </span>
     <span class="font-bold text-primary-text">7 MiB MCU &rarr; 6.5 GiB SBC</span>
   </div>
 </div>
 
-{/* Inline Vanilla Script for Dynamic Model & Context Slider Updates */}
-<script is:inline define:vars={{ componentId, modelsPayload }}>
-  function setupSimulator() {
-    const root = document.getElementById(componentId);
-    if (!root) return;
+{/* Bulletproof Event-Delegated Script */}
+<script is:inline define:vars={{ componentId, modelsJson, boardsJson }}>
+  (function initSim() {
+    const rawModels = JSON.parse(modelsJson);
+    const rawBoards = JSON.parse(boardsJson);
 
-    const selectBtns = root.querySelectorAll('.model-sim-btn');
-    const seqSlider = root.getElementById(`${componentId}-seq-slider`);
-    const seqLabel = root.getElementById(`${componentId}-seq-label`);
-
-    const activeModelEl = root.getElementById(`${componentId}-active-model-name`);
-    const activeWeightsEl = root.getElementById(`${componentId}-active-weights`);
-    const activeOverheadEl = root.getElementById(`${componentId}-active-overhead`);
-    const activeKvEl = root.getElementById(`${componentId}-active-kv`);
-
-    const vesselCards = root.querySelectorAll('.sim-board-card');
-
-    let selectedModelIdx = 0;
-    let selectedSeqLen = 2048;
+    let activeModelIdx = 0;
+    let activeSeqLen = 2048;
 
     const GIB = 1024 * 1024 * 1024;
     const MIB = 1024 * 1024;
@@ -325,28 +332,35 @@ const modelsPayload = models.map((m) => ({
       return (n / MIB).toFixed(n >= 10 * MIB ? 0 : 1) + ' MiB';
     }
 
-    function updateSimulation() {
-      const model = modelsPayload[selectedModelIdx];
+    function render() {
+      const root = document.getElementById(componentId);
+      if (!root) return;
+
+      const model = rawModels[activeModelIdx];
       if (!model) return;
 
-      // Update Slider Label text
-      if (seqLabel) {
-        seqLabel.textContent = selectedSeqLen.toLocaleString() + ' tokens';
-      }
+      // Update Slider Label
+      const seqLabel = root.getElementById(`${componentId}-seq-label`);
+      if (seqLabel) seqLabel.textContent = activeSeqLen.toLocaleString() + ' tokens';
 
-      // Calculate component sizes
+      // Update Header Text
+      const nameEl = root.getElementById(`${componentId}-active-name`);
+      const weightsEl = root.getElementById(`${componentId}-active-weights`);
+      const overheadEl = root.getElementById(`${componentId}-active-overhead`);
+      const kvEl = root.getElementById(`${componentId}-active-kv`);
+
       const weights = model.fileBytes;
       const overhead = Math.max(model.fileBytes * 0.12, 512 * 1024);
 
-      // Update Summary Header Banner
-      if (activeModelEl) activeModelEl.textContent = model.id;
-      if (activeWeightsEl) activeWeightsEl.textContent = formatBytes(weights);
-      if (activeOverheadEl) activeOverheadEl.textContent = formatBytes(overhead);
+      if (nameEl) nameEl.textContent = model.id;
+      if (weightsEl) weightsEl.textContent = formatBytes(weights);
+      if (overheadEl) overheadEl.textContent = formatBytes(overhead);
 
-      // Update Buttons UI
-      selectBtns.forEach((btn) => {
+      // Update Pill Button active classes
+      const buttons = root.querySelectorAll('.sim-pill-btn');
+      buttons.forEach((btn) => {
         const idx = parseInt(btn.getAttribute('data-model-idx') || '0', 10);
-        if (idx === selectedModelIdx) {
+        if (idx === activeModelIdx) {
           btn.classList.add('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas', 'shadow-xs');
           btn.classList.remove('border-border', 'bg-canvas', 'text-muted-text');
         } else {
@@ -355,81 +369,93 @@ const modelsPayload = models.map((m) => ({
         }
       });
 
-      // Update each board vessel
-      vesselCards.forEach((card) => {
-        const ceiling = parseFloat(card.getAttribute('data-ceiling-bytes') || '1');
+      // Update Board Cards
+      const cards = root.querySelectorAll('.sim-card');
+      cards.forEach((card, boardIdx) => {
+        const b = rawBoards[boardIdx];
+        if (!b) return;
 
+        const ceiling = b.modelCeilingBytes;
         const baseKvRatio = ceiling < 32 * MIB ? 0.08 : 0.04;
-        const kvCache = Math.max(model.runtimeBytes * baseKvRatio * (selectedSeqLen / 2048), 256 * 1024);
-        const totalRequired = weights + overhead + kvCache;
+        const kvCache = Math.max(model.runtimeBytes * baseKvRatio * (activeSeqLen / 2048), 256 * 1024);
+        const total = weights + overhead + kvCache;
 
-        // Update KV cache header banner for active board reference
-        if (activeKvEl) activeKvEl.textContent = formatBytes(kvCache);
+        if (boardIdx === 0 && kvEl) kvEl.textContent = formatBytes(kvCache);
 
-        const totalPct = Math.round((totalRequired / ceiling) * 100);
+        const isMCU = ceiling <= 16 * MIB;
+        const isClassExceeded = weights > 32 * MIB && isMCU;
 
-        // Normalize widths relative to ceiling so visual growth is clearly visible
-        const normDenom = Math.max(totalRequired, ceiling);
-        const weightsPct = Math.min((weights / normDenom) * 100, 100);
-        const overheadPct = Math.min((overhead / normDenom) * 100, 100);
-        const kvPct = Math.min((kvCache / normDenom) * 100, 100);
-
-        let status = 'fits';
-        if (totalPct > 100) status = 'exceeds';
-        else if (totalPct > 80) status = 'tight';
-
-        const diff = Math.abs(ceiling - totalRequired);
-
-        // Update Segment Widths
+        const occLabel = card.querySelector('.sim-occupied-label');
+        const badge = card.querySelector('.sim-verdict-badge');
         const segW = card.querySelector('.sim-seg-weights');
         const segKv = card.querySelector('.sim-seg-kv');
         const segOv = card.querySelector('.sim-seg-overhead');
 
-        if (segW) segW.style.width = weightsPct.toFixed(1) + '%';
-        if (segKv) segKv.style.width = kvPct.toFixed(1) + '%';
-        if (segOv) segOv.style.width = overheadPct.toFixed(1) + '%';
+        if (isClassExceeded) {
+          if (segW) segW.style.width = '0%';
+          if (segKv) segKv.style.width = '0%';
+          if (segOv) segOv.style.width = '0%';
 
-        // Update occupied metrics label
-        const occLabel = card.querySelector('.sim-occupied-label');
-        if (occLabel) {
-          occLabel.textContent = `${formatBytes(totalRequired)} (${totalPct}%)`;
-        }
+          if (badge) {
+            badge.innerHTML = `<span class="text-muted-text font-normal">Exceeds ${b.class === 'accelerator' ? 'Edge TPU 8 MB cache' : 'MCU 16 MiB class ceiling'}</span>`;
+          }
+        } else {
+          const totalPct = Math.round((total / ceiling) * 100);
+          const normDenom = Math.max(total, ceiling);
 
-        // Update verdict badge
-        const badge = card.querySelector('.sim-verdict-badge');
-        if (badge) {
-          if (status === 'fits') {
-            badge.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · ${formatBytes(diff)} Free Headroom</span>`;
-          } else if (status === 'tight') {
-            badge.innerHTML = `<span class="text-amber-600 dark:text-amber-400">⚠️ Tight · ${formatBytes(diff)} Margin</span>`;
-          } else {
-            badge.innerHTML = `<span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +${formatBytes(diff)} (${totalPct}%)</span>`;
+          const wPct = Math.min((weights / normDenom) * 100, 100);
+          const oPct = Math.min((overhead / normDenom) * 100, 100);
+          const kPct = Math.min((kvCache / normDenom) * 100, 100);
+
+          if (segW) segW.style.width = wPct.toFixed(1) + '%';
+          if (segKv) segKv.style.width = kPct.toFixed(1) + '%';
+          if (segOv) segOv.style.width = oPct.toFixed(1) + '%';
+
+          if (occLabel) occLabel.textContent = `${formatBytes(total)} (${totalPct}%)`;
+
+          if (badge) {
+            const diff = Math.abs(ceiling - total);
+            if (totalPct <= 80) {
+              badge.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · ${formatBytes(diff)} Free Headroom</span>`;
+            } else if (totalPct <= 100) {
+              badge.innerHTML = `<span class="text-amber-600 dark:text-amber-400">⚠️ Tight · ${formatBytes(diff)} Margin</span>`;
+            } else {
+              badge.innerHTML = `<span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +${formatBytes(diff)} (${totalPct}%)</span>`;
+            }
           }
         }
       });
     }
 
-    // Attach button click listeners
-    selectBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        selectedModelIdx = parseInt(btn.getAttribute('data-model-idx') || '0', 10);
-        updateSimulation();
-      });
-    });
+    // Bulletproof Event Delegation on Root Container
+    function attachListeners() {
+      const root = document.getElementById(componentId);
+      if (!root) return;
 
-    // Attach slider input listener for immediate real-time response
-    if (seqSlider) {
-      seqSlider.addEventListener('input', (e) => {
-        selectedSeqLen = parseInt(e.target.value, 10);
-        updateSimulation();
+      root.addEventListener('click', (e) => {
+        const btn = e.target.closest('.sim-pill-btn');
+        if (btn) {
+          const idx = parseInt(btn.getAttribute('data-model-idx') || '0', 10);
+          activeModelIdx = idx;
+          render();
+        }
       });
+
+      const slider = root.querySelector(`#${componentId}-seq-slider`);
+      if (slider) {
+        slider.addEventListener('input', (e) => {
+          activeSeqLen = parseInt(e.target.value, 10);
+          render();
+        });
+      }
     }
-  }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupSimulator);
-  } else {
-    setupSimulator();
-  }
-  document.addEventListener('astro:page-load', setupSimulator);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => { attachListeners(); render(); });
+    } else {
+      attachListeners();
+      render();
+    }
+    document.addEventListener('astro:page-load', () => { attachListeners(); render(); });
+  })();
 </script>
