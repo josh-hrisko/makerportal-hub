@@ -39,6 +39,11 @@ const GIB = 1024 * 1024 * 1024;
 const MIB = 1024 * 1024;
 const fmtBytes = (n: number) => (n >= GIB ? `${(n / GIB).toFixed(1)} GiB` : `${(n / MIB).toFixed(0)} MiB`);
 
+// Short name helper for labels
+function getFullShortName(name: string): string {
+  return name.split('(')[0].trim();
+}
+
 // Calculate board stats for radar axes
 const boardStats = boards.map((b) => {
   const bFits = fits.filter((f) => f.boardId === b.id);
@@ -53,11 +58,11 @@ const boardStats = boards.map((b) => {
   const fitsScore = fitsCount / totalModels;
   const tightScore = (fitsCount + tightCount) / totalModels;
   const fitPct = Math.round((fitsCount / totalModels) * 100);
-  const shortName = b.name.split('(')[0].trim();
+  const fullShortName = getFullShortName(b.name);
 
   return {
     board: b,
-    shortName,
+    fullShortName,
     fitsCount,
     tightCount,
     noCount,
@@ -70,11 +75,16 @@ const boardStats = boards.map((b) => {
   };
 });
 
-const W = 380;
-const H = 260;
-const CX = W / 2;
-const CY = H / 2 + 5;
-const R = 95; // radar radius
+// Canvas dimensions & ViewBox coordinate system with negative origin (-80, -20)
+// to guarantee long labels like "Jetson Orin Nano" are NEVER clipped on the left edge.
+const VB_X = -80;
+const VB_Y = -20;
+const VB_W = 600;
+const VB_H = 320;
+
+const CX = 220; // radar center X
+const CY = 140; // radar center Y
+const R = 90;  // radar polygon radius
 
 const N = boardStats.length;
 // Angles for axes starting top (-PI/2)
@@ -111,7 +121,7 @@ const defaultBoardIdx = axes.findIndex((a) => a.fitsCount > 0) >= 0 ? axes.findI
 const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
 ---
 
-<div class="relative w-full overflow-hidden rounded-[20px] border border-border bg-card-bg p-5 shadow-sm" id={componentId}>
+<div class="relative w-full rounded-[20px] border border-border bg-card-bg p-5 shadow-sm" id={componentId}>
   {/* Component Header */}
   <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
     <div>
@@ -120,7 +130,7 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
         Interactive Board Coverage Radar
       </div>
       <p class="mt-0.5 font-mono text-[0.6rem] text-muted-text">
-        Click any board vertex to inspect model headroom & RAM limits.
+        Click any board vertex or pill below to inspect model headroom & RAM limits.
       </p>
     </div>
     <div class="flex items-center gap-2 font-mono text-[0.58rem] text-muted-text">
@@ -141,20 +151,20 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
             : 'border-border bg-elevated text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text'
         }`}
       >
-        {ax.shortName} ({ax.fitsCount})
+        {ax.fullShortName} ({ax.fitsCount})
       </button>
     ))}
   </div>
 
-  {/* SVG Radar Chart Canvas */}
-  <div class="relative mt-2 w-full" style={`aspect-ratio: ${W}/${H};`}>
+  {/* SVG Radar Chart Canvas — ViewBox starting at -80 to ensure zero text clipping */}
+  <div class="relative mt-2 w-full" style={`aspect-ratio: ${VB_W}/${VB_H};`}>
     <svg
-      viewBox={`0 0 ${W} ${H}`}
+      viewBox={`${VB_X} ${VB_Y} ${VB_W} ${VB_H}`}
       width="100%"
       height="100%"
       role="img"
       aria-label={`Interactive radar chart showing fit capacity across 5 hardware boards`}
-      class="absolute inset-0 h-full w-full text-primary-text"
+      class="absolute inset-0 h-full w-full overflow-visible text-primary-text"
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
@@ -224,10 +234,14 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
       {/* Vertices & Axis Labels */}
       {axes.map((ax, i) => {
         const fp = fitsPolyPoints[i];
-        const labelDist = R + 22;
+        const labelDist = R + 24;
         const lx = CX + labelDist * ax.cos;
         const ly = CY + labelDist * ax.sin;
 
+        // Text anchor alignment:
+        // Top (i=0): middle anchor
+        // Right side (cos > 0.15): start anchor
+        // Left side (cos < -0.15): end anchor
         const textAnchor = Math.abs(ax.cos) < 0.15 ? 'middle' : ax.cos > 0 ? 'start' : 'end';
         const isSelected = i === defaultBoardIdx;
 
@@ -251,7 +265,7 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
             <circle
               cx={CX + R * ax.cos}
               cy={CY + R * ax.sin}
-              r="3"
+              r="3.5"
               fill="var(--mp-border-strong)"
             />
 
@@ -267,29 +281,29 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
               />
             )}
 
-            {/* Label */}
+            {/* Label — full short name with zero clipping thanks to -80 viewBox origin */}
             <text
               x={lx}
               y={ly - 4}
               text-anchor={textAnchor}
               font-family="var(--font-sans)"
-              font-size="9.5"
+              font-size="10"
               font-weight="700"
               fill="currentColor"
               class="text-primary-text"
             >
-              {ax.shortName}
+              {ax.fullShortName}
             </text>
             <text
               x={lx}
-              y={ly + 7}
+              y={ly + 8}
               text-anchor={textAnchor}
               font-family="var(--font-mono)"
-              font-size="8"
+              font-size="8.5"
               fill="currentColor"
               class={ax.fitsCount > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-muted-text'}
             >
-              {ax.fitsCount}/{totalModels} fit
+              {ax.fitsCount}/{totalModels} fit ({ax.fitPct}%)
             </text>
           </g>
         );
