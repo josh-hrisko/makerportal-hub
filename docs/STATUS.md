@@ -90,6 +90,10 @@ Current commercial state:
 | `trends-digest.yml` | daily | Bluesky credentials | Live; publishes gated journal data and self-hosted thumbnails |
 | `amazon-catalog.yml` | monthly/manual | Amazon Creators API credentials | Live, PR-gated catalog refresh |
 | `globe-data-digest.yml` | every 4h | none | Live; direct weather/TLE data commits can advance `main` during work |
+| `edgespec-digest.yml` | daily (planned) | none | Planned; EdgeSpec & TinyML Hardware Radar digest ([PASSIVE-CONTENT-ENGINES-2026.md](file:///Users/josh/Documents/GitHub/makerportal-hub/docs/PASSIVE-CONTENT-ENGINES-2026.md)) |
+| `cloud-tco-digest.yml` | daily (planned) | none | Planned; Cloud vs Edge TCO breakeven calculator engine |
+
+Full architecture, sequence, and integrity rules for passive daily content engines: [PASSIVE-CONTENT-ENGINES-2026.md](file:///Users/josh/Documents/GitHub/makerportal-hub/docs/PASSIVE-CONTENT-ENGINES-2026.md).
 
 The globe workflow can cause a non-fast-forward push. Fetch and rebase after a
 rejected push; inspect the remote commit before resolving any overlap.
