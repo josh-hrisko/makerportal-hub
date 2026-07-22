@@ -1,8 +1,8 @@
 ---
 /**
- * Interactive Hardware RAM Containment & Model Headroom Inspector.
- * Replaces flat static log plots with dynamic memory containment gauges
- * showing exact RAM occupation, 80% safety thresholds, and headroom across 5 board classes.
+ * Frontier Edge AI Hardware Memory Allocation & Context Pressure Simulator.
+ * Interactive visual canvas showing how model tensor weights, KV cache context buffers,
+ * and runtime overhead fit into real hardware memory banks (7 MiB MCU → 6.5 GiB SBC).
  */
 interface BoardLite {
   id: string;
@@ -44,195 +44,282 @@ const shortBoardName = (b: BoardLite) => b.name.split('(')[0].trim();
 
 function classBadge(c: string) {
   if (c === 'mcu') return { icon: '⚡', label: 'Microcontroller' };
-  if (c === 'sbc') return { icon: '🖥️', label: 'Single Board Computer' };
+  if (c === 'sbc') return { icon: '🖥️', label: 'Single-Board Computer' };
   if (c === 'accelerator') return { icon: '🧠', label: 'AI Accelerator' };
   if (c === 'edge-gpu') return { icon: '🚀', label: 'Edge GPU' };
   return { icon: '💻', label: 'Embedded System' };
 }
 
-// Calculate default selected model stats
 const defaultModel = models[0] || { id: 'default', runtimeBytes: 100 * MIB, fileBytes: 80 * MIB, format: 'GGUF' };
-const componentId = `headroom-${Math.random().toString(36).substring(2, 7)}`;
+const componentId = `simulator-${Math.random().toString(36).substring(2, 7)}`;
 
-// Build initial fit payload for SSR
-const boardPayload = boards.map((b) => {
-  const ceiling = b.modelCeilingBytes;
-  const initialRuntime = defaultModel.runtimeBytes;
-  const pct = Math.min(Math.round((initialRuntime / ceiling) * 100), 999);
+// Initial SSR simulation calculations (2048 tokens baseline)
+const defaultSeqLen = 2048;
+const calcAllocations = (mBytes: number, fBytes: number, ceiling: number, seqLen: number) => {
+  const weights = fBytes;
+  const overhead = fBytes * 0.15; // 15% scratchpad / tensor runtime overhead
+  const kvCache = mBytes * 0.05 * (seqLen / 2048); // KV cache scales linearly with sequence length
+  const total = weights + overhead + kvCache;
+
+  const weightsPct = Math.min((weights / ceiling) * 100, 100);
+  const overheadPct = Math.min((overhead / ceiling) * 100, 100 - weightsPct);
+  const kvPct = Math.min((kvCache / ceiling) * 100, Math.max(0, 100 - weightsPct - overheadPct));
+  const totalPct = Math.round((total / ceiling) * 100);
 
   let status: 'fits' | 'tight' | 'exceeds' = 'fits';
-  if (pct > 100) status = 'exceeds';
-  else if (pct > 80) status = 'tight';
+  if (totalPct > 100) status = 'exceeds';
+  else if (totalPct > 80) status = 'tight';
 
-  const diff = Math.abs(ceiling - initialRuntime);
-  let statusText = '';
-  if (status === 'fits') statusText = `❇️ ${fmtBytes(diff)} Free Headroom`;
-  else if (status === 'tight') statusText = `⚠️ ${fmtBytes(diff)} Tight Margin`;
-  else statusText = `🛑 Exceeds Ceiling by ${fmtBytes(diff)}`;
+  const headroom = Math.abs(ceiling - total);
 
   return {
-    board: b,
-    badge: classBadge(b.class),
-    shortName: shortBoardName(b),
-    pct,
+    weights,
+    overhead,
+    kvCache,
+    total,
+    weightsPct,
+    overheadPct,
+    kvPct,
+    totalPct,
     status,
-    statusText,
+    headroom,
   };
-});
+};
 
-// Clean payload for script
-const modelsData = models.map((m) => ({ id: m.id, runtimeBytes: m.runtimeBytes }));
+const boardSimulations = boards.map((b) => ({
+  board: b,
+  badge: classBadge(b.class),
+  shortName: shortBoardName(b),
+  sim: calcAllocations(defaultModel.runtimeBytes, defaultModel.fileBytes, b.modelCeilingBytes, defaultSeqLen),
+}));
+
+// Clean payload for script execution
+const modelsPayload = models.map((m) => ({
+  id: m.id,
+  runtimeBytes: m.runtimeBytes,
+  fileBytes: m.fileBytes,
+  quant: m.quant ?? 'Q4_K_M',
+  format: m.format,
+}));
 ---
 
-<div class="w-full overflow-hidden rounded-[20px] border border-border bg-card-bg shadow-sm" id={componentId}>
-  {/* Component Header */}
-  <div class="border-b border-border bg-elevated/40 px-5 py-4">
+<div class="w-full overflow-hidden rounded-[24px] border border-border bg-card-bg shadow-md" id={componentId}>
+  {/* Header Title Banner */}
+  <div class="border-b border-border bg-elevated/50 px-6 py-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <div class="flex items-center gap-2 font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-primary-text">
-          <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Hardware RAM Containment & Headroom Inspector
+        <div class="flex items-center gap-2 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-primary-text">
+          <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          Hardware Memory Allocation & Context Pressure Simulator
         </div>
-        <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text max-w-2xl">
-          Click any scanned model below to inspect how its runtime footprint occupies memory across targets — from 7 MiB microcontrollers to 6.5 GiB single-board computers.
+        <p class="mt-1 text-[0.85rem] leading-[1.5] text-muted-text max-w-3xl">
+          Simulate how quantized model weights, runtime scratchpads, and dynamic KV cache context buffers occupy memory across hardware targets — from 7 MiB microcontrollers to 6.5 GiB SBCs.
         </p>
       </div>
-      <div class="flex items-center gap-3 font-mono text-[0.6rem] text-muted-text shrink-0">
-        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Fits (&le;80%)</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-amber-500"></span> Tight (&le;100%)</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-red-500"></span> Exceeds (&gt;100%)</span>
+      {/* Visual Legend */}
+      <div class="flex flex-wrap items-center gap-3 font-mono text-[0.62rem] text-muted-text shrink-0">
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> Weights</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-teal-400"></span> KV Cache</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-cyan-600"></span> Overhead</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-amber-500"></span> Tight (80-100%)</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-red-500"></span> Overflow (&gt;100%)</span>
       </div>
     </div>
 
-    {/* Interactive Model Selector Pills */}
-    <div class="mt-3.5 flex flex-wrap items-center gap-1.5">
-      <span class="font-mono text-[0.6rem] font-semibold text-primary-text uppercase tracking-wider mr-1">
-        Select Model:
-      </span>
-      {models.map((m, idx) => {
-        const nameLabel = m.id.split('/')[1] || m.id;
-        const isSelected = idx === 0;
-        return (
-          <button
-            type="button"
-            data-model-idx={idx}
-            class={`model-select-btn rounded-full border px-2.5 py-1 font-mono text-[0.6rem] transition-all ${
-              isSelected
-                ? 'active border-primary-text bg-primary-text font-bold text-canvas shadow-xs'
-                : 'border-border bg-canvas text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text'
-            }`}
-          >
-            <span class="font-medium">{nameLabel}</span>
-            <span class="ml-1 opacity-75">({fmtBytes(m.runtimeBytes)})</span>
-          </button>
-        );
-      })}
+    {/* Simulator Control Rail: Model Selector + Context Length Slider */}
+    <div class="mt-5 grid gap-4 lg:grid-cols-12 lg:items-center border-t border-border/60 pt-4">
+      {/* Model Selection Pills */}
+      <div class="lg:col-span-8">
+        <span class="block font-mono text-[0.6rem] font-bold uppercase tracking-wider text-muted-text mb-2">
+          1. Select Model Weights:
+        </span>
+        <div class="flex flex-wrap items-center gap-1.5">
+          {models.map((m, idx) => {
+            const nameLabel = m.id.split('/')[1] || m.id;
+            const isSelected = idx === 0;
+            return (
+              <button
+                type="button"
+                data-model-idx={idx}
+                class={`model-sim-btn rounded-full border px-3 py-1 font-mono text-[0.62rem] transition-all cursor-pointer ${
+                  isSelected
+                    ? 'active border-primary-text bg-primary-text font-bold text-canvas shadow-xs'
+                    : 'border-border bg-canvas text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text'
+                }`}
+              >
+                <span>{nameLabel}</span>
+                <span class="ml-1 opacity-75">({fmtBytes(m.fileBytes)})</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Context Window Slider */}
+      <div class="lg:col-span-4 rounded-[14px] border border-border bg-canvas p-3">
+        <div class="flex items-center justify-between font-mono text-[0.62rem]">
+          <span class="font-bold text-primary-text uppercase tracking-wider">2. Context Window:</span>
+          <span class="font-bold text-emerald-600 dark:text-emerald-400" id={`${componentId}-seq-label`}>
+            2,048 tokens
+          </span>
+        </div>
+        <input
+          type="range"
+          id={`${componentId}-seq-slider`}
+          min="512"
+          max="8192"
+          step="512"
+          value="2048"
+          class="mt-2 w-full accent-primary-text cursor-pointer"
+        />
+        <div class="flex justify-between font-mono text-[0.55rem] text-muted-text mt-1">
+          <span>512 tks</span>
+          <span>2k tks</span>
+          <span>4k tks</span>
+          <span>8k tks</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  {/* Live Active Model Banner */}
-  <div class="border-b border-border bg-canvas px-5 py-2.5 flex items-center justify-between font-mono text-[0.65rem]">
+  {/* Active Model & Context Simulation Summary Bar */}
+  <div class="border-b border-border bg-canvas/80 px-6 py-3 flex flex-wrap items-center justify-between gap-3 font-mono text-[0.68rem]">
     <div class="flex items-center gap-2">
-      <span class="text-muted-text">Active Model:</span>
-      <span class="font-bold text-primary-text" id={`${componentId}-active-name`}>
+      <span class="text-muted-text">Simulating:</span>
+      <span class="font-bold text-primary-text" id={`${componentId}-active-model-name`}>
         {defaultModel.id}
       </span>
+      <span class="text-muted-text">({defaultModel.format}{defaultModel.quant ? ` · ${defaultModel.quant}` : ''})</span>
     </div>
-    <div class="flex items-center gap-2">
-      <span class="text-muted-text">Estimated Runtime Footprint:</span>
-      <span class="font-bold text-emerald-600 dark:text-emerald-400" id={`${componentId}-active-bytes`}>
-        {fmtBytes(defaultModel.runtimeBytes)}
-      </span>
+    <div class="flex flex-wrap items-center gap-4 text-muted-text">
+      <span>Tensors: <strong class="text-primary-text" id={`${componentId}-active-weights`}>{fmtBytes(defaultModel.fileBytes)}</strong></span>
+      <span>Overhead: <strong class="text-primary-text" id={`${componentId}-active-overhead`}>{fmtBytes(defaultModel.fileBytes * 0.15)}</strong></span>
+      <span>KV Cache: <strong class="text-emerald-600 dark:text-emerald-400" id={`${componentId}-active-kv`}>{fmtBytes(defaultModel.runtimeBytes * 0.05)}</strong></span>
     </div>
   </div>
 
-  {/* Board Memory Containment Vessels (5 Rows) */}
-  <div class="p-5 space-y-4">
-    {boardPayload.map((item) => (
+  {/* Hardware Memory Topology Vessels (5 Rows) */}
+  <div class="p-6 space-y-4">
+    {boardSimulations.map((item) => (
       <div
-        class="board-vessel-card rounded-[14px] border border-border bg-elevated/30 p-3.5 transition-colors hover:border-[var(--mp-border-strong)]"
+        class="sim-board-card rounded-[16px] border border-border bg-elevated/40 p-4 transition-all hover:border-[var(--mp-border-strong)] shadow-xs"
         data-board-id={item.board.id}
         data-ceiling-bytes={item.board.modelCeilingBytes}
       >
-        {/* Vessel Header */}
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <div class="flex items-center gap-2">
-            <span class="text-sm">{item.badge.icon}</span>
+        {/* Vessel Header info */}
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">{item.badge.icon}</span>
             <div>
-              <span class="font-mono text-[0.82rem] font-bold text-primary-text">
-                {item.shortName}
-              </span>
-              <span class="ml-2 font-mono text-[0.58rem] uppercase tracking-wider text-muted-text rounded-md bg-canvas border border-border px-1.5 py-0.5">
-                {item.badge.label}
-              </span>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-[0.9rem] font-bold text-primary-text">
+                  {item.shortName}
+                </span>
+                <span class="font-mono text-[0.58rem] uppercase tracking-wider text-muted-text rounded-md bg-canvas border border-border px-2 py-0.5 font-semibold">
+                  {item.badge.label}
+                </span>
+              </div>
+              <p class="text-[0.72rem] text-muted-text mt-0.5">
+                {item.board.ramLabel || `${fmtBytes(item.board.modelCeilingBytes)} RAM Budget`}
+              </p>
             </div>
           </div>
-          <div class="font-mono text-[0.62rem] text-right">
-            <span class="text-muted-text">RAM Budget Ceiling: </span>
+          <div class="font-mono text-[0.68rem] text-right">
+            <span class="text-muted-text">Datasheet Ceiling: </span>
             <span class="font-bold text-primary-text">{fmtBytes(item.board.modelCeilingBytes)}</span>
-            {item.board.ramLabel && <span class="text-muted-text ml-1">({item.board.ramLabel})</span>}
           </div>
         </div>
 
-        {/* Progress Vessel Bar with 80% Safety Line */}
-        <div class="relative h-6 w-full rounded-full bg-canvas border border-border overflow-hidden">
+        {/* Multi-Segmented Memory Track with 80% Threshold Line */}
+        <div class="relative h-7 w-full rounded-xl bg-canvas border border-border overflow-hidden flex">
           {/* 80% Safety Line Marker */}
           <div
-            class="absolute top-0 bottom-0 w-[2px] bg-amber-500/70 z-10"
+            class="absolute top-0 bottom-0 w-[2px] bg-amber-500/80 z-20"
             style="left: 80%;"
-            title="80% Recommended Safety Threshold"
+            title="80% Safety Threshold"
           ></div>
 
-          {/* Filled Memory Progress Gauge */}
+          {/* Segment 1: Weights */}
           <div
-            class={`vessel-bar h-full transition-all duration-300 rounded-full ${
-              item.status === 'fits'
-                ? 'bg-emerald-500'
-                : item.status === 'tight'
-                ? 'bg-amber-500'
-                : 'bg-red-500'
-            }`}
-            style={`width: ${Math.min(item.pct, 100)}%;`}
+            class="sim-seg-weights h-full bg-emerald-500 transition-all duration-300 relative"
+            style={`width: ${item.sim.weightsPct}%;`}
+            title={`Weights: ${fmtBytes(item.sim.weights)}`}
           ></div>
+
+          {/* Segment 2: KV Cache */}
+          <div
+            class="sim-seg-kv h-full bg-teal-400 transition-all duration-300 relative"
+            style={`width: ${item.sim.kvPct}%;`}
+            title={`KV Cache: ${fmtBytes(item.sim.kvCache)}`}
+          ></div>
+
+          {/* Segment 3: Overhead */}
+          <div
+            class="sim-seg-overhead h-full bg-cyan-600 transition-all duration-300 relative"
+            style={`width: ${item.sim.overheadPct}%;`}
+            title={`Overhead: ${fmtBytes(item.sim.overhead)}`}
+          ></div>
+
+          {/* Overflow indicator if total > ceiling */}
+          {item.sim.status === 'exceeds' && (
+            <div
+              class="sim-seg-overflow h-full bg-red-500/90 transition-all duration-300 absolute right-0 top-0 bottom-0 animate-pulse z-10"
+              style="width: 20%;"
+              title="Memory Overflow!"
+            ></div>
+          )}
         </div>
 
-        {/* Vessel Footer Metrics */}
-        <div class="mt-2 flex items-center justify-between font-mono text-[0.64rem]">
-          <div class="flex items-center gap-2">
-            <span class="text-muted-text">Occupied:</span>
-            <span class="font-bold text-primary-text vessel-occupied-text">
-              {fmtBytes(defaultModel.runtimeBytes)} ({item.pct}%)
+        {/* Vessel Footprint & Headroom Verdict Footer */}
+        <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[0.66rem]">
+          <div class="flex items-center gap-3">
+            <span>
+              Total Load: <strong class="text-primary-text sim-occupied-label">{fmtBytes(item.sim.total)} ({item.sim.totalPct}%)</strong>
             </span>
           </div>
-          <div class="font-bold vessel-headroom-badge">
-            <span class={item.status === 'fits' ? 'text-emerald-600 dark:text-emerald-400' : item.status === 'tight' ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}>
-              {item.statusText}
-            </span>
+
+          <div class="sim-verdict-badge font-bold">
+            {item.sim.status === 'fits' ? (
+              <span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · {fmtBytes(item.sim.headroom)} Free Headroom</span>
+            ) : item.sim.status === 'tight' ? (
+              <span class="text-amber-600 dark:text-amber-400">⚠️ Tight · {fmtBytes(item.sim.headroom)} Margin</span>
+            ) : (
+              <span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +{fmtBytes(item.sim.headroom)}</span>
+            )}
           </div>
         </div>
       </div>
     ))}
   </div>
 
-  {/* Footer Log Ruler Macro Summary */}
-  <div class="border-t border-border bg-elevated/20 px-5 py-3 font-mono text-[0.62rem] text-muted-text flex flex-wrap items-center justify-between gap-2">
+  {/* Simulator Footer Notes */}
+  <div class="border-t border-border bg-elevated/30 px-6 py-3 font-mono text-[0.62rem] text-muted-text flex flex-wrap items-center justify-between gap-2">
     <span>
-      Memory containment evaluates required runtime bytes (file &times; 1.25 for KV cache & tensors) against hardware ceiling limits.
+      Simulation arithmetic: Total Memory = Tensor Weights + Runtime Overhead (15%) + KV Cache (scaled to sequence length).
     </span>
     <span class="font-bold text-primary-text">7 MiB MCU &rarr; 6.5 GiB SBC</span>
   </div>
 </div>
 
-{/* Inline Vanilla Script for Interactive Model Switching */}
-<script is:inline define:vars={{ componentId, modelsData }}>
-  function setupHeadroomInspector() {
+{/* Inline Vanilla Script for Dynamic Model & Context Slider Updates */}
+<script is:inline define:vars={{ componentId, modelsPayload, boards }}>
+  function setupSimulator() {
     const root = document.getElementById(componentId);
     if (!root) return;
 
-    const selectBtns = root.querySelectorAll('.model-select-btn');
-    const activeNameEl = root.getElementById(`${componentId}-active-name`);
-    const activeBytesEl = root.getElementById(`${componentId}-active-bytes`);
-    const vesselCards = root.querySelectorAll('.board-vessel-card');
+    const selectBtns = root.querySelectorAll('.model-sim-btn');
+    const seqSlider = root.getElementById(`${componentId}-seq-slider`);
+    const seqLabel = root.getElementById(`${componentId}-seq-label`);
+
+    const activeModelEl = root.getElementById(`${componentId}-active-model-name`);
+    const activeWeightsEl = root.getElementById(`${componentId}-active-weights`);
+    const activeOverheadEl = root.getElementById(`${componentId}-active-overhead`);
+    const activeKvEl = root.getElementById(`${componentId}-active-kv`);
+
+    const vesselCards = root.querySelectorAll('.sim-board-card');
+
+    let selectedModelIdx = 0;
+    let selectedSeqLen = 2048;
 
     const GIB = 1024 * 1024 * 1024;
     const MIB = 1024 * 1024;
@@ -241,14 +328,31 @@ const modelsData = models.map((m) => ({ id: m.id, runtimeBytes: m.runtimeBytes }
       return (n / MIB).toFixed(n >= 10 * MIB ? 0 : 1) + ' MiB';
     }
 
-    function selectModel(mIdx) {
-      const model = modelsData[mIdx];
+    function updateSimulation() {
+      const model = modelsPayload[selectedModelIdx];
       if (!model) return;
 
-      // Update button active styling
+      // Update Slider Label
+      if (seqLabel) {
+        seqLabel.textContent = selectedSeqLen.toLocaleString() + ' tokens';
+      }
+
+      // Calculate component sizes
+      const weights = model.fileBytes;
+      const overhead = model.fileBytes * 0.15;
+      const kvCache = model.runtimeBytes * 0.05 * (selectedSeqLen / 2048);
+      const totalRequired = weights + overhead + kvCache;
+
+      // Update Summary Header Banner
+      if (activeModelEl) activeModelEl.textContent = model.id;
+      if (activeWeightsEl) activeWeightsEl.textContent = formatBytes(weights);
+      if (activeOverheadEl) activeOverheadEl.textContent = formatBytes(overhead);
+      if (activeKvEl) activeKvEl.textContent = formatBytes(kvCache);
+
+      // Update Buttons UI
       selectBtns.forEach((btn) => {
         const idx = parseInt(btn.getAttribute('data-model-idx') || '0', 10);
-        if (idx === mIdx) {
+        if (idx === selectedModelIdx) {
           btn.classList.add('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas', 'shadow-xs');
           btn.classList.remove('border-border', 'bg-canvas', 'text-muted-text');
         } else {
@@ -257,72 +361,85 @@ const modelsData = models.map((m) => ({ id: m.id, runtimeBytes: m.runtimeBytes }
         }
       });
 
-      // Update Header active banner
-      if (activeNameEl) activeNameEl.textContent = model.id;
-      if (activeBytesEl) activeBytesEl.textContent = formatBytes(model.runtimeBytes);
-
-      // Update each board vessel gauge
+      // Update each board vessel
       vesselCards.forEach((card) => {
         const ceiling = parseFloat(card.getAttribute('data-ceiling-bytes') || '1');
-        const runtime = model.runtimeBytes;
-        const pct = Math.round((runtime / ceiling) * 100);
+
+        const weightsPct = Math.min((weights / ceiling) * 100, 100);
+        const overheadPct = Math.min((overhead / ceiling) * 100, Math.max(0, 100 - weightsPct));
+        const kvPct = Math.min((kvCache / ceiling) * 100, Math.max(0, 100 - weightsPct - overheadPct));
+        const totalPct = Math.round((totalRequired / ceiling) * 100);
 
         let status = 'fits';
-        if (pct > 100) status = 'exceeds';
-        else if (pct > 80) status = 'tight';
+        if (totalPct > 100) status = 'exceeds';
+        else if (totalPct > 80) status = 'tight';
 
-        const diff = Math.abs(ceiling - runtime);
-        let statusText = '';
-        let statusClass = 'text-emerald-600 dark:text-emerald-400';
-        let barBgClass = 'bg-emerald-500';
+        const headroom = Math.abs(ceiling - totalRequired);
 
-        if (status === 'fits') {
-          statusText = `❇️ ${formatBytes(diff)} Free Headroom`;
-          statusClass = 'text-emerald-600 dark:text-emerald-400';
-          barBgClass = 'bg-emerald-500';
-        } else if (status === 'tight') {
-          statusText = `⚠️ ${formatBytes(diff)} Tight Margin`;
-          statusClass = 'text-amber-600 dark:text-amber-400';
-          barBgClass = 'bg-amber-500';
-        } else {
-          statusText = `🛑 Exceeds Ceiling by ${formatBytes(diff)}`;
-          statusClass = 'text-red-600 dark:text-red-400';
-          barBgClass = 'bg-red-500';
+        // Update Segment Widths
+        const segW = card.querySelector('.sim-seg-weights');
+        const segKv = card.querySelector('.sim-seg-kv');
+        const segOv = card.querySelector('.sim-seg-overhead');
+        let segOverflow = card.querySelector('.sim-seg-overflow');
+
+        if (segW) segW.style.width = weightsPct + '%';
+        if (segKv) segKv.style.width = kvPct + '%';
+        if (segOv) segOv.style.width = overheadPct + '%';
+
+        // Update overflow bar if needed
+        const track = card.querySelector('.relative.h-7');
+        if (status === 'exceeds') {
+          if (!segOverflow && track) {
+            segOverflow = document.createElement('div');
+            segOverflow.className = 'sim-seg-overflow h-full bg-red-500/90 transition-all duration-300 absolute right-0 top-0 bottom-0 animate-pulse z-10';
+            segOverflow.style.width = '20%';
+            track.appendChild(segOverflow);
+          }
+        } else if (segOverflow) {
+          segOverflow.remove();
         }
 
-        // Update progress bar
-        const bar = card.querySelector('.vessel-bar');
-        if (bar) {
-          bar.style.width = Math.min(pct, 100) + '%';
-          bar.className = `vessel-bar h-full transition-all duration-300 rounded-full ${barBgClass}`;
+        // Update occupied metrics label
+        const occLabel = card.querySelector('.sim-occupied-label');
+        if (occLabel) {
+          occLabel.textContent = `${formatBytes(totalRequired)} (${totalPct}%)`;
         }
 
-        // Update occupied text
-        const occ = card.querySelector('.vessel-occupied-text');
-        if (occ) {
-          occ.textContent = `${formatBytes(runtime)} (${pct}%)`;
-        }
-
-        // Update headroom badge text
-        const hBadge = card.querySelector('.vessel-headroom-badge');
-        if (hBadge) {
-          hBadge.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+        // Update verdict badge
+        const badge = card.querySelector('.sim-verdict-badge');
+        if (badge) {
+          if (status === 'fits') {
+            badge.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · ${formatBytes(headroom)} Free Headroom</span>`;
+          } else if (status === 'tight') {
+            badge.innerHTML = `<span class="text-amber-600 dark:text-amber-400">⚠️ Tight · ${formatBytes(headroom)} Margin</span>`;
+          } else {
+            badge.innerHTML = `<span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +${formatBytes(headroom)}</span>`;
+          }
         }
       });
     }
 
+    // Attach button listeners
     selectBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-model-idx') || '0', 10);
-        selectModel(idx);
+        selectedModelIdx = parseInt(btn.getAttribute('data-model-idx') || '0', 10);
+        updateSimulation();
       });
     });
+
+    // Attach slider listener
+    if (seqSlider) {
+      seqSlider.addEventListener('input', (e) => {
+        selectedSeqLen = parseInt(e.target.value, 10);
+        updateSimulation();
+      });
+    }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupHeadroomInspector);
+    document.addEventListener('DOMContentLoaded', setupSimulator);
   } else {
-    setupHeadroomInspector();
+    setupSimulator();
   }
-  document.addEventListener('astro:page-load', setupHeadroomInspector);
+  document.addEventListener('astro:page-load', setupSimulator);
 </script>
