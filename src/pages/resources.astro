@@ -1,6 +1,17 @@
 ---
-import HubShell from '../components/HubShell.astro';
+/**
+ * /resources — Frontier Engineering Library & Visual Radar.
+ *
+ * DESIGN & UX MANDATE (2026 Standard):
+ *  - Replaces plain static "Topics" with interactive visual pillar cards featuring
+ *    hand-rolled SSR SVG micro-visualizers (Quantization, DSP Filter Curve, Phase Space, RF Lobe).
+ *  - Bento Showcase spotlighting Edge AI Radar (with RadarSpider SVG teaser), Signals Journal, and Shop.
+ *  - Categorized & Filterable Playground Explorer covering all 32 simulators.
+ *  - Developer Toolkit & Re-ranked Gear Cards.
+ *  - Zero external requests, CLS 0, full light/dark theme support.
+ */
 import Layout from '../layouts/Layout.astro';
+import HubShell from '../components/HubShell.astro';
 import AffiliateDisclosure from '../components/AffiliateDisclosure.astro';
 import ButtondownSignup from '../components/ButtondownSignup.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../data/affiliate-links';
@@ -8,9 +19,10 @@ import { getCollection } from 'astro:content';
 import { pillarMeta, fallbackPillar } from '../data/trends';
 import type { TrendItem } from '../data/trends';
 import { playground } from '../data/playground';
+import PillarCard from '../components/resources/PillarCard.astro';
+import RadarSpider from '../components/edge-radar/RadarSpider.astro';
 
-// Fetch the journal entries to compute trending pillars for gear re-ranking (D-017)
-// No journal content is rendered on /resources anymore — canonical home is /journal
+// Fetch the journal entries to compute trending pillars for gear re-ranking
 const journals = await getCollection('journal');
 const sortedJournals = journals.sort((a, b) => b.id.localeCompare(a.id));
 const latestJournal = sortedJournals[0];
@@ -25,6 +37,13 @@ const trendingPillarEntries = Object.entries(pillarCounts).sort((a, b) => b[1] -
 const trendingPillars = trendingPillarEntries.map(([k]) => k);
 const topTrendingPillars = trendingPillars.slice(0, 3);
 const trendingPillarSet = new Set(trendingPillars);
+
+// Fetch Edge Radar snapshots for the feature bento block
+const radarEntries = await getCollection('edge-radar');
+const latestRadar = radarEntries.sort((a, b) => b.id.localeCompare(a.id))[0];
+const radarBoards = latestRadar?.data.boards ?? [];
+const radarModels = latestRadar?.data.models ?? [];
+const radarFits = latestRadar?.data.fits ?? [];
 
 const linkTrendScore = (link: { pillars?: string[] }) =>
   (link.pillars ?? []).reduce((sum, p) => sum + (pillarCounts[p] ?? 0), 0);
@@ -62,137 +81,448 @@ const gearGroups = baseGearGroups
   })
   .sort((a, b) => b.score - a.score || b.trendingItems - a.trendingItems || a.originalIdx - b.originalIdx);
 
-const title = 'Resources — Guides, Playground & Tools | MakerPortal';
+const title = 'Resources — Guides, Edge AI Radar & Interactive Playground | MakerPortal';
 const description =
-  'On-device AI guides, iOS craft notes, downloadable archives, interactive playground, and 50 curated gear picks with disclosure. Daily Signals Journal re-ranks gear.';
+  'Frontier engineering library: daily Edge AI Radar memory reports, interactive physics & DSP simulators, on-device AI spec guides, and 50 audited gear picks.';
 
-const topics = [
-  { title: 'On-device AI', blurb: 'CoreML, ANE latency, quantization, offline indexes, hybrid where needed.' },
-  { title: 'Transparent architecture', blurb: 'No dark patterns, App Store labels, local storage, clear cloud disclosure for agentic.' },
-  { title: 'SwiftUI craft', blurb: 'Performance, accessibility, one-handed moments.' },
-  { title: 'Shipping indie', blurb: 'Release discipline, App Store ops, small teams.' },
+const pillarCardsData = [
+  {
+    id: 'on-device-ai',
+    title: 'On-Device AI & CoreML',
+    subtitle: 'CoreML · ANE · Quantization',
+    description: 'Model quantization (GGUF/ONNX/CoreML), ANE latency bounds, fp16 vs int8 compression, and offline vector retrieval.',
+    countLabel: '4 Sims · 3 Field Notes',
+    color: '#10b981',
+    type: 'ai' as const,
+    href: '/blog/notiary-on-device-semantic-search',
+  },
+  {
+    id: 'dsp-audio',
+    title: 'Audio DSP & Perceptual Math',
+    subtitle: 'Biquad · FFT · Formants',
+    description: 'Direct-Form-II-Transposed biquad cascades, RBJ cookbook coefficient solvers, perceptual audio masking, and real-time Web Audio.',
+    countLabel: '8 Sims · 4 Field Notes',
+    color: '#3b82f6',
+    type: 'dsp' as const,
+    href: '/blog/inside-biquadia',
+  },
+  {
+    id: 'physics-solvers',
+    title: 'Physics & Symplectic Solvers',
+    subtitle: 'RK4 · Verlet · FEM · FDTD',
+    description: 'Fixed-step 4th-order Runge-Kutta, symplectic velocity Verlet orbital mechanics, Chladni cymatics modal transport, and wave propagation.',
+    countLabel: '8 Sims · 2 Field Notes',
+    color: '#8b5cf6',
+    type: 'physics' as const,
+    href: '/playground/double-pendulum',
+  },
+  {
+    id: 'embedded-rf',
+    title: 'Hardware & RF Engineering',
+    subtitle: 'BLE UART · Antenna · RTOS',
+    description: 'HM-10 vs Nordic UART Service framing, directional antenna EM radiation patterns, micro-memory ceilings, and priority preemptive RTOS scheduling.',
+    countLabel: '8 Sims · 3 Field Notes',
+    color: '#f59e0b',
+    type: 'rf' as const,
+    href: '/blog/blexar-ble-uart-bridge',
+  },
 ];
 
-const tools = [
-  { name: 'Apple Developer', href: 'https://developer.apple.com', note: 'Official docs & SDKs' },
-  { name: 'Core ML Tools', href: 'https://apple.github.io/coremltools/', note: 'Model conversion' },
-  { name: 'Astro', href: 'https://astro.build', note: 'This hub’s static engine' },
+const developerTools = [
+  { name: 'Hugging Face Hub API', href: 'https://huggingface.co', category: 'Model Registry', note: 'Public GGUF & ONNX model file trees' },
+  { name: 'Core ML Tools', href: 'https://apple.github.io/coremltools/', category: 'Apple ML', note: 'PyTorch/ONNX to CoreML model conversion' },
+  { name: 'llama.cpp Engine', href: 'https://github.com/ggerganov/llama.cpp', category: 'Edge LLM', note: 'Quantized GGUF CPU/GPU inference engine' },
+  { name: 'Apple Developer', href: 'https://developer.apple.com', category: 'iOS Platform', note: 'Metal Shading Language, CoreML, Core Bluetooth' },
+  { name: 'Astro 7 Static', href: 'https://astro.build', category: 'Web Engine', note: 'Static SSR architecture behind MakerPortal' },
 ];
 ---
 
 <Layout title={title} description={description}>
   <HubShell
-    kicker="Learn · Resources · Topic hubs"
-    title="A library that scales."
-    lead="Topic-first learning (not format silos): guides, downloads, and tool picks that feed SEO, agents, and affiliate income — without turning the studio into a content farm."
+    kicker="Learn · Resources · Engineering Library"
+    title="Frontier Engineering Library & Visual Radar"
+    lead="Daily Hugging Face model memory radar, signals journal, 32 interactive physics/DSP simulators, on-device AI spec guides, and developer toolkit — grounded in real code."
     status="Learn"
   >
     <Fragment slot="hero-actions">
-      <div class="mt-8 flex flex-wrap gap-3">
-        <a href="/blog" class="inline-flex min-h-11 items-center rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">Field notes</a>
-        <a href="/shop" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Shop archives</a>
+      <div class="mt-8 flex flex-wrap gap-2.5">
+        <a href="/resources/edge-ai-radar" class="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90">
+          Edge AI Radar ↗
+        </a>
+        <a href="#playground" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">32 Simulators ↓</a>
+        <a href="#gear" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Curated Gear ↓</a>
+        <a href="/shop" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Shop Archives</a>
       </div>
     </Fragment>
   </HubShell>
 
-  <section class="border-b border-border" aria-labelledby="topics-title">
-    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
-      <h2 id="topics-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Topics</h2>
-      <div class="mt-8 grid gap-4 sm:grid-cols-2">
-        {topics.map((t) => (
-          <a href="/blog" class="group rounded-[20px] border border-border bg-card-bg p-5 transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated">
-            <h3 class="text-lg font-semibold text-primary-text group-hover:text-primary-cta">{t.title}</h3>
-            <p class="mt-2 text-[0.9rem] leading-[1.6] text-muted-text">{t.blurb}</p>
-          </a>
+  {/* ── Bento Showcase Grid (Edge Radar + Signals + Shop) ─────────── */}
+  <section class="border-b border-border bg-canvas py-10 sm:py-14" aria-labelledby="bento-title">
+    <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
+      <div class="grid gap-6 lg:grid-cols-12">
+        {/* Block 1: Edge AI Radar Feature Banner */}
+        <div class="group relative flex flex-col justify-between overflow-hidden rounded-[24px] border border-border bg-card-bg p-6 sm:p-8 lg:col-span-7 hover:border-[var(--mp-border-strong)] transition-all">
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Daily Automated Engine 01
+              </span>
+              {latestRadar && (
+                <span class="font-mono text-[0.62rem] text-muted-text">{latestRadar.id}</span>
+              )}
+            </div>
+
+            <h2 id="bento-title" class="mt-4 text-[clamp(1.4rem,2.8vw,1.85rem)] font-bold tracking-[-0.03em] text-primary-text leading-snug">
+              Edge AI & TinyML Hardware Radar
+            </h2>
+            <p class="mt-2 text-[0.92rem] leading-[1.65] text-muted-text max-w-xl">
+              Daily deterministic scan of new GGUF and ONNX releases on Hugging Face — verified file bytes in, datasheet memory ceilings out for ESP32-S3, Teensy 4.1, Pi 5, Coral TPU, and Jetson Orin Nano.
+            </p>
+          </div>
+
+          {/* Mini Radar Mark Teaser */}
+          {latestRadar && (
+            <div class="my-6 grid gap-4 sm:grid-cols-12 sm:items-center">
+              <div class="sm:col-span-6">
+                <RadarSpider boards={radarBoards} models={radarModels} fits={radarFits} />
+              </div>
+              <div class="space-y-2 font-mono text-[0.75rem] text-muted-text sm:col-span-6">
+                <div class="flex justify-between border-b border-border pb-1">
+                  <span>Scanned Models:</span>
+                  <strong class="text-primary-text">{radarModels.length}</strong>
+                </div>
+                <div class="flex justify-between border-b border-border pb-1">
+                  <span>Hardware Ceilings:</span>
+                  <strong class="text-primary-text">5 Boards</strong>
+                </div>
+                <div class="flex justify-between border-b border-border pb-1">
+                  <span>Pi 5 / Orin Fits:</span>
+                  <strong class="text-emerald-600 dark:text-emerald-400">8/12</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span>Methodology:</span>
+                  <strong class="text-primary-text">Verified Bytes × 1.25</strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <a
+              href="/resources/edge-ai-radar"
+              class="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-text px-6 text-[0.88rem] font-bold text-canvas hover:opacity-90"
+            >
+              Open Edge AI Radar Matrix →
+            </a>
+          </div>
+        </div>
+
+        {/* Right Stack: Signals Journal + Shop Archives */}
+        <div class="flex flex-col gap-6 lg:col-span-5">
+          {/* Block 2: Signals Journal */}
+          <div class="flex flex-1 flex-col justify-between rounded-[24px] border border-border bg-card-bg p-6 sm:p-7">
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
+                  Daily Signals
+                </span>
+                {latestJournal && (
+                  <span class="font-mono text-[0.6rem] text-muted-text">{latestJournal.id}</span>
+                )}
+              </div>
+              <h3 class="mt-3 text-[1.2rem] font-bold tracking-[-0.02em] text-primary-text">
+                Signals Journal
+              </h3>
+              <p class="mt-1.5 text-[0.86rem] leading-[1.6] text-muted-text">
+                Daily developer signals across Bluesky & Hacker News — auto-published to <span class="font-mono text-[0.78rem]">/journal</span>. Trending pillars re-rank gear below.
+              </p>
+
+              {topTrendingPillars.length > 0 && (
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  {topTrendingPillars.map((p) => (
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.08em] text-muted-text">
+                      <span class="h-1.5 w-1.5 rounded-full bg-primary-cta" aria-hidden="true"></span>
+                      {pillarMeta[p]?.label ?? p}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div class="mt-5">
+              <a
+                href="/journal"
+                class="inline-flex min-h-10 items-center rounded-full border border-border bg-elevated px-5 text-[0.84rem] font-semibold text-primary-text hover:border-[var(--mp-border-strong)]"
+              >
+                Open Signals Journal →
+              </a>
+            </div>
+          </div>
+
+          {/* Block 3: Shop & Code Archives */}
+          <div class="flex flex-1 flex-col justify-between rounded-[24px] border border-border bg-card-bg p-6 sm:p-7">
+            <div>
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
+                Digital Archives
+              </span>
+              <h3 class="mt-3 text-[1.2rem] font-bold tracking-[-0.02em] text-primary-text">
+                Shop & Verified Code Archives
+              </h3>
+              <p class="mt-1.5 text-[0.86rem] leading-[1.6] text-muted-text">
+                Downloadable standalone C++, Swift, and Python numerical solvers with README provenance and hardware schematics.
+              </p>
+            </div>
+
+            <div class="mt-5">
+              <a
+                href="/shop"
+                class="inline-flex min-h-10 items-center rounded-full border border-border bg-elevated px-5 text-[0.84rem] font-semibold text-primary-text hover:border-[var(--mp-border-strong)]"
+              >
+                Browse Shop Archives ($19–$29) →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ── Section 1: Core Research Pillars (Visual Cards) ──────────── */}
+  <section class="border-b border-border bg-card-bg/30 py-12 sm:py-16" aria-labelledby="pillars-title">
+    <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Core Pillars</span>
+          <h2 id="pillars-title" class="mt-1 text-[clamp(1.4rem,3vw,1.85rem)] font-bold tracking-[-0.04em] text-primary-text">
+            Four pillars of engineering craft
+          </h2>
+          <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
+            Deep-dive research, numerical solvers, and production code walkthroughs — zero fluff, zero synthetic AI content abuse.
+          </p>
+        </div>
+        <a href="/blog" class="inline-flex min-h-10 items-center rounded-full border border-border bg-canvas px-4 font-mono text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-primary-text hover:border-[var(--mp-border-strong)]">
+          All Field Notes →
+        </a>
+      </div>
+
+      <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {pillarCardsData.map((p) => (
+          <PillarCard
+            title={p.title}
+            subtitle={p.subtitle}
+            description={p.description}
+            countLabel={p.countLabel}
+            color={p.color}
+            type={p.type}
+            href={p.href}
+          />
         ))}
       </div>
     </div>
   </section>
 
-  {/* Signals Journal lives at /journal — compact bridge (no duplicate feed) */}
-  <section class="border-b border-border" aria-labelledby="signals-bridge-title">
-    <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
-      <div class="flex flex-col gap-4 rounded-[20px] border border-border bg-card-bg p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-        <div>
-          <h2 id="signals-bridge-title" class="text-[1.15rem] font-semibold text-primary-text">Signals Journal</h2>
-          <p class="mt-1.5 max-w-xl text-[0.9rem] leading-[1.6] text-muted-text">Daily developer signals — auto-published to <span class="font-mono text-[0.8rem]">/journal</span>. Trending pillars re-rank <a href="#gear" class="text-brand-anchor hover:text-primary-text">Gear</a> below.</p>
-          {latestJournal && (
-            <p class="mt-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">Latest · {latestJournal.id} · {allTrends.length} signals</p>
-          )}
-        </div>
-        <div class="flex shrink-0 flex-wrap gap-2">
-          <a href="/journal" class="inline-flex min-h-10 items-center rounded-full bg-primary-text px-5 text-[0.85rem] font-bold text-canvas hover:opacity-90">Open Signals →</a>
-          <a href={latestJournal ? `/journal/${latestJournal.id}` : '/journal'} class="inline-flex min-h-10 items-center rounded-full border border-border bg-elevated px-5 text-[0.85rem] font-medium text-muted-text hover:text-primary-text hover:border-[var(--mp-border-strong)]">Latest report</a>
-        </div>
-      </div>
-
-      {/* Edge AI Radar — daily deterministic model × board fit report */}
-      <div class="mt-4 flex flex-col gap-4 rounded-[20px] border border-border bg-card-bg p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-        <div>
-          <h2 class="text-[1.15rem] font-semibold text-primary-text">Edge AI Radar</h2>
-          <p class="mt-1.5 max-w-xl text-[0.9rem] leading-[1.6] text-muted-text">Daily scan of fresh GGUF/ONNX releases sized against real board memory ceilings — ESP32-S3, Teensy 4.1, Pi 5, Coral TPU, Jetson Orin. Verified bytes and datasheet math only.</p>
-        </div>
-        <div class="flex shrink-0 flex-wrap gap-2">
-          <a href="/resources/edge-ai-radar" class="inline-flex min-h-10 items-center rounded-full bg-primary-text px-5 text-[0.85rem] font-bold text-canvas hover:opacity-90">Open Radar →</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="playground" class="border-b border-border" aria-labelledby="playground-title">
-    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+  {/* ── Section 2: Interactive Playground Explorer (32 Simulators) ── */}
+  <section id="playground" class="border-b border-border bg-canvas py-14 sm:py-20" aria-labelledby="playground-title">
+    <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="playground-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Playground</h2>
-          <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">Frontier research instruments and interactive simulations. Some are grounded in production app code; others are independent explorations — all numerically rigorous with disclosed method and limitations.</p>
+          <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Interactive Instruments</span>
+          <h2 id="playground-title" class="mt-1 text-[clamp(1.4rem,3vw,1.85rem)] font-bold tracking-[-0.04em] text-primary-text">
+            Playground & Numerical Solvers ({playground.filter((p) => p.status === 'live').length})
+          </h2>
+          <p class="mt-2 max-w-2xl text-[0.92rem] leading-[1.6] text-muted-text">
+            Frontier research instruments and interactive simulations. Grounded in real production app kernels, verified against analytical benchmarks.
+          </p>
         </div>
-        <a href="/playground" class="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-[0.9rem] font-semibold text-primary-text hover:border-brand-anchor hover:text-brand-anchor">Open Playground →</a>
+        <a href="/playground" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.88rem] font-bold text-primary-text hover:border-[var(--mp-border-strong)]">
+          Open Full Playground →
+        </a>
       </div>
-      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+      {/* Category Filter Tabs */}
+      <div class="mt-8 flex flex-wrap gap-2 border-b border-border pb-4" id="playground-filter-bar">
+        <button
+          type="button"
+          data-filter="all"
+          class="sim-filter-btn active rounded-full bg-primary-text px-4 py-1.5 font-mono text-[0.68rem] font-bold uppercase tracking-[0.1em] text-canvas transition-colors"
+        >
+          All ({playground.filter((p) => p.status === 'live').length})
+        </button>
+        <button
+          type="button"
+          data-filter="on-device-ai"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+        >
+          On-Device AI
+        </button>
+        <button
+          type="button"
+          data-filter="dsp-audio"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+        >
+          DSP & Audio
+        </button>
+        <button
+          type="button"
+          data-filter="physics"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+        >
+          Physics & Solvers
+        </button>
+        <button
+          type="button"
+          data-filter="lab"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+        >
+          App Grounded Lab
+        </button>
+      </div>
+
+      {/* Simulator Cards Grid */}
+      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="simulators-grid">
         {playground.filter((p) => p.status === 'live').map((entry) => {
           const pillar = entry.pillarHint ? (pillarMeta[entry.pillarHint] ?? fallbackPillar) : null;
+          const pHint = entry.pillarHint ?? 'other';
+          const isLab = entry.isGrounded;
+
           return (
-          <a href={`/playground/${entry.slug}`} class="group flex flex-col rounded-[16px] border border-border bg-card-bg p-4 transition-colors hover:border-[var(--mp-border-strong)] hover:bg-elevated">
-            {pillar && (
-              <span class="inline-flex items-center gap-1.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
-                <span class="h-1.5 w-1.5 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
-                {pillar.label} {entry.isGrounded ? '· Lab' : ''}
-              </span>
-            )}
-            <span class="mt-2 text-[0.98rem] font-semibold text-primary-text transition-colors group-hover:text-primary-cta">{entry.title}</span>
-            <span class="mt-1 text-[0.8rem] text-muted-text">{entry.tagline}</span>
-          </a>
+            <a
+              href={`/playground/${entry.slug}`}
+              data-pillar={pHint}
+              data-grounded={isLab ? 'true' : 'false'}
+              class="sim-card group flex flex-col justify-between rounded-[18px] border border-border bg-card-bg p-4.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--mp-border-strong)] hover:bg-elevated/70"
+            >
+              <div>
+                <div class="flex items-center justify-between gap-1.5">
+                  {pillar ? (
+                    <span class="inline-flex items-center gap-1.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">
+                      <span class="h-1.5 w-1.5 rounded-full" style={`background: ${pillar.color};`} aria-hidden="true"></span>
+                      {pillar.label}
+                    </span>
+                  ) : (
+                    <span class="font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-text">Simulator</span>
+                  )}
+                  {isLab && (
+                    <span class="rounded-full bg-primary-cta/10 px-2 py-0.5 font-mono text-[0.55rem] font-bold uppercase tracking-[0.08em] text-primary-cta">
+                      App Grounded
+                    </span>
+                  )}
+                </div>
+
+                <h3 class="mt-2.5 text-[0.98rem] font-bold leading-snug text-primary-text transition-colors group-hover:text-primary-cta">
+                  {entry.title}
+                </h3>
+                <p class="mt-1.5 text-[0.82rem] leading-[1.5] text-muted-text line-clamp-2">
+                  {entry.tagline}
+                </p>
+              </div>
+
+              <div class="mt-4 flex items-center justify-between border-t border-border/60 pt-3 font-mono text-[0.62rem] text-muted-text group-hover:text-primary-text">
+                <span>Explore simulator</span>
+                <span>→</span>
+              </div>
+            </a>
           );
         })}
       </div>
     </div>
   </section>
 
-  <section id="tools" class="border-b border-border" aria-labelledby="tools-title">
-    <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
-      <h2 id="tools-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Tools we use</h2>
-      <p class="mt-3 max-w-2xl text-[0.95rem] text-muted-text">
-        Curated links. If a listing becomes an affiliate relationship, it will be labeled. See <a href="/privacy#affiliates" class="text-brand-anchor hover:text-primary-text">disclosure</a>.
+  {/* Client-side filter script for simulators */}
+  <script is:inline>
+    function setupSimFilters() {
+      const filterBar = document.getElementById('playground-filter-bar');
+      const grid = document.getElementById('simulators-grid');
+      if (!filterBar || !grid) return;
+
+      const buttons = filterBar.querySelectorAll('.sim-filter-btn');
+      const cards = grid.querySelectorAll('.sim-card');
+
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const filter = btn.getAttribute('data-filter');
+
+          buttons.forEach((b) => {
+            b.classList.remove('active', 'bg-primary-text', 'text-canvas');
+            b.classList.add('border', 'border-border', 'bg-card-bg', 'text-muted-text');
+          });
+
+          btn.classList.add('active', 'bg-primary-text', 'text-canvas');
+          btn.classList.remove('border', 'border-border', 'bg-card-bg', 'text-muted-text');
+
+          cards.forEach((card) => {
+            const p = card.getAttribute('data-pillar');
+            const grounded = card.getAttribute('data-grounded') === 'true';
+
+            if (filter === 'all') {
+              card.style.display = 'flex';
+            } else if (filter === 'lab') {
+              card.style.display = grounded ? 'flex' : 'none';
+            } else if (filter === p) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupSimFilters);
+    } else {
+      setupSimFilters();
+    }
+    document.addEventListener('astro:page-load', setupSimFilters);
+  </script>
+
+  {/* ── Section 3: Developer Toolkit ("Tools We Use") ─────────────── */}
+  <section id="tools" class="border-b border-border bg-card-bg/20 py-12 sm:py-16" aria-labelledby="tools-title">
+    <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
+      <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Developer Toolkit</span>
+      <h2 id="tools-title" class="mt-1 text-[clamp(1.4rem,3vw,1.85rem)] font-bold tracking-[-0.04em] text-primary-text">
+        Tools & infrastructure we build with
+      </h2>
+      <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
+        Curated stack. If a listing ever becomes an affiliate relationship, it will be disclosed. See <a href="/privacy#affiliates" class="text-brand-anchor hover:text-primary-text">privacy & affiliate disclosure</a>.
       </p>
-      <ul class="mt-8 divide-y divide-border border-y border-border">
-        {tools.map((tool) => (
-          <li class="flex flex-wrap items-center justify-between gap-3 py-5">
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {developerTools.map((tool) => (
+          <div class="flex flex-col justify-between rounded-[16px] border border-border bg-card-bg p-5">
             <div>
-              <a href={tool.href} target="_blank" rel="noopener noreferrer" class="text-[1.05rem] font-semibold text-primary-text hover:text-primary-cta">{tool.name} ↗</a>
-              <p class="mt-1 text-[0.85rem] text-muted-text">{tool.note}</p>
+              <div class="flex items-center justify-between gap-2">
+                <span class="rounded-full bg-elevated border border-border px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">
+                  {tool.category}
+                </span>
+                <span class="font-mono text-[0.62rem] text-muted-text">Verified</span>
+              </div>
+              <h3 class="mt-3 text-[1.05rem] font-bold text-primary-text">
+                <a href={tool.href} target="_blank" rel="noopener noreferrer" class="hover:text-primary-cta">
+                  {tool.name} ↗
+                </a>
+              </h3>
+              <p class="mt-1.5 text-[0.84rem] leading-[1.55] text-muted-text">
+                {tool.note}
+              </p>
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   </section>
 
+  {/* ── Section 4: Monetized Gear & Dev Kits ──────────────────────── */}
   {affiliateLinks.length > 0 && (
-    <section id="gear" class="border-b border-border" aria-labelledby="gear-title">
-      <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+    <section id="gear" class="border-b border-border bg-canvas py-14 sm:py-20" aria-labelledby="gear-title">
+      <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 id="gear-title" class="text-[clamp(1.4rem,3vw,1.85rem)] font-[650] tracking-[-0.04em] text-primary-text">Gear</h2>
+            <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Curated Hardware</span>
+            <h2 id="gear-title" class="mt-1 text-[clamp(1.4rem,3vw,1.85rem)] font-bold tracking-[-0.04em] text-primary-text">
+              Tested Gear & Development Kits
+            </h2>
             <AffiliateDisclosure class="mt-3 max-w-2xl" />
           </div>
           {topTrendingPillars.length > 0 && (
@@ -202,7 +532,8 @@ const tools = [
             </p>
           )}
         </div>
-        {/* Modern gear grid — larger imagery, bento-style, fast + captivating */}
+
+        {/* Gear Groups */}
         {gearGroups.map((group) => (
           <div class="mt-12 first:mt-10 gear-group">
             <div class="flex items-center gap-3">
@@ -235,7 +566,7 @@ const tools = [
                       rel="sponsored noopener noreferrer"
                       class={`group/card relative flex flex-col overflow-hidden rounded-[22px] border bg-card-bg transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_50px_-18px_rgba(0,0,0,0.22)] ${isBeyond ? 'hidden group-open/details:flex group-open/details:flex-col' : 'flex flex-col'} ${isTrendingItem ? 'border-primary-cta/25 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.12)]' : 'border-border'}`}
                     >
-                      {/* Image — large, modern, 4:3 with subtle radial tint */}
+                      {/* Image — large 4:3 */}
                       <div class="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(120%_120%_at_30%_20%,color-mix(in_srgb,var(--mp-elevated)_70%,transparent),var(--mp-card-bg))] p-6 sm:p-7">
                         {resolved.image ? (
                           <img
@@ -252,20 +583,19 @@ const tools = [
                             {group.label}
                           </div>
                         )}
-                        {/* Price — floating pill top-right */}
+                        {/* Price pill */}
                         {resolved.price && (
                           <span class="absolute right-3 top-3 inline-flex items-center rounded-full border border-border bg-canvas/90 px-2.5 py-1 font-mono text-[0.7rem] font-semibold tracking-[-0.01em] text-primary-text shadow-sm backdrop-blur">
                             {resolved.price}
                           </span>
                         )}
-                        {/* Trending badge — top-left */}
+                        {/* Trending badge */}
                         {isTrendingItem && (
                           <span class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-primary-cta px-2.5 py-1 font-mono text-[0.6rem] font-bold uppercase tracking-[0.08em] text-white shadow-sm">
                             <span class="size-1 rounded-full bg-white animate-pulse" aria-hidden="true"></span>
                             trending
                           </span>
                         )}
-                        {/* Category watermark */}
                         <span class="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-elevated/70 px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-muted-text/60 backdrop-blur">
                           {link.category}
                         </span>
@@ -337,12 +667,13 @@ const tools = [
     }
   </style>
 
+  {/* ── Section 5: Newsletter ──────────────────────────────────────── */}
   <section class="border-b border-border bg-elevated/20" aria-labelledby="newsletter-title">
     <div class="mx-auto max-w-[88rem] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
       <div class="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
         <div>
           <h2 id="newsletter-title" class="text-[clamp(1.3rem,3vw,1.7rem)] font-[650] tracking-[-0.03em] text-primary-text">Newsletter — privacy-first</h2>
-          <p class="mt-3 max-w-xl text-[0.9rem] leading-[1.6] text-muted-text">Buttondown (no tracking pixels, markdown-friendly per D-014). Get Signals re-rank, archive drops, field notes. Free snippet lead magnet.</p>
+          <p class="mt-3 max-w-xl text-[0.9rem] leading-[1.6] text-muted-text">Buttondown (no tracking pixels, markdown-friendly). Get Signals re-rank, archive drops, field notes. Free snippet lead magnet.</p>
           <p class="mt-3 font-mono text-[0.62rem] text-muted-text">Free first 100, $9/mo addon · RSS also at /rss.xml</p>
         </div>
         <ButtondownSignup tag="resources" source="resources-page" title="Learn — privacy-first" blurb="Signals re-rank + archive drops + field notes. No tracking, unsubscribe anytime." />

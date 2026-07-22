@@ -1,0 +1,130 @@
+---
+/**
+ * Visual Pillar Card for /resources page.
+ * Renders a rich editorial card with hand-rolled SSR SVG micro-visualizer.
+ * Zero JS, CLS 0, themeable via currentColor / --mp-*.
+ */
+interface Props {
+  title: string;
+  subtitle: string;
+  description: string;
+  countLabel: string;
+  color: string;
+  type: 'ai' | 'dsp' | 'physics' | 'rf';
+  href: string;
+}
+
+const { title, subtitle, description, countLabel, color, type, href } = Astro.props;
+---
+
+<a
+  href={href}
+  class="group relative flex flex-col justify-between overflow-hidden rounded-[22px] border border-border bg-card-bg p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--mp-border-strong)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.18)]"
+>
+  <div>
+    {/* Header & Pillar Badge */}
+    <div class="flex items-center justify-between gap-2">
+      <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-text">
+        <span class="h-2 w-2 rounded-full" style={`background: ${color};`} aria-hidden="true"></span>
+        {subtitle}
+      </span>
+      <span class="font-mono text-[0.62rem] font-semibold text-muted-text">{countLabel}</span>
+    </div>
+
+    {/* Title & Description */}
+    <h3 class="mt-4 text-[1.2rem] font-bold tracking-[-0.02em] text-primary-text transition-colors group-hover:text-primary-cta">
+      {title}
+    </h3>
+    <p class="mt-2 text-[0.88rem] leading-[1.6] text-muted-text">
+      {description}
+    </p>
+  </div>
+
+  {/* SSR Micro-Visualizer Canvas */}
+  <div class="relative mt-6 h-28 w-full overflow-hidden rounded-[14px] border border-border bg-canvas p-3">
+    {type === 'ai' && (
+      /* On-Device AI: Quantization Memory Compression Bar SVG */
+      <svg viewBox="0 0 320 80" class="h-full w-full text-primary-text" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Quantization compression illustration">
+        <text x="10" y="16" font-family="var(--font-mono)" font-size="8" fill="currentColor" class="text-muted-text">FP16 Full (18.0 GB)</text>
+        <rect x="10" y="22" width="290" height="10" rx="5" fill="var(--mp-elevated)" stroke="var(--mp-border)" stroke-width="0.8" />
+        <rect x="10" y="22" width="290" height="10" rx="5" fill="#ef4444" opacity="0.8" />
+
+        <text x="10" y="48" font-family="var(--font-mono)" font-size="8" fill="currentColor" class="text-muted-text">Q4_K_M (5.4 GB) · 70% Saved</text>
+        <rect x="10" y="54" width="290" height="10" rx="5" fill="var(--mp-elevated)" stroke="var(--mp-border)" stroke-width="0.8" />
+        <rect x="10" y="54" width="87" height="10" rx="5" fill="#10b981" opacity="0.9" />
+      </svg>
+    )}
+
+    {type === 'dsp' && (
+      /* Audio DSP: Biquad Peak Filter Frequency Response Curve SVG */
+      <svg viewBox="0 0 320 80" class="h-full w-full text-primary-text" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DSP filter frequency response curve">
+        <line x1="20" y1="65" x2="300" y2="65" stroke="var(--mp-border-strong)" stroke-width="1" />
+        <line x1="20" y1="15" x2="20" y2="65" stroke="var(--mp-border-strong)" stroke-width="1" />
+        
+        {/* Peak Filter Magnitude Curve */}
+        <path
+          d="M 20 50 Q 80 50, 120 48 T 160 18 T 200 48 Q 240 50, 300 50"
+          fill="none"
+          stroke="var(--mp-cta)"
+          stroke-width="2.5"
+          stroke-linejoin="round"
+        />
+        {/* Fill area under curve */}
+        <path
+          d="M 20 65 L 20 50 Q 80 50, 120 48 T 160 18 T 200 48 Q 240 50, 300 50 L 300 65 Z"
+          fill="var(--mp-cta)"
+          fill-opacity="0.12"
+        />
+        {/* Center frequency tick mark */}
+        <line x1="160" y1="18" x2="160" y2="65" stroke="#3b82f6" stroke-width="1" stroke-dasharray="2 2" />
+        <circle cx="160" cy="18" r="3.5" fill="#3b82f6" />
+        <text x="165" y="24" font-family="var(--font-mono)" font-size="8" fill="currentColor" class="text-primary-text">fc = 1.0 kHz (Q=2.0)</text>
+      </svg>
+    )}
+
+    {type === 'physics' && (
+      /* Physics & Solvers: Double Pendulum Phase Space Trajectory SVG */
+      <svg viewBox="0 0 320 80" class="h-full w-full text-primary-text" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chaotic phase space trajectory">
+        {/* Grid lines */}
+        <line x1="160" y1="10" x2="160" y2="70" stroke="var(--mp-border)" stroke-width="0.8" stroke-dasharray="3 3" />
+        <line x1="20" y1="40" x2="300" y2="40" stroke="var(--mp-border)" stroke-width="0.8" stroke-dasharray="3 3" />
+        
+        {/* Lissajous / chaotic phase space loop */}
+        <path
+          d="M 60 40 C 90 10, 130 70, 160 40 C 190 10, 230 70, 260 40 C 230 10, 190 70, 160 40 C 130 10, 90 70, 60 40 Z"
+          fill="none"
+          stroke="#8b5cf6"
+          stroke-width="2"
+          opacity="0.85"
+        />
+        <circle cx="160" cy="40" r="4" fill="#8b5cf6" />
+        <text x="170" y="36" font-family="var(--font-mono)" font-size="8" fill="currentColor" class="text-primary-text">RK4 (dt=0.001s)</text>
+      </svg>
+    )}
+
+    {type === 'rf' && (
+      /* Hardware & RF: Polar Antenna Pattern SVG */
+      <svg viewBox="0 0 320 80" class="h-full w-full text-primary-text" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antenna directional radiation pattern">
+        {/* Concentric rings */}
+        <circle cx="160" cy="40" r="12" fill="none" stroke="var(--mp-border)" stroke-width="0.8" />
+        <circle cx="160" cy="40" r="26" fill="none" stroke="var(--mp-border)" stroke-width="0.8" />
+        
+        {/* Directional Lobe */}
+        <path
+          d="M 160 40 C 140 20, 140 0, 160 2 C 180 0, 180 20, 160 40 Z"
+          fill="#f59e0b"
+          fill-opacity="0.25"
+          stroke="#f59e0b"
+          stroke-width="2"
+        />
+        <circle cx="160" cy="40" r="3" fill="#f59e0b" />
+        <text x="190" y="24" font-family="var(--font-mono)" font-size="8" fill="currentColor" class="text-primary-text">+5.2 dBi Directivity</text>
+      </svg>
+    )}
+  </div>
+
+  <div class="mt-4 flex items-center justify-between font-mono text-[0.68rem] font-semibold text-primary-cta group-hover:translate-x-1 transition-transform">
+    <span>Explore pillar →</span>
+    <span>↗</span>
+  </div>
+</a>
