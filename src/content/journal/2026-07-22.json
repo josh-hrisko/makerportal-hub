@@ -1,0 +1,423 @@
+{
+  "generatedAt": "2026-07-22T12:28:32.736Z",
+  "items": [
+    {
+      "id": "github-1137228781",
+      "source": "github",
+      "title": "OGAD – Off Grid AI — private, on-device AI. Run open models (text, vision, image, voice) locally through one OpenAI-compatible ",
+      "url": "https://github.com/off-grid-ai/OGAD",
+      "author": "off-grid-ai",
+      "publishedAt": "2026-07-22T12:20:02Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "privacy-arch"
+      ],
+      "score": 27,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-1293023589",
+      "source": "github",
+      "title": "velora – Local-first, on-device dictation for macOS (Apple Silicon) — Superwhisper/Wispr Flow alternative. Multilingual STT + LLM",
+      "url": "https://github.com/sushilk1991/velora",
+      "author": "sushilk1991",
+      "publishedAt": "2026-07-22T12:15:52Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm",
+        "privacy-arch",
+        "metal-ane"
+      ],
+      "score": 25,
+      "domain": "github.com",
+      "sources": [
+        "hackernews",
+        "github"
+      ]
+    },
+    {
+      "id": "github-1304355918",
+      "source": "github",
+      "title": "pxq_llama – PXQ: PXA-native low-bit MoE quants (2/3/4-bit, E16-row scales) + fused CUDA kernels for Pascal/Volta — run a real 35B on",
+      "url": "https://github.com/poisonxa16/pxq_llama",
+      "author": "poisonxa16",
+      "publishedAt": "2026-07-22T12:21:37Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1304355918.webp"
+    },
+    {
+      "id": "github-1061337488",
+      "source": "github",
+      "title": "yzma – Go with your own intelligence - Go applications that directly integrate llama.cpp for local inference using hardware acc",
+      "url": "https://github.com/hybridgroup/yzma",
+      "author": "hybridgroup",
+      "publishedAt": "2026-07-22T11:25:25Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "bluesky",
+        "github"
+      ],
+      "image": "/trends/github-1061337488.webp"
+    },
+    {
+      "id": "github-1138007869",
+      "source": "github",
+      "title": "Wax – Single-file memory layer for AI agents, sub mili-second RAG on Apple Silicon. Metal Optimized On-Device. No Server. No A",
+      "url": "https://github.com/christopherkarani/Wax",
+      "author": "christopherkarani",
+      "publishedAt": "2026-07-22T09:30:53Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1138007869.webp"
+    },
+    {
+      "id": "github-1233899535",
+      "source": "github",
+      "title": "presspeech – Fast, private push-to-talk dictation for Apple Silicon Macs — local Parakeet TDT v3, no cloud or telemetry.",
+      "url": "https://github.com/rcourtman/presspeech",
+      "author": "rcourtman",
+      "publishedAt": "2026-07-21T23:23:53Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane",
+        "privacy-arch"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1233899535.webp"
+    },
+    {
+      "id": "bluesky-3mr5a24xhs224",
+      "source": "bluesky",
+      "title": "Mentioned a few times I've been looking at ANE (Apple Neural Engine, the fp16 chip in all new Macs & iPhones).\n\nJust came across another great resource, published a few weeks ago, reverse engineered a lot of the lower le",
+      "url": "https://bsky.app/profile/hydroxide.dev/post/3mr5a24xhs224",
+      "author": "hydroxide.dev",
+      "publishedAt": "2026-07-21T06:54:56.608Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "arxiv.org",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr5a24xhs224.webp"
+    },
+    {
+      "id": "bluesky-3mr6l77u7xk2j",
+      "source": "bluesky",
+      "title": "they have a llama.cpp fork and GGUFs huggingface.co/poolside/Lag...\n\ni fear i may be doing another round of overnight tuning for the ideal GPU+CPU config for these",
+      "url": "https://bsky.app/profile/philpax.me/post/3mr6l77u7xk2j",
+      "author": "philpax.me",
+      "publishedAt": "2026-07-21T19:47:18.319Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 19,
+      "domain": "huggingface.co",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr6l77u7xk2j.webp"
+    },
+    {
+      "id": "hackernews-49004886",
+      "source": "hackernews",
+      "title": "Llamatop - see what the various cores on your macbook are doing!",
+      "url": "https://github.com/fragmede/llamatop",
+      "author": "fragmede",
+      "publishedAt": "2026-07-22T11:12:35Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 15,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-49004886.webp"
+    },
+    {
+      "id": "hackernews-48993102",
+      "source": "hackernews",
+      "title": "Bento – Live collab PowerPoints in one HTML (viewer+editor+data+CRDT)",
+      "url": "https://bento.page/slides/",
+      "author": "starfallg",
+      "publishedAt": "2026-07-21T14:53:48Z",
+      "tags": [
+        "local-llm",
+        "privacy-arch"
+      ],
+      "score": 15,
+      "domain": "bento.page",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-49003210",
+      "source": "hackernews",
+      "title": "A hand-cranked device for running local LLMs",
+      "url": "https://squeezlabs.github.io/handcrank/",
+      "author": "antondd",
+      "publishedAt": "2026-07-22T07:53:51Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "squeezlabs.github.io",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "devto-4198449",
+      "source": "devto",
+      "title": "DeviceShelf for iOS is out of TestFlight and on the App Store",
+      "url": "https://dev.to/deviceshelf/deviceshelf-for-ios-is-out-of-testflight-and-on-the-app-store-20a4",
+      "author": "deviceshelf",
+      "publishedAt": "2026-07-21T15:36:26Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 11,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4198449.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-17T23:44:54.611Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "bluesky-3mr2zp4r53k2m",
+      "source": "bluesky",
+      "title": "To prepare Strolly for app resizability in iOS 27, we wanted its non-modal detent sheets to adapt into side panels on wider displays.\n\nSwiftUI sheets don’t support that presentation, so we built our own panel API:\n\nnilco",
+      "url": "https://bsky.app/profile/hishnash.bsky.social/post/3mr2zp4r53k2m",
+      "author": "hishnash.bsky.social",
+      "publishedAt": "2026-07-20T09:56:05.374Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 9,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr2zp4r53k2m.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-14T06:56:44.666Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 9,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "hackernews-48925332",
+      "source": "hackernews",
+      "title": "LHIC – A local-first browser agent with 30ms latency and $0 LLM cost",
+      "url": "https://github.com/chengmatt416/LHIC",
+      "author": "pinyencheng",
+      "publishedAt": "2026-07-15T18:45:36Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 8,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "bluesky-3mqo5s7fgk222",
+      "source": "bluesky",
+      "title": "Local LLM text translation or transformation in GStreamer with llama.cpp\n\nNew Centricular devlog post by Sebastian Dröge:\n\ncentricular.com/devlog/2026-...\n\n#gstreamer #ai #machinelearning #multimedia #llm #translation #o",
+      "url": "https://bsky.app/profile/centricular.com/post/3mqo5s7fgk222",
+      "author": "centricular.com",
+      "publishedAt": "2026-07-15T07:04:47.168Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 8,
+      "domain": "centricular.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqo5s7fgk222.webp"
+    },
+    {
+      "id": "devto-4151334",
+      "source": "devto",
+      "title": "VideoIO, PCM Mixing And Timed Whisper Captions",
+      "url": "https://dev.to/codenameone/videoio-pcm-mixing-and-timed-whisper-captions-1l3n",
+      "author": "codenameone",
+      "publishedAt": "2026-07-15T14:58:28Z",
+      "tags": [
+        "metal-ane"
+      ],
+      "score": 5,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4151334.webp"
+    },
+    {
+      "id": "arxiv-2607.08800v1",
+      "source": "arxiv",
+      "title": "Dual-BEATs: Unlocking Zero-Shot Stereo Audio Perception in Audio Large Language Models via Dithering",
+      "url": "http://arxiv.org/abs/2607.08800v1",
+      "author": "Shuo-Chun Lin",
+      "publishedAt": "2026-07-09T03:10:16Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 5,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.08800v1.webp"
+    },
+    {
+      "id": "devto-4171973",
+      "source": "devto",
+      "title": "Swift Classes — Why Copying a Class Isn't What You Think 📋",
+      "url": "https://dev.to/gamya_m/swift-classes-why-copying-a-class-isnt-what-you-think-31ip",
+      "author": "gamya_m",
+      "publishedAt": "2026-07-21T08:44:00Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": -88,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4171973.webp"
+    },
+    {
+      "id": "hackernews-48969619",
+      "source": "hackernews",
+      "title": "Phosphor – a CRT TV video player for your Mac",
+      "url": "https://github.com/JoAz111/Phosphor",
+      "author": "JoAz111",
+      "publishedAt": "2026-07-19T16:43:02Z",
+      "tags": [
+        "metal-ane"
+      ],
+      "score": -89,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48969619.webp"
+    },
+    {
+      "id": "hackernews-48991094",
+      "source": "hackernews",
+      "title": "ChatPanel, A Privacy-first AI Agent browser side panel",
+      "url": "https://chatpanel.net/",
+      "author": "earth2mars",
+      "publishedAt": "2026-07-21T11:56:19Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": -90,
+      "domain": "chatpanel.net",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.13278v2",
+      "source": "arxiv",
+      "title": "Adapting Diffusion-Based Music Synthesis to Speech and Singing Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.13278v2",
+      "author": "Ben Maman",
+      "publishedAt": "2026-07-14T21:29:17Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -93,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.13278v2.webp"
+    },
+    {
+      "id": "arxiv-2607.11706v1",
+      "source": "arxiv",
+      "title": "VoxENES 2026: Benchmarking Generalization of Speech Spoofing Detectors Against LLM-Era TTS and Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.11706v1",
+      "author": "Aastha Sharma",
+      "publishedAt": "2026-07-13T15:35:29Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -93,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.11706v1.webp"
+    }
+  ]
+}
