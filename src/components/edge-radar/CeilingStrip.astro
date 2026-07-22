@@ -1,0 +1,232 @@
+---
+/**
+ * Board-ceiling strip: 7 MiB → 6.5 GiB log ruler with that day's models plotted
+ * by verdict per board (rows = boards, dots = models at runtimeBytes).
+ * SSR-only, zero JS, themeable, CLS-fixed via aspect-ratio.
+ */
+interface BoardLite {
+  id: string;
+  name: string;
+  class: string;
+  modelCeilingBytes: number;
+  ramLabel?: string;
+}
+interface ModelLite {
+  id: string;
+  runtimeBytes: number;
+  fileBytes: number;
+}
+interface FitLite {
+  modelId: string;
+  boardId: string;
+  verdict: 'fits' | 'tight' | 'no';
+}
+
+interface Props {
+  boards: BoardLite[];
+  models: ModelLite[];
+  fits: FitLite[];
+}
+
+const { boards, models, fits } = Astro.props;
+
+const MIB = 1024 * 1024;
+const GIB = 1024 * 1024 * 1024;
+
+const DOMAIN_MIN = Math.min(...boards.map((b) => b.modelCeilingBytes));
+const DOMAIN_MAX = Math.max(...boards.map((b) => b.modelCeilingBytes));
+
+const LOG_MIN = Math.log10(DOMAIN_MIN);
+const LOG_MAX = Math.log10(DOMAIN_MAX);
+const RANGE = LOG_MAX - LOG_MIN;
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+function logFrac(bytes: number) {
+  const c = clamp(bytes, DOMAIN_MIN, DOMAIN_MAX);
+  return (Math.log10(c) - LOG_MIN) / RANGE;
+}
+function fmtBytes(n: number) {
+  if (n >= GIB) return `${(n / GIB).toFixed(n >= 10 * GIB ? 1 : 2)} GiB`;
+  return `${(n / MIB).toFixed(n >= 10 * MIB ? 0 : 1)} MiB`;
+}
+function shortBoardName(b: BoardLite) {
+  return b.name.split('(')[0].trim();
+}
+
+const W = 640;
+const ROW_H = 34;
+const HEADER = 26;
+const FOOTER = 34;
+const LEFT = 168; // gutter for board labels
+const RIGHT = 16;
+const TRACK_W = W - LEFT - RIGHT;
+const H = HEADER + boards.length * ROW_H + FOOTER + 8;
+
+const fitMap = new Map<string, 'fits' | 'tight' | 'no'>();
+for (const f of fits) fitMap.set(`${f.modelId}::${f.boardId}`, f.verdict);
+
+const distinctCeilings = [...new Set(boards.map((b) => b.modelCeilingBytes))]
+  .sort((a, b) => a - b)
+  .map((bytes) => ({
+    bytes,
+    x: LEFT + logFrac(bytes) * TRACK_W,
+    label: fmtBytes(bytes),
+  }));
+
+const xTicks = (() => {
+  const candidates = [8 * MIB, 16 * MIB, 32 * MIB, 64 * MIB, 128 * MIB, 256 * MIB, 512 * MIB, 1 * GIB, 2 * GIB, 4 * GIB, 6.5 * GIB];
+  return candidates
+    .filter((b) => b >= DOMAIN_MIN && b <= DOMAIN_MAX)
+    .map((b) => ({ bytes: b, x: LEFT + logFrac(b) * TRACK_W, label: fmtBytes(b) }));
+})();
+
+// For global strip dots above board rows (optional overview) — compute aggregate verdict per model
+function aggregateVerdict(modelId: string): 'fits' | 'tight' | 'no' {
+  const vs = boards.map((b) => fitMap.get(`${modelId}::${b.id}`) ?? 'no');
+  if (vs.includes('fits')) return 'fits';
+  if (vs.includes('tight')) return 'tight';
+  return 'no';
+}
+const overviewDots = models.map((m) => ({
+  id: m.id,
+  x: LEFT + logFrac(m.runtimeBytes) * TRACK_W,
+  overflow: m.runtimeBytes > DOMAIN_MAX || m.runtimeBytes < DOMAIN_MIN,
+  verdict: aggregateVerdict(m.id),
+  runtime: m.runtimeBytes,
+}));
+---
+<div class="w-full overflow-hidden rounded-[16px] border border-border bg-card-bg">
+  {/* header */}
+  <div class="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+    <h3 class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">Board ceiling strip · 7 MiB → 6.5 GiB</h3>
+    <div class="flex items-center gap-3 font-mono text-[0.6rem] text-muted-text">
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> fits</span>
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-amber-500"></span> tight</span>
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-muted-text/30"></span> no</span>
+    </div>
+  </div>
+
+  {/* svg container with fixed aspect ratio for CLS 0 */}
+  <div class="relative w-full bg-canvas" style={`aspect-ratio: ${W}/${H};`}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height="100%"
+      role="img"
+      aria-label={`Board ceilings from ${fmtBytes(DOMAIN_MIN)} to ${fmtBytes(DOMAIN_MAX)} with ${models.length} models plotted`}
+      class="absolute inset-0 h-full w-full text-primary-text"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* faint vertical grid for distinct ceilings */}
+      {distinctCeilings.map((c) => (
+        <line x1={c.x} y1={HEADER - 6} x2={c.x} y2={H - FOOTER} stroke="var(--mp-border)" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.9" />
+      ))}
+
+      {/* overview dots band — top mini strip */}
+      <g>
+        <rect x={LEFT} y={HEADER - 18} width={TRACK_W} height="12" rx="6" fill="var(--mp-elevated)" stroke="var(--mp-border)" stroke-width="0.7" />
+        {overviewDots.map((d) => {
+          const cls = d.verdict === 'fits' ? 'text-emerald-600 dark:text-emerald-400' : d.verdict === 'tight' ? 'text-amber-600 dark:text-amber-400' : 'text-muted-text';
+          return (
+            <g class={cls}>
+              <circle cx={d.x} cy={HEADER - 12} r={d.verdict === 'no' ? 3 : 4} fill="currentColor" stroke="var(--mp-card)" stroke-width="0.9">
+                <title>{d.id} · {fmtBytes(d.runtime)} · {d.verdict}{d.overflow ? ' · overflow' : ''}</title>
+              </circle>
+            </g>
+          );
+        })}
+        <text x={LEFT - 8} y={HEADER - 8} text-anchor="end" font-family="var(--font-mono)" font-size="8" fill="currentColor" class="text-muted-text">all models</text>
+      </g>
+
+      {/* board rows */}
+      {boards.map((board, row) => {
+        const y = HEADER + row * ROW_H + ROW_H / 2;
+        const ceilingX = LEFT + logFrac(board.modelCeilingBytes) * TRACK_W;
+        return (
+          <g>
+            {/* row bg alternating for readability */}
+            <rect
+              x={0}
+              y={HEADER + row * ROW_H}
+              width={W}
+              height={ROW_H}
+              fill={row % 2 === 0 ? 'var(--mp-card)' : 'var(--mp-elevated)'}
+              opacity={row % 2 === 0 ? 1 : 0.55}
+            />
+            {/* horizontal guideline */}
+            <line x1={LEFT} y1={y} x2={W - RIGHT} y2={y} stroke="var(--mp-border)" stroke-width="0.6" opacity="0.6" />
+
+            {/* board label */}
+            <g>
+              <text x={12} y={y - 4} font-family="var(--font-sans)" font-size="11" font-weight="650" fill="currentColor" class="text-primary-text">
+                {shortBoardName(board)}
+              </text>
+              <text x={12} y={y + 8} font-family="var(--font-mono)" font-size="8.2" fill="currentColor" class="text-muted-text">
+                {board.class} · {board.ramLabel ?? fmtBytes(board.modelCeilingBytes)} · ceiling {fmtBytes(board.modelCeilingBytes)}
+              </text>
+            </g>
+
+            {/* ceiling marker for this board (bolder) */}
+            <g>
+              <line x1={ceilingX} y1={HEADER + row * ROW_H + 4} x2={ceilingX} y2={HEADER + (row + 1) * ROW_H - 4} stroke="currentColor" stroke-width="1.6" class="text-primary-text" opacity="0.9" />
+              <circle cx={ceilingX} cy={HEADER + row * ROW_H + 4} r="2.6" fill="var(--mp-cta)" />
+            </g>
+
+            {/* model dots for this board */}
+            {models.map((m) => {
+              const verdict = fitMap.get(`${m.id}::${board.id}`) ?? 'no';
+              const cls = verdict === 'fits' ? 'text-emerald-600 dark:text-emerald-400' : verdict === 'tight' ? 'text-amber-600 dark:text-amber-400' : 'text-muted-text';
+              const mx = LEFT + logFrac(m.runtimeBytes) * TRACK_W;
+              const overflow = m.runtimeBytes > DOMAIN_MAX || m.runtimeBytes < DOMAIN_MIN;
+              return (
+                <g class={cls}>
+                  <circle
+                    cx={mx}
+                    cy={y}
+                    r={verdict === 'no' ? 3.2 : 4.2}
+                    fill="currentColor"
+                    stroke="var(--mp-card)"
+                    stroke-width={verdict === 'no' ? 0.7 : 1}
+                    opacity={verdict === 'no' ? 0.42 : 0.96}
+                  >
+                    <title>{m.id} · {fmtBytes(m.runtimeBytes)} on {shortBoardName(board)} · {verdict}{overflow ? ' · beyond strip' : ''}</title>
+                  </circle>
+                  {overflow && verdict !== 'no' && (
+                    <text x={mx + 5} y={y + 3} font-family="var(--font-mono)" font-size="7.5" fill="currentColor">↗</text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+
+      {/* distinct ceiling labels at top */}
+      <g class="text-[0.68rem]">
+        {distinctCeilings.map((c) => (
+          <g>
+            <rect x={c.x - 28} y={HEADER - 38} width="56" height="16" rx="7" fill="var(--mp-card)" stroke="var(--mp-border)" stroke-width="0.7" />
+            <text x={c.x} y={HEADER - 27} text-anchor="middle" font-family="var(--font-mono)" font-size="8" font-weight="700" fill="currentColor">{c.label}</text>
+          </g>
+        ))}
+      </g>
+
+      {/* x-axis ticks footer */}
+      <g>
+        {xTicks.map((t) => (
+          <g>
+            <line x1={t.x} y1={H - FOOTER} x2={t.x} y2={H - FOOTER + 5} stroke="var(--mp-border-strong)" stroke-width="0.8" />
+            <text x={t.x} y={H - 8} text-anchor="middle" font-family="var(--font-mono)" font-size="8.5" fill="currentColor" class="text-muted-text">{t.label}</text>
+          </g>
+        ))}
+        <line x1={LEFT} y1={H - FOOTER} x2={W - RIGHT} y2={H - FOOTER} stroke="var(--mp-border-strong)" stroke-width="0.9" />
+      </g>
+
+      <title>Board ceilings {fmtBytes(DOMAIN_MIN)} → {fmtBytes(DOMAIN_MAX)} — {models.length} models plotted per board by verdict</title>
+    </svg>
+  </div>
+
+  <div class="border-t border-border bg-elevated/40 px-5 py-2.5 font-mono text-[0.6rem] leading-[1.5] text-muted-text">
+    Log scale. Each dot is a model at its runtime estimate (file ×1.25). Left of a board's ceiling line → fits/tight; right → no. Top band aggregates best verdict across all boards. Overflow ↘ means runtime beyond {fmtBytes(DOMAIN_MAX)}.
+  </div>
+</div>

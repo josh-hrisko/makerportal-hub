@@ -20,6 +20,8 @@ import Layout from '../../layouts/Layout.astro';
 import HubShell from '../../components/HubShell.astro';
 import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
+import MemoryBar from '../../components/edge-radar/MemoryBar.astro';
+import CeilingStrip from '../../components/edge-radar/CeilingStrip.astro';
 
 const entries = await getCollection('edge-radar');
 const sorted = entries.sort((a, b) => b.id.localeCompare(a.id));
@@ -92,9 +94,10 @@ const description =
   >
     <Fragment slot="hero-actions">
       <div class="mt-8 flex flex-wrap gap-2">
-        <a href="#radar" class="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
-          Today's matrix ↓
+        <a href="#landscape" class="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
+          Memory landscape ↓
         </a>
+        <a href="#radar" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Matrix ↓</a>
         <a href="#methodology" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Methodology</a>
         <a href="/resources" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">← Resources</a>
       </div>
@@ -108,6 +111,36 @@ const description =
 
   {latest ? (
     <>
+      {/* ── Visual-first: board ceiling strip (item 2) ─────────────── */}
+      <section id="landscape" class="border-b border-border bg-canvas" aria-labelledby="landscape-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="landscape-title" class="text-[clamp(1.4rem,3vw,1.9rem)] font-[700] tracking-[-0.04em] text-primary-text">Memory landscape, today</h2>
+              <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
+                Log ruler from the smallest MCU ceiling (7 MiB) to the biggest SBC ceiling (6.5 GiB). Every dot is a model at its runtime estimate — left of a board's line you have headroom, right you don't. Top band shows best verdict across all boards.
+              </p>
+            </div>
+            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> log scale · {models.length} models plotted
+            </span>
+          </div>
+
+          <div class="mt-8">
+            <CeilingStrip boards={boards} models={models} fits={fits} />
+          </div>
+
+          <div class="mt-6 flex flex-wrap gap-2 font-mono text-[0.6rem] text-muted-text">
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-2.5 py-1">
+              <span class="h-1 w-16 rounded-full bg-gradient-to-r from-[var(--mp-elevated)] to-[var(--mp-cta)]" aria-hidden="true"></span>
+              footprint ↑ grows → right (log)
+            </span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-2.5 py-1">7 MiB MCU → 6.5 GiB SBC</span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-2.5 py-1">zero JS · SSR SVG · CLS 0</span>
+          </div>
+        </div>
+      </section>
+
       {/* ── Fit matrix ─────────────────────────────────────────────── */}
       <section id="radar" class="border-b border-border" aria-labelledby="radar-title">
         <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
@@ -180,22 +213,33 @@ const description =
             File bytes come from the repo's verified Hugging Face file tree. Parameter count is back-derived from those bytes ÷ the quant's published bits-per-weight — an approximation, labeled as one. FLOPs/token is the dense-transformer 2·P rule.
           </p>
           <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {models.map((m) => (
-              <li class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="rounded-full bg-elevated border border-border px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">{m.format}{m.quant ? ` · ${m.quant}` : ''}</span>
-                  <span class="font-mono text-[0.6rem] text-muted-text">{fitsCount(m.id)}/{boards.length} boards</span>
-                </div>
-                <a href={m.url} target="_blank" rel="noopener noreferrer" class="mt-3 text-[0.95rem] font-semibold leading-snug text-primary-text hover:text-primary-cta">{m.id}</a>
-                <span class="mt-1 truncate font-mono text-[0.62rem] text-muted-text" title={m.fileName}>{m.fileName}</span>
-                <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-4">
-                  <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">File</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtBytes(m.fileBytes)}</dd></div>
-                  <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Runtime est.</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtBytes(m.runtimeBytes)}</dd></div>
-                  <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">≈ Params</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtParams(m.approxParams)}</dd></div>
-                  <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">FLOPs/token</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtFlops(m.flopsPerToken)}</dd></div>
-                </dl>
-              </li>
-            ))}
+            {models.map((m) => {
+              const perModelFits = fits.filter((f) => f.modelId === m.id);
+              return (
+                <li class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="rounded-full bg-elevated border border-border px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">{m.format}{m.quant ? ` · ${m.quant}` : ''}</span>
+                    <span class="font-mono text-[0.6rem] text-muted-text">{fitsCount(m.id)}/{boards.length} boards</span>
+                  </div>
+                  <a href={m.url} target="_blank" rel="noopener noreferrer" class="mt-3 text-[0.95rem] font-semibold leading-snug text-primary-text hover:text-primary-cta">{m.id}</a>
+                  <span class="mt-1 truncate font-mono text-[0.62rem] text-muted-text" title={m.fileName}>{m.fileName}</span>
+                  <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-4">
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">File</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtBytes(m.fileBytes)}</dd></div>
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Runtime est.</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtBytes(m.runtimeBytes)}</dd></div>
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">≈ Params</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtParams(m.approxParams)}</dd></div>
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">FLOPs/token</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtFlops(m.flopsPerToken)}</dd></div>
+                  </dl>
+                  {/* item 1: log-scale memory bar with board ceiling markers — SSR SVG, zero JS, CLS fixed */}
+                  <div class="mt-4">
+                    <div class="mb-1.5 flex items-center justify-between">
+                      <span class="font-mono text-[0.56rem] uppercase tracking-[0.12em] text-muted-text">Footprint vs ceilings · log 1 MiB→16 GiB</span>
+                      <span class="font-mono text-[0.56rem] text-muted-text">{fmtBytes(m.runtimeBytes)}</span>
+                    </div>
+                    <MemoryBar runtimeBytes={m.runtimeBytes} modelId={m.id} boards={boards} fits={perModelFits} />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </section>

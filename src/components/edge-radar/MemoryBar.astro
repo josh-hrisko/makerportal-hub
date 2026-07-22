@@ -1,0 +1,207 @@
+---
+/**
+ * Log-scale memory footprint bar per model with board-ceiling markers.
+ * SSR only, zero JS, themeable via currentColor / --mp-* tokens.
+ * Every pixel derived from committed snapshot — no external requests.
+ *
+ * Domain 1 MiB → 16 GiB (MAX_REPRESENTATIVE_BYTES) so all bars share the
+ * same log ruler and remain comparable across the page.
+ */
+interface BoardLite {
+  id: string;
+  name: string;
+  modelCeilingBytes: number;
+}
+interface FitLite {
+  boardId: string;
+  verdict: 'fits' | 'tight' | 'no';
+}
+
+interface Props {
+  runtimeBytes: number;
+  modelId?: string;
+  boards: BoardLite[];
+  fits: FitLite[];
+}
+
+const { runtimeBytes, modelId, boards, fits } = Astro.props;
+
+const MIB = 1024 * 1024;
+const GIB = 1024 * 1024 * 1024;
+const DOMAIN_MIN = 1 * MIB;
+const DOMAIN_MAX = 16 * GIB;
+
+const LOG_MIN = Math.log10(DOMAIN_MIN);
+const LOG_MAX = Math.log10(DOMAIN_MAX);
+const RANGE = LOG_MAX - LOG_MIN;
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+
+function logFrac(bytes: number): number {
+  const c = clamp(bytes, DOMAIN_MIN, DOMAIN_MAX);
+  return (Math.log10(c) - LOG_MIN) / RANGE;
+}
+
+const W = 480;
+const H = 80;
+const PAD_L = 16;
+const PAD_R = 16;
+const TRACK_W = W - PAD_L - PAD_R;
+const TRACK_Y = 38;
+const TRACK_H = 12;
+
+const runtimeFrac = logFrac(runtimeBytes);
+const runtimeX = PAD_L + runtimeFrac * TRACK_W;
+
+const fmtBytes = (n: number) => {
+  if (n >= GIB) return `${(n / GIB).toFixed(n >= 10 * GIB ? 1 : 2)} GiB`;
+  return `${(n / MIB).toFixed(n >= 10 * MIB ? 0 : 1)} MiB`;
+};
+
+// Distinct ceilings to avoid duplicate markers — group boards sharing same ceiling
+const ceilingGroups = new Map<number, BoardLite[]>();
+for (const b of boards) {
+  const list = ceilingGroups.get(b.modelCeilingBytes) ?? [];
+  list.push(b);
+  ceilingGroups.set(b.modelCeilingBytes, list);
+}
+const distinctCeilings = [...ceilingGroups.entries()]
+  .map(([bytes, bs]) => ({ bytes, boards: bs, frac: logFrac(bytes), x: PAD_L + logFrac(bytes) * TRACK_W }))
+  .sort((a, b) => a.bytes - b.bytes);
+
+// Verdict helper per ceiling group (best among boards in group)
+function groupVerdict(group: typeof distinctCeilings[number]): 'fits' | 'tight' | 'no' {
+  const ids = new Set(group.boards.map((b) => b.id));
+  const groupFits = fits.filter((f) => ids.has(f.boardId));
+  if (groupFits.some((f) => f.verdict === 'fits')) return 'fits';
+  if (groupFits.some((f) => f.verdict === 'tight')) return 'tight';
+  return 'no';
+}
+
+// Short label for board groups
+function shortLabel(group: typeof distinctCeilings[number]): string {
+  if (group.boards.length === 1) return group.boards[0].name.split('(')[0].trim();
+  // Two MCU boards share 7 MiB — collapse
+  if (group.boards.every((b) => b.modelCeilingBytes === 7 * MIB)) return 'ESP32-S3 / Teensy · 7 MiB';
+  if (group.bytes === 8 * MIB) return 'Coral · 8 MiB';
+  if (group.bytes === Math.floor(6.5 * GIB)) return 'Pi 5 / Jetson · 6.5 GiB';
+  return `${group.boards.length} boards · ${fmtBytes(group.bytes)}`;
+}
+
+const ticks = [1 * MIB, 10 * MIB, 100 * MIB, 1 * GIB, 10 * GIB].map((b) => ({
+  bytes: b,
+  x: PAD_L + logFrac(b) * TRACK_W,
+  label: fmtBytes(b),
+}));
+
+const overflowRight = runtimeBytes > DOMAIN_MAX;
+---
+<div class="group relative w-full overflow-hidden rounded-[12px] border border-border bg-card-bg" style={`aspect-ratio: ${W}/${H};`}>
+  <svg
+    viewBox={`0 0 ${W} ${H}`}
+    width="100%"
+    height="100%"
+    role="img"
+    aria-label={modelId ? `Memory footprint for ${modelId}: ${fmtBytes(runtimeBytes)} runtime — board ceilings at ${distinctCeilings.map((c) => fmtBytes(c.bytes)).join(', ')}` : `Memory footprint ${fmtBytes(runtimeBytes)}`}
+    class="absolute inset-0 h-full w-full text-primary-text"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* background grid — subtle */}
+    <g aria-hidden="true">
+      <rect x={PAD_L} y={TRACK_Y} width={TRACK_W} height={TRACK_H} rx={TRACK_H / 2} fill="var(--mp-elevated)" />
+      <rect x={PAD_L} y={TRACK_Y} width={TRACK_W} height={TRACK_H} rx={TRACK_H / 2} fill="none" stroke="var(--mp-border)" stroke-width="0.9" />
+    </g>
+
+    {/* log ticks bottom */}
+    <g class="text-[0.62rem] text-muted-text" aria-hidden="true">
+      {ticks.map((t) => (
+        <g>
+          <line x1={t.x} y1={TRACK_Y + TRACK_H + 2} x2={t.x} y2={TRACK_Y + TRACK_H + 6} stroke="var(--mp-border-strong)" stroke-width="0.8" />
+          <text x={t.x} y={H - 4} text-anchor="middle" fill="currentColor" font-family="var(--font-mono)" font-size="8.5">{t.label}</text>
+        </g>
+      ))}
+    </g>
+
+    {/* filled bar */}
+    <g>
+      <clipPath id={`clip-${(modelId ?? 'model').replace(/[^a-zA-Z0-9]/g, '-')}`}>
+        <rect x={PAD_L} y={TRACK_Y} width={TRACK_W} height={TRACK_H} rx={TRACK_H / 2} />
+      </clipPath>
+      <rect
+        x={PAD_L}
+        y={TRACK_Y}
+        width={runtimeFrac * TRACK_W}
+        height={TRACK_H}
+        fill="var(--mp-cta)"
+        opacity="0.92"
+        clip-path={`url(#clip-${(modelId ?? 'model').replace(/[^a-zA-Z0-9]/g, '-')})`}
+      />
+      {/* thin highlight top edge */}
+      <rect x={PAD_L} y={TRACK_Y} width={runtimeFrac * TRACK_W} height="1.2" fill="white" opacity="0.35" clip-path={`url(#clip-${(modelId ?? 'model').replace(/[^a-zA-Z0-9]/g, '-')})`} />
+    </g>
+
+    {/* board ceiling markers */}
+    {distinctCeilings.map((g, i) => {
+      const verdict = groupVerdict(g);
+      const dotClass =
+        verdict === 'fits'
+          ? 'text-emerald-600 dark:text-emerald-400'
+          : verdict === 'tight'
+            ? 'text-amber-600 dark:text-amber-400'
+            : 'text-muted-text';
+      // Stagger labels when close (7 MiB vs 8 MiB ~6px apart)
+      const staggerY = distinctCeilings.length > 2 && i === 0 ? 10 : i === 1 ? 18 : 10;
+      const label = shortLabel(g);
+      return (
+        <g>
+          <line
+            x1={g.x}
+            y1={TRACK_Y - 12}
+            x2={g.x}
+            y2={TRACK_Y + TRACK_H + 2}
+            stroke={verdict === 'no' ? 'var(--mp-border-strong)' : 'currentColor'}
+            stroke-width={verdict === 'no' ? 0.9 : 1.2}
+            stroke-dasharray={verdict === 'no' ? '3 3' : '0'}
+            class={verdict === 'no' ? 'text-muted-text' : dotClass}
+            opacity={verdict === 'no' ? 0.55 : 0.95}
+          />
+          {/* dot at intersection */}
+          <g class={dotClass}>
+            <circle cx={g.x} cy={TRACK_Y + TRACK_H / 2} r={verdict === 'no' ? 3 : 4} fill="currentColor" stroke="var(--mp-card)" stroke-width="1.2" />
+          </g>
+          {/* label above */}
+          <text
+            x={g.x}
+            y={staggerY}
+            text-anchor={g.x < PAD_L + 60 ? 'start' : g.x > W - PAD_R - 60 ? 'end' : 'middle'}
+            fill="currentColor"
+            font-family="var(--font-mono)"
+            font-size="7.8"
+            font-weight="600"
+            class={verdict === 'no' ? 'text-muted-text' : 'text-primary-text'}
+            letter-spacing="0.04em"
+          >
+            {label}
+          </text>
+        </g>
+      );
+    })}
+
+    {/* runtime label floating */}
+    <g>
+      <g transform={`translate(${clamp(runtimeX, PAD_L + 28, W - PAD_R - 28)}, ${TRACK_Y - 6})`}>
+        <rect x="-28" y="-14" width="56" height="14" rx="6" fill="var(--mp-card)" stroke="var(--mp-border)" stroke-width="0.8" />
+        <text text-anchor="middle" y="-4" fill="currentColor" font-family="var(--font-mono)" font-size="8.2" font-weight="700">
+          {fmtBytes(runtimeBytes)}{overflowRight ? ' +' : ''}
+        </text>
+      </g>
+      {/* caret */}
+      <path
+        d={`M ${runtimeX} ${TRACK_Y - 1} L ${runtimeX - 3} ${TRACK_Y - 6} L ${runtimeX + 3} ${TRACK_Y - 6} Z`}
+        fill="var(--mp-cta)"
+      />
+    </g>
+
+    <title>{modelId ? `${modelId} — ${fmtBytes(runtimeBytes)} runtime` : fmtBytes(runtimeBytes)} — ceilings {distinctCeilings.map((c) => fmtBytes(c.bytes)).join(', ')}</title>
+  </svg>
+</div>
