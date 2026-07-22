@@ -47,4 +47,49 @@ const journal = defineCollection({
   }),
 });
 
-export const collections = { blog, journal };
+const edgeRadar = defineCollection({
+  loader: glob({ base: './src/content/edge-radar', pattern: '**/*.json' }),
+  schema: z.object({
+    generatedAt: z.string(),
+    boards: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        class: z.enum(['mcu', 'sbc', 'accelerator', 'edge-gpu']),
+        ramBytes: z.number(),
+        ramLabel: z.string(),
+        modelCeilingBytes: z.number(),
+        note: z.string(),
+        linkIds: z.array(z.string()).default([]),
+      })
+    ),
+    models: z.array(
+      z.object({
+        id: z.string(),
+        author: z.string().nullable(),
+        url: z.string(),
+        lastModified: z.string(),
+        format: z.enum(['gguf', 'onnx']),
+        fileName: z.string(),
+        fileBytes: z.number(),
+        quant: z.string().nullable(),
+        approxParams: z.number().nullable(),
+        flopsPerToken: z.number().nullable(),
+        runtimeBytes: z.number(),
+        likes: z.number().default(0),
+        downloads: z.number().default(0),
+        pipelineTag: z.string().nullable(),
+      })
+    ),
+    fits: z.array(
+      z.object({
+        modelId: z.string(),
+        boardId: z.string(),
+        verdict: z.enum(['fits', 'tight', 'no']),
+        headroomBytes: z.number(),
+      })
+    ),
+  }),
+});
+
+export const collections = { blog, journal, 'edge-radar': edgeRadar };

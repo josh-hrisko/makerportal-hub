@@ -1,0 +1,71 @@
+name: EdgeSpec radar digest
+
+on:
+  schedule:
+    # Daily 13:30 UTC — offset from the :00 thundering herd and from the trend
+    # digest's 11:00/12:00 UTC slots so direct-to-main pushes rarely race.
+    - cron: '30 13 * * *' # publishes that day's EdgeSpec & TinyML Hardware Radar
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+# Prevent overlapping runs from racing on the direct push to main.
+concurrency:
+  group: edgespec-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Gate tests are the automated safety net (same D-022 posture as the
+      # trends digest): deterministic-math regressions abort before publish.
+      - name: Pipeline gate tests
+        run: node --test scripts/edgespec/pipeline.test.mjs
+
+      - name: Build radar snapshot
+        # Writes src/content/edge-radar/YYYY-MM-DD.json and
+        # edgespec-radar-summary.md (surfaced below as the run's step summary).
+        # Writes no snapshot when gating leaves nothing, so an empty day
+        # never publishes.
+        run: node scripts/edgespec/build-radar.mjs
+
+      - name: Publish that day's radar snapshot directly if changed
+        run: |
+          # The run writes a NEW src/content/edge-radar/YYYY-MM-DD.json, which
+          # is UNTRACKED relative to main — `git diff` never reports untracked
+          # files, so `git status --porcelain` is required to detect the new day.
+          if [ -z "$(git status --porcelain -- src/content/edge-radar/)" ]; then
+            echo "No radar changes detected. Skipping publish."
+          else
+            git config user.name "makerportal-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add -A src/content/edge-radar/
+            git commit -m "EdgeSpec Radar: $(date -u +%Y-%m-%d)"
+            # Direct-to-main push can be rejected if main advanced since
+            # checkout (e.g. a globe-data-digest run pushed). Rebase+retry
+            # only on rejection.
+            git push origin main || (git pull --rebase origin main && git push origin main)
+          fi
+
+      - name: Publish step summary
+        if: always()
+        run: |
+          # The model × board fit table for the run — the "skim what shipped"
+          # value attached to the Actions run.
+          if [ -f edgespec-radar-summary.md ]; then
+            cat edgespec-radar-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi

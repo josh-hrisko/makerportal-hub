@@ -463,50 +463,50 @@ Detailed specifications of mathematical and physical simulations available insid
 
 ## Trending Technical Signals — Latest Scan
 
-Daily scored technical scan items (Date: 2026-07-19):
+Daily scored technical scan items (Date: 2026-07-22):
 
-### 1. wispr – Privacy-first voice dictation for macOS — powered by on-device Whisper AI. No cloud, no tracking.
-- **Score:** 33
-- **URL:** https://github.com/sebsto/wispr
-- **Domain:** github.com
-- **Primary Source:** github
-- **Tags:** on-device-ai, ios-craft, privacy-arch
-- **Corroborated Sources:** bluesky, github
-
-
-### 2. EnviousWispr – Free, sub-second on-device AI dictation for macOS. Dual engines (Whisper + Parakeet) on Apple Silicon. Optional AI polis
-- **Score:** 24
-- **URL:** https://github.com/saurabhav88/EnviousWispr
-- **Domain:** github.com
-- **Primary Source:** github
-- **Tags:** on-device-ai, metal-ane
-- **Corroborated Sources:** github
-
-
-### 3. imp – From-scratch C++/CUDA inference engine for the NVIDIA RTX 5090 (sm_120a) — the best single-GPU backend for agentic AI: t
-- **Score:** 24
-- **URL:** https://github.com/kekzl/imp
-- **Domain:** github.com
-- **Primary Source:** github
-- **Tags:** on-device-ai, local-llm
-- **Corroborated Sources:** github
-
-
-### 4. kernel-ai-assistant – Jandal AI — Local-first Android AI assistant with on-device LLM inference, semantic memory, and extensible skill framewo
-- **Score:** 24
-- **URL:** https://github.com/NickMonrad/kernel-ai-assistant
+### 1. OGAD – Off Grid AI — private, on-device AI. Run open models (text, vision, image, voice) locally through one OpenAI-compatible 
+- **Score:** 27
+- **URL:** https://github.com/off-grid-ai/OGAD
 - **Domain:** github.com
 - **Primary Source:** github
 - **Tags:** on-device-ai, local-llm, privacy-arch
 - **Corroborated Sources:** github
 
 
-### 5. ETOS-LLM-Studio – A native LLM client for iOS & Apple Watch. Run local GGUF models offline via llama.cpp, or connect to OpenAI/Claude/Gemi
-- **Score:** 24
-- **URL:** https://github.com/Eric-Terminal/ETOS-LLM-Studio
+### 2. velora – Local-first, on-device dictation for macOS (Apple Silicon) — Superwhisper/Wispr Flow alternative. Multilingual STT + LLM
+- **Score:** 25
+- **URL:** https://github.com/sushilk1991/velora
 - **Domain:** github.com
 - **Primary Source:** github
-- **Tags:** local-llm, ios-craft
+- **Tags:** on-device-ai, local-llm, privacy-arch, metal-ane
+- **Corroborated Sources:** hackernews, github
+
+
+### 3. pxq_llama – PXQ: PXA-native low-bit MoE quants (2/3/4-bit, E16-row scales) + fused CUDA kernels for Pascal/Volta — run a real 35B on
+- **Score:** 24
+- **URL:** https://github.com/poisonxa16/pxq_llama
+- **Domain:** github.com
+- **Primary Source:** github
+- **Tags:** on-device-ai, local-llm
+- **Corroborated Sources:** github
+
+
+### 4. yzma – Go with your own intelligence - Go applications that directly integrate llama.cpp for local inference using hardware acc
+- **Score:** 24
+- **URL:** https://github.com/hybridgroup/yzma
+- **Domain:** github.com
+- **Primary Source:** github
+- **Tags:** local-llm
+- **Corroborated Sources:** bluesky, github
+
+
+### 5. Wax – Single-file memory layer for AI agents, sub mili-second RAG on Apple Silicon. Metal Optimized On-Device. No Server. No A
+- **Score:** 24
+- **URL:** https://github.com/christopherkarani/Wax
+- **Domain:** github.com
+- **Primary Source:** github
+- **Tags:** on-device-ai, metal-ane
 - **Corroborated Sources:** github
 
 
@@ -567,4 +567,4 @@ curated developer hardware and equipment specifications:
 - **ANE Acceleration**: Apple Neural Engine cores leveraged directly via CoreML FP16 formats to avoid thermal throttling and save battery.
 - **Zero Telemetry Stance**: Absolute privacy posture. No third-party SDKs, no segment, no Firebase. All logs remain local on device.
 
-Last updated: 2026-07-20 — compiled automatically at build time.
+Last updated: 2026-07-22 — compiled automatically at build time.

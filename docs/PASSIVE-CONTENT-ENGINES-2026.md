@@ -91,7 +91,7 @@ This document outlines the architectural design, monetization mechanics, and exe
 
 ```
 +-----------------------------------------------------------------------------------+
-| Phase 1: EdgeSpec Radar Prototyping                                              |
+| Phase 1: EdgeSpec Radar Prototyping                    [DONE 2026-07-22]         |
 | - Create `scripts/edgespec/build-radar.mjs`                                      |
 | - Define JSON schema for model quantizations vs hardware board specs             |
 | - Connect SparkFun 10% & Amazon Associate link generation helpers                |
@@ -99,7 +99,7 @@ This document outlines the architectural design, monetization mechanics, and exe
                                           |
                                           v
 +-----------------------------------------------------------------------------------+
-| Phase 2: GitHub Action & Pipeline Gate                                            |
+| Phase 2: GitHub Action & Pipeline Gate                 [DONE 2026-07-22]         |
 | - Create `.github/workflows/edgespec-digest.yml`                                  |
 | - Implement `scripts/edgespec/pipeline.test.mjs` (pre-publish gate test)         |
 | - Auto-publish daily snapshot to `/resources/edge-ai-radar`                       |

@@ -90,7 +90,7 @@ Current commercial state:
 | `trends-digest.yml` | daily | Bluesky credentials | Live; publishes gated journal data and self-hosted thumbnails |
 | `amazon-catalog.yml` | monthly/manual | Amazon Creators API credentials | Live, PR-gated catalog refresh |
 | `globe-data-digest.yml` | every 4h | none | Live; direct weather/TLE data commits can advance `main` during work |
-| `edgespec-digest.yml` | daily (planned) | none | Planned; EdgeSpec & TinyML Hardware Radar digest ([PASSIVE-CONTENT-ENGINES-2026.md](file:///Users/josh/Documents/GitHub/makerportal-hub/docs/PASSIVE-CONTENT-ENGINES-2026.md)) |
+| `edgespec-digest.yml` | daily | none | Live since 2026-07-22; EdgeSpec & TinyML Hardware Radar ([PASSIVE-CONTENT-ENGINES-2026.md](file:///Users/josh/Documents/GitHub/makerportal-hub/docs/PASSIVE-CONTENT-ENGINES-2026.md)) — gate tests, HF fetch, direct commit |
 | `cloud-tco-digest.yml` | daily (planned) | none | Planned; Cloud vs Edge TCO breakeven calculator engine |
 
 Full architecture, sequence, and integrity rules for passive daily content engines: [PASSIVE-CONTENT-ENGINES-2026.md](file:///Users/josh/Documents/GitHub/makerportal-hub/docs/PASSIVE-CONTENT-ENGINES-2026.md).
@@ -122,6 +122,15 @@ rejected push; inspect the remote commit before resolving any overlap.
   16,843 words (+1 is llms.txt build date-stamp regeneration, no content
   change). Re-run the commands below before trusting these counts after new
   templates/content.
+- EdgeSpec Radar launch (2026-07-22): `scripts/edgespec/` (pure core +
+  HF orchestrator + 18 gate tests), `/resources/edge-ai-radar`, and
+  `edgespec-digest.yml` live. First snapshot: 12 models × 5 boards from
+  verified Hugging Face file trees; real-Chromium QA at 390px/desktop in both
+  themes — zero console errors, zero document overflow (matrix scrolls
+  horizontally with a sticky model column), zero external requests on load,
+  6 sponsored kit links (Amazon/SparkFun) with correct rels. Build: 88
+  Pagefind pages, 17,180 indexed words (growth = new radar route + daily
+  journal entries).
 
 ## Known residual risks
 

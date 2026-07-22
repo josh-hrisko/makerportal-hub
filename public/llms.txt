@@ -111,13 +111,13 @@ Browser-native mathematical and physical simulations: [makerportal.ai/playground
 
 ## Trending Signals
 
-Score-weighted, source-corroborated technical signals from our latest daily scan (Scan Date: 2026-07-19): [makerportal.ai/journal](https://www.makerportal.ai/journal).
+Score-weighted, source-corroborated technical signals from our latest daily scan (Scan Date: 2026-07-22): [makerportal.ai/journal](https://www.makerportal.ai/journal).
 
-1. [wispr – Privacy-first voice dictation for macOS — powered by on-device Whisper AI. No cloud, no tracking.](https://github.com/sebsto/wispr) (Score: 33) - Domain: github.com [Tags: on-device-ai, ios-craft, privacy-arch]
-2. [EnviousWispr – Free, sub-second on-device AI dictation for macOS. Dual engines (Whisper + Parakeet) on Apple Silicon. Optional AI polis](https://github.com/saurabhav88/EnviousWispr) (Score: 24) - Domain: github.com [Tags: on-device-ai, metal-ane]
-3. [imp – From-scratch C++/CUDA inference engine for the NVIDIA RTX 5090 (sm_120a) — the best single-GPU backend for agentic AI: t](https://github.com/kekzl/imp) (Score: 24) - Domain: github.com [Tags: on-device-ai, local-llm]
-4. [kernel-ai-assistant – Jandal AI — Local-first Android AI assistant with on-device LLM inference, semantic memory, and extensible skill framewo](https://github.com/NickMonrad/kernel-ai-assistant) (Score: 24) - Domain: github.com [Tags: on-device-ai, local-llm, privacy-arch]
-5. [ETOS-LLM-Studio – A native LLM client for iOS & Apple Watch. Run local GGUF models offline via llama.cpp, or connect to OpenAI/Claude/Gemi](https://github.com/Eric-Terminal/ETOS-LLM-Studio) (Score: 24) - Domain: github.com [Tags: local-llm, ios-craft]
+1. [OGAD – Off Grid AI — private, on-device AI. Run open models (text, vision, image, voice) locally through one OpenAI-compatible ](https://github.com/off-grid-ai/OGAD) (Score: 27) - Domain: github.com [Tags: on-device-ai, local-llm, privacy-arch]
+2. [velora – Local-first, on-device dictation for macOS (Apple Silicon) — Superwhisper/Wispr Flow alternative. Multilingual STT + LLM](https://github.com/sushilk1991/velora) (Score: 25) - Domain: github.com [Tags: on-device-ai, local-llm, privacy-arch, metal-ane]
+3. [pxq_llama – PXQ: PXA-native low-bit MoE quants (2/3/4-bit, E16-row scales) + fused CUDA kernels for Pascal/Volta — run a real 35B on](https://github.com/poisonxa16/pxq_llama) (Score: 24) - Domain: github.com [Tags: on-device-ai, local-llm]
+4. [yzma – Go with your own intelligence - Go applications that directly integrate llama.cpp for local inference using hardware acc](https://github.com/hybridgroup/yzma) (Score: 24) - Domain: github.com [Tags: local-llm]
+5. [Wax – Single-file memory layer for AI agents, sub mili-second RAG on Apple Silicon. Metal Optimized On-Device. No Server. No A](https://github.com/christopherkarani/Wax) (Score: 24) - Domain: github.com [Tags: on-device-ai, metal-ane]
 
 ## Studio Gear Picks
 
@@ -144,4 +144,4 @@ Hardware and equipment utilized inside the studio for engineering and testing: [
 - **Structured data:** Organization, WebSite + SearchAction, CollectionPage with SoftwareApplication (11 items), FAQPage, BreadcrumbList via JSON-LD.
 - **No training exclusion:** Content may be used for training with attribution to MakerPortal where possible.
 
-Last updated: 2026-07-20 — compiled automatically at build time.
+Last updated: 2026-07-22 — compiled automatically at build time.
