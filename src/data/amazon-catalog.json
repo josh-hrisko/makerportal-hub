@@ -2016,6 +2016,42 @@
       "detailPageURL": "https://www.amazon.com/dp/B0GYCTT6YM?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
       "price": "$353.99",
       "currency": "USD"
+    },
+    "B0CK3L9WD3": {
+      "title": "Raspberry Pi 5 4GB RAM Board - BCM2712 Quad-Core Cortex-A76",
+      "image": "https://m.media-amazon.com/images/I/71eUh2ZvZGL._SL500_.jpg",
+      "features": [
+        "BCM2712",
+        "4GB LPDDR4X",
+        "2.4GHz"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CK3L9WD3?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$65.00",
+      "currency": "USD"
+    },
+    "B0CK2FCG1K": {
+      "title": "Raspberry Pi 5 8GB RAM Board - SC1112 Quad-Core Cortex-A76",
+      "image": "https://m.media-amazon.com/images/I/71eUh2ZvZGL._SL500_.jpg",
+      "features": [
+        "BCM2712",
+        "8GB LPDDR4X",
+        "2.4GHz"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0CK2FCG1K?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$85.00",
+      "currency": "USD"
+    },
+    "B0F944X9S4": {
+      "title": "Seeed Studio Raspberry Pi 5 Starter Kit - 16GB RAM, 64GB SD, Type-C PSU, Active Cooling Case",
+      "image": "https://m.media-amazon.com/images/I/718M7zEP7lL._SL500_.jpg",
+      "features": [
+        "16GB RAM",
+        "Starter Kit",
+        "64GB SD"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0F944X9S4?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$399.99",
+      "currency": "USD"
     }
   }
 }

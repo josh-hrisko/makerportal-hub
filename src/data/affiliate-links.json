@@ -1737,34 +1737,25 @@
   },
   {
     "id": "sf-raspberry-pi-5-4gb",
-    "label": "Raspberry Pi 5 - 4GB",
-    "note": "Pi 5 4GB via SparkFun — lighter BOM for classroom and headless lab hosts. Third-party SKU (tracked referral).",
+    "label": "Raspberry Pi 5 - 4GB (B0CK3L9WD3)",
+    "note": "Pi 5 4GB board — Amazon verified ASIN B0CK3L9WD3. Was SparkFun third-party (no Originals commission); now Amazon affiliate (engineersport-20) for proper tracking.",
     "category": "SBC",
-    "merchant": "sparkfun",
-    "externalUrl": "raspberry-pi-5-4gb.html",
-    "sku": "DEV-23550",
-    "sparkfunOriginal": false,
-    "price": "110",
-    "currency": "USD",
-    "image": "https://www.sparkfun.com/media/catalog/product/cache/6b78ac9ed927a3c2db42a3c84dab4ce5/2/3/23550-Raspberry-Pi-5-4G-feature.jpg",
+    "asin": "B0CK3L9WD3",
     "relatedTo": [
       "rtos-scheduler",
       "blexar",
       "fly-edge-db-lab"
+    ],
+    "pillars": [
+      "on-device-ai"
     ]
   },
   {
     "id": "sf-raspberry-pi-5-8gb",
-    "label": "Raspberry Pi 5 - 8GB",
-    "note": "Flagship Pi 5 (8GB) via SparkFun — desktop Linux / edge lab host for SLAM, RTOS cross-compile, and sensor benches. Third-party SKU (referral tracked; SparkFun Originals commission does not apply).",
+    "label": "Raspberry Pi 5 - 8GB (B0CK2FCG1K)",
+    "note": "Flagship Pi 5 8GB board — Amazon verified ASIN B0CK2FCG1K (via DuckDuckGo Amazon search). SparkFun third-party gave no commission; now Amazon affiliate.",
     "category": "SBC",
-    "merchant": "sparkfun",
-    "externalUrl": "raspberry-pi-5-8gb.html",
-    "sku": "DEV-23551",
-    "sparkfunOriginal": false,
-    "price": "180",
-    "currency": "USD",
-    "image": "https://www.sparkfun.com/media/catalog/product/cache/6b78ac9ed927a3c2db42a3c84dab4ce5/2/3/23551-Raspberry-Pi-5-8G-feature_2.jpg",
+    "asin": "B0CK2FCG1K",
     "relatedTo": [
       "slam-odometry-arena",
       "rtos-scheduler",
@@ -1781,16 +1772,10 @@
   },
   {
     "id": "sf-raspberry-pi-5-16gb",
-    "label": "Raspberry Pi 5 - 16GB",
-    "note": "Pi 5 16GB — flagship LPDDR4X for local LLM hosting; 14.5 GiB model ceiling after OS/CUDA reserves. Verified for Q4_K_M up to ~12B params. Third-party via SparkFun (tracked referral).",
+    "label": "Raspberry Pi 5 - 16GB Starter Kit (B0F944X9S4)",
+    "note": "Pi 5 16GB starter kit — Amazon verified ASIN B0F944X9S4 (Seeed Studio 16GB + 64GB SD, Type-C PSU, case). 14.5 GiB ceiling for Q4_K_M up to ~12B params. SparkFun third-party gave no commission; now Amazon.",
     "category": "SBC",
-    "merchant": "sparkfun",
-    "externalUrl": "raspberry-pi-5-16gb.html",
-    "sku": "DEV-23552",
-    "sparkfunOriginal": false,
-    "price": "210",
-    "currency": "USD",
-    "image": "https://www.sparkfun.com/media/catalog/product/cache/6b78ac9ed927a3c2db42a3c84dab4ce5/2/3/23551-Raspberry-Pi-5-8G-feature_2.jpg",
+    "asin": "B0F944X9S4",
     "relatedTo": [
       "slam-odometry-arena",
       "coreml-model-size-calculator",
