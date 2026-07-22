@@ -1,17 +1,23 @@
 ---
 /**
- * Deterministic hero "radar" (polar/spider plot) SVG mark.
- * Seeded entirely from snapshot fit matrix — zero random, zero client JS,
- * CLS 0 via aspect ratio, themeable via currentColor / --mp-* tokens.
+ * Interactive Hero "Radar" (Polar/Spider Plot) & Board Fit Inspector.
+ * Seeded entirely from snapshot fit matrix — zero random, zero 3rd-party JS.
+ * Progressive enhancement: vanilla JS inline script enables instant vertex/board
+ * switching to inspect model fit lists, RAM ceilings, and headroom.
  */
 interface BoardLite {
   id: string;
   name: string;
   class: string;
+  ramLabel?: string;
   modelCeilingBytes: number;
 }
 interface ModelLite {
   id: string;
+  runtimeBytes: number;
+  fileBytes: number;
+  quant?: string | null;
+  format: string;
 }
 interface FitLite {
   modelId: string;
@@ -29,29 +35,46 @@ const { boards, models, fits } = Astro.props;
 
 const totalModels = models.length || 1;
 
-// Calculate fit score for each board (1.0 for fits, 0.5 for tight, 0.0 for no)
+const GIB = 1024 * 1024 * 1024;
+const MIB = 1024 * 1024;
+const fmtBytes = (n: number) => (n >= GIB ? `${(n / GIB).toFixed(1)} GiB` : `${(n / MIB).toFixed(0)} MiB`);
+
+// Calculate board stats for radar axes
 const boardStats = boards.map((b) => {
   const bFits = fits.filter((f) => f.boardId === b.id);
-  const fitsCount = bFits.filter((f) => f.verdict === 'fits').length;
-  const tightCount = bFits.filter((f) => f.verdict === 'tight').length;
-  const score = (fitsCount + tightCount * 0.5) / totalModels;
+  const fitsList = bFits.filter((f) => f.verdict === 'fits').map((f) => models.find((m) => m.id === f.modelId)).filter(Boolean) as ModelLite[];
+  const tightList = bFits.filter((f) => f.verdict === 'tight').map((f) => models.find((m) => m.id === f.modelId)).filter(Boolean) as ModelLite[];
+  const noList = bFits.filter((f) => f.verdict === 'no').map((f) => models.find((m) => m.id === f.modelId)).filter(Boolean) as ModelLite[];
+
+  const fitsCount = fitsList.length;
+  const tightCount = tightList.length;
+  const noCount = noList.length;
+
+  const fitsScore = fitsCount / totalModels;
+  const tightScore = (fitsCount + tightCount) / totalModels;
   const fitPct = Math.round((fitsCount / totalModels) * 100);
   const shortName = b.name.split('(')[0].trim();
+
   return {
     board: b,
     shortName,
     fitsCount,
     tightCount,
-    score,
+    noCount,
+    fitsScore,
+    tightScore,
     fitPct,
+    fitsList,
+    tightList,
+    noList,
   };
 });
 
-const W = 360;
-const H = 320;
+const W = 380;
+const H = 260;
 const CX = W / 2;
-const CY = H / 2 + 10;
-const R = 105; // radius
+const CY = H / 2 + 5;
+const R = 95; // radar radius
 
 const N = boardStats.length;
 // Angles for axes starting top (-PI/2)
@@ -59,156 +82,351 @@ const axes = boardStats.map((st, i) => {
   const angle = -Math.PI / 2 + (i * 2 * Math.PI) / N;
   return {
     ...st,
+    index: i,
     angle,
     cos: Math.cos(angle),
     sin: Math.sin(angle),
   };
 });
 
-// Calculate polygon points for score (minimum 0.08 so zero-fits boards still show a center anchor dot)
-const polyPoints = axes.map((ax) => {
-  const rEff = Math.max(ax.score, 0.06) * R;
-  return {
-    x: CX + rEff * ax.cos,
-    y: CY + rEff * ax.sin,
-  };
+// Points for Clean Fits Polygon (Emerald)
+const fitsPolyPoints = axes.map((ax) => {
+  const rEff = Math.max(ax.fitsScore, 0.05) * R;
+  return { x: CX + rEff * ax.cos, y: CY + rEff * ax.sin };
 });
+const fitsPolyStr = fitsPolyPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 
-const polyPointsStr = polyPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+// Points for Tight Fits Polygon (Amber)
+const tightPolyPoints = axes.map((ax) => {
+  const rEff = Math.max(ax.tightScore, 0.05) * R;
+  return { x: CX + rEff * ax.cos, y: CY + rEff * ax.sin };
+});
+const tightPolyStr = tightPolyPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 
-// Grid concentric rings (25%, 50%, 75%, 100%)
+// Concentric grid rings (25%, 50%, 75%, 100%)
 const rings = [0.25, 0.5, 0.75, 1.0];
+
+// Default selected board (Pi 5 or first with fits)
+const defaultBoardIdx = axes.findIndex((a) => a.fitsCount > 0) >= 0 ? axes.findIndex((a) => a.fitsCount > 0) : 0;
+const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
 ---
 
-<div class="relative w-full overflow-hidden rounded-[16px] border border-border bg-card-bg p-4" style={`aspect-ratio: ${W}/${H};`}>
-  <div class="mb-1 flex items-center justify-between">
-    <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-primary-text">Board Coverage Radar</span>
-    <span class="font-mono text-[0.58rem] text-muted-text">{totalModels} models scanned</span>
+<div class="relative w-full overflow-hidden rounded-[20px] border border-border bg-card-bg p-5 shadow-sm" id={componentId}>
+  {/* Component Header */}
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+    <div>
+      <div class="flex items-center gap-1.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Interactive Board Coverage Radar
+      </div>
+      <p class="mt-0.5 font-mono text-[0.6rem] text-muted-text">
+        Click any board vertex to inspect model headroom & RAM limits.
+      </p>
+    </div>
+    <div class="flex items-center gap-2 font-mono text-[0.58rem] text-muted-text">
+      <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Fits (≤80%)</span>
+      <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-amber-500"></span> Tight (&le;100%)</span>
+    </div>
   </div>
-  <svg
-    viewBox={`0 0 ${W} ${H}`}
-    width="100%"
-    height="100%"
-    role="img"
-    aria-label={`Radar chart showing fit density across ${N} hardware boards: ${axes.map((a) => `${a.shortName}: ${a.fitPct}%`).join(', ')}`}
-    class="absolute inset-0 h-full w-full text-primary-text"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <defs>
-      <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="var(--mp-cta)" stop-opacity="0.28"></stop>
-        <stop offset="100%" stop-color="var(--mp-cta)" stop-opacity="0.02"></stop>
-      </radialGradient>
-    </defs>
 
-    {/* Concentric grid rings */}
-    <g aria-hidden="true">
-      {rings.map((rFrac) => {
-        const rVal = rFrac * R;
-        const ringPoints = axes
-          .map((ax) => `${(CX + rVal * ax.cos).toFixed(1)},${(CY + rVal * ax.sin).toFixed(1)}`)
-          .join(' ');
-        return (
-          <polygon
-            points={ringPoints}
-            fill="none"
+  {/* Radar Board Chip Selector Bar */}
+  <div class="mt-3 flex flex-wrap gap-1.5" id={`${componentId}-chips`}>
+    {axes.map((ax, idx) => (
+      <button
+        type="button"
+        data-board-idx={idx}
+        class={`radar-chip-btn rounded-full border px-2.5 py-1 font-mono text-[0.6rem] transition-colors ${
+          idx === defaultBoardIdx
+            ? 'active border-primary-text bg-primary-text font-bold text-canvas'
+            : 'border-border bg-elevated text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text'
+        }`}
+      >
+        {ax.shortName} ({ax.fitsCount})
+      </button>
+    ))}
+  </div>
+
+  {/* SVG Radar Chart Canvas */}
+  <div class="relative mt-2 w-full" style={`aspect-ratio: ${W}/${H};`}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height="100%"
+      role="img"
+      aria-label={`Interactive radar chart showing fit capacity across 5 hardware boards`}
+      class="absolute inset-0 h-full w-full text-primary-text"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <radialGradient id={`${componentId}-glow`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="var(--mp-cta)" stop-opacity="0.25"></stop>
+          <stop offset="100%" stop-color="var(--mp-cta)" stop-opacity="0.02"></stop>
+        </radialGradient>
+      </defs>
+
+      {/* Grid rings */}
+      <g aria-hidden="true">
+        {rings.map((rFrac) => {
+          const rVal = rFrac * R;
+          const ringPoints = axes
+            .map((ax) => `${(CX + rVal * ax.cos).toFixed(1)},${(CY + rVal * ax.sin).toFixed(1)}`)
+            .join(' ');
+          return (
+            <polygon
+              points={ringPoints}
+              fill="none"
+              stroke="var(--mp-border)"
+              stroke-width={rFrac === 1.0 ? '1.2' : '0.8'}
+              stroke-dasharray={rFrac === 1.0 ? '0' : '3 3'}
+              opacity={rFrac === 1.0 ? '0.9' : '0.5'}
+            />
+          );
+        })}
+
+        {/* Axis radial spokes */}
+        {axes.map((ax) => (
+          <line
+            x1={CX}
+            y1={CY}
+            x2={CX + R * ax.cos}
+            y2={CY + R * ax.sin}
             stroke="var(--mp-border)"
-            stroke-width={rFrac === 1.0 ? '1.2' : '0.8'}
-            stroke-dasharray={rFrac === 1.0 ? '0' : '3 3'}
-            opacity={rFrac === 1.0 ? '0.9' : '0.6'}
+            stroke-width="1"
+            opacity="0.7"
           />
+        ))}
+      </g>
+
+      {/* Radial background glow */}
+      <circle cx={CX} cy={CY} r={R} fill={`url(#${componentId}-glow)`} aria-hidden="true" />
+
+      {/* Tight Fits Polygon (Amber outline/fill) */}
+      <polygon
+        points={tightPolyStr}
+        fill="#f59e0b"
+        fill-opacity="0.15"
+        stroke="#f59e0b"
+        stroke-width="1.5"
+        stroke-dasharray="3 3"
+        stroke-linejoin="round"
+      />
+
+      {/* Clean Fits Polygon (Emerald fill) */}
+      <polygon
+        points={fitsPolyStr}
+        fill="#10b981"
+        fill-opacity="0.28"
+        stroke="#10b981"
+        stroke-width="2.2"
+        stroke-linejoin="round"
+      />
+
+      {/* Vertices & Axis Labels */}
+      {axes.map((ax, i) => {
+        const fp = fitsPolyPoints[i];
+        const labelDist = R + 22;
+        const lx = CX + labelDist * ax.cos;
+        const ly = CY + labelDist * ax.sin;
+
+        const textAnchor = Math.abs(ax.cos) < 0.15 ? 'middle' : ax.cos > 0 ? 'start' : 'end';
+        const isSelected = i === defaultBoardIdx;
+
+        return (
+          <g
+            class="radar-vertex-group cursor-pointer"
+            data-board-idx={i}
+          >
+            {/* Outer halo highlight when selected */}
+            <circle
+              cx={CX + R * ax.cos}
+              cy={CY + R * ax.sin}
+              r={isSelected ? 10 : 0}
+              fill="none"
+              stroke="var(--mp-cta)"
+              stroke-width="1.8"
+              class="vertex-highlight transition-all"
+            />
+
+            {/* Axis boundary dot */}
+            <circle
+              cx={CX + R * ax.cos}
+              cy={CY + R * ax.sin}
+              r="3"
+              fill="var(--mp-border-strong)"
+            />
+
+            {/* Fits vertex dot */}
+            {ax.fitsCount > 0 && (
+              <circle
+                cx={fp.x}
+                cy={fp.y}
+                r="4.5"
+                fill="var(--mp-card)"
+                stroke="#10b981"
+                stroke-width="2"
+              />
+            )}
+
+            {/* Label */}
+            <text
+              x={lx}
+              y={ly - 4}
+              text-anchor={textAnchor}
+              font-family="var(--font-sans)"
+              font-size="9.5"
+              font-weight="700"
+              fill="currentColor"
+              class="text-primary-text"
+            >
+              {ax.shortName}
+            </text>
+            <text
+              x={lx}
+              y={ly + 7}
+              text-anchor={textAnchor}
+              font-family="var(--font-mono)"
+              font-size="8"
+              fill="currentColor"
+              class={ax.fitsCount > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-muted-text'}
+            >
+              {ax.fitsCount}/{totalModels} fit
+            </text>
+          </g>
         );
       })}
 
-      {/* Axis radial spokes */}
-      {axes.map((ax) => (
-        <line
-          x1={CX}
-          y1={CY}
-          x2={CX + R * ax.cos}
-          y2={CY + R * ax.sin}
-          stroke="var(--mp-border)"
-          stroke-width="0.9"
-          opacity="0.7"
-        />
-      ))}
-    </g>
+      {/* Center origin */}
+      <circle cx={CX} cy={CY} r="2.5" fill="var(--mp-border-strong)" />
+    </svg>
+  </div>
 
-    {/* Glow background behind polygon */}
-    <circle cx={CX} cy={CY} r={R} fill="url(#radar-glow)" aria-hidden="true" />
+  {/* Interactive Board Detail Inspector Panel */}
+  <div class="mt-2 border-t border-border pt-3" id={`${componentId}-inspector`}>
+    {axes.map((ax, idx) => (
+      <div
+        data-inspector-idx={idx}
+        class={`inspector-panel ${idx === defaultBoardIdx ? 'block' : 'hidden'}`}
+      >
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <span class="rounded-full bg-elevated border border-border px-2 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.1em] text-muted-text">
+              {ax.board.class}
+            </span>
+            <h4 class="mt-1 font-mono text-[0.88rem] font-bold text-primary-text">
+              {ax.board.name}
+            </h4>
+          </div>
+          <div class="text-right font-mono text-[0.62rem]">
+            <span class="block text-primary-text font-bold">Ceiling: {fmtBytes(ax.board.modelCeilingBytes)}</span>
+            <span class="text-muted-text">{ax.board.ramLabel}</span>
+          </div>
+        </div>
 
-    {/* Filled Radar Polygon */}
-    <g>
-      <polygon
-        points={polyPointsStr}
-        fill="var(--mp-cta)"
-        fill-opacity="0.2"
-        stroke="var(--mp-cta)"
-        stroke-width="2"
-        stroke-linejoin="round"
-      />
-    </g>
+        {/* Model Breakdown for Selected Board */}
+        <div class="mt-2.5 flex items-center gap-3 font-mono text-[0.65rem]">
+          <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+            ✔ {ax.fitsCount} Fits
+          </span>
+          {ax.tightCount > 0 && (
+            <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
+              ⚠ {ax.tightCount} Tight
+            </span>
+          )}
+          <span class="inline-flex items-center gap-1 text-muted-text">
+            ✖ {ax.noCount} Exceed Ceiling
+          </span>
+        </div>
 
-    {/* Vertices & Axis Labels */}
-    {axes.map((ax, i) => {
-      const p = polyPoints[i];
-      const labelDist = R + 22;
-      const lx = CX + labelDist * ax.cos;
-      const ly = CY + labelDist * ax.sin;
-
-      // Text alignment based on position
-      const textAnchor =
-        Math.abs(ax.cos) < 0.15 ? 'middle' : ax.cos > 0 ? 'start' : 'end';
-
-      const isFits = ax.fitsCount > 0;
-
-      return (
-        <g class="group/vertex cursor-pointer">
-          {/* Data point dot on radar */}
-          <circle
-            cx={p.x}
-            cy={p.y}
-            r="4.5"
-            fill="var(--mp-card)"
-            stroke="var(--mp-cta)"
-            stroke-width="2"
-          />
-          <circle
-            cx={p.x}
-            cy={p.y}
-            r="2"
-            fill="var(--mp-cta)"
-          />
-
-          {/* Outer board label */}
-          <text
-            x={lx}
-            y={ly - 4}
-            text-anchor={textAnchor}
-            font-family="var(--font-sans)"
-            font-size="9.5"
-            font-weight="700"
-            fill="currentColor"
-            class="text-primary-text"
-          >
-            {ax.shortName}
-          </text>
-          <text
-            x={lx}
-            y={ly + 7}
-            text-anchor={textAnchor}
-            font-family="var(--font-mono)"
-            font-size="8"
-            fill="currentColor"
-            class={isFits ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-muted-text'}
-          >
-            {ax.fitsCount}/{totalModels} fit ({ax.fitPct}%)
-          </text>
-        </g>
-      );
-    })}
-
-    {/* Center origin indicator */}
-    <circle cx={CX} cy={CY} r="2.5" fill="var(--mp-border-strong)" />
-  </svg>
+        {/* Fits Model List Pills */}
+        <div class="mt-2 flex flex-wrap gap-1.5">
+          {ax.fitsList.length > 0 ? (
+            ax.fitsList.slice(0, 4).map((m) => (
+              <a
+                href={`#radar`}
+                class="inline-flex items-center gap-1 rounded-md border border-border bg-canvas px-2 py-0.5 font-mono text-[0.6rem] text-primary-text hover:border-[var(--mp-border-strong)]"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                <span class="truncate max-w-[120px]">{m.id.split('/')[1] || m.id}</span>
+                <span class="text-muted-text">({fmtBytes(m.runtimeBytes)})</span>
+              </a>
+            ))
+          ) : (
+            <span class="font-mono text-[0.6rem] text-muted-text italic">
+              No scanned models fit within this board's {fmtBytes(ax.board.modelCeilingBytes)} ceiling.
+            </span>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
 </div>
+
+{/* Inline Vanilla Script for Interactive Vertex & Chip Switching */}
+<script is:inline define:vars={{ componentId }}>
+  function setupRadarInspector() {
+    const root = document.getElementById(componentId);
+    if (!root) return;
+
+    const chips = root.querySelectorAll('.radar-chip-btn');
+    const vertices = root.querySelectorAll('.radar-vertex-group');
+    const panels = root.querySelectorAll('.inspector-panel');
+
+    function setActiveBoard(idx) {
+      // Update Chip buttons
+      chips.forEach((c) => {
+        const cIdx = parseInt(c.getAttribute('data-board-idx') || '0', 10);
+        if (cIdx === idx) {
+          c.classList.add('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas');
+          c.classList.remove('border-border', 'bg-elevated', 'text-muted-text');
+        } else {
+          c.classList.remove('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas');
+          c.classList.add('border-border', 'bg-elevated', 'text-muted-text');
+        }
+      });
+
+      // Update Vertex highlight circles
+      vertices.forEach((v) => {
+        const vIdx = parseInt(v.getAttribute('data-board-idx') || '0', 10);
+        const hl = v.querySelector('.vertex-highlight');
+        if (hl) {
+          hl.setAttribute('r', vIdx === idx ? '10' : '0');
+        }
+      });
+
+      // Update Inspector Detail Panels
+      panels.forEach((p) => {
+        const pIdx = parseInt(p.getAttribute('data-inspector-idx') || '0', 10);
+        if (pIdx === idx) {
+          p.classList.remove('hidden');
+          p.classList.add('block');
+        } else {
+          p.classList.remove('block');
+          p.classList.add('hidden');
+        }
+      });
+    }
+
+    // Attach click listeners to chips
+    chips.forEach((c) => {
+      c.addEventListener('click', () => {
+        const idx = parseInt(c.getAttribute('data-board-idx') || '0', 10);
+        setActiveBoard(idx);
+      });
+    });
+
+    // Attach click listeners to SVG vertices
+    vertices.forEach((v) => {
+      v.addEventListener('click', () => {
+        const idx = parseInt(v.getAttribute('data-board-idx') || '0', 10);
+        setActiveBoard(idx);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupRadarInspector);
+  } else {
+    setupRadarInspector();
+  }
+  document.addEventListener('astro:page-load', setupRadarInspector);
+</script>
