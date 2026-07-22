@@ -35,6 +35,8 @@ interface Props {
   fits?: FitLite[];
 }
 
+import { shortBoardLabel } from '../../lib/edge-radar-labels';
+
 const { boards, models } = Astro.props;
 
 const MIB = 1024 * 1024;
@@ -45,7 +47,7 @@ const fmtBytes = (n: number) => {
   return `${(n / MIB).toFixed(n >= 10 * MIB ? 0 : 1)} MiB`;
 };
 
-const shortBoardName = (b: BoardLite) => b.name.split('(')[0].trim();
+const shortBoardName = (b: BoardLite) => shortBoardLabel(b.name);
 
 function classBadge(c: string) {
   if (c === 'mcu') return { icon: '⚡', label: 'Microcontroller', order: 0, desc: '7 MiB arena · TinyML only' };

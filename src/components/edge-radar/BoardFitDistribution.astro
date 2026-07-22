@@ -26,6 +26,8 @@ interface Props {
   fits: FitLite[];
 }
 
+import { shortBoardLabel } from '../../lib/edge-radar-labels';
+
 const { boards, models, fits } = Astro.props;
 
 const totalModels = models.length || 1;
@@ -48,7 +50,7 @@ const boardDist = [...boards]
 
     return {
       board: b,
-      shortName: b.name.split('(')[0].trim(),
+      shortName: shortBoardLabel(b.name),
       fitsCount,
       tightCount,
       noCount,

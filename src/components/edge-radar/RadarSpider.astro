@@ -31,6 +31,8 @@ interface Props {
   fits: FitLite[];
 }
 
+import { shortBoardLabel } from '../../lib/edge-radar-labels';
+
 const { boards, models, fits } = Astro.props;
 
 const totalModels = models.length || 1;
@@ -39,9 +41,9 @@ const GIB = 1024 * 1024 * 1024;
 const MIB = 1024 * 1024;
 const fmtBytes = (n: number) => (n >= GIB ? `${(n / GIB).toFixed(1)} GiB` : `${(n / MIB).toFixed(0)} MiB`);
 
-// Short name helper for labels
+// Compact label with RAM SKU — never strip parentheses alone (Pi 5 8GB vs 16GB)
 function getFullShortName(name: string): string {
-  return name.split('(')[0].trim();
+  return shortBoardLabel(name);
 }
 
 // Calculate board stats for radar axes
@@ -165,7 +167,7 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
       width="100%"
       height="100%"
       role="img"
-      aria-label={`Interactive radar chart showing fit capacity across 5 hardware boards`}
+      aria-label={`Interactive radar chart showing fit capacity across ${N} hardware boards`}
       class="absolute inset-0 h-full w-full overflow-visible text-primary-text"
       xmlns="http://www.w3.org/2000/svg"
     >

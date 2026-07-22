@@ -56,9 +56,9 @@ function radarFitsCountFor(boardId: string) {
     return f && f.verdict !== 'no';
   }).length;
 }
-const radarPi5Fits = radarFitsCountFor('raspberry-pi-5-8gb');
-const radarOrinFits = radarFitsCountFor('jetson-orin-nano-8gb');
-const radarSbcFits = Math.max(radarPi5Fits, radarOrinFits);
+// High-RAM class (6.5+ GiB) — use best board so teaser reflects Sigma/Pi16/Orin NX era
+const radarHighRamIds = ['latte-panda-sigma-32gb', 'raspberry-pi-5-16gb', 'jetson-orin-nx-16gb', 'raspberry-pi-5-8gb', 'jetson-orin-nano-8gb'];
+const radarSbcFits = Math.max(0, ...radarHighRamIds.map((id) => radarFitsCountFor(id)));
 const radarMcuFits = radarModels.filter((m) => {
   const fEsp = radarFits.find((x) => x.modelId === m.id && x.boardId === 'esp32-s3-n8r8');
   const fTeensy = radarFits.find((x) => x.modelId === m.id && x.boardId === 'teensy-4-1');
@@ -197,7 +197,7 @@ const developerTools = [
               Edge AI & TinyML Hardware Radar
             </h2>
             <p class="mt-2 text-[0.92rem] leading-[1.65] text-muted-text max-w-xl">
-              Daily deterministic scan of new GGUF and ONNX releases on Hugging Face — verified file bytes in, datasheet memory ceilings out for ESP32-S3, Teensy 4.1, Pi 5, Coral TPU, and Jetson Orin Nano.
+              Daily deterministic scan of new GGUF and ONNX releases on Hugging Face — verified file bytes in, datasheet memory ceilings out for Pi 5 8GB/16GB, Orin Nano/NX, Sigma 32GB, Orange/ROCK 16GB, Coral TPU, ESP32-S3, and Teensy 4.1.
             </p>
           </div>
 
@@ -217,7 +217,7 @@ const developerTools = [
                   <strong class="text-primary-text">{radarBoards.length} Boards</strong>
                 </div>
                 <div class="flex justify-between border-b border-border pb-1">
-                  <span>Pi 5 / Orin Fits:</span>
+                  <span>Sigma / Pi5 16GB Fits:</span>
                   <strong class="text-emerald-600 dark:text-emerald-400">{radarSbcFits}/{radarModels.length}</strong>
                 </div>
                 <div class="flex justify-between border-b border-border pb-1">

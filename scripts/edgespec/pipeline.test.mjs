@@ -25,6 +25,7 @@ import {
   modelFamilyKey,
   selectRadarModels,
   computeRadar,
+  shortBoardLabel,
 } from './radar-core.mjs';
 
 const GIB = 1024 * 1024 * 1024;
@@ -127,6 +128,24 @@ test('board ceilings never exceed total RAM and keep the 80% rule meaningful', (
     assert.ok(b.modelCeilingBytes > 0);
     assert.ok(b.id && b.name && b.note && b.ramLabel);
   }
+});
+
+test('shortBoardLabel keeps RAM SKU size and never collides Pi 5 8GB/16GB', () => {
+  assert.equal(shortBoardLabel('Raspberry Pi 5 (8 GB)'), 'Pi 5 8GB');
+  assert.equal(shortBoardLabel('Raspberry Pi 5 (16 GB)'), 'Pi 5 16GB');
+  assert.equal(shortBoardLabel('Orange Pi 5 Plus (16 GB)'), 'Orange Pi 5+ 16GB');
+  assert.equal(shortBoardLabel('Radxa ROCK 5B (16 GB)'), 'ROCK 5B 16GB');
+  assert.equal(shortBoardLabel('Jetson Orin Nano (8 GB)'), 'Orin Nano 8GB');
+  assert.equal(shortBoardLabel('Jetson Orin NX (16 GB)'), 'Orin NX 16GB');
+  assert.equal(shortBoardLabel('LattePanda Sigma (32 GB)'), 'Sigma 32GB');
+  assert.equal(shortBoardLabel('ESP32-S3 (N8R8 devkit)'), 'ESP32-S3 N8R8');
+  assert.equal(shortBoardLabel('Teensy 4.1 (+8 MB PSRAM)'), 'Teensy 4.1 8MB');
+  assert.equal(shortBoardLabel('Coral Edge TPU (USB Accelerator)'), 'Coral TPU');
+
+  const labels = BOARDS.map((b) => shortBoardLabel(b.name));
+  assert.equal(new Set(labels).size, labels.length, `duplicate short labels: ${labels.join(', ')}`);
+  // Parentheses-strip alone collides — guard against regression
+  assert.notEqual(shortBoardLabel('Raspberry Pi 5 (8 GB)'), shortBoardLabel('Raspberry Pi 5 (16 GB)'));
 });
 
 test('every kit linkId a board recommends exists in the curated affiliate registry', () => {

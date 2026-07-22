@@ -25,6 +25,8 @@ interface Props {
   fits: FitLite[];
 }
 
+import { shortBoardLabel } from '../../lib/edge-radar-labels';
+
 const { runtimeBytes, modelId, boards, fits } = Astro.props;
 
 const MIB = 1024 * 1024;
@@ -79,16 +81,16 @@ function groupVerdict(group: typeof distinctCeilings[number]): 'fits' | 'tight' 
   return 'no';
 }
 
-// Short label for board groups — most powerful first presentation, but log scale is low→high left→right
+// Short label for board groups — always size-qualified (Pi 5 8GB ≠ Pi 5 16GB)
 function shortLabel(group: typeof distinctCeilings[number]): string {
-  if (group.boards.length === 1) return group.boards[0].name.split('(')[0].trim();
-  if (group.boards.every((b) => b.modelCeilingBytes === 7 * MIB)) return 'ESP32 / Teensy (7 MiB)';
-  if (group.bytes === 8 * MIB) return 'Coral (8 MiB)';
-  if (group.bytes === Math.floor(6.5 * GIB)) return 'Pi5 8GB / Nano 8GB (6.5 GiB)';
-  if (group.bytes === Math.floor(14 * GIB)) return 'Orange/Rock 16GB (14 GiB)';
-  if (group.bytes === Math.floor(14.5 * GIB)) return 'Pi5 16GB / Orin NX 16GB (14.5 GiB)';
-  if (group.bytes === Math.floor(30 * GIB)) return 'Sigma 32GB (30 GiB)';
-  return `${group.boards.length} boards (${fmtBytes(group.bytes)})`;
+  if (group.boards.length === 1) return shortBoardLabel(group.boards[0].name);
+  if (group.boards.every((b) => b.modelCeilingBytes === 7 * MIB)) return 'ESP32/Teensy 7MiB';
+  if (group.bytes === 8 * MIB) return 'Coral 8MiB';
+  if (group.bytes === Math.floor(6.5 * GIB)) return 'Pi5/Nano 8GB';
+  if (group.bytes === Math.floor(14 * GIB)) return 'Orange/ROCK 16GB';
+  if (group.bytes === Math.floor(14.5 * GIB)) return 'Pi5/OrinNX 16GB';
+  if (group.bytes === Math.floor(30 * GIB)) return 'Sigma 32GB';
+  return group.boards.map((b) => shortBoardLabel(b.name)).join('/');
 }
 
 const ticks = [1 * MIB, 10 * MIB, 100 * MIB, 1 * GIB, 10 * GIB, 30 * GIB].map((b) => ({

@@ -30,6 +30,7 @@ import RadarSpider from '../../components/edge-radar/RadarSpider.astro';
 import QuantSpectrum from '../../components/edge-radar/QuantSpectrum.astro';
 import BoardFitDistribution from '../../components/edge-radar/BoardFitDistribution.astro';
 import TrendSparkline from '../../components/edge-radar/TrendSparkline.astro';
+import { shortBoardLabel } from '../../lib/edge-radar-labels';
 
 const entries = await getCollection('edge-radar');
 const sorted = entries.sort((a, b) => b.id.localeCompare(a.id));
@@ -119,7 +120,7 @@ const minCeil = Math.min(...boards.map((b) => b.modelCeilingBytes));
 const maxCeil = Math.max(...boards.map((b) => b.modelCeilingBytes));
 const fmtCeilRange = `${(minCeil / MIB).toFixed(0)}M–${(maxCeil / GIB).toFixed(maxCeil >= 30*GIB ? 0 : 1)}G`;
 
-const boardListDesc = boards.map((b) => b.name.split('(')[0].trim()).slice(0, 6).join(', ') + (boards.length > 6 ? ` +${boards.length - 6} more` : '');
+const boardListDesc = boardsDesc.map((b) => shortBoardLabel(b.name)).slice(0, 6).join(', ') + (boardsDesc.length > 6 ? ` +${boardsDesc.length - 6} more` : '');
 
 const title = 'Edge AI Radar — Daily TinyML & GGUF Hardware Fit Report | MakerPortal';
 const description =
@@ -260,7 +261,7 @@ const description =
                   <th scope="col" class="px-3 py-3.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Runtime est.</th>
                   {boardsDesc.map((b) => (
                     <th scope="col" class="px-3 py-3.5 text-center font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">
-                      {b.name.split('(')[0].trim()}
+                      {shortBoardLabel(b.name)}
                       <span class="block text-[0.56rem] font-normal normal-case tracking-normal text-muted-text/70">{fmtBytes(b.modelCeilingBytes)} ceiling</span>
                     </th>
                   ))}
@@ -390,11 +391,11 @@ const description =
               <div class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-2">
                   <span class="rounded-full bg-elevated border border-border px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] font-semibold text-muted-text">{board.class}</span>
-                  <span class="font-mono text-[0.62rem] text-muted-text">{board.ramLabel}</span>
+                  <span class="font-mono text-[0.62rem] text-muted-text">{fmtBytes(board.modelCeilingBytes)} ceiling</span>
                 </div>
-                <h3 class="mt-3 text-[0.95rem] font-bold text-primary-text">{board.name}</h3>
+                <h3 class="mt-3 text-[0.95rem] font-bold text-primary-text">{shortBoardLabel(board.name)}</h3>
+                <p class="mt-0.5 font-mono text-[0.62rem] text-muted-text">{board.ramLabel}</p>
                 <p class="mt-2 flex-1 text-[0.82rem] leading-[1.55] text-muted-text">{board.note}</p>
-                <p class="mt-3 font-mono text-[0.68rem] font-semibold text-primary-text">Model ceiling · {fmtBytes(board.modelCeilingBytes)}</p>
                 {links.length > 0 && (
                   <ul class="mt-3 space-y-1.5 border-t border-border pt-3">
                     {links.map((l) => (
@@ -428,7 +429,7 @@ const description =
               <h3 class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">Inputs (ground truth only)</h3>
               <ul class="mt-4 space-y-2.5 text-[0.85rem] leading-[1.6] text-muted-text">
                 <li><strong class="text-primary-text">Verified file bytes</strong> — each repo's public Hugging Face file tree, fetched at build time. No benchmark claims, no tokens/sec, no accuracy numbers.</li>
-                <li><strong class="text-primary-text">Datasheet memory constants</strong> — ESP32-S3 (512 KB SRAM + 8 MB PSRAM), Teensy 4.1 (1 MB + 8 MB PSRAM), Pi 5 (8 GB), Coral Edge TPU (8 MB on-chip model cache), Jetson Orin Nano (8 GB unified). Hardcoded in <span class="font-mono text-[0.78rem]">scripts/edgespec/radar-core.mjs</span> with sources in comments.</li>
+                <li><strong class="text-primary-text">Datasheet memory constants</strong> — ESP32-S3 N8R8 (512 KB + 8 MB PSRAM), Teensy 4.1 +8MB, Pi 5 8GB/16GB, Orange Pi 5+ 16GB, ROCK 5B 16GB, Coral TPU (8 MB cache), Orin Nano 8GB / NX 16GB, Sigma 32GB. Hardcoded in <span class="font-mono text-[0.78rem]">scripts/edgespec/radar-core.mjs</span> with sources in comments.</li>
                 <li><strong class="text-primary-text">Published quant formats</strong> — llama.cpp bits-per-weight values (Q4_K_M ≈ 4.85 bpw, Q8_0 ≈ 8.5, …).</li>
               </ul>
             </div>
