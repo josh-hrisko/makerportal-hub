@@ -1,8 +1,9 @@
 ---
 /**
- * Board-ceiling strip: 7 MiB → 6.5 GiB log ruler with that day's models plotted
- * by verdict per board (rows = boards, dots = models at runtimeBytes).
- * SSR-only, zero JS, themeable, CLS-fixed via aspect-ratio.
+ * Board RAM Ceilings & Model Footprint Ruler Component.
+ * Plots today's scanned models on a 7 MiB → 6.5 GiB log ruler vs each board's
+ * datasheet memory ceiling wall.
+ * SSR-only, zero JS requirement, themeable, CLS 0 via aspect ratio.
  */
 interface BoardLite {
   id: string;
@@ -53,22 +54,23 @@ function shortBoardName(b: BoardLite) {
   return b.name.split('(')[0].trim();
 }
 
-// Class badge helper
-function classIcon(c: string) {
-  if (c === 'mcu') return '⚡';
-  if (c === 'sbc') return '🖥️';
-  if (c === 'accelerator') return '🧠';
-  if (c === 'edge-gpu') return '🚀';
-  return '💻';
+// Class badge & icon helper
+function classBadge(c: string) {
+  if (c === 'mcu') return { icon: '⚡', label: 'MCU' };
+  if (c === 'sbc') return { icon: '🖥️', label: 'SBC' };
+  if (c === 'accelerator') return { icon: '🧠', label: 'Accelerator' };
+  if (c === 'edge-gpu') return { icon: '🚀', label: 'Edge GPU' };
+  return { icon: '💻', label: 'Compute' };
 }
 
-const W = 680;
-const ROW_H = 38;
-const HEADER = 32;
-const FOOTER = 36;
-const LEFT = 180; // gutter for board labels
-const RIGHT = 20;
-const TRACK_W = W - LEFT - RIGHT;
+const W = 720;
+const LEFT = 200; // Left gutter for board labels & RAM specs
+const RIGHT = 24;
+const TRACK_W = W - LEFT - RIGHT; // 496px
+
+const HEADER = 56;
+const ROW_H = 44;
+const FOOTER = 38;
 const H = HEADER + boards.length * ROW_H + FOOTER + 8;
 
 const fitMap = new Map<string, 'fits' | 'tight' | 'no'>();
@@ -89,7 +91,6 @@ const xTicks = (() => {
     .map((b) => ({ bytes: b, x: LEFT + logFrac(b) * TRACK_W, label: fmtBytes(b) }));
 })();
 
-// For global strip dots above board rows (overview summary spark)
 function aggregateVerdict(modelId: string): 'fits' | 'tight' | 'no' {
   const vs = boards.map((b) => fitMap.get(`${modelId}::${b.id}`) ?? 'no');
   if (vs.includes('fits')) return 'fits';
@@ -107,19 +108,24 @@ const overviewDots = models.map((m) => ({
 const totalFits = overviewDots.filter((d) => d.verdict !== 'no').length;
 ---
 
-<div class="group/strip w-full overflow-hidden rounded-[16px] border border-border bg-card-bg shadow-sm">
-  {/* Header banner */}
-  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-elevated/40 px-5 py-3.5">
-    <div class="flex items-center gap-2">
-      <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
-      <h3 class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
-        Board Ceiling & Fit Spectrum · {fmtBytes(DOMAIN_MIN)} → {fmtBytes(DOMAIN_MAX)}
-      </h3>
+<div class="group/strip w-full overflow-hidden rounded-[20px] border border-border bg-card-bg shadow-sm">
+  {/* Clear Component Header */}
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-elevated/40 px-5 py-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
+        <h3 class="font-mono text-[0.72rem] font-bold uppercase tracking-[0.14em] text-primary-text">
+          Hardware RAM Limits & Model Footprint Ruler
+        </h3>
+      </div>
+      <p class="mt-1 text-[0.82rem] leading-[1.5] text-muted-text max-w-2xl">
+        Models to the left of a board's vertical ceiling line fit within that hardware's RAM budget (file bytes &times; 1.25 runtime overhead).
+      </p>
     </div>
-    <div class="flex items-center gap-3 font-mono text-[0.6rem] text-muted-text">
-      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Fits</span>
-      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-amber-500"></span> Tight</span>
-      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-muted-text/30"></span> No Fit</span>
+    <div class="flex items-center gap-3 font-mono text-[0.6rem] text-muted-text shrink-0">
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Fits (&le;80%)</span>
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-amber-500"></span> Tight (&le;100%)</span>
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-muted-text/30"></span> Exceeds (&gt;100%)</span>
     </div>
   </div>
 
@@ -130,100 +136,103 @@ const totalFits = overviewDots.filter((d) => d.verdict !== 'no').length;
       width="100%"
       height="100%"
       role="img"
-      aria-label={`Board ceilings from ${fmtBytes(DOMAIN_MIN)} to ${fmtBytes(DOMAIN_MAX)} with ${models.length} models plotted`}
-      class="absolute inset-0 h-full w-full text-primary-text"
+      aria-label={`Board RAM ceilings from ${fmtBytes(DOMAIN_MIN)} to ${fmtBytes(DOMAIN_MAX)} with ${models.length} models plotted`}
+      class="absolute inset-0 h-full w-full overflow-visible text-primary-text"
       xmlns="http://www.w3.org/2000/svg"
     >
       <style>
         .board-row-group { transition: opacity 0.15s ease; }
-        .board-row-group:hover rect.row-bg { fill: var(--mp-elevated); opacity: 0.9 !important; }
-        .board-row-group:hover circle.model-dot { transform: scale(1.25); transform-origin: center; }
+        .board-row-group:hover rect.row-bg { fill: var(--mp-elevated); opacity: 0.95 !important; }
+        .board-row-group:hover circle.model-dot { transform: scale(1.3); transform-origin: center; }
       </style>
 
-      {/* Faint vertical grid for distinct ceilings */}
+      {/* Grid lines at distinct ceiling boundaries */}
       {distinctCeilings.map((c) => (
-        <line
-          x1={c.x}
-          y1={HEADER - 4}
-          x2={c.x}
-          y2={H - FOOTER}
-          stroke="var(--mp-border)"
-          stroke-width="1"
-          stroke-dasharray="4 4"
-          opacity="0.8"
-        />
+        <g>
+          <line
+            x1={c.x}
+            y1={HEADER - 12}
+            x2={c.x}
+            y2={H - FOOTER}
+            stroke="var(--mp-border)"
+            stroke-width="1"
+            stroke-dasharray="4 4"
+            opacity="0.8"
+          />
+        </g>
       ))}
 
       {/* Overview summary spark band at top */}
       <g class="group/spark">
+        <text x={LEFT - 10} y={HEADER - 22} text-anchor="end" font-family="var(--font-mono)" font-size="8.5" font-weight="700" fill="currentColor" class="text-primary-text">
+          All Models ({totalFits}/{models.length} fit)
+        </text>
         <rect
           x={LEFT}
-          y={HEADER - 22}
+          y={HEADER - 30}
           width={TRACK_W}
           height="14"
           rx="7"
           fill="var(--mp-elevated)"
           stroke="var(--mp-border)"
-          stroke-width="0.8"
+          stroke-width="1"
         />
         {overviewDots.map((d) => {
           const cls = d.verdict === 'fits' ? 'text-emerald-600 dark:text-emerald-400' : d.verdict === 'tight' ? 'text-amber-600 dark:text-amber-400' : 'text-muted-text';
           return (
             <g class={cls}>
-              <circle cx={d.x} cy={HEADER - 15} r={d.verdict === 'no' ? 3 : 4} fill="currentColor" stroke="var(--mp-card)" stroke-width="1">
-                <title>{d.id} · {fmtBytes(d.runtime)} · {d.verdict}{d.overflow ? ' · overflow' : ''}</title>
+              <circle cx={d.x} cy={HEADER - 23} r={d.verdict === 'no' ? 3 : 4} fill="currentColor" stroke="var(--mp-card)" stroke-width="1">
+                <title>{d.id} · {fmtBytes(d.runtime)} runtime · {d.verdict}{d.overflow ? ' · beyond domain' : ''}</title>
               </circle>
             </g>
           );
         })}
-        <text x={LEFT - 10} y={HEADER - 11} text-anchor="end" font-family="var(--font-mono)" font-size="8.5" font-weight="600" fill="currentColor" class="text-muted-text">
-          overview ({totalFits}/{models.length} fit)
-        </text>
       </g>
 
       {/* Board Rows */}
       {boards.map((board, row) => {
         const y = HEADER + row * ROW_H + ROW_H / 2;
         const ceilingX = LEFT + logFrac(board.modelCeilingBytes) * TRACK_W;
+        const badge = classBadge(board.class);
+
         return (
           <g class="board-row-group cursor-pointer">
-            {/* Row background with hover effect */}
+            {/* Row background */}
             <rect
               x={0}
               y={HEADER + row * ROW_H}
               width={W}
               height={ROW_H}
               fill={row % 2 === 0 ? 'var(--mp-card)' : 'var(--mp-elevated)'}
-              opacity={row % 2 === 0 ? 1 : 0.5}
+              opacity={row % 2 === 0 ? 1 : 0.4}
               class="row-bg"
             />
 
             {/* Guideline across track */}
             <line x1={LEFT} y1={y} x2={W - RIGHT} y2={y} stroke="var(--mp-border)" stroke-width="0.7" opacity="0.6" />
 
-            {/* Board identity & name */}
-            <g>
-              <text x={14} y={y - 4} font-family="var(--font-sans)" font-size="11" font-weight="700" fill="currentColor" class="text-primary-text">
-                {classIcon(board.class)} {shortBoardName(board)}
+            {/* Board identity & RAM specs in left gutter */}
+            <g transform={`translate(14, ${y - 8})`}>
+              <text font-family="var(--font-sans)" font-size="11.5" font-weight="700" fill="currentColor" class="text-primary-text">
+                {badge.icon} {shortBoardName(board)}
               </text>
-              <text x={14} y={y + 9} font-family="var(--font-mono)" font-size="8.2" fill="currentColor" class="text-muted-text">
-                {board.class.toUpperCase()} · {board.ramLabel ?? fmtBytes(board.modelCeilingBytes)}
+              <text y="14" font-family="var(--font-mono)" font-size="8.2" fill="currentColor" class="text-muted-text">
+                {badge.label} · {board.ramLabel ?? fmtBytes(board.modelCeilingBytes)}
               </text>
             </g>
 
-            {/* Ceiling marker line & marker dot */}
+            {/* Memory Ceiling Wall (Vertical Bar with Ceiling Badge) */}
             <g>
               <line
                 x1={ceilingX}
-                y1={HEADER + row * ROW_H + 3}
+                y1={HEADER + row * ROW_H + 4}
                 x2={ceilingX}
-                y2={HEADER + (row + 1) * ROW_H - 3}
-                stroke="currentColor"
-                stroke-width="2"
-                class="text-primary-text"
-                opacity="0.9"
+                y2={HEADER + (row + 1) * ROW_H - 4}
+                stroke="var(--mp-cta)"
+                stroke-width="2.2"
+                opacity="0.95"
               />
-              <circle cx={ceilingX} cy={HEADER + row * ROW_H + 4} r="3" fill="var(--mp-cta)" />
+              <circle cx={ceilingX} cy={HEADER + row * ROW_H + 5} r="3" fill="var(--mp-cta)" />
             </g>
 
             {/* Model dots for this board */}
@@ -235,7 +244,7 @@ const totalFits = overviewDots.filter((d) => d.verdict !== 'no').length;
               return (
                 <g class={cls}>
                   {verdict !== 'no' && (
-                    <circle cx={mx} cy={y} r="6" fill="currentColor" opacity="0.2" />
+                    <circle cx={mx} cy={y} r="6.5" fill="currentColor" opacity="0.18" />
                   )}
                   <circle
                     cx={mx}
@@ -247,10 +256,10 @@ const totalFits = overviewDots.filter((d) => d.verdict !== 'no').length;
                     opacity={verdict === 'no' ? 0.45 : 0.98}
                     class="model-dot"
                   >
-                    <title>{m.id} · {fmtBytes(m.runtimeBytes)} on {shortBoardName(board)} · {verdict}{overflow ? ' · beyond ceiling' : ''}</title>
+                    <title>{m.id} · {fmtBytes(m.runtimeBytes)} runtime on {shortBoardName(board)} → {verdict.toUpperCase()}</title>
                   </circle>
                   {overflow && (
-                    <text x={W - RIGHT - 12} y={y + 3} font-family="var(--font-mono)" font-size="8" font-weight="700" fill="currentColor" class="text-amber-500">
+                    <text x={W - RIGHT - 10} y={y + 3} font-family="var(--font-mono)" font-size="8" font-weight="700" fill="currentColor" class="text-amber-500">
                       ↗
                     </text>
                   )}
@@ -261,12 +270,14 @@ const totalFits = overviewDots.filter((d) => d.verdict !== 'no').length;
         );
       })}
 
-      {/* Ceiling header badges */}
+      {/* Ceiling header badges floating above vertical ceiling lines */}
       <g class="text-[0.68rem]">
         {distinctCeilings.map((c) => (
-          <g>
-            <rect x={c.x - 28} y={HEADER - 34} width="56" height="15" rx="6" fill="var(--mp-card)" stroke="var(--mp-border)" stroke-width="0.8" />
-            <text x={c.x} y={HEADER - 24} text-anchor="middle" font-family="var(--font-mono)" font-size="8" font-weight="700" fill="currentColor">{c.label}</text>
+          <g transform={`translate(${clamp(c.x, LEFT + 30, W - RIGHT - 30)}, ${HEADER - 42})`}>
+            <rect x="-30" y="-8" width="60" height="15" rx="6" fill="var(--mp-card)" stroke="var(--mp-cta)" stroke-width="1" />
+            <text x="0" y="3" text-anchor="middle" font-family="var(--font-mono)" font-size="8" font-weight="700" fill="currentColor" class="text-primary-text">
+              Limit: {c.label}
+            </text>
           </g>
         ))}
       </g>
@@ -284,7 +295,10 @@ const totalFits = overviewDots.filter((d) => d.verdict !== 'no').length;
     </svg>
   </div>
 
-  <div class="border-t border-border bg-elevated/30 px-5 py-2.5 font-mono text-[0.6rem] leading-[1.5] text-muted-text">
-    Log ruler. Every dot is a model at its estimated runtime footprint (file bytes × 1.25). Models to the left of a board's ceiling vertical fit that hardware; models to the right do not.
+  <div class="border-t border-border bg-elevated/30 px-5 py-3 font-mono text-[0.62rem] leading-[1.5] text-muted-text flex flex-wrap items-center justify-between gap-2">
+    <span>
+      Log ruler scale. Every dot is a model at its estimated runtime footprint (file size &times; 1.25). Vertical orange bars mark each hardware board's datasheet RAM ceiling wall.
+    </span>
+    <span class="font-bold text-primary-text">7 MiB MCU &rarr; 6.5 GiB SBC</span>
   </div>
 </div>
