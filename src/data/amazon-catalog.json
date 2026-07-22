@@ -1992,6 +1992,30 @@
       "detailPageURL": "https://www.amazon.com/dp/B0B2D5QXG5?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
       "price": "$18.99",
       "currency": "USD"
+    },
+    "B0F1FMTK1T": {
+      "title": "Yahboom Jetson Orin NX Super 16GB RAM 157 TOPS Dev Kit JetPack 6.2 256GB SSD",
+      "image": "https://m.media-amazon.com/images/I/71O1rHob7AL._AC_SL500_.jpg",
+      "features": [
+        "Orin NX 16GB 100 TOPS",
+        "JetPack 6.2",
+        "256GB SSD"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0F1FMTK1T?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$1109.99",
+      "currency": "USD"
+    },
+    "B0GYCTT6YM": {
+      "title": "Orange Pi 5 Plus 16GB RK3588 8-Core SBC, 2.4GHz, 8K Video Decoding",
+      "image": "https://m.media-amazon.com/images/I/710TlGXvfWL._AC_SL500_.jpg",
+      "features": [
+        "RK3588",
+        "16GB LPDDR4X",
+        "NVMe"
+      ],
+      "detailPageURL": "https://www.amazon.com/dp/B0GYCTT6YM?tag=engineersport-20&linkCode=ogi&th=1&psc=1",
+      "price": "$353.99",
+      "currency": "USD"
     }
   }
 }

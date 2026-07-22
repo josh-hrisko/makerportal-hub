@@ -1802,13 +1802,10 @@
   },
   {
     "id": "jetson-orin-nx-16gb-dev-kit",
-    "label": "NVIDIA Jetson Orin NX 16GB Developer Kit",
-    "note": "Orin NX 16GB — 100 TOPS unified LPDDR5, 14.5 GiB model ceiling. Runs llama.cpp CUDA / TensorRT-LLM for 4-12B Q4_K_M at 4k+ context. Amazon tracked.",
+    "label": "Yahboom Jetson Orin NX Super 16GB Dev Kit (B0F1FMTK1T)",
+    "note": "Orin NX 16GB — 100 TOPS unified LPDDR5, 14.5 GiB model ceiling, JetPack 6.2 + 256GB SSD included. Amazon verified — runs TensorRT-LLM for 4-12B Q4_K_M at 4k+ context.",
     "category": "SBC",
-    "merchant": "other",
-    "externalUrl": "https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/",
-    "price": "499",
-    "currency": "USD",
+    "asin": "B0F1FMTK1T",
     "relatedTo": [
       "coreml-model-size-calculator",
       "vector-retrieval-recall-lab",
@@ -1820,13 +1817,10 @@
   },
   {
     "id": "orange-pi-5-plus-16gb",
-    "label": "Orange Pi 5 Plus - 16GB",
-    "note": "RK3588 8-core 16GB LPDDR4X, 14 GiB model ceiling — affordable Pi5-class host for llama.cpp / RKLLM with NVMe. Price/performance for local 7-9B Q4_K_M.",
+    "label": "Orange Pi 5 Plus - 16GB (B0GYCTT6YM)",
+    "note": "RK3588 8-core 16GB LPDDR4X, 14 GiB model ceiling — verified Amazon ASIN B0GYCTT6YM, affordable Pi5-class host for llama.cpp / RKLLM with NVMe.",
     "category": "SBC",
-    "merchant": "other",
-    "externalUrl": "http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-5-plus.html",
-    "price": "149",
-    "currency": "USD",
+    "asin": "B0GYCTT6YM",
     "relatedTo": [
       "coreml-model-size-calculator",
       "vector-retrieval-recall-lab"
@@ -1838,7 +1832,7 @@
   {
     "id": "radxa-rock-5b-16gb",
     "label": "Radxa ROCK 5B - 16GB",
-    "note": "RK3588 ROCK 5B 16GB LPDDR4X — 14 GiB ceiling, PCIe NVMe, strong llama.cpp RKNN target. Good mid-range for 8-12B quantized models.",
+    "note": "RK3588 ROCK 5B 16GB LPDDR4X — 14 GiB ceiling, PCIe NVMe, strong llama.cpp RKNN target. Official Radxa product page verified (no Amazon affiliate SKU yet).",
     "category": "SBC",
     "merchant": "other",
     "externalUrl": "https://radxa.com/products/rock5/5b",
@@ -1854,12 +1848,12 @@
   },
   {
     "id": "latte-panda-sigma-32gb",
-    "label": "LattePanda Sigma - 32GB",
-    "note": "Intel N100 + 32GB LPDDR5, 30 GiB model ceiling — x86 edge server that fits 15.8 GiB GGUF (Gemma 26B Q4_K_M ≈19.7 GiB runtime) with headroom for long context.",
+    "label": "LattePanda Sigma - 32GB (DFRobot DFR1080)",
+    "note": "Intel Core i5-1340P 12C/16T + 32GB LPDDR5, 30 GiB model ceiling — verified DFRobot SKU DFR1080 product-2671.html, fits 15.8 GiB GGUF (Gemma 26B Q4_K_M ≈19.7 GiB runtime) with headroom. Uses ?tracking_id=vwfcds.",
     "category": "SBC",
     "merchant": "dfrobot",
-    "externalUrl": "LattePanda-Sigma.html",
-    "price": "599",
+    "externalUrl": "product-2671.html",
+    "price": "729",
     "currency": "USD",
     "relatedTo": [
       "coreml-model-size-calculator",
