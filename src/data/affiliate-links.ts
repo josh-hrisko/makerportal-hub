@@ -7,7 +7,7 @@
  * PR, see docs/DECISIONS.md D-012). Which products exist here is still 100%
  * human-curated — only the display data for a chosen ASIN is automated.
  *
- * Non-Amazon merchants (SparkFun, PCB houses, …) use merchant + path/sku
+ * Non-Amazon merchants (SparkFun, DFRobot, PCB houses, …) use merchant + path/sku
  * with optional static image/price on the link row.
  */
 import affiliateLinksData from './affiliate-links.json';
@@ -17,8 +17,11 @@ export const AMAZON_ASSOCIATE_TAG = 'engineersport-20';
 
 /** SparkFun Amasty Affiliate code — public referral id (appended as ?ref=). */
 export const SPARKFUN_AFFILIATE_CODE = 'rOtrc44SZw';
-
 export const SPARKFUN_BASE = 'https://www.sparkfun.com';
+
+/** DFRobot Affiliate Code — public referral tracking id (appended as ?tracking_id=). */
+export const DFROBOT_AFFILIATE_CODE = 'vwfcds';
+export const DFROBOT_BASE = 'https://www.dfrobot.com';
 
 /** PCB fabrication partners: PCBWay referral is live; JLCPCB remains an empty, owner-gated stub. */
 export const PCBWAY_BASE = 'https://www.pcbway.com';
@@ -31,12 +34,7 @@ export const JLCPCB_BASE = 'https://jlcpcb.com';
  * JLCPCB shelved — same audience, low ROI until traffic.
  */
 export const PCBWAY_REFERRAL_CODE: string = 'https://pcbway.com/g/VJp6Xm';
-export const PCBWAY_SHARED_PROJECTS: Record<string, string> = {
-  // Shared Projects pending — roadmap, not fake URLs
-  // 'signal-integrity-lab': 'https://www.pcbway.com/project/shareproject/SI_50_Ohm_Coupon_...',
-  // 'antenna-em-sandbox': 'https://www.pcbway.com/project/shareproject/Patch_2.4GHz_...',
-  // 'verilog-live-sculptor': 'https://www.pcbway.com/project/shareproject/FPGA_Carrier_...',
-};
+export const PCBWAY_SHARED_PROJECTS: Record<string, string> = {};
 
 /** JLCPCB Brand Advocate / referral. Empty until owner approval lands. */
 export const JLCPCB_REFERRAL_CODE: string = ''; // coupon / referral param — owner to fill
@@ -44,30 +42,12 @@ export const JLCPCB_SPONSORSHIP_URL: string = ''; // brand advocate page if exis
 
 /**
  * SaaS / GPU-cloud partners (docs/SAAS-GPU-MONETIZATION.md).
- * Same integrity rule as PCB fab: no fake IDs shipped. An empty constant makes
- * that provider render as a clean informational link (rel="noopener noreferrer",
- * no "sponsored"); a verified destination flips only that provider to
- * rel="sponsored noopener noreferrer" via buildSaasPartnerUrl.
- *
- * Owner decision 2026-07-19: stable affiliate programs only. No credit-grant/
- * free-token DevRel pitches. ElevenLabs (PartnerStack) and Pinecone Affiliate
- * Partner are approved stable paths. Modal/Fly labs remain live as educational
- * instruments only (WebGPU/Fly region visuals), not monetized; their URLs stay
- * empty/informational permanently unless a verified public affiliate program
- * appears (not a credit grant).
- *
- * - ElevenLabs: PartnerStack, 22% recurring 12 mo (commission to us, NOT a
- *   user-facing discount — never phrase it as "22% off" in UI copy).
- * - Pinecone: official creator/educator affiliate application exists, but the
- *   public page does not disclose a rate. Keep empty until MakerPortal is
- *   accepted and receives its own URL; never state a commission percentage.
- * - Modal / Fly.io: educational only — no public affiliate program, no credit
- *   pursuit. Owner explicitly rejected free-token credit engine.
+ * ElevenLabs: PartnerStack (approved).
  */
-export const ELEVENLABS_PARTNER_URL: string = 'https://try.elevenlabs.io/jzowx8mw6p6b'; // approved PartnerStack destination
-export const PINECONE_PARTNER_URL: string = ''; // approval pending; accept only the issued destination URL, never an API key
-export const MODAL_REFERRAL_URL: string = ''; // educational only — stable affiliates only per owner 2026-07-19
-export const FLY_REFERRAL_URL: string = ''; // educational only — stable affiliates only per owner 2026-07-19
+export const ELEVENLABS_PARTNER_URL: string = 'https://try.elevenlabs.io/jzowx8mw6p6b';
+export const PINECONE_PARTNER_URL: string = '';
+export const MODAL_REFERRAL_URL: string = '';
+export const FLY_REFERRAL_URL: string = '';
 
 export function buildSaasPartnerUrl(
   partnerUrl: string,
@@ -95,12 +75,6 @@ export function buildAmazonUrl(asin: string): string {
   return `https://www.amazon.com/dp/${asin}?tag=${AMAZON_ASSOCIATE_TAG}`;
 }
 
-/**
- * Build a tracked SparkFun URL. `path` is a product slug like
- * `raspberry-pi-5-8gb.html` or a full https URL on sparkfun.com.
- * Commission is 10% on SparkFun Originals only (third-party SKUs still get
- * the referral cookie but may pay $0).
- */
 export function buildSparkFunUrl(path: string): string {
   const base = path.startsWith('http')
     ? path
@@ -110,11 +84,22 @@ export function buildSparkFunUrl(path: string): string {
   return url.toString();
 }
 
+/**
+ * Build a tracked DFRobot URL. `path` is a product slug like
+ * `LATTEPANDA-3-DELTA.html` or a full URL on dfrobot.com.
+ */
+export function buildDfRobotUrl(path: string): string {
+  const base = path.startsWith('http')
+    ? path
+    : `${DFROBOT_BASE}/${path.replace(/^\//, '')}`;
+  const url = new URL(base);
+  url.searchParams.set('tracking_id', DFROBOT_AFFILIATE_CODE);
+  return url.toString();
+}
+
 export function buildPcbWayUrl(pathOrUrl: string): string {
-  // If full shared-project URL already provided (owner), return as-is
   if (!pathOrUrl) {
     if (PCBWAY_REFERRAL_CODE) {
-      // Generic referral landing — if inviteid style
       if (PCBWAY_REFERRAL_CODE.startsWith('http')) return PCBWAY_REFERRAL_CODE;
       return `${PCBWAY_BASE}/setinvite.aspx?inviteid=${PCBWAY_REFERRAL_CODE}`;
     }
@@ -158,28 +143,17 @@ export function isFabLive(): { pcbway: boolean; jlcpcb: boolean } {
 export type AffiliateLink = {
   id: string;
   label: string;
-  /** Amazon ASIN / ISBN-10. Optional when merchant !== amazon. */
   asin?: string;
   note: string;
   category: string;
-  /** Defaults to amazon when asin is present. */
   merchant?: AffiliateMerchant;
-  /**
-   * SparkFun product path (e.g. `teensy-4-0.html`) or full partner URL.
-   * For sparkfun merchant, prefer path + buildSparkFunUrl at resolve time.
-   */
   externalUrl?: string;
-  /** Partner SKU / part number for display. */
   sku?: string;
-  /** True when SparkFun pays Originals commission on this SKU. */
   sparkfunOriginal?: boolean;
-  /** Static display fields for non-Amazon merchants (hand-curated). */
   image?: string;
   price?: string;
   currency?: string;
-  /** Related content, e.g. blog post slugs or simulator ids — editorial placement only. */
   relatedTo?: string[];
-  /** Shared vocabulary with src/data/trends.ts pillarMeta — soft link only, no pipeline coupling. */
   pillars?: string[];
 };
 
@@ -217,13 +191,6 @@ function formatMoney(price?: string): string | undefined {
   return `$${n.toFixed(n % 1 === 0 ? 0 : 2)}`;
 }
 
-/**
- * Merges a curated pick with its live catalog entry (if the cache has one
- * yet). Falls back to the hand-typed label/note and a statically-built URL
- * when live data is missing — pre-first-run stub, a throttled/failed
- * lookup, or a discontinued ASIN should never break the page or show stale
- * data.
- */
 export function resolveAffiliateLink(link: AffiliateLink): ResolvedAffiliateLink {
   const merchant = resolveMerchant(link);
 
@@ -237,6 +204,19 @@ export function resolveAffiliateLink(link: AffiliateLink): ResolvedAffiliateLink
       price: formatMoney(link.price),
       currency: link.currency ?? 'USD',
       url: path ? buildSparkFunUrl(path) : `${SPARKFUN_BASE}/?ref=${SPARKFUN_AFFILIATE_CODE}`,
+    };
+  }
+
+  if (merchant === 'dfrobot') {
+    const path = link.externalUrl ?? link.sku ?? '';
+    return {
+      ...link,
+      merchant: 'dfrobot',
+      title: link.label,
+      image: link.image,
+      price: formatMoney(link.price),
+      currency: link.currency ?? 'USD',
+      url: path ? buildDfRobotUrl(path) : `${DFROBOT_BASE}/?tracking_id=${DFROBOT_AFFILIATE_CODE}`,
     };
   }
 

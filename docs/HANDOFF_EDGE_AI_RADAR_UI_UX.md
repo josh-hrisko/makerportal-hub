@@ -1,6 +1,6 @@
 # HANDOFF DOCUMENT: Edge AI Radar UI/UX Architecture & Handoff Prompt
 
-**Timestamp**: `2026-07-22T20:32:00Z`  
+**Timestamp**: `2026-07-22T20:34:00Z`  
 **Repository**: `makerportal-hub`  
 **Target Pages**:
 - [`/resources/edge-ai-radar`](https://makerportal.ai/resources/edge-ai-radar) (`src/pages/resources/edge-ai-radar.astro`)
@@ -29,7 +29,7 @@ The **Edge AI Radar** is a daily, deterministic data pipeline and visualization 
   - Interactive board selector pills + SVG vertex click targets.
 
 ### B. `CeilingStrip.astro` (Hardware RAM Containment & Context Pressure Simulator)
-- **Status**: Updated with Event Delegation & Domain-Grounded Boundaries (`923cac4`, latest edit).
+- **Status**: Updated with Event Delegation & Domain-Grounded Boundaries (`3061ca6`).
 - **Domain Logic Rule**:
   - For models > 32 MB evaluated against microcontrollers (ESP32-S3, Teensy 4.1) or accelerators (Coral Edge TPU), the component reports **"Architectural Class Boundary Exceeded (Requires sub-16 MiB TinyML model)"** rather than printing nonsensical `85,964%` overflow numbers.
 - **Client Script Reactivity**:
@@ -38,7 +38,21 @@ The **Edge AI Radar** is a daily, deterministic data pipeline and visualization 
 
 ---
 
-## 3. Recommended Handoff Prompt for Next LLM / Agent
+## 3. Affiliate Merchant Registry Update: DFRobot Code `vwfcds`
+
+- **Merchant**: DFRobot (`https://www.dfrobot.com`)
+- **Tracking Code**: `vwfcds` (parameter `?tracking_id=vwfcds`)
+- **Location in Codebase**: [`src/data/affiliate-links.ts`](file:///Users/josh/Documents/GitHub/makerportal-hub/src/data/affiliate-links.ts)
+  - `export const DFROBOT_AFFILIATE_CODE = 'vwfcds';`
+  - `export function buildDfRobotUrl(path: string): string`
+  - Integrated into `resolveAffiliateLink(link)` for `merchant === 'dfrobot'`.
+
+### Task for Future Agent / LLM:
+Add DFRobot hardware links (e.g. LattePanda Delta/Sigma SBCs, DFRobot ESP32-S3 N8R8 boards, UNIHIKER AI boards) into `src/data/affiliate-links.json` using `merchant: "dfrobot"` and `externalUrl: "product-slug.html"`. The resolver will automatically append `?tracking_id=vwfcds`.
+
+---
+
+## 4. Recommended Handoff Prompt for Next LLM / Agent
 
 Copy and paste the prompt below to initiate the next session with full context:
 
@@ -55,6 +69,9 @@ You are taking over UI/UX refinement on makerportal-hub for the Edge AI Radar fe
   - src/components/edge-radar/CeilingStrip.astro (RAM Containment & Context Pressure Simulator)
   - src/components/edge-radar/QuantSpectrum.astro (BPW Quantization Spectrum)
   - src/components/edge-radar/BoardFitDistribution.astro (Fit distribution per board class)
+- Affiliate Registry & DFRobot Tracking:
+  - DFRobot tracking code is live in src/data/affiliate-links.ts: DFROBOT_AFFILIATE_CODE = 'vwfcds' (?tracking_id=vwfcds).
+  - Implement DFRobot products (LattePanda, ESP32-S3, UNIHIKER) in src/data/affiliate-links.json when adding hardware links.
 - Pipeline & Ground Truth:
   - scripts/edgespec/radar-core.mjs (fit matrix math & gate tests)
   - node --test scripts/edgespec/pipeline.test.mjs (18 tests, must pass 100%)
@@ -68,7 +85,7 @@ You are taking over UI/UX refinement on makerportal-hub for the Edge AI Radar fe
 
 ---
 
-## 4. Verification Baseline
+## 5. Verification Baseline
 
 All gate tests pass cleanly on the current commit:
 - `node --test scripts/edgespec/pipeline.test.mjs` → **18/18 PASS**
