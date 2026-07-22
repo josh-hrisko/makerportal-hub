@@ -11,6 +11,15 @@
  * Mirrors the trends pipeline posture (D-022): the gate tests in
  * pipeline.test.mjs are the pre-publish safety net; if gating leaves zero
  * models, no radar file is written and the workflow publishes nothing.
+ *
+ * HF API CONTRACT (learned 2026-07-22 — see docs/DID-NOT-WORK.md):
+ *  - `?tags=gguf&sort=lastModified` is spam-dominated (40 candidates → 1
+ *    usable). Curated author feeds below are the quality floor — do not
+ *    remove them to "simplify".
+ *  - Byte sizes come ONLY from `/tree/main?recursive=true`;
+ *    `?files_metadata=true` returned `size: null` for LFS files.
+ *  - `sort=likes7d` lists omit `lastModified` — survivors get a budgeted
+ *    detail call below.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';

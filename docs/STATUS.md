@@ -170,6 +170,8 @@ template or rebuild Pagefind.
 
 ## Recent coherent commits
 
+- `faad168` — Engine 1: EdgeSpec & TinyML Hardware Radar — daily deterministic pipeline
+- `bab50c8` — 2026 passive content engines roadmap + frontier handoff refresh
 - `0c54f91` — PartnerStack marketplace sweep recorded; rejected routes fenced off
 - `234daa5` — browser hardening and privacy fixes
 - `c7b101e` — growth surfaces, field notes, DevRel drafts

@@ -81,3 +81,57 @@
   privacy-first stance; re-researching them is wasted effort. Full verified-terms
   table, unverified list, and the go-forward rule live in
   `AFFILIATE-CANDIDATES.md` → "PartnerStack Network marketplace sweep (2026-07-19)".
+
+## Hugging Face Hub API (EdgeSpec radar, learned 2026-07-22)
+
+- **`?library=gguf` and `?tags=gguf&sort=lastModified` are spam-dominated.**
+  The freshest-by-modified tag lists are mostly training-checkpoint repos that
+  carry the tag but ship zero `.gguf` files (40 candidates → 1 usable). Do not
+  tune keywords against this noise — the fix that worked is curated author
+  feeds (`?author=bartowski&search=GGUF`, `?author=unsloth&search=GGUF`,
+  `?author=onnx-community`) entering the candidate pool *before* the tag lists,
+  verified 2026-07-22 to ship parseable artifacts daily.
+- **`?files_metadata=true` returned `size: null` for LFS files** (observed on
+  `bartowski/*` repos). The only reliable byte source is
+  `/api/models/{repo}/tree/main?recursive=true` — every entry carries a real
+  `size`. Treat the tree API as ground truth; never publish a byte count from
+  any other field.
+- **`sort=likes7d` list responses omit `lastModified`** (only `createdAt` is
+  present). Radar needs a per-repo detail call for gated survivors to get
+  `lastModified`; budget it (`DETAIL_BUDGET`) instead of fetching detail for
+  every candidate.
+- **Trending models tagged `gguf` are usually safetensors repos** with an
+  incidental tag — the tree gate ("must contain a parseable quant `.gguf`
+  file") is what actually filters them. The gate is the design, not a bug.
+- **`i1-GGUF`-style repos ship only `imatrix.gguf`** files (no quant token in
+  the name) — correctly rejected by `parseGgufFilename`; don't add a fallback
+  that treats imatrix files as runnable models.
+- **Repo names lie about parameter counts.** Observed: `prism-ml/Bonsai-27B-gguf`'s
+  Q8_0 file is 600 MiB (≈0.6B params by bytes÷bpw), not 27B. The radar derives
+  ≈params from verified bytes ÷ quant bpw and the page FAQ says so — never
+  parse param counts from repo titles.
+
+## Generated-page UX (Engine 1, learned 2026-07-22)
+
+- **A wide table on mobile needs a sticky first column.** Plain
+  `overflow-x-auto` on the fit matrix scrolled the model names out of view;
+  `sticky left-0 z-10 bg-card-bg` on the first `th`/`td` (plus a subtle offset
+  shadow) keeps row context while swiping. Verify with
+  `wrapper.scrollLeft = N` in the QA script, not just document-level overflow.
+- **Text-only kit link rows on auto-generated pages = zero external requests
+  at load.** The radar renders curated buy links as compact text rows (no
+  merchant `<img>`), which keeps the privacy boundary absolute (no IP/UA leak
+  to image hosts) and CLS at zero. Product imagery stays on human-curated
+  surfaces (`/resources#gear`, simulator GearCarousels) where it's already
+  disclosed.
+- **`astro check` lints `scripts/**/*.mjs` too** — an unused import in a
+  pipeline test surfaced as a `ts(6133)` hint. Keep script imports exact;
+  the bar is 0 errors / 0 warnings / 0 hints.
+- **Playwright QA without polluting the repo:** `playwright-core` installed in
+  a scratch dir outside the repo + system Chrome
+  (`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`) as
+  `executablePath` — no browser download, no package.json changes. Playwright
+  browser builds are also already cached at `~/Library/Caches/ms-playwright`.
+- **Every build regenerates `public/llms*.txt`** (date stamp + latest journal
+  items). That's expected diff noise — fold it into the current commit rather
+  than reverting or committing it separately.

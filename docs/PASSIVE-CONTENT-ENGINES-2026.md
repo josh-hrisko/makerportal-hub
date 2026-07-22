@@ -16,6 +16,7 @@ This document outlines the architectural design, monetization mechanics, and exe
    - **Pinecone Affiliate Partner** (pending approval)
 4. **Simulator Visual Order Constraint:** Every monetized simulator strictly maintains:
    `Simulator → Anatomy → GearCarousel (third) → KitBuilder (fourth) → Math → Code → ExportGate → FAQ`
+5. **Generated Pages Must Be Visual-First (owner directive 2026-07-22):** Auto-published surfaces (radar, TCO, benchmarks) must ship **rich, data-driven graphics** — SVG/canvas charts, proportional memory bars, radar/spider plots, quant-spectrum strips, crossover curves — rendered from the snapshot's verified numbers. A bare table + cards is the *floor*, not the target. Every graphic must be derived deterministically from the committed JSON (no decorative filler, no invented data points), must redraw correctly in light/dark themes, respect reduced-motion, and keep CLS = 0 (fixed aspect-ratio containers). The radar page launched 2026-07-22 with the floor (matrix + cards); elevating it to the visual standard is the next queued upgrade.
 
 ---
 
@@ -121,6 +122,33 @@ This document outlines the architectural design, monetization mechanics, and exe
 | - Enable Lemon Squeezy payment overlays                                           |
 +-----------------------------------------------------------------------------------+
 ```
+
+---
+
+## 3b. Engine 1 Field Notes (build-out 2026-07-22 — read before extending)
+
+Shipped: `scripts/edgespec/{radar-core,build-radar,pipeline.test}.mjs`,
+`src/content/edge-radar/YYYY-MM-DD.json`, `/resources/edge-ai-radar`,
+`.github/workflows/edgespec-digest.yml` (daily 13:30 UTC). 18 gate tests.
+
+**Data-acquisition lessons (details + anti-patterns in DID-NOT-WORK.md → "Hugging Face Hub API"):**
+- Candidate quality comes from *curated author feeds first*, then `likes7d` trending, then `lastModified` tail. Pure tag-fresh lists are spam-dominated.
+- Byte sizes only from `/tree/main?recursive=true`. Nothing else is trustworthy.
+- 32 verified rows → 12 slots after family dedupe is a *normal* ratio; don't "fix" the dedupe to inflate slot count.
+- Runtime constants that worked: `LIST_LIMIT=40`, `CURATED_LIMIT=10`, `TREE_BUDGET=48`, `DETAIL_BUDGET=24`, `maxModels=12`, ~2 min wall time.
+
+**Architecture choices to reuse for Engines 2/3:**
+- Split pure logic (`*-core.mjs`, no I/O) from the orchestrator (fetch + write). Every published number becomes testable against fixtures without network — this is the gate-test pattern that replaces human PR review (D-022 posture).
+- Integrity test that pays off: boards' `linkIds` are asserted against `src/data/affiliate-links.json` in the gate tests — the pipeline *cannot* route buyers to an uncurated product.
+- Workflow mirrors `trends-digest.yml` exactly (porcelain check on the content dir, gitignored `*-summary.md` as step summary, rebase-retry push). Cron offset to `:30` — `:00` slots herd-drop.
+- Page is zero-client-JS by design (SSR table + cards): CLS 0, no external requests at load, text-only kit rows. Add graphics per rule 5 without breaking these three properties.
+
+**Open upgrades for the radar (visual-first mandate):**
+- Proportional memory-footprint bars per model vs each board ceiling (log scale).
+- Board-ceiling comparison strip (7 MiB → 6.5 GiB) with that day's models plotted on it.
+- Quant bits-per-weight spectrum graphic; fits/tight/no distribution donut per board.
+- A small canvas/SVG "radar" hero mark derived from the day's fit matrix.
+- Trend line once ≥7 snapshots exist: daily count of edge-fittable models.
 
 ---
 

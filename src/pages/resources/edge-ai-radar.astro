@@ -1,4 +1,20 @@
 ---
+/**
+ * Edge AI Radar — renders the latest src/content/edge-radar/*.json snapshot.
+ *
+ * DESIGN LAW for this generated surface (owner directive 2026-07-22, see
+ * docs/PASSIVE-CONTENT-ENGINES-2026.md rule 5):
+ *  - Visual-first upgrade is QUEUED HERE: log-scale memory bars vs board
+ *    ceilings, board-ceiling strip, quant spectrum, fit distribution. All
+ *    graphics must derive from `latest.data` only — no decorative filler.
+ *  - Keep the three shipped properties intact while adding graphics:
+ *    (1) zero client JS required, (2) zero external requests at load
+ *    (kit links are text-only rows on purpose — no merchant <img> here),
+ *    (3) CLS 0 via fixed aspect-ratio containers.
+ *  - The fit matrix scrolls horizontally on mobile with a STICKY first
+ *    column (sticky left-0 z-10 bg-card-bg + offset shadow) — regression-
+ *    tested in QA via wrapper.scrollLeft, not just document overflow.
+ */
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import HubShell from '../../components/HubShell.astro';

@@ -194,7 +194,10 @@ export function estimateRuntimeBytes(fileBytes) {
   return Math.round(fileBytes * RUNTIME_OVERHEAD);
 }
 
-/** Approximate parameter count from verified bytes ÷ quant bits-per-weight. */
+/** Approximate parameter count from verified bytes ÷ quant bits-per-weight.
+ *  Deliberately derived from the FILE, never parsed from the repo title —
+ *  observed 2026-07-22: a "27B" repo shipping a 600 MiB Q8_0 (≈0.6B params
+ *  by this math). The page labels this "≈" and the FAQ explains why. */
 export function estimateParams(fileBytes, quant) {
   const bpw = QUANT_BITS_PER_WEIGHT[quant];
   if (!bpw) return null;
@@ -228,7 +231,11 @@ export function fitVerdict(runtimeBytes, board) {
 export const MAX_REPRESENTATIVE_BYTES = 16 * GIB;
 
 /** Strip trailing version/experiment suffixes so Fluxmire/...-v5 and -v7
- *  from the same author collapse into one radar slot. Deterministic. */
+ *  from the same author collapse into one radar slot. Deterministic.
+ *  INTENTIONALLY conservative: genuinely distinct variants from one author
+ *  (e.g. prism-ml/Bonsai-27B-gguf vs Ternary-Bonsai-27B-gguf) keep separate
+ *  slots — they are different models with different files. Do not broaden
+ *  this to strip quant/format words; slot inflation is not a goal. */
 export function modelFamilyKey(repoId) {
   return repoId
     .toLowerCase()
