@@ -1,0 +1,161 @@
+---
+/**
+ * Trend Sparkline Component (Item 6 in visual-first queue).
+ * Reads edge-radar snapshot history and plots trend over time.
+ * SSR-only, zero JS, CLS 0 via aspect ratio, themeable via --mp-*.
+ */
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entries: CollectionEntry<'edge-radar'>[];
+}
+
+const { entries } = Astro.props;
+
+// Sort entries chronologically (oldest first)
+const sortedEntries = [...entries].sort((a, b) => a.id.localeCompare(b.id));
+
+const points = sortedEntries.map((e) => {
+  const models = e.data.models ?? [];
+  const fits = e.data.fits ?? [];
+  const fittableCount = models.filter((m) =>
+    fits.some((f) => f.modelId === m.id && f.verdict !== 'no')
+  ).length;
+
+  return {
+    date: e.id,
+    totalModels: models.length,
+    fittableCount,
+  };
+});
+
+const W = 640;
+const H = 120;
+const LEFT = 24;
+const RIGHT = 24;
+const TOP = 24;
+const BOTTOM = 28;
+const TRACK_W = W - LEFT - RIGHT;
+const TRACK_H = H - TOP - BOTTOM;
+
+const countValues = points.map((p) => p.totalModels);
+const maxCount = Math.max(...countValues, 16);
+const minCount = 0;
+
+const getY = (val: number) => TOP + TRACK_H - ((val - minCount) / (maxCount - minCount)) * TRACK_H;
+const getX = (idx: number) =>
+  points.length <= 1
+    ? LEFT + TRACK_W / 2
+    : LEFT + (idx / (points.length - 1)) * TRACK_W;
+
+const totalPathStr = points.length > 1
+  ? points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(p.totalModels).toFixed(1)}`).join(' ')
+  : '';
+
+const fittablePathStr = points.length > 1
+  ? points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(p.fittableCount).toFixed(1)}`).join(' ')
+  : '';
+
+const latestPoint = points[points.length - 1];
+---
+
+<div class="w-full overflow-hidden rounded-[16px] border border-border bg-card-bg p-5">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+    <div>
+      <h3 class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+        Edge AI Release & Fit Trend · {points.length} Daily Snapshot{points.length === 1 ? '' : 's'}
+      </h3>
+      <p class="mt-0.5 text-[0.78rem] text-muted-text">
+        Daily count of fresh Hugging Face model releases and how many fit edge hardware ceilings.
+      </p>
+    </div>
+    <div class="flex items-center gap-3 font-mono text-[0.6rem] text-muted-text">
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-primary-text"></span> Total Scanned</span>
+      <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Edge Fittable</span>
+    </div>
+  </div>
+
+  <div class="relative mt-3 w-full bg-canvas" style={`aspect-ratio: ${W}/${H};`}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height="100%"
+      role="img"
+      aria-label={`Trend chart showing ${points.length} daily snapshots of edge AI releases`}
+      class="absolute inset-0 h-full w-full text-primary-text"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Horizontal guide lines */}
+      <g aria-hidden="true">
+        <line x1={LEFT} y1={TOP} x2={W - RIGHT} y2={TOP} stroke="var(--mp-border)" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6" />
+        <line x1={LEFT} y1={TOP + TRACK_H / 2} x2={W - RIGHT} y2={TOP + TRACK_H / 2} stroke="var(--mp-border)" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6" />
+        <line x1={LEFT} y1={TOP + TRACK_H} x2={W - RIGHT} y2={TOP + TRACK_H} stroke="var(--mp-border)" stroke-width="1" />
+      </g>
+
+      {points.length > 1 ? (
+        <g>
+          {/* Total models line */}
+          <path d={totalPathStr} fill="none" stroke="currentColor" stroke-width="2" class="text-primary-text" />
+          {/* Edge fittable models line */}
+          <path d={fittablePathStr} fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-500" />
+
+          {/* Plot points */}
+          {points.map((p, i) => {
+            const px = getX(i);
+            const pyTotal = getY(p.totalModels);
+            const pyFit = getY(p.fittableCount);
+            return (
+              <g class="group/point">
+                <circle cx={px} cy={pyTotal} r="3.5" fill="var(--mp-card)" stroke="currentColor" stroke-width="1.8" class="text-primary-text" />
+                <circle cx={px} cy={pyFit} r="3.5" fill="var(--mp-card)" stroke="currentColor" stroke-width="1.8" class="text-emerald-500" />
+              </g>
+            );
+          })}
+        </g>
+      ) : (
+        /* Single snapshot callout state */
+        <g>
+          {(() => {
+            const px = getX(0);
+            const pyTotal = getY(latestPoint?.totalModels ?? 12);
+            const pyFit = getY(latestPoint?.fittableCount ?? 8);
+            return (
+              <g>
+                <line x1={LEFT} y1={pyTotal} x2={W - RIGHT} y2={pyTotal} stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 4" class="text-primary-text" opacity="0.4" />
+                <circle cx={px} cy={pyTotal} r="5" fill="var(--mp-card)" stroke="currentColor" stroke-width="2" class="text-primary-text" />
+
+                <line x1={LEFT} y1={pyFit} x2={W - RIGHT} y2={pyFit} stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 4" class="text-emerald-500" opacity="0.4" />
+                <circle cx={px} cy={pyFit} r="5" fill="var(--mp-card)" stroke="currentColor" stroke-width="2" class="text-emerald-500" />
+
+                <g transform={`translate(${px}, ${pyTotal - 14})`}>
+                  <rect x="-42" y="-10" width="84" height="14" rx="6" fill="var(--mp-card)" stroke="var(--mp-border)" stroke-width="1" />
+                  <text text-anchor="middle" y="0" font-family="var(--font-mono)" font-size="8" font-weight="700" fill="currentColor" class="text-primary-text">
+                    Baseline · {latestPoint?.totalModels} models
+                  </text>
+                </g>
+              </g>
+            );
+          })()}
+        </g>
+      )}
+
+      {/* Date labels on bottom axis */}
+      {points.map((p, i) => {
+        const px = getX(i);
+        return (
+          <text
+            x={px}
+            y={H - 8}
+            text-anchor="middle"
+            font-family="var(--font-mono)"
+            font-size="8.5"
+            fill="currentColor"
+            class="text-muted-text"
+          >
+            {p.date}
+          </text>
+        );
+      })}
+    </svg>
+  </div>
+</div>

@@ -1,19 +1,23 @@
 ---
 /**
- * Edge AI Radar — renders the latest src/content/edge-radar/*.json snapshot.
+ * Edge AI Radar — Editorial Data Story Page.
+ * Renders the latest src/content/edge-radar/*.json snapshot.
  *
- * DESIGN LAW for this generated surface (owner directive 2026-07-22, see
- * docs/PASSIVE-CONTENT-ENGINES-2026.md rule 5):
- *  - Visual-first upgrade is QUEUED HERE: log-scale memory bars vs board
- *    ceilings, board-ceiling strip, quant spectrum, fit distribution. All
- *    graphics must derive from `latest.data` only — no decorative filler.
- *  - Keep the three shipped properties intact while adding graphics:
- *    (1) zero client JS required, (2) zero external requests at load
- *    (kit links are text-only rows on purpose — no merchant <img> here),
- *    (3) CLS 0 via fixed aspect-ratio containers.
- *  - The fit matrix scrolls horizontally on mobile with a STICKY first
- *    column (sticky left-0 z-10 bg-card-bg + offset shadow) — regression-
- *    tested in QA via wrapper.scrollLeft, not just document overflow.
+ * DESIGN LAW (owner directive 2026-07-22, see docs/PASSIVE-CONTENT-ENGINES-2026.md rule 5):
+ *  - Editorial Data Story: large hero stats, tight mono kickers, generous whitespace,
+ *    optical alignment, proper type scale, visual cadence between sections.
+ *  - Rich Data Graphics:
+ *    (1) Deterministic Hero "Radar" Spider Mark (RadarSpider.astro)
+ *    (2) Memory Landscape Today (CeilingStrip.astro)
+ *    (3) Per-Model Footprint Arithmetic (MemoryBar.astro)
+ *    (4) Quantization BPW Spectrum (QuantSpectrum.astro)
+ *    (5) Board Fit Breakdown (BoardFitDistribution.astro)
+ *    (6) Snapshot Release Trend (TrendSparkline.astro)
+ *  - Hard constraints intact:
+ *    (1) Zero client JS required (all SSR SVG)
+ *    (2) Zero external requests at load (kit links are text-only rows)
+ *    (3) CLS 0 via fixed aspect-ratio containers
+ *    (4) Fit matrix scrolls horizontally on mobile with a STICKY first column.
  */
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
@@ -22,6 +26,10 @@ import AffiliateDisclosure from '../../components/AffiliateDisclosure.astro';
 import { affiliateLinks, resolveAffiliateLink } from '../../data/affiliate-links';
 import MemoryBar from '../../components/edge-radar/MemoryBar.astro';
 import CeilingStrip from '../../components/edge-radar/CeilingStrip.astro';
+import RadarSpider from '../../components/edge-radar/RadarSpider.astro';
+import QuantSpectrum from '../../components/edge-radar/QuantSpectrum.astro';
+import BoardFitDistribution from '../../components/edge-radar/BoardFitDistribution.astro';
+import TrendSparkline from '../../components/edge-radar/TrendSparkline.astro';
 
 const entries = await getCollection('edge-radar');
 const sorted = entries.sort((a, b) => b.id.localeCompare(a.id));
@@ -52,8 +60,8 @@ const fmtFlops = (n: number | null) => {
 };
 
 const verdictMeta = {
-  fits: { label: 'Fits', dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
-  tight: { label: 'Tight', dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+  fits: { label: 'Fits', dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400 font-semibold' },
+  tight: { label: 'Tight', dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400 font-semibold' },
   no: { label: 'No', dot: 'bg-muted-text/30', text: 'text-muted-text' },
 } as const;
 
@@ -80,9 +88,21 @@ const boardKits = boards
       .map((l) => resolveAffiliateLink(l)),
   }));
 
+// Summary Stats
+const totalModels = models.length;
+const totalBoards = boards.length;
+const pi5Fits = models.filter((m) => {
+  const f = fitFor(m.id, 'raspberry-pi-5-8gb');
+  return f && f.verdict !== 'no';
+}).length;
+const mcuFits = models.filter((m) => {
+  const f = fitFor(m.id, 'esp32-s3-n8r8');
+  return f && f.verdict !== 'no';
+}).length;
+
 const title = 'Edge AI Radar — Daily TinyML & GGUF Hardware Fit Report | MakerPortal';
 const description =
-  'Daily deterministic radar: fresh GGUF/ONNX model releases from Hugging Face, sized against the real memory ceilings of ESP32-S3, Teensy 4.1, Raspberry Pi 5, Coral Edge TPU and Jetson Orin Nano. No benchmarks invented — only verified file bytes and datasheet math.';
+  'Daily deterministic radar: fresh GGUF/ONNX model releases from Hugging Face, sized against the real memory ceilings of ESP32-S3, Teensy 4.1, Raspberry Pi 5, Coral Edge TPU and Jetson Orin Nano.';
 ---
 
 <Layout title={title} description={description}>
@@ -93,17 +113,18 @@ const description =
     status="Daily"
   >
     <Fragment slot="hero-actions">
-      <div class="mt-8 flex flex-wrap gap-2">
+      <div class="mt-8 flex flex-wrap gap-2.5">
         <a href="#landscape" class="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary-text px-5 text-[0.9rem] font-bold text-canvas hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor">
           Memory landscape ↓
         </a>
-        <a href="#radar" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Matrix ↓</a>
+        <a href="#radar" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Fit matrix ↓</a>
+        <a href="#quant-spectrum" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">BPW spectrum ↓</a>
         <a href="#methodology" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Methodology</a>
         <a href="/resources" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">← Resources</a>
       </div>
       {generatedAt && (
         <p class="mt-6 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
-          {formattedDate} · {models.length} models × {boards.length} boards · generated {new Date(generatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
+          {formattedDate} · {totalModels} models × {totalBoards} boards · generated {new Date(generatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
         </p>
       )}
     </Fragment>
@@ -111,18 +132,71 @@ const description =
 
   {latest ? (
     <>
-      {/* ── Visual-first: board ceiling strip (item 2) ─────────────── */}
+      {/* ── Editorial Hero Overview & Radar Mark ───────────────────── */}
+      <section class="border-b border-border bg-card-bg/40 py-10 sm:py-14">
+        <div class="mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
+          <div class="grid gap-8 lg:grid-cols-12 lg:items-center">
+            {/* Left: Stat Kicker Cards */}
+            <div class="space-y-6 lg:col-span-7">
+              <div>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-text">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Daily Snapshot · {dateStr}
+                </span>
+                <h2 class="mt-3 text-[clamp(1.5rem,3.2vw,2.2rem)] font-bold tracking-[-0.04em] text-primary-text leading-tight">
+                  Real file sizes vs real hardware memory limits.
+                </h2>
+                <p class="mt-2 text-[0.95rem] leading-[1.65] text-muted-text max-w-2xl">
+                  Quantized model weights vary dramatically by quantization scheme. Below is today's verified fit profile across microcontrollers, single-board computers, and edge GPU accelerators.
+                </p>
+              </div>
+
+              {/* Stat Grid */}
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div class="rounded-[14px] border border-border bg-card-bg p-4">
+                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Scanned</span>
+                  <div class="mt-1 font-mono text-[1.4rem] font-bold text-primary-text">{totalModels}</div>
+                  <span class="text-[0.7rem] text-muted-text">HF Releases</span>
+                </div>
+                <div class="rounded-[14px] border border-border bg-card-bg p-4">
+                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Ceilings</span>
+                  <div class="mt-1 font-mono text-[1.25rem] font-bold text-primary-text">7M–6.5G</div>
+                  <span class="text-[0.7rem] text-muted-text">RAM Span</span>
+                </div>
+                <div class="rounded-[14px] border border-border bg-card-bg p-4">
+                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">SBC Fits</span>
+                  <div class="mt-1 font-mono text-[1.4rem] font-bold text-emerald-600 dark:text-emerald-400">{pi5Fits}/{totalModels}</div>
+                  <span class="text-[0.7rem] text-muted-text">Pi 5 / Orin Nano</span>
+                </div>
+                <div class="rounded-[14px] border border-border bg-card-bg p-4">
+                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">MCU Fits</span>
+                  <div class="mt-1 font-mono text-[1.4rem] font-bold text-muted-text">{mcuFits}/{totalModels}</div>
+                  <span class="text-[0.7rem] text-muted-text">ESP32 / Teensy</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Deterministic Hero Radar Spider Mark */}
+            <div class="lg:col-span-5">
+              <RadarSpider boards={boards} models={models} fits={fits} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 1: Board Ceiling Strip (Item 2) ────────────────── */}
       <section id="landscape" class="border-b border-border bg-canvas" aria-labelledby="landscape-title">
         <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
           <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 id="landscape-title" class="text-[clamp(1.4rem,3vw,1.9rem)] font-[700] tracking-[-0.04em] text-primary-text">Memory landscape, today</h2>
+              <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Visual Map 01</span>
+              <h2 id="landscape-title" class="mt-1 text-[clamp(1.4rem,3vw,1.9rem)] font-bold tracking-[-0.04em] text-primary-text">Memory landscape, today</h2>
               <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
-                Log ruler from the smallest MCU ceiling (7 MiB) to the biggest SBC ceiling (6.5 GiB). Every dot is a model at its runtime estimate — left of a board's line you have headroom, right you don't. Top band shows best verdict across all boards.
+                Log ruler from the smallest MCU ceiling (7 MiB) to the biggest SBC ceiling (6.5 GiB). Every dot is a model at its runtime estimate — left of a board's line you have headroom, right you don't. Top band shows overview verdict across all boards.
               </p>
             </div>
-            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
-              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> log scale · {models.length} models plotted
+            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> log ruler · {models.length} models plotted
             </span>
           </div>
 
@@ -131,72 +205,73 @@ const description =
           </div>
 
           <div class="mt-6 flex flex-wrap gap-2 font-mono text-[0.6rem] text-muted-text">
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-2.5 py-1">
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1">
               <span class="h-1 w-16 rounded-full bg-gradient-to-r from-[var(--mp-elevated)] to-[var(--mp-cta)]" aria-hidden="true"></span>
               footprint ↑ grows → right (log)
             </span>
-            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-2.5 py-1">7 MiB MCU → 6.5 GiB SBC</span>
-            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-2.5 py-1">zero JS · SSR SVG · CLS 0</span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-3 py-1">7 MiB MCU → 6.5 GiB SBC</span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-3 py-1">zero JS · SSR SVG · CLS 0</span>
           </div>
         </div>
       </section>
 
-      {/* ── Fit matrix ─────────────────────────────────────────────── */}
-      <section id="radar" class="border-b border-border" aria-labelledby="radar-title">
+      {/* ── Section 2: Fit Matrix ──────────────────────────────────── */}
+      <section id="radar" class="border-b border-border bg-card-bg/20" aria-labelledby="radar-title">
         <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
           <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 id="radar-title" class="text-[clamp(1.3rem,2.8vw,1.7rem)] font-[650] tracking-[-0.04em] text-primary-text">Today's fit matrix</h2>
+              <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Data Table 02</span>
+              <h2 id="radar-title" class="mt-1 text-[clamp(1.4rem,3vw,1.8rem)] font-bold tracking-[-0.04em] text-primary-text">Today's fit matrix</h2>
               <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
-                Representative quant file per repo (Q4_K_M preferred), runtime estimate = verified bytes × 1.25, against each board's disclosed model-memory ceiling. <span class="text-emerald-600 dark:text-emerald-400 font-medium">Fits</span> ≤ 80% of ceiling · <span class="text-amber-600 dark:text-amber-400 font-medium">Tight</span> ≤ 100% · otherwise No.
+                Representative quant file per repo (Q4_K_M preferred), runtime estimate = verified bytes × 1.25, against each board's disclosed model-memory ceiling. <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Fits</span> ≤ 80% of ceiling · <span class="text-amber-600 dark:text-amber-400 font-semibold">Tight</span> ≤ 100% · otherwise No.
               </p>
             </div>
-            <span class="inline-flex items-center rounded-full border border-border bg-elevated px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
+            <span class="inline-flex items-center rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
               <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
               Scan {dateStr}
             </span>
           </div>
 
-          <div class="mt-8 overflow-x-auto rounded-[20px] border border-border bg-card-bg">
-            <table class="w-full min-w-[760px] border-collapse text-left">
+          <div class="mt-8 overflow-x-auto rounded-[20px] border border-border bg-card-bg shadow-sm">
+            <table class="w-full min-w-[780px] border-collapse text-left">
               <thead>
-                <tr class="border-b border-border">
-                  <th scope="col" class="sticky left-0 z-10 bg-card-bg px-4 py-3 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Model · representative file</th>
-                  <th scope="col" class="px-3 py-3 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Runtime est.</th>
+                <tr class="border-b border-border bg-elevated/40">
+                  <th scope="col" class="sticky left-0 z-10 bg-card-bg px-4 py-3.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Model · representative file</th>
+                  <th scope="col" class="px-3 py-3.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Runtime est.</th>
                   {boards.map((b) => (
-                    <th scope="col" class="px-3 py-3 text-center font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-text">
+                    <th scope="col" class="px-3 py-3.5 text-center font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">
                       {b.name.split('(')[0].trim()}
-                      <span class="block text-[0.55rem] font-normal normal-case tracking-normal text-muted-text/70">{fmtBytes(b.modelCeilingBytes)} ceiling</span>
+                      <span class="block text-[0.56rem] font-normal normal-case tracking-normal text-muted-text/70">{fmtBytes(b.modelCeilingBytes)} ceiling</span>
                     </th>
                   ))}
-                  <th scope="col" class="px-3 py-3 text-center font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Score</th>
+                  <th scope="col" class="px-3 py-3.5 text-center font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Score</th>
                 </tr>
               </thead>
               <tbody>
                 {models.map((m) => (
-                  <tr class="border-b border-border/60 last:border-0 hover:bg-elevated/50">
-                    <td class="sticky left-0 z-10 max-w-[22rem] bg-card-bg px-4 py-3 shadow-[8px_0_12px_-8px_var(--mp-card-shadow,rgba(0,0,0,0.08))]">
-                      <a href={m.url} target="_blank" rel="noopener noreferrer" class="text-[0.85rem] font-semibold leading-snug text-primary-text hover:text-primary-cta">
+                  <tr class="border-b border-border/60 last:border-0 hover:bg-elevated/60 transition-colors">
+                    <td class="sticky left-0 z-10 max-w-[22rem] bg-card-bg px-4 py-3.5 shadow-[8px_0_12px_-8px_var(--mp-card-shadow,rgba(0,0,0,0.08))]">
+                      <a href={m.url} target="_blank" rel="noopener noreferrer" class="text-[0.88rem] font-bold leading-snug text-primary-text hover:text-primary-cta">
                         {m.id}
                       </a>
                       <span class="mt-0.5 block font-mono text-[0.62rem] text-muted-text">
                         {m.format.toUpperCase()}{m.quant ? ` · ${m.quant}` : ''} · {fmtBytes(m.fileBytes)} file{m.pipelineTag ? ` · ${m.pipelineTag}` : ''}
                       </span>
                     </td>
-                    <td class="whitespace-nowrap px-3 py-3 font-mono text-[0.75rem] text-primary-text">{fmtBytes(m.runtimeBytes)}</td>
+                    <td class="whitespace-nowrap px-3 py-3.5 font-mono text-[0.78rem] font-medium text-primary-text">{fmtBytes(m.runtimeBytes)}</td>
                     {boards.map((b) => {
                       const f = fitFor(m.id, b.id);
                       const meta = f ? verdictMeta[f.verdict] : verdictMeta.no;
                       return (
-                        <td class="px-3 py-3 text-center">
-                          <span class={`inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas px-2 py-0.5 font-mono text-[0.62rem] ${meta.text}`}>
+                        <td class="px-3 py-3.5 text-center">
+                          <span class={`inline-flex items-center gap-1.5 rounded-full border border-border bg-canvas px-2.5 py-0.5 font-mono text-[0.62rem] ${meta.text}`}>
                             <span class={`h-1.5 w-1.5 rounded-full ${meta.dot}`} aria-hidden="true"></span>
                             {meta.label}
                           </span>
                         </td>
                       );
                     })}
-                    <td class="px-3 py-3 text-center font-mono text-[0.75rem] text-muted-text">{fitsCount(m.id)}/{boards.length}</td>
+                    <td class="px-3 py-3.5 text-center font-mono text-[0.78rem] font-semibold text-muted-text">{fitsCount(m.id)}/{boards.length}</td>
                   </tr>
                 ))}
               </tbody>
@@ -205,35 +280,56 @@ const description =
         </div>
       </section>
 
-      {/* ── Model detail cards ─────────────────────────────────────── */}
-      <section class="border-b border-border" aria-labelledby="models-title">
+      {/* ── Section 3: Quant Spectrum & Board Fit Breakdown (Items 3 & 4) ──── */}
+      <section id="quant-spectrum" class="border-b border-border bg-canvas" aria-labelledby="spectrum-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10 space-y-8">
+          <div>
+            <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Analytics 03 & 04</span>
+            <h2 id="spectrum-title" class="mt-1 text-[clamp(1.4rem,3vw,1.8rem)] font-bold tracking-[-0.04em] text-primary-text">Quantization & board fit analytics</h2>
+            <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
+              Bits-per-weight distribution across today's models and breakdown of fit capacity per hardware board class.
+            </p>
+          </div>
+
+          <div class="grid gap-6 lg:grid-cols-2">
+            <QuantSpectrum models={models} />
+            <BoardFitDistribution boards={boards} models={models} fits={fits} />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 4: Model detail cards (Item 1 MemoryBar) ───────── */}
+      <section class="border-b border-border bg-card-bg/20" aria-labelledby="models-title">
         <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
-          <h2 id="models-title" class="text-[clamp(1.3rem,2.8vw,1.7rem)] font-[650] tracking-[-0.04em] text-primary-text">The arithmetic, per model</h2>
+          <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Per-Model Cards 05</span>
+          <h2 id="models-title" class="mt-1 text-[clamp(1.4rem,3vw,1.8rem)] font-bold tracking-[-0.04em] text-primary-text">The arithmetic, per model</h2>
           <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
-            File bytes come from the repo's verified Hugging Face file tree. Parameter count is back-derived from those bytes ÷ the quant's published bits-per-weight — an approximation, labeled as one. FLOPs/token is the dense-transformer 2·P rule.
+            File bytes come from the repo's verified Hugging Face file tree. Parameter count is back-derived from those bytes ÷ the quant's published bits-per-weight. FLOPs/token is the dense-transformer 2·P rule.
           </p>
           <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {models.map((m) => {
               const perModelFits = fits.filter((f) => f.modelId === m.id);
               return (
-                <li class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5">
+                <li class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5 shadow-sm hover:border-[var(--mp-border-strong)] transition-all">
                   <div class="flex items-center justify-between gap-2">
-                    <span class="rounded-full bg-elevated border border-border px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">{m.format}{m.quant ? ` · ${m.quant}` : ''}</span>
-                    <span class="font-mono text-[0.6rem] text-muted-text">{fitsCount(m.id)}/{boards.length} boards</span>
+                    <span class="rounded-full bg-elevated border border-border px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] font-semibold text-muted-text">{m.format}{m.quant ? ` · ${m.quant}` : ''}</span>
+                    <span class="font-mono text-[0.62rem] font-semibold text-muted-text">{fitsCount(m.id)}/{boards.length} boards</span>
                   </div>
-                  <a href={m.url} target="_blank" rel="noopener noreferrer" class="mt-3 text-[0.95rem] font-semibold leading-snug text-primary-text hover:text-primary-cta">{m.id}</a>
+                  <a href={m.url} target="_blank" rel="noopener noreferrer" class="mt-3 text-[0.95rem] font-bold leading-snug text-primary-text hover:text-primary-cta">
+                    {m.id}
+                  </a>
                   <span class="mt-1 truncate font-mono text-[0.62rem] text-muted-text" title={m.fileName}>{m.fileName}</span>
                   <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-4">
-                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">File</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtBytes(m.fileBytes)}</dd></div>
-                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Runtime est.</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtBytes(m.runtimeBytes)}</dd></div>
-                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">≈ Params</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtParams(m.approxParams)}</dd></div>
-                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">FLOPs/token</dt><dd class="font-mono text-[0.78rem] text-primary-text">{fmtFlops(m.flopsPerToken)}</dd></div>
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">File</dt><dd class="font-mono text-[0.78rem] font-medium text-primary-text">{fmtBytes(m.fileBytes)}</dd></div>
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Runtime est.</dt><dd class="font-mono text-[0.78rem] font-medium text-primary-text">{fmtBytes(m.runtimeBytes)}</dd></div>
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">≈ Params</dt><dd class="font-mono text-[0.78rem] font-medium text-primary-text">{fmtParams(m.approxParams)}</dd></div>
+                    <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">FLOPs/token</dt><dd class="font-mono text-[0.78rem] font-medium text-primary-text">{fmtFlops(m.flopsPerToken)}</dd></div>
                   </dl>
-                  {/* item 1: log-scale memory bar with board ceiling markers — SSR SVG, zero JS, CLS fixed */}
+                  {/* Re-crafted MemoryBar (Items 1 & 2) */}
                   <div class="mt-4">
                     <div class="mb-1.5 flex items-center justify-between">
                       <span class="font-mono text-[0.56rem] uppercase tracking-[0.12em] text-muted-text">Footprint vs ceilings · log 1 MiB→16 GiB</span>
-                      <span class="font-mono text-[0.56rem] text-muted-text">{fmtBytes(m.runtimeBytes)}</span>
+                      <span class="font-mono text-[0.56rem] font-semibold text-primary-text">{fmtBytes(m.runtimeBytes)}</span>
                     </div>
                     <MemoryBar runtimeBytes={m.runtimeBytes} modelId={m.id} boards={boards} fits={perModelFits} />
                   </div>
@@ -244,25 +340,41 @@ const description =
         </div>
       </section>
 
-      {/* ── Boards + curated kits ──────────────────────────────────── */}
-      <section class="border-b border-border" aria-labelledby="boards-title">
+      {/* ── Section 5: Historical Release Trend (Item 6) ───────────── */}
+      <section class="border-b border-border bg-canvas" aria-labelledby="trend-title">
+        <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10 space-y-6">
+          <div>
+            <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Historical Trend 06</span>
+            <h2 id="trend-title" class="mt-1 text-[clamp(1.4rem,3vw,1.8rem)] font-bold tracking-[-0.04em] text-primary-text">Daily release & fit history</h2>
+            <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
+              Tracking total Hugging Face releases vs edge-fittable models across daily radar snapshots.
+            </p>
+          </div>
+
+          <TrendSparkline entries={entries} />
+        </div>
+      </section>
+
+      {/* ── Section 6: Boards + Curated Dev Kits ───────────────────── */}
+      <section class="border-b border-border bg-card-bg/20" aria-labelledby="boards-title">
         <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
           <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 id="boards-title" class="text-[clamp(1.3rem,2.8vw,1.7rem)] font-[650] tracking-[-0.04em] text-primary-text">The boards behind the ceilings</h2>
+              <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Hardware 07</span>
+              <h2 id="boards-title" class="mt-1 text-[clamp(1.4rem,3vw,1.8rem)] font-bold tracking-[-0.04em] text-primary-text">The boards behind the ceilings</h2>
               <AffiliateDisclosure class="mt-3 max-w-2xl" />
             </div>
           </div>
           <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {boardKits.map(({ board, links }) => (
-              <div class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5">
+              <div class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-2">
-                  <span class="rounded-full bg-elevated border border-border px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">{board.class}</span>
+                  <span class="rounded-full bg-elevated border border-border px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] font-semibold text-muted-text">{board.class}</span>
                   <span class="font-mono text-[0.62rem] text-muted-text">{board.ramLabel}</span>
                 </div>
-                <h3 class="mt-3 text-[0.95rem] font-semibold text-primary-text">{board.name}</h3>
-                <p class="mt-2 flex-1 text-[0.8rem] leading-[1.55] text-muted-text">{board.note}</p>
-                <p class="mt-3 font-mono text-[0.68rem] text-primary-text">Model ceiling · {fmtBytes(board.modelCeilingBytes)}</p>
+                <h3 class="mt-3 text-[0.95rem] font-bold text-primary-text">{board.name}</h3>
+                <p class="mt-2 flex-1 text-[0.82rem] leading-[1.55] text-muted-text">{board.note}</p>
+                <p class="mt-3 font-mono text-[0.68rem] font-semibold text-primary-text">Model ceiling · {fmtBytes(board.modelCeilingBytes)}</p>
                 {links.length > 0 && (
                   <ul class="mt-3 space-y-1.5 border-t border-border pt-3">
                     {links.map((l) => (
@@ -271,7 +383,7 @@ const description =
                           href={l.url}
                           target="_blank"
                           rel="sponsored noopener noreferrer"
-                          class="group/link flex items-center justify-between gap-2 rounded-[10px] border border-border bg-canvas px-3 py-2 text-[0.78rem] font-medium text-primary-text hover:border-[var(--mp-border-strong)] hover:text-primary-cta"
+                          class="group/link flex items-center justify-between gap-2 rounded-[10px] border border-border bg-canvas px-3 py-2 text-[0.78rem] font-semibold text-primary-text hover:border-[var(--mp-border-strong)] hover:text-primary-cta transition-colors"
                         >
                           <span class="truncate">{l.title}</span>
                           <span class="shrink-0 font-mono text-[0.68rem] text-muted-text">{l.price ? `${l.price} ↗` : '↗'}</span>
@@ -286,10 +398,11 @@ const description =
         </div>
       </section>
 
-      {/* ── Methodology ────────────────────────────────────────────── */}
-      <section id="methodology" class="border-b border-border" aria-labelledby="method-title">
+      {/* ── Section 7: Methodology ─────────────────────────────────── */}
+      <section id="methodology" class="border-b border-border bg-canvas" aria-labelledby="method-title">
         <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
-          <h2 id="method-title" class="text-[clamp(1.3rem,2.8vw,1.7rem)] font-[650] tracking-[-0.04em] text-primary-text">Methodology — deterministic, checkable</h2>
+          <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Verification 08</span>
+          <h2 id="method-title" class="mt-1 text-[clamp(1.4rem,3vw,1.8rem)] font-bold tracking-[-0.04em] text-primary-text">Methodology — deterministic, checkable</h2>
           <div class="mt-6 grid gap-4 lg:grid-cols-2">
             <div class="rounded-[16px] border border-border bg-card-bg p-6">
               <h3 class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">Inputs (ground truth only)</h3>
@@ -315,10 +428,11 @@ const description =
         </div>
       </section>
 
-      {/* ── FAQ ────────────────────────────────────────────────────── */}
-      <section aria-labelledby="faq-title">
+      {/* ── Section 8: FAQ ─────────────────────────────────────────── */}
+      <section aria-labelledby="faq-title" class="bg-card-bg/20">
         <div class="mx-auto max-w-[88rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
-          <h2 id="faq-title" class="text-[clamp(1.3rem,2.8vw,1.7rem)] font-[650] tracking-[-0.04em] text-primary-text">FAQ</h2>
+          <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Questions 09</span>
+          <h2 id="faq-title" class="mt-1 text-[clamp(1.4rem,3vw,1.8rem)] font-bold tracking-[-0.04em] text-primary-text">Frequently Asked Questions</h2>
           <div class="mt-6 grid gap-3 lg:grid-cols-2">
             <details class="group rounded-[14px] border border-border bg-card-bg p-5 open:bg-elevated/50">
               <summary class="cursor-pointer list-none text-[0.9rem] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">Why no tokens-per-second or accuracy numbers?<span class="float-right text-muted-text group-open:rotate-45">+</span></summary>

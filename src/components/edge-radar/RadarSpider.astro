@@ -1,0 +1,214 @@
+---
+/**
+ * Deterministic hero "radar" (polar/spider plot) SVG mark.
+ * Seeded entirely from snapshot fit matrix — zero random, zero client JS,
+ * CLS 0 via aspect ratio, themeable via currentColor / --mp-* tokens.
+ */
+interface BoardLite {
+  id: string;
+  name: string;
+  class: string;
+  modelCeilingBytes: number;
+}
+interface ModelLite {
+  id: string;
+}
+interface FitLite {
+  modelId: string;
+  boardId: string;
+  verdict: 'fits' | 'tight' | 'no';
+}
+
+interface Props {
+  boards: BoardLite[];
+  models: ModelLite[];
+  fits: FitLite[];
+}
+
+const { boards, models, fits } = Astro.props;
+
+const totalModels = models.length || 1;
+
+// Calculate fit score for each board (1.0 for fits, 0.5 for tight, 0.0 for no)
+const boardStats = boards.map((b) => {
+  const bFits = fits.filter((f) => f.boardId === b.id);
+  const fitsCount = bFits.filter((f) => f.verdict === 'fits').length;
+  const tightCount = bFits.filter((f) => f.verdict === 'tight').length;
+  const score = (fitsCount + tightCount * 0.5) / totalModels;
+  const fitPct = Math.round((fitsCount / totalModels) * 100);
+  const shortName = b.name.split('(')[0].trim();
+  return {
+    board: b,
+    shortName,
+    fitsCount,
+    tightCount,
+    score,
+    fitPct,
+  };
+});
+
+const W = 360;
+const H = 320;
+const CX = W / 2;
+const CY = H / 2 + 10;
+const R = 105; // radius
+
+const N = boardStats.length;
+// Angles for axes starting top (-PI/2)
+const axes = boardStats.map((st, i) => {
+  const angle = -Math.PI / 2 + (i * 2 * Math.PI) / N;
+  return {
+    ...st,
+    angle,
+    cos: Math.cos(angle),
+    sin: Math.sin(angle),
+  };
+});
+
+// Calculate polygon points for score (minimum 0.08 so zero-fits boards still show a center anchor dot)
+const polyPoints = axes.map((ax) => {
+  const rEff = Math.max(ax.score, 0.06) * R;
+  return {
+    x: CX + rEff * ax.cos,
+    y: CY + rEff * ax.sin,
+  };
+});
+
+const polyPointsStr = polyPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+// Grid concentric rings (25%, 50%, 75%, 100%)
+const rings = [0.25, 0.5, 0.75, 1.0];
+---
+
+<div class="relative w-full overflow-hidden rounded-[16px] border border-border bg-card-bg p-4" style={`aspect-ratio: ${W}/${H};`}>
+  <div class="mb-1 flex items-center justify-between">
+    <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-primary-text">Board Coverage Radar</span>
+    <span class="font-mono text-[0.58rem] text-muted-text">{totalModels} models scanned</span>
+  </div>
+  <svg
+    viewBox={`0 0 ${W} ${H}`}
+    width="100%"
+    height="100%"
+    role="img"
+    aria-label={`Radar chart showing fit density across ${N} hardware boards: ${axes.map((a) => `${a.shortName}: ${a.fitPct}%`).join(', ')}`}
+    class="absolute inset-0 h-full w-full text-primary-text"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="var(--mp-cta)" stop-opacity="0.28"></stop>
+        <stop offset="100%" stop-color="var(--mp-cta)" stop-opacity="0.02"></stop>
+      </radialGradient>
+    </defs>
+
+    {/* Concentric grid rings */}
+    <g aria-hidden="true">
+      {rings.map((rFrac) => {
+        const rVal = rFrac * R;
+        const ringPoints = axes
+          .map((ax) => `${(CX + rVal * ax.cos).toFixed(1)},${(CY + rVal * ax.sin).toFixed(1)}`)
+          .join(' ');
+        return (
+          <polygon
+            points={ringPoints}
+            fill="none"
+            stroke="var(--mp-border)"
+            stroke-width={rFrac === 1.0 ? '1.2' : '0.8'}
+            stroke-dasharray={rFrac === 1.0 ? '0' : '3 3'}
+            opacity={rFrac === 1.0 ? '0.9' : '0.6'}
+          />
+        );
+      })}
+
+      {/* Axis radial spokes */}
+      {axes.map((ax) => (
+        <line
+          x1={CX}
+          y1={CY}
+          x2={CX + R * ax.cos}
+          y2={CY + R * ax.sin}
+          stroke="var(--mp-border)"
+          stroke-width="0.9"
+          opacity="0.7"
+        />
+      ))}
+    </g>
+
+    {/* Glow background behind polygon */}
+    <circle cx={CX} cy={CY} r={R} fill="url(#radar-glow)" aria-hidden="true" />
+
+    {/* Filled Radar Polygon */}
+    <g>
+      <polygon
+        points={polyPointsStr}
+        fill="var(--mp-cta)"
+        fill-opacity="0.2"
+        stroke="var(--mp-cta)"
+        stroke-width="2"
+        stroke-linejoin="round"
+      />
+    </g>
+
+    {/* Vertices & Axis Labels */}
+    {axes.map((ax, i) => {
+      const p = polyPoints[i];
+      const labelDist = R + 22;
+      const lx = CX + labelDist * ax.cos;
+      const ly = CY + labelDist * ax.sin;
+
+      // Text alignment based on position
+      const textAnchor =
+        Math.abs(ax.cos) < 0.15 ? 'middle' : ax.cos > 0 ? 'start' : 'end';
+
+      const isFits = ax.fitsCount > 0;
+
+      return (
+        <g class="group/vertex cursor-pointer">
+          {/* Data point dot on radar */}
+          <circle
+            cx={p.x}
+            cy={p.y}
+            r="4.5"
+            fill="var(--mp-card)"
+            stroke="var(--mp-cta)"
+            stroke-width="2"
+          />
+          <circle
+            cx={p.x}
+            cy={p.y}
+            r="2"
+            fill="var(--mp-cta)"
+          />
+
+          {/* Outer board label */}
+          <text
+            x={lx}
+            y={ly - 4}
+            text-anchor={textAnchor}
+            font-family="var(--font-sans)"
+            font-size="9.5"
+            font-weight="700"
+            fill="currentColor"
+            class="text-primary-text"
+          >
+            {ax.shortName}
+          </text>
+          <text
+            x={lx}
+            y={ly + 7}
+            text-anchor={textAnchor}
+            font-family="var(--font-mono)"
+            font-size="8"
+            fill="currentColor"
+            class={isFits ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-muted-text'}
+          >
+            {ax.fitsCount}/{totalModels} fit ({ax.fitPct}%)
+          </text>
+        </g>
+      );
+    })}
+
+    {/* Center origin indicator */}
+    <circle cx={CX} cy={CY} r="2.5" fill="var(--mp-border-strong)" />
+  </svg>
+</div>

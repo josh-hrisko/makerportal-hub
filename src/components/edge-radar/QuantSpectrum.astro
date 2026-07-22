@@ -1,0 +1,259 @@
+---
+/**
+ * Quantization Bits-Per-Weight (bpw) Spectrum Graphic.
+ * Shows the distribution of quantization formats across today's scanned models.
+ * SSR-only, zero JS, CLS 0 via aspect ratio, themeable via currentColor / --mp-*.
+ */
+interface ModelLite {
+  id: string;
+  quant?: string | null;
+  format: string;
+  fileBytes: number;
+}
+
+interface Props {
+  models: ModelLite[];
+}
+
+const { models } = Astro.props;
+
+const bpwMap: Record<string, number> = {
+  Q2_K: 2.5,
+  Q3_K_S: 3.2,
+  Q3_K_M: 3.45,
+  Q3_K_L: 3.75,
+  Q4_0: 4.5,
+  Q4_K_S: 4.5,
+  Q4_K_M: 4.85,
+  Q5_0: 5.5,
+  Q5_K_S: 5.5,
+  Q5_K_M: 5.5,
+  Q6_K: 6.56,
+  Q8_0: 8.5,
+  FP16: 16.0,
+  F16: 16.0,
+};
+
+// Default estimation if quant not recognized
+function getBpw(m: ModelLite): number {
+  if (m.quant && bpwMap[m.quant.toUpperCase()]) {
+    return bpwMap[m.quant.toUpperCase()];
+  }
+  if (m.quant?.startsWith('Q4')) return 4.85;
+  if (m.quant?.startsWith('Q8')) return 8.5;
+  if (m.quant?.startsWith('Q5')) return 5.5;
+  if (m.quant?.startsWith('Q2')) return 2.5;
+  if (m.format === 'onnx') return 8.0; // standard ONNX int8 default
+  return 4.85;
+}
+
+const DOMAIN_MIN = 2.0;
+const DOMAIN_MAX = 16.0;
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+const frac = (bpw: number) => (clamp(bpw, DOMAIN_MIN, DOMAIN_MAX) - DOMAIN_MIN) / (DOMAIN_MAX - DOMAIN_MIN);
+
+const W = 640;
+const H = 140;
+const LEFT = 24;
+const RIGHT = 24;
+const TRACK_W = W - LEFT - RIGHT;
+const TRACK_Y = 56;
+const TRACK_H = 14;
+
+// Group models by quant format
+const groups = new Map<string, { quant: string; bpw: number; models: ModelLite[] }>();
+
+for (const m of models) {
+  const bpw = getBpw(m);
+  const qKey = m.quant || m.format.toUpperCase();
+  const existing = groups.get(qKey) ?? { quant: qKey, bpw, models: [] };
+  existing.models.push(m);
+  groups.set(qKey, existing);
+}
+
+const groupList = [...groups.values()].sort((a, b) => a.bpw - b.bpw);
+
+const ticks = [
+  { label: '2 bpw', bpw: 2.0, note: 'Extreme loss' },
+  { label: '4.85 bpw (Q4_K_M)', bpw: 4.85, note: 'Sweet spot' },
+  { label: '8.5 bpw (Q8_0)', bpw: 8.5, note: 'High fidelity' },
+  { label: '16.0 bpw', bpw: 16.0, note: 'FP16 full' },
+];
+---
+
+<div class="w-full overflow-hidden rounded-[16px] border border-border bg-card-bg p-5">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+    <div>
+      <h3 class="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
+        Quantization Spectrum · Bits Per Weight (bpw)
+      </h3>
+      <p class="mt-0.5 text-[0.78rem] text-muted-text">
+        Lower bpw fits smaller boards; 4.85 bpw (Q4_K_M) retains ~99% perplexity with 70% RAM savings.
+      </p>
+    </div>
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-[0.6rem] text-muted-text">
+      {models.length} models across {groupList.length} quants
+    </span>
+  </div>
+
+  <div class="relative mt-3 w-full bg-canvas" style={`aspect-ratio: ${W}/${H};`}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height="100%"
+      role="img"
+      aria-label={`Quantization spectrum showing distribution of ${models.length} models from 2.0 to 16.0 bits per weight`}
+      class="absolute inset-0 h-full w-full text-primary-text"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="quant-spectrum-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#10b981"></stop>
+          <stop offset="35%" stop-color="var(--mp-cta)"></stop>
+          <stop offset="70%" stop-color="#f59e0b"></stop>
+          <stop offset="100%" stop-color="#ef4444"></stop>
+        </linearGradient>
+      </defs>
+
+      {/* Spectrum Track */}
+      <rect
+        x={LEFT}
+        y={TRACK_Y}
+        width={TRACK_W}
+        height={TRACK_H}
+        rx={TRACK_H / 2}
+        fill="url(#quant-spectrum-grad)"
+        opacity="0.85"
+      />
+      <rect
+        x={LEFT}
+        y={TRACK_Y}
+        width={TRACK_W}
+        height={TRACK_H}
+        rx={TRACK_H / 2}
+        fill="none"
+        stroke="var(--mp-border)"
+        stroke-width="1"
+      />
+
+      {/* Sweet spot indicator highlight */}
+      <g>
+        {(() => {
+          const q4x = LEFT + frac(4.85) * TRACK_W;
+          return (
+            <g>
+              <rect
+                x={q4x - 22}
+                y={TRACK_Y - 2}
+                width="44"
+                height={TRACK_H + 4}
+                rx="6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                class="text-emerald-500"
+              />
+            </g>
+          );
+        })()}
+      </g>
+
+      {/* Ticks and vertical guides */}
+      {ticks.map((t) => {
+        const tx = LEFT + frac(t.bpw) * TRACK_W;
+        return (
+          <g>
+            <line
+              x1={tx}
+              y1={TRACK_Y + TRACK_H}
+              x2={tx}
+              y2={TRACK_Y + TRACK_H + 6}
+              stroke="var(--mp-border-strong)"
+              stroke-width="1"
+            />
+            <text
+              x={tx}
+              y={H - 12}
+              text-anchor={tx < LEFT + 40 ? 'start' : tx > W - RIGHT - 40 ? 'end' : 'middle'}
+              font-family="var(--font-mono)"
+              font-size="8.5"
+              font-weight="600"
+              fill="currentColor"
+              class="text-primary-text"
+            >
+              {t.label}
+            </text>
+            <text
+              x={tx}
+              y={H - 2}
+              text-anchor={tx < LEFT + 40 ? 'start' : tx > W - RIGHT - 40 ? 'end' : 'middle'}
+              font-family="var(--font-mono)"
+              font-size="7.5"
+              fill="currentColor"
+              class="text-muted-text"
+            >
+              {t.note}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Plotted model groups on top of spectrum */}
+      {groupList.map((g, i) => {
+        const gx = LEFT + frac(g.bpw) * TRACK_W;
+        const count = g.models.length;
+        // Stagger y position if needed
+        const badgeY = TRACK_Y - 14 - (i % 2) * 12;
+
+        return (
+          <g class="group/quant">
+            {/* Leader line down to track */}
+            <line
+              x1={gx}
+              y1={badgeY + 12}
+              x2={gx}
+              y2={TRACK_Y}
+              stroke="var(--mp-border-strong)"
+              stroke-width="1"
+            />
+            {/* Dot on track */}
+            <circle
+              cx={gx}
+              cy={TRACK_Y + TRACK_H / 2}
+              r="4.5"
+              fill="var(--mp-card)"
+              stroke="currentColor"
+              stroke-width="1.8"
+              class="text-primary-text"
+            />
+            {/* Quant badge above */}
+            <g transform={`translate(${clamp(gx, LEFT + 24, W - RIGHT - 24)}, ${badgeY})`}>
+              <rect
+                x="-24"
+                y="-10"
+                width="48"
+                height="14"
+                rx="6"
+                fill="var(--mp-card)"
+                stroke="var(--mp-border)"
+                stroke-width="1"
+              />
+              <text
+                text-anchor="middle"
+                y="0"
+                font-family="var(--font-mono)"
+                font-size="8"
+                font-weight="700"
+                fill="currentColor"
+                class="text-primary-text"
+              >
+                {g.quant} ({count})
+              </text>
+            </g>
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+</div>
