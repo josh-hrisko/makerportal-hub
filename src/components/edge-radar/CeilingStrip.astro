@@ -55,36 +55,42 @@ const componentId = `simulator-${Math.random().toString(36).substring(2, 7)}`;
 
 // Initial SSR simulation calculations (2048 tokens baseline)
 const defaultSeqLen = 2048;
-const calcAllocations = (mBytes: number, fBytes: number, ceiling: number, seqLen: number) => {
+
+function calcAllocations(mBytes: number, fBytes: number, ceiling: number, seqLen: number) {
   const weights = fBytes;
-  const overhead = fBytes * 0.15; // 15% scratchpad / tensor runtime overhead
-  const kvCache = mBytes * 0.05 * (seqLen / 2048); // KV cache scales linearly with sequence length
+  const overhead = Math.max(fBytes * 0.12, 512 * 1024); // runtime overhead
+  // KV Cache scales with sequence length and model capacity
+  const baseKvRatio = ceiling < 32 * MIB ? 0.08 : 0.04;
+  const kvCache = Math.max(mBytes * baseKvRatio * (seqLen / 2048), 256 * 1024);
   const total = weights + overhead + kvCache;
 
-  const weightsPct = Math.min((weights / ceiling) * 100, 100);
-  const overheadPct = Math.min((overhead / ceiling) * 100, 100 - weightsPct);
-  const kvPct = Math.min((kvCache / ceiling) * 100, Math.max(0, 100 - weightsPct - overheadPct));
   const totalPct = Math.round((total / ceiling) * 100);
+
+  // Proportional segment widths relative to TOTAL required memory (up to 100% of container)
+  const normDenom = Math.max(total, ceiling);
+  const weightsPct = Math.min((weights / normDenom) * 100, 100);
+  const overheadPct = Math.min((overhead / normDenom) * 100, 100);
+  const kvPct = Math.min((kvCache / normDenom) * 100, 100);
 
   let status: 'fits' | 'tight' | 'exceeds' = 'fits';
   if (totalPct > 100) status = 'exceeds';
   else if (totalPct > 80) status = 'tight';
 
-  const headroom = Math.abs(ceiling - total);
+  const diff = Math.abs(ceiling - total);
 
   return {
     weights,
     overhead,
     kvCache,
     total,
+    totalPct,
     weightsPct,
     overheadPct,
     kvPct,
-    totalPct,
     status,
-    headroom,
+    diff,
   };
-};
+}
 
 const boardSimulations = boards.map((b) => ({
   board: b,
@@ -93,7 +99,7 @@ const boardSimulations = boards.map((b) => ({
   sim: calcAllocations(defaultModel.runtimeBytes, defaultModel.fileBytes, b.modelCeilingBytes, defaultSeqLen),
 }));
 
-// Clean payload for script execution
+// Clean payload for client script
 const modelsPayload = models.map((m) => ({
   id: m.id,
   runtimeBytes: m.runtimeBytes,
@@ -113,23 +119,23 @@ const modelsPayload = models.map((m) => ({
           Hardware Memory Allocation & Context Pressure Simulator
         </div>
         <p class="mt-1 text-[0.85rem] leading-[1.5] text-muted-text max-w-3xl">
-          Simulate how quantized model weights, runtime scratchpads, and dynamic KV cache context buffers occupy memory across hardware targets — from 7 MiB microcontrollers to 6.5 GiB SBCs.
+          Drag the context slider or select different models below. Watch how tensor weights, runtime overhead, and expanding KV cache context buffers occupy real hardware memory banks in real time.
         </p>
       </div>
       {/* Visual Legend */}
       <div class="flex flex-wrap items-center gap-3 font-mono text-[0.62rem] text-muted-text shrink-0">
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> Weights</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-teal-400"></span> KV Cache</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-cyan-600"></span> Overhead</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> Tensors</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-cyan-400"></span> KV Cache</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-slate-500"></span> Overhead</span>
         <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-amber-500"></span> Tight (80-100%)</span>
         <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-red-500"></span> Overflow (&gt;100%)</span>
       </div>
     </div>
 
-    {/* Simulator Control Rail: Model Selector + Context Length Slider */}
+    {/* Simulator Control Panel */}
     <div class="mt-5 grid gap-4 lg:grid-cols-12 lg:items-center border-t border-border/60 pt-4">
       {/* Model Selection Pills */}
-      <div class="lg:col-span-8">
+      <div class="lg:col-span-7">
         <span class="block font-mono text-[0.6rem] font-bold uppercase tracking-wider text-muted-text mb-2">
           1. Select Model Weights:
         </span>
@@ -155,11 +161,11 @@ const modelsPayload = models.map((m) => ({
         </div>
       </div>
 
-      {/* Context Window Slider */}
-      <div class="lg:col-span-4 rounded-[14px] border border-border bg-canvas p-3">
-        <div class="flex items-center justify-between font-mono text-[0.62rem]">
-          <span class="font-bold text-primary-text uppercase tracking-wider">2. Context Window:</span>
-          <span class="font-bold text-emerald-600 dark:text-emerald-400" id={`${componentId}-seq-label`}>
+      {/* Interactive Context Window Slider */}
+      <div class="lg:col-span-5 rounded-[14px] border border-border bg-canvas p-3.5 shadow-xs">
+        <div class="flex items-center justify-between font-mono text-[0.65rem]">
+          <span class="font-bold text-primary-text uppercase tracking-wider">2. Context Length:</span>
+          <span class="font-bold text-cyan-600 dark:text-cyan-400 text-[0.8rem]" id={`${componentId}-seq-label`}>
             2,048 tokens
           </span>
         </div>
@@ -170,31 +176,31 @@ const modelsPayload = models.map((m) => ({
           max="8192"
           step="512"
           value="2048"
-          class="mt-2 w-full accent-primary-text cursor-pointer"
+          class="mt-2.5 w-full h-2 accent-cyan-500 rounded-lg cursor-pointer bg-elevated"
         />
-        <div class="flex justify-between font-mono text-[0.55rem] text-muted-text mt-1">
+        <div class="flex justify-between font-mono text-[0.58rem] text-muted-text mt-1.5">
           <span>512 tks</span>
-          <span>2k tks</span>
-          <span>4k tks</span>
-          <span>8k tks</span>
+          <span>2,048 tks</span>
+          <span>4,096 tks</span>
+          <span>8,192 tks</span>
         </div>
       </div>
     </div>
   </div>
 
-  {/* Active Model & Context Simulation Summary Bar */}
-  <div class="border-b border-border bg-canvas/80 px-6 py-3 flex flex-wrap items-center justify-between gap-3 font-mono text-[0.68rem]">
+  {/* Active Simulation Headline Banner */}
+  <div class="border-b border-border bg-canvas/90 px-6 py-3 flex flex-wrap items-center justify-between gap-3 font-mono text-[0.68rem]">
     <div class="flex items-center gap-2">
-      <span class="text-muted-text">Simulating:</span>
+      <span class="text-muted-text">Active Simulation:</span>
       <span class="font-bold text-primary-text" id={`${componentId}-active-model-name`}>
         {defaultModel.id}
       </span>
       <span class="text-muted-text">({defaultModel.format}{defaultModel.quant ? ` · ${defaultModel.quant}` : ''})</span>
     </div>
     <div class="flex flex-wrap items-center gap-4 text-muted-text">
-      <span>Tensors: <strong class="text-primary-text" id={`${componentId}-active-weights`}>{fmtBytes(defaultModel.fileBytes)}</strong></span>
-      <span>Overhead: <strong class="text-primary-text" id={`${componentId}-active-overhead`}>{fmtBytes(defaultModel.fileBytes * 0.15)}</strong></span>
-      <span>KV Cache: <strong class="text-emerald-600 dark:text-emerald-400" id={`${componentId}-active-kv`}>{fmtBytes(defaultModel.runtimeBytes * 0.05)}</strong></span>
+      <span>Tensors: <strong class="text-emerald-600 dark:text-emerald-400" id={`${componentId}-active-weights`}>{fmtBytes(defaultModel.fileBytes)}</strong></span>
+      <span>KV Cache: <strong class="text-cyan-600 dark:text-cyan-400" id={`${componentId}-active-kv`}>{fmtBytes(defaultModel.runtimeBytes * 0.04)}</strong></span>
+      <span>Overhead: <strong class="text-primary-text" id={`${componentId}-active-overhead`}>{fmtBytes(defaultModel.fileBytes * 0.12)}</strong></span>
     </div>
   </div>
 
@@ -230,44 +236,35 @@ const modelsPayload = models.map((m) => ({
           </div>
         </div>
 
-        {/* Multi-Segmented Memory Track with 80% Threshold Line */}
+        {/* Multi-Segmented Memory Progress Bar */}
         <div class="relative h-7 w-full rounded-xl bg-canvas border border-border overflow-hidden flex">
           {/* 80% Safety Line Marker */}
           <div
             class="absolute top-0 bottom-0 w-[2px] bg-amber-500/80 z-20"
             style="left: 80%;"
-            title="80% Safety Threshold"
+            title="80% Recommended Safety Threshold"
           ></div>
 
-          {/* Segment 1: Weights */}
+          {/* Segment 1: Tensors (Emerald) */}
           <div
-            class="sim-seg-weights h-full bg-emerald-500 transition-all duration-300 relative"
+            class="sim-seg-weights h-full bg-emerald-500 transition-all duration-200"
             style={`width: ${item.sim.weightsPct}%;`}
-            title={`Weights: ${fmtBytes(item.sim.weights)}`}
+            title={`Tensors: ${fmtBytes(item.sim.weights)}`}
           ></div>
 
-          {/* Segment 2: KV Cache */}
+          {/* Segment 2: KV Cache (Cyan) */}
           <div
-            class="sim-seg-kv h-full bg-teal-400 transition-all duration-300 relative"
+            class="sim-seg-kv h-full bg-cyan-400 transition-all duration-200"
             style={`width: ${item.sim.kvPct}%;`}
             title={`KV Cache: ${fmtBytes(item.sim.kvCache)}`}
           ></div>
 
-          {/* Segment 3: Overhead */}
+          {/* Segment 3: Overhead (Slate/Cyan-dark) */}
           <div
-            class="sim-seg-overhead h-full bg-cyan-600 transition-all duration-300 relative"
+            class="sim-seg-overhead h-full bg-slate-500/70 transition-all duration-200"
             style={`width: ${item.sim.overheadPct}%;`}
             title={`Overhead: ${fmtBytes(item.sim.overhead)}`}
           ></div>
-
-          {/* Overflow indicator if total > ceiling */}
-          {item.sim.status === 'exceeds' && (
-            <div
-              class="sim-seg-overflow h-full bg-red-500/90 transition-all duration-300 absolute right-0 top-0 bottom-0 animate-pulse z-10"
-              style="width: 20%;"
-              title="Memory Overflow!"
-            ></div>
-          )}
         </div>
 
         {/* Vessel Footprint & Headroom Verdict Footer */}
@@ -280,11 +277,11 @@ const modelsPayload = models.map((m) => ({
 
           <div class="sim-verdict-badge font-bold">
             {item.sim.status === 'fits' ? (
-              <span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · {fmtBytes(item.sim.headroom)} Free Headroom</span>
+              <span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · {fmtBytes(item.sim.diff)} Free Headroom</span>
             ) : item.sim.status === 'tight' ? (
-              <span class="text-amber-600 dark:text-amber-400">⚠️ Tight · {fmtBytes(item.sim.headroom)} Margin</span>
+              <span class="text-amber-600 dark:text-amber-400">⚠️ Tight · {fmtBytes(item.sim.diff)} Margin</span>
             ) : (
-              <span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +{fmtBytes(item.sim.headroom)}</span>
+              <span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +{fmtBytes(item.sim.diff)} ({item.sim.totalPct}%)</span>
             )}
           </div>
         </div>
@@ -295,14 +292,14 @@ const modelsPayload = models.map((m) => ({
   {/* Simulator Footer Notes */}
   <div class="border-t border-border bg-elevated/30 px-6 py-3 font-mono text-[0.62rem] text-muted-text flex flex-wrap items-center justify-between gap-2">
     <span>
-      Simulation arithmetic: Total Memory = Tensor Weights + Runtime Overhead (15%) + KV Cache (scaled to sequence length).
+      Simulation arithmetic: Total Memory = Tensor Weights + Runtime Overhead (12%) + KV Cache (scaled to sequence length).
     </span>
     <span class="font-bold text-primary-text">7 MiB MCU &rarr; 6.5 GiB SBC</span>
   </div>
 </div>
 
 {/* Inline Vanilla Script for Dynamic Model & Context Slider Updates */}
-<script is:inline define:vars={{ componentId, modelsPayload, boards }}>
+<script is:inline define:vars={{ componentId, modelsPayload }}>
   function setupSimulator() {
     const root = document.getElementById(componentId);
     if (!root) return;
@@ -332,22 +329,19 @@ const modelsPayload = models.map((m) => ({
       const model = modelsPayload[selectedModelIdx];
       if (!model) return;
 
-      // Update Slider Label
+      // Update Slider Label text
       if (seqLabel) {
         seqLabel.textContent = selectedSeqLen.toLocaleString() + ' tokens';
       }
 
       // Calculate component sizes
       const weights = model.fileBytes;
-      const overhead = model.fileBytes * 0.15;
-      const kvCache = model.runtimeBytes * 0.05 * (selectedSeqLen / 2048);
-      const totalRequired = weights + overhead + kvCache;
+      const overhead = Math.max(model.fileBytes * 0.12, 512 * 1024);
 
       // Update Summary Header Banner
       if (activeModelEl) activeModelEl.textContent = model.id;
       if (activeWeightsEl) activeWeightsEl.textContent = formatBytes(weights);
       if (activeOverheadEl) activeOverheadEl.textContent = formatBytes(overhead);
-      if (activeKvEl) activeKvEl.textContent = formatBytes(kvCache);
 
       // Update Buttons UI
       selectBtns.forEach((btn) => {
@@ -365,39 +359,35 @@ const modelsPayload = models.map((m) => ({
       vesselCards.forEach((card) => {
         const ceiling = parseFloat(card.getAttribute('data-ceiling-bytes') || '1');
 
-        const weightsPct = Math.min((weights / ceiling) * 100, 100);
-        const overheadPct = Math.min((overhead / ceiling) * 100, Math.max(0, 100 - weightsPct));
-        const kvPct = Math.min((kvCache / ceiling) * 100, Math.max(0, 100 - weightsPct - overheadPct));
+        const baseKvRatio = ceiling < 32 * MIB ? 0.08 : 0.04;
+        const kvCache = Math.max(model.runtimeBytes * baseKvRatio * (selectedSeqLen / 2048), 256 * 1024);
+        const totalRequired = weights + overhead + kvCache;
+
+        // Update KV cache header banner for active board reference
+        if (activeKvEl) activeKvEl.textContent = formatBytes(kvCache);
+
         const totalPct = Math.round((totalRequired / ceiling) * 100);
+
+        // Normalize widths relative to ceiling so visual growth is clearly visible
+        const normDenom = Math.max(totalRequired, ceiling);
+        const weightsPct = Math.min((weights / normDenom) * 100, 100);
+        const overheadPct = Math.min((overhead / normDenom) * 100, 100);
+        const kvPct = Math.min((kvCache / normDenom) * 100, 100);
 
         let status = 'fits';
         if (totalPct > 100) status = 'exceeds';
         else if (totalPct > 80) status = 'tight';
 
-        const headroom = Math.abs(ceiling - totalRequired);
+        const diff = Math.abs(ceiling - totalRequired);
 
         // Update Segment Widths
         const segW = card.querySelector('.sim-seg-weights');
         const segKv = card.querySelector('.sim-seg-kv');
         const segOv = card.querySelector('.sim-seg-overhead');
-        let segOverflow = card.querySelector('.sim-seg-overflow');
 
-        if (segW) segW.style.width = weightsPct + '%';
-        if (segKv) segKv.style.width = kvPct + '%';
-        if (segOv) segOv.style.width = overheadPct + '%';
-
-        // Update overflow bar if needed
-        const track = card.querySelector('.relative.h-7');
-        if (status === 'exceeds') {
-          if (!segOverflow && track) {
-            segOverflow = document.createElement('div');
-            segOverflow.className = 'sim-seg-overflow h-full bg-red-500/90 transition-all duration-300 absolute right-0 top-0 bottom-0 animate-pulse z-10';
-            segOverflow.style.width = '20%';
-            track.appendChild(segOverflow);
-          }
-        } else if (segOverflow) {
-          segOverflow.remove();
-        }
+        if (segW) segW.style.width = weightsPct.toFixed(1) + '%';
+        if (segKv) segKv.style.width = kvPct.toFixed(1) + '%';
+        if (segOv) segOv.style.width = overheadPct.toFixed(1) + '%';
 
         // Update occupied metrics label
         const occLabel = card.querySelector('.sim-occupied-label');
@@ -409,17 +399,17 @@ const modelsPayload = models.map((m) => ({
         const badge = card.querySelector('.sim-verdict-badge');
         if (badge) {
           if (status === 'fits') {
-            badge.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · ${formatBytes(headroom)} Free Headroom</span>`;
+            badge.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400">❇️ Fits · ${formatBytes(diff)} Free Headroom</span>`;
           } else if (status === 'tight') {
-            badge.innerHTML = `<span class="text-amber-600 dark:text-amber-400">⚠️ Tight · ${formatBytes(headroom)} Margin</span>`;
+            badge.innerHTML = `<span class="text-amber-600 dark:text-amber-400">⚠️ Tight · ${formatBytes(diff)} Margin</span>`;
           } else {
-            badge.innerHTML = `<span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +${formatBytes(headroom)}</span>`;
+            badge.innerHTML = `<span class="text-red-600 dark:text-red-400">🛑 Exceeds Ceiling by +${formatBytes(diff)} (${totalPct}%)</span>`;
           }
         }
       });
     }
 
-    // Attach button listeners
+    // Attach button click listeners
     selectBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
         selectedModelIdx = parseInt(btn.getAttribute('data-model-idx') || '0', 10);
@@ -427,7 +417,7 @@ const modelsPayload = models.map((m) => ({
       });
     });
 
-    // Attach slider listener
+    // Attach slider input listener for immediate real-time response
     if (seqSlider) {
       seqSlider.addEventListener('input', (e) => {
         selectedSeqLen = parseInt(e.target.value, 10);
