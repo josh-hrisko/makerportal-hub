@@ -41,7 +41,11 @@ const trendingPillarSet = new Set(trendingPillars);
 // Fetch Edge Radar snapshots for the feature bento block
 const radarEntries = await getCollection('edge-radar');
 const latestRadar = radarEntries.sort((a, b) => b.id.localeCompare(a.id))[0];
-const radarBoards = latestRadar?.data.boards ?? [];
+const radarBoardsRaw = latestRadar?.data.boards ?? [];
+// Most powerful first for teaser radar
+const radarBoards = [...radarBoardsRaw].sort((a: any, b: any) =>
+  (b.modelCeilingBytes - a.modelCeilingBytes) || (b.ramBytes - a.ramBytes)
+);
 const radarModels = latestRadar?.data.models ?? [];
 const radarFits = latestRadar?.data.fits ?? [];
 

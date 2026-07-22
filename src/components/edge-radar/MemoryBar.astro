@@ -4,8 +4,9 @@
  * SSR only, zero JS, themeable via currentColor / --mp-* tokens.
  * Every pixel derived from committed snapshot — no external requests.
  *
- * Domain 1 MiB → 16 GiB (MAX_REPRESENTATIVE_BYTES) so all bars share the
- * same log ruler and remain comparable across the page.
+ * Domain 1 MiB → 32 GiB (MAX_REPRESENTATIVE_BYTES) so all bars share the
+ * same log ruler and remain comparable across the page — most powerful boards
+ * (Sigma 30 GiB) at right, weaker MCU at left, but table presents strongest first.
  */
 interface BoardLite {
   id: string;
@@ -29,7 +30,7 @@ const { runtimeBytes, modelId, boards, fits } = Astro.props;
 const MIB = 1024 * 1024;
 const GIB = 1024 * 1024 * 1024;
 const DOMAIN_MIN = 1 * MIB;
-const DOMAIN_MAX = 16 * GIB;
+const DOMAIN_MAX = 32 * GIB;
 
 const LOG_MIN = Math.log10(DOMAIN_MIN);
 const LOG_MAX = Math.log10(DOMAIN_MAX);
@@ -78,17 +79,19 @@ function groupVerdict(group: typeof distinctCeilings[number]): 'fits' | 'tight' 
   return 'no';
 }
 
-// Short label for board groups
+// Short label for board groups — most powerful first presentation, but log scale is low→high left→right
 function shortLabel(group: typeof distinctCeilings[number]): string {
   if (group.boards.length === 1) return group.boards[0].name.split('(')[0].trim();
-  // Two MCU boards share 7 MiB — collapse
   if (group.boards.every((b) => b.modelCeilingBytes === 7 * MIB)) return 'ESP32 / Teensy (7 MiB)';
   if (group.bytes === 8 * MIB) return 'Coral (8 MiB)';
-  if (group.bytes === Math.floor(6.5 * GIB)) return 'Pi 5 / Jetson (6.5 GiB)';
+  if (group.bytes === Math.floor(6.5 * GIB)) return 'Pi5 8GB / Nano 8GB (6.5 GiB)';
+  if (group.bytes === Math.floor(14 * GIB)) return 'Orange/Rock 16GB (14 GiB)';
+  if (group.bytes === Math.floor(14.5 * GIB)) return 'Pi5 16GB / Orin NX 16GB (14.5 GiB)';
+  if (group.bytes === Math.floor(30 * GIB)) return 'Sigma 32GB (30 GiB)';
   return `${group.boards.length} boards (${fmtBytes(group.bytes)})`;
 }
 
-const ticks = [1 * MIB, 10 * MIB, 100 * MIB, 1 * GIB, 10 * GIB].map((b) => ({
+const ticks = [1 * MIB, 10 * MIB, 100 * MIB, 1 * GIB, 10 * GIB, 30 * GIB].map((b) => ({
   bytes: b,
   x: PAD_L + logFrac(b) * TRACK_W,
   label: fmtBytes(b),

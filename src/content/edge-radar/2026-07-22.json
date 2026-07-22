@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T18:16:18.387Z",
+  "generatedAt": "2026-07-22T20:46:23.788Z",
   "boards": [
     {
       "id": "esp32-s3-n8r8",
@@ -38,6 +38,42 @@
       ]
     },
     {
+      "id": "raspberry-pi-5-16gb",
+      "name": "Raspberry Pi 5 (16 GB)",
+      "class": "sbc",
+      "ramBytes": 17179869184,
+      "ramLabel": "16 GB LPDDR4X",
+      "modelCeilingBytes": 15569256448,
+      "note": "16GB flagship — fits 9-12B Q4_K_M (5-7 GiB files) with 2-4k context headroom. Same power envelope, double RAM for local LLM.",
+      "linkIds": [
+        "sf-raspberry-pi-5-16gb"
+      ]
+    },
+    {
+      "id": "orange-pi-5-plus-16gb",
+      "name": "Orange Pi 5 Plus (16 GB)",
+      "class": "sbc",
+      "ramBytes": 17179869184,
+      "ramLabel": "16 GB LPDDR4X (RK3588)",
+      "modelCeilingBytes": 15032385536,
+      "note": "RK3588 SBC — cheaper Pi5-class alternative with PCIe NVMe for model storage; 14 GiB ceiling after RKLLM / llama.cpp overhead.",
+      "linkIds": [
+        "orange-pi-5-plus-16gb"
+      ]
+    },
+    {
+      "id": "radxa-rock-5b-16gb",
+      "name": "Radxa ROCK 5B (16 GB)",
+      "class": "sbc",
+      "ramBytes": 17179869184,
+      "ramLabel": "16 GB LPDDR4X (RK3588)",
+      "modelCeilingBytes": 15032385536,
+      "note": "ROCK 5B 16GB — solid mid-range for 7-12B Q4_K_M; active cooling recommended for sustained inference.",
+      "linkIds": [
+        "radxa-rock-5b-16gb"
+      ]
+    },
+    {
       "id": "coral-edge-tpu",
       "name": "Coral Edge TPU (USB Accelerator)",
       "class": "accelerator",
@@ -60,6 +96,30 @@
       "linkIds": [
         "jetson-orin-nano-super-dev-kit",
         "sf-jetson-orin-nano"
+      ]
+    },
+    {
+      "id": "jetson-orin-nx-16gb",
+      "name": "Jetson Orin NX (16 GB)",
+      "class": "edge-gpu",
+      "ramBytes": 17179869184,
+      "ramLabel": "16 GB LPDDR5 (100 TOPS)",
+      "modelCeilingBytes": 15569256448,
+      "note": "Orin NX 16GB — double RAM vs Nano, fits 4-12B Q4_K_M with long context (8k) headroom for TensorRT-LLM.",
+      "linkIds": [
+        "jetson-orin-nx-16gb-dev-kit"
+      ]
+    },
+    {
+      "id": "latte-panda-sigma-32gb",
+      "name": "LattePanda Sigma (32 GB)",
+      "class": "sbc",
+      "ramBytes": 34359738368,
+      "ramLabel": "32 GB LPDDR5 (x86)",
+      "modelCeilingBytes": 32212254720,
+      "note": "x86 edge server — 30 GiB model ceiling fits Gemma 4-26B-A4B Q4_K_M (15.8 GiB file / 19.7 GiB runtime) with 10 GiB headroom for 8k context.",
+      "linkIds": [
+        "latte-panda-sigma-32gb"
       ]
     }
   ],
@@ -278,6 +338,24 @@
     },
     {
       "modelId": "bartowski/ProCreations_grug-9b-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8180777568
+    },
+    {
+      "modelId": "bartowski/ProCreations_grug-9b-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 7643906656
+    },
+    {
+      "modelId": "bartowski/ProCreations_grug-9b-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 7643906656
+    },
+    {
+      "modelId": "bartowski/ProCreations_grug-9b-GGUF",
       "boardId": "coral-edge-tpu",
       "verdict": "no",
       "headroomBytes": -7380090272
@@ -287,6 +365,18 @@
       "boardId": "jetson-orin-nano-8gb",
       "verdict": "no",
       "headroomBytes": -409157024
+    },
+    {
+      "modelId": "bartowski/ProCreations_grug-9b-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8180777568
+    },
+    {
+      "modelId": "bartowski/ProCreations_grug-9b-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 24823775840
     },
     {
       "modelId": "bartowski/FINAL-Bench_Darwin-4B-Chimera-GGUF",
@@ -305,6 +395,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "fits",
       "headroomBytes": 3723167096
+    },
+    {
+      "modelId": "bartowski/FINAL-Bench_Darwin-4B-Chimera-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 12313101688
+    },
+    {
+      "modelId": "bartowski/FINAL-Bench_Darwin-4B-Chimera-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11776230776
+    },
+    {
+      "modelId": "bartowski/FINAL-Bench_Darwin-4B-Chimera-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11776230776
     },
     {
       "modelId": "bartowski/FINAL-Bench_Darwin-4B-Chimera-GGUF",
@@ -319,6 +427,18 @@
       "headroomBytes": 3723167096
     },
     {
+      "modelId": "bartowski/FINAL-Bench_Darwin-4B-Chimera-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 12313101688
+    },
+    {
+      "modelId": "bartowski/FINAL-Bench_Darwin-4B-Chimera-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 28956099960
+    },
+    {
       "modelId": "bartowski/Merlin-Research_Merlin-Agent-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -335,6 +455,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "no",
       "headroomBytes": -409157504
+    },
+    {
+      "modelId": "bartowski/Merlin-Research_Merlin-Agent-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8180777088
+    },
+    {
+      "modelId": "bartowski/Merlin-Research_Merlin-Agent-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 7643906176
+    },
+    {
+      "modelId": "bartowski/Merlin-Research_Merlin-Agent-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 7643906176
     },
     {
       "modelId": "bartowski/Merlin-Research_Merlin-Agent-GGUF",
@@ -349,6 +487,18 @@
       "headroomBytes": -409157504
     },
     {
+      "modelId": "bartowski/Merlin-Research_Merlin-Agent-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8180777088
+    },
+    {
+      "modelId": "bartowski/Merlin-Research_Merlin-Agent-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 24823775360
+    },
+    {
       "modelId": "bartowski/iselabvn_Tini-Cybersec-8B-A1B-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -365,6 +515,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "tight",
       "headroomBytes": 521039496
+    },
+    {
+      "modelId": "bartowski/iselabvn_Tini-Cybersec-8B-A1B-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 9110974088
+    },
+    {
+      "modelId": "bartowski/iselabvn_Tini-Cybersec-8B-A1B-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8574103176
+    },
+    {
+      "modelId": "bartowski/iselabvn_Tini-Cybersec-8B-A1B-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8574103176
     },
     {
       "modelId": "bartowski/iselabvn_Tini-Cybersec-8B-A1B-GGUF",
@@ -379,6 +547,18 @@
       "headroomBytes": 521039496
     },
     {
+      "modelId": "bartowski/iselabvn_Tini-Cybersec-8B-A1B-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 9110974088
+    },
+    {
+      "modelId": "bartowski/iselabvn_Tini-Cybersec-8B-A1B-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 25753972360
+    },
+    {
       "modelId": "bartowski/InternScience_Agents-A1-4B-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -395,6 +575,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "fits",
       "headroomBytes": 3373257296
+    },
+    {
+      "modelId": "bartowski/InternScience_Agents-A1-4B-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11963191888
+    },
+    {
+      "modelId": "bartowski/InternScience_Agents-A1-4B-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11426320976
+    },
+    {
+      "modelId": "bartowski/InternScience_Agents-A1-4B-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11426320976
     },
     {
       "modelId": "bartowski/InternScience_Agents-A1-4B-GGUF",
@@ -409,6 +607,18 @@
       "headroomBytes": 3373257296
     },
     {
+      "modelId": "bartowski/InternScience_Agents-A1-4B-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11963191888
+    },
+    {
+      "modelId": "bartowski/InternScience_Agents-A1-4B-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 28606190160
+    },
+    {
       "modelId": "bartowski/MirilAI_Miril-Drone-2B-1-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -425,6 +635,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "fits",
       "headroomBytes": 2667147296
+    },
+    {
+      "modelId": "bartowski/MirilAI_Miril-Drone-2B-1-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11257081888
+    },
+    {
+      "modelId": "bartowski/MirilAI_Miril-Drone-2B-1-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 10720210976
+    },
+    {
+      "modelId": "bartowski/MirilAI_Miril-Drone-2B-1-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 10720210976
     },
     {
       "modelId": "bartowski/MirilAI_Miril-Drone-2B-1-GGUF",
@@ -439,6 +667,18 @@
       "headroomBytes": 2667147296
     },
     {
+      "modelId": "bartowski/MirilAI_Miril-Drone-2B-1-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11257081888
+    },
+    {
+      "modelId": "bartowski/MirilAI_Miril-Drone-2B-1-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 27900080160
+    },
+    {
       "modelId": "onnx-community/IllaryiaStories-1M-ONNX",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -455,6 +695,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "fits",
       "headroomBytes": 6933756931
+    },
+    {
+      "modelId": "onnx-community/IllaryiaStories-1M-ONNX",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 15523691523
+    },
+    {
+      "modelId": "onnx-community/IllaryiaStories-1M-ONNX",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 14986820611
+    },
+    {
+      "modelId": "onnx-community/IllaryiaStories-1M-ONNX",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 14986820611
     },
     {
       "modelId": "onnx-community/IllaryiaStories-1M-ONNX",
@@ -469,6 +727,18 @@
       "headroomBytes": 6933756931
     },
     {
+      "modelId": "onnx-community/IllaryiaStories-1M-ONNX",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 15523691523
+    },
+    {
+      "modelId": "onnx-community/IllaryiaStories-1M-ONNX",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 32166689795
+    },
+    {
       "modelId": "unsloth/Ornith-1.0-9B-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -485,6 +755,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "no",
       "headroomBytes": -147012984
+    },
+    {
+      "modelId": "unsloth/Ornith-1.0-9B-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8442921608
+    },
+    {
+      "modelId": "unsloth/Ornith-1.0-9B-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 7906050696
+    },
+    {
+      "modelId": "unsloth/Ornith-1.0-9B-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 7906050696
     },
     {
       "modelId": "unsloth/Ornith-1.0-9B-GGUF",
@@ -499,6 +787,18 @@
       "headroomBytes": -147012984
     },
     {
+      "modelId": "unsloth/Ornith-1.0-9B-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8442921608
+    },
+    {
+      "modelId": "unsloth/Ornith-1.0-9B-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 25085919880
+    },
+    {
       "modelId": "unsloth/gemma-4-26B-A4B-it-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -515,6 +815,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "no",
       "headroomBytes": -14205105304
+    },
+    {
+      "modelId": "unsloth/gemma-4-26B-A4B-it-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "no",
+      "headroomBytes": -5615170712
+    },
+    {
+      "modelId": "unsloth/gemma-4-26B-A4B-it-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "no",
+      "headroomBytes": -6152041624
+    },
+    {
+      "modelId": "unsloth/gemma-4-26B-A4B-it-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "no",
+      "headroomBytes": -6152041624
     },
     {
       "modelId": "unsloth/gemma-4-26B-A4B-it-GGUF",
@@ -529,6 +847,18 @@
       "headroomBytes": -14205105304
     },
     {
+      "modelId": "unsloth/gemma-4-26B-A4B-it-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "no",
+      "headroomBytes": -5615170712
+    },
+    {
+      "modelId": "unsloth/gemma-4-26B-A4B-it-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 11027827560
+    },
+    {
       "modelId": "unsloth/gemma-4-12b-it-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -545,6 +875,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "no",
       "headroomBytes": -1923004944
+    },
+    {
+      "modelId": "unsloth/gemma-4-12b-it-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 6666929648
+    },
+    {
+      "modelId": "unsloth/gemma-4-12b-it-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 6130058736
+    },
+    {
+      "modelId": "unsloth/gemma-4-12b-it-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 6130058736
     },
     {
       "modelId": "unsloth/gemma-4-12b-it-GGUF",
@@ -559,6 +907,18 @@
       "headroomBytes": -1923004944
     },
     {
+      "modelId": "unsloth/gemma-4-12b-it-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 6666929648
+    },
+    {
+      "modelId": "unsloth/gemma-4-12b-it-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 23309927920
+    },
+    {
       "modelId": "unsloth/gemma-4-E4B-it-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -575,6 +935,24 @@
       "boardId": "raspberry-pi-5-8gb",
       "verdict": "tight",
       "headroomBytes": 757857376
+    },
+    {
+      "modelId": "unsloth/gemma-4-E4B-it-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 9347791968
+    },
+    {
+      "modelId": "unsloth/gemma-4-E4B-it-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8810921056
+    },
+    {
+      "modelId": "unsloth/gemma-4-E4B-it-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 8810921056
     },
     {
       "modelId": "unsloth/gemma-4-E4B-it-GGUF",
@@ -589,6 +967,18 @@
       "headroomBytes": 757857376
     },
     {
+      "modelId": "unsloth/gemma-4-E4B-it-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 9347791968
+    },
+    {
+      "modelId": "unsloth/gemma-4-E4B-it-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 25990790240
+    },
+    {
       "modelId": "unsloth/gemma-4-E2B-it-GGUF",
       "boardId": "esp32-s3-n8r8",
       "verdict": "no",
@@ -608,6 +998,24 @@
     },
     {
       "modelId": "unsloth/gemma-4-E2B-it-GGUF",
+      "boardId": "raspberry-pi-5-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11685833608
+    },
+    {
+      "modelId": "unsloth/gemma-4-E2B-it-GGUF",
+      "boardId": "orange-pi-5-plus-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11148962696
+    },
+    {
+      "modelId": "unsloth/gemma-4-E2B-it-GGUF",
+      "boardId": "radxa-rock-5b-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11148962696
+    },
+    {
+      "modelId": "unsloth/gemma-4-E2B-it-GGUF",
       "boardId": "coral-edge-tpu",
       "verdict": "no",
       "headroomBytes": -3875034232
@@ -617,6 +1025,18 @@
       "boardId": "jetson-orin-nano-8gb",
       "verdict": "fits",
       "headroomBytes": 3095899016
+    },
+    {
+      "modelId": "unsloth/gemma-4-E2B-it-GGUF",
+      "boardId": "jetson-orin-nx-16gb",
+      "verdict": "fits",
+      "headroomBytes": 11685833608
+    },
+    {
+      "modelId": "unsloth/gemma-4-E2B-it-GGUF",
+      "boardId": "latte-panda-sigma-32gb",
+      "verdict": "fits",
+      "headroomBytes": 28328831880
     }
   ]
 }

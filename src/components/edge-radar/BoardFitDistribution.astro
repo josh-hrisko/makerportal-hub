@@ -9,6 +9,7 @@ interface BoardLite {
   name: string;
   class: string;
   modelCeilingBytes: number;
+  ramBytes?: number;
 }
 interface ModelLite {
   id: string;
@@ -33,27 +34,29 @@ const GIB = 1024 * 1024 * 1024;
 const MIB = 1024 * 1024;
 const fmtBytes = (n: number) => (n >= GIB ? `${(n / GIB).toFixed(1)} GiB` : `${(n / MIB).toFixed(0)} MiB`);
 
-const boardDist = boards.map((b) => {
-  const bFits = fits.filter((f) => f.boardId === b.id);
-  const fitsCount = bFits.filter((f) => f.verdict === 'fits').length;
-  const tightCount = bFits.filter((f) => f.verdict === 'tight').length;
-  const noCount = bFits.filter((f) => f.verdict === 'no').length;
+const boardDist = [...boards]
+  .sort((a, b) => b.modelCeilingBytes - a.modelCeilingBytes || (b.ramBytes ?? 0) - (a.ramBytes ?? 0) || a.name.localeCompare(b.name))
+  .map((b) => {
+    const bFits = fits.filter((f) => f.boardId === b.id);
+    const fitsCount = bFits.filter((f) => f.verdict === 'fits').length;
+    const tightCount = bFits.filter((f) => f.verdict === 'tight').length;
+    const noCount = bFits.filter((f) => f.verdict === 'no').length;
 
-  const fitsPct = (fitsCount / totalModels) * 100;
-  const tightPct = (tightCount / totalModels) * 100;
-  const noPct = (noCount / totalModels) * 100;
+    const fitsPct = (fitsCount / totalModels) * 100;
+    const tightPct = (tightCount / totalModels) * 100;
+    const noPct = (noCount / totalModels) * 100;
 
-  return {
-    board: b,
-    shortName: b.name.split('(')[0].trim(),
-    fitsCount,
-    tightCount,
-    noCount,
-    fitsPct,
-    tightPct,
-    noPct,
-  };
-});
+    return {
+      board: b,
+      shortName: b.name.split('(')[0].trim(),
+      fitsCount,
+      tightCount,
+      noCount,
+      fitsPct,
+      tightPct,
+      noPct,
+    };
+  });
 ---
 
 <div class="w-full overflow-hidden rounded-[16px] border border-border bg-card-bg p-5">

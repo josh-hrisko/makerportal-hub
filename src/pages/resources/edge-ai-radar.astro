@@ -41,6 +41,13 @@ const boards = latest?.data.boards ?? [];
 const models = latest?.data.models ?? [];
 const fits = latest?.data.fits ?? [];
 
+// Most powerful first: 30 GiB Sigma → 14.5 GiB Orin/Pi16 → 8/6.5 GiB → 8 MiB TPU → 7 MiB MCU
+const boardsDesc = [...boards].sort((a, b) =>
+  b.modelCeilingBytes - a.modelCeilingBytes ||
+  b.ramBytes - a.ramBytes ||
+  a.name.localeCompare(b.name)
+);
+
 const fitFor = (modelId: string, boardId: string) =>
   fits.find((f) => f.modelId === modelId && f.boardId === boardId);
 
@@ -77,8 +84,8 @@ const formattedDate = dateStr
 
 const fitsCount = (modelId: string) => fits.filter((f) => f.modelId === modelId && f.verdict !== 'no').length;
 
-// Boards with curated buy paths, resolved through the audited affiliate registry.
-const boardKits = boards
+// Boards with curated buy paths — most powerful first so best performance is visible top
+const boardKits = boardsDesc
   .filter((b) => b.linkIds.length > 0)
   .map((b) => ({
     board: b,
@@ -190,9 +197,9 @@ const description =
               </div>
             </div>
 
-            {/* Right: Deterministic Hero Radar Spider Mark */}
+            {/* Right: Deterministic Hero Radar Spider Mark — strongest boards first, top-down */}
             <div class="lg:col-span-5">
-              <RadarSpider boards={boards} models={models} fits={fits} />
+              <RadarSpider boards={boardsDesc} models={models} fits={fits} />
             </div>
           </div>
         </div>
@@ -215,7 +222,7 @@ const description =
           </div>
 
           <div class="mt-8">
-            <CeilingStrip boards={boards} models={models} fits={fits} />
+            <CeilingStrip boards={boardsDesc} models={models} fits={fits} />
           </div>
 
           <div class="mt-6 flex flex-wrap gap-2 font-mono text-[0.6rem] text-muted-text">
@@ -251,7 +258,7 @@ const description =
                 <tr class="border-b border-border bg-elevated/40">
                   <th scope="col" class="sticky left-0 z-10 bg-card-bg px-4 py-3.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Model · representative file</th>
                   <th scope="col" class="px-3 py-3.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Runtime est.</th>
-                  {boards.map((b) => (
+                  {boardsDesc.map((b) => (
                     <th scope="col" class="px-3 py-3.5 text-center font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">
                       {b.name.split('(')[0].trim()}
                       <span class="block text-[0.56rem] font-normal normal-case tracking-normal text-muted-text/70">{fmtBytes(b.modelCeilingBytes)} ceiling</span>
@@ -272,7 +279,7 @@ const description =
                       </span>
                     </td>
                     <td class="whitespace-nowrap px-3 py-3.5 font-mono text-[0.78rem] font-medium text-primary-text">{fmtBytes(m.runtimeBytes)}</td>
-                    {boards.map((b) => {
+                    {boardsDesc.map((b) => {
                       const f = fitFor(m.id, b.id);
                       const meta = f ? verdictMeta[f.verdict] : verdictMeta.no;
                       return (
@@ -284,7 +291,7 @@ const description =
                         </td>
                       );
                     })}
-                    <td class="px-3 py-3.5 text-center font-mono text-[0.78rem] font-semibold text-muted-text">{fitsCount(m.id)}/{boards.length}</td>
+                    <td class="px-3 py-3.5 text-center font-mono text-[0.78rem] font-semibold text-muted-text">{fitsCount(m.id)}/{boardsDesc.length}</td>
                   </tr>
                 ))}
               </tbody>
@@ -306,7 +313,7 @@ const description =
 
           <div class="grid gap-6 lg:grid-cols-2">
             <QuantSpectrum models={models} />
-            <BoardFitDistribution boards={boards} models={models} fits={fits} />
+            <BoardFitDistribution boards={boardsDesc} models={models} fits={fits} />
           </div>
         </div>
       </section>
@@ -326,7 +333,7 @@ const description =
                 <li class="flex flex-col rounded-[16px] border border-border bg-card-bg p-5 shadow-sm hover:border-[var(--mp-border-strong)] transition-all">
                   <div class="flex items-center justify-between gap-2">
                     <span class="rounded-full bg-elevated border border-border px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.1em] font-semibold text-muted-text">{m.format}{m.quant ? ` · ${m.quant}` : ''}</span>
-                    <span class="font-mono text-[0.62rem] font-semibold text-muted-text">{fitsCount(m.id)}/{boards.length} boards</span>
+                    <span class="font-mono text-[0.62rem] font-semibold text-muted-text">{fitsCount(m.id)}/{boardsDesc.length} boards</span>
                   </div>
                   <a href={m.url} target="_blank" rel="noopener noreferrer" class="mt-3 text-[0.95rem] font-bold leading-snug text-primary-text hover:text-primary-cta">
                     {m.id}
@@ -338,13 +345,13 @@ const description =
                     <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">≈ Params</dt><dd class="font-mono text-[0.78rem] font-medium text-primary-text">{fmtParams(m.approxParams)}</dd></div>
                     <div><dt class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">FLOPs/token</dt><dd class="font-mono text-[0.78rem] font-medium text-primary-text">{fmtFlops(m.flopsPerToken)}</dd></div>
                   </dl>
-                  {/* Re-crafted MemoryBar (Items 1 & 2) */}
+                  {/* Re-crafted MemoryBar (Items 1 & 2) — strongest first, log 1 MiB→32 GiB */}
                   <div class="mt-4">
                     <div class="mb-1.5 flex items-center justify-between">
-                      <span class="font-mono text-[0.56rem] uppercase tracking-[0.12em] text-muted-text">Footprint vs ceilings · log 1 MiB→16 GiB</span>
+                      <span class="font-mono text-[0.56rem] uppercase tracking-[0.12em] text-muted-text">Footprint vs ceilings · log 1 MiB→32 GiB</span>
                       <span class="font-mono text-[0.56rem] font-semibold text-primary-text">{fmtBytes(m.runtimeBytes)}</span>
                     </div>
-                    <MemoryBar runtimeBytes={m.runtimeBytes} modelId={m.id} boards={boards} fits={perModelFits} />
+                    <MemoryBar runtimeBytes={m.runtimeBytes} modelId={m.id} boards={boardsDesc} fits={perModelFits} />
                   </div>
                 </li>
               );

@@ -12,6 +12,7 @@ interface BoardLite {
   name: string;
   class: string;
   modelCeilingBytes: number;
+  ramBytes?: number;
   ramLabel?: string;
 }
 interface ModelLite {
@@ -108,7 +109,7 @@ function evaluateBoardFit(mBytes: number, fBytes: number, board: BoardLite, seqL
   };
 }
 
-// Group boards by class for meaningful sections
+// Group boards by class — most powerful first (30 GiB Sigma top, 7 MiB MCU bottom)
 const grouped = new Map<string, { badge: ReturnType<typeof classBadge>; boards: BoardLite[] }>();
 for (const b of boards) {
   const badge = classBadge(b.class);
@@ -116,10 +117,15 @@ for (const b of boards) {
   entry.boards.push(b);
   grouped.set(b.class, entry);
 }
-const orderedGroups = [...grouped.values()].sort((a, b) => a.badge.order - b.badge.order);
-// Sort boards within each group by ceiling ascending, so small→large
+// Sort groups by max ceiling descending, so sbc/edge-gpu (30/14.5 GiB) top, mcu bottom
+const orderedGroups = [...grouped.values()].sort((a, b) => {
+  const maxA = Math.max(...a.boards.map((x) => x.modelCeilingBytes));
+  const maxB = Math.max(...b.boards.map((x) => x.modelCeilingBytes));
+  return maxB - maxA;
+});
+// Sort boards within each group by ceiling descending, so strongest board first
 for (const g of orderedGroups) {
-  g.boards.sort((a, b) => a.modelCeilingBytes - b.modelCeilingBytes);
+  g.boards.sort((a, b) => b.modelCeilingBytes - a.modelCeilingBytes || (b.ramBytes ?? 0) - (a.ramBytes ?? 0) || a.name.localeCompare(b.name));
 }
 
 const initialBoardSims = orderedGroups.flatMap((g) =>
