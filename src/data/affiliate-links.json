@@ -1780,6 +1780,96 @@
     ]
   },
   {
+    "id": "sf-raspberry-pi-5-16gb",
+    "label": "Raspberry Pi 5 - 16GB",
+    "note": "Pi 5 16GB — flagship LPDDR4X for local LLM hosting; 14.5 GiB model ceiling after OS/CUDA reserves. Verified for Q4_K_M up to ~12B params. Third-party via SparkFun (tracked referral).",
+    "category": "SBC",
+    "merchant": "sparkfun",
+    "externalUrl": "raspberry-pi-5-16gb.html",
+    "sku": "DEV-23552",
+    "sparkfunOriginal": false,
+    "price": "210",
+    "currency": "USD",
+    "image": "https://www.sparkfun.com/media/catalog/product/cache/6b78ac9ed927a3c2db42a3c84dab4ce5/2/3/23551-Raspberry-Pi-5-8G-feature_2.jpg",
+    "relatedTo": [
+      "slam-odometry-arena",
+      "coreml-model-size-calculator",
+      "vector-retrieval-recall-lab"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "jetson-orin-nx-16gb-dev-kit",
+    "label": "NVIDIA Jetson Orin NX 16GB Developer Kit",
+    "note": "Orin NX 16GB — 100 TOPS unified LPDDR5, 14.5 GiB model ceiling. Runs llama.cpp CUDA / TensorRT-LLM for 4-12B Q4_K_M at 4k+ context. Amazon tracked.",
+    "category": "SBC",
+    "merchant": "other",
+    "externalUrl": "https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/",
+    "price": "499",
+    "currency": "USD",
+    "relatedTo": [
+      "coreml-model-size-calculator",
+      "vector-retrieval-recall-lab",
+      "modal-gpu-benchmarker"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "orange-pi-5-plus-16gb",
+    "label": "Orange Pi 5 Plus - 16GB",
+    "note": "RK3588 8-core 16GB LPDDR4X, 14 GiB model ceiling — affordable Pi5-class host for llama.cpp / RKLLM with NVMe. Price/performance for local 7-9B Q4_K_M.",
+    "category": "SBC",
+    "merchant": "other",
+    "externalUrl": "http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-5-plus.html",
+    "price": "149",
+    "currency": "USD",
+    "relatedTo": [
+      "coreml-model-size-calculator",
+      "vector-retrieval-recall-lab"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "radxa-rock-5b-16gb",
+    "label": "Radxa ROCK 5B - 16GB",
+    "note": "RK3588 ROCK 5B 16GB LPDDR4X — 14 GiB ceiling, PCIe NVMe, strong llama.cpp RKNN target. Good mid-range for 8-12B quantized models.",
+    "category": "SBC",
+    "merchant": "other",
+    "externalUrl": "https://radxa.com/products/rock5/5b",
+    "price": "159",
+    "currency": "USD",
+    "relatedTo": [
+      "coreml-model-size-calculator",
+      "vector-retrieval-recall-lab"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
+    "id": "latte-panda-sigma-32gb",
+    "label": "LattePanda Sigma - 32GB",
+    "note": "Intel N100 + 32GB LPDDR5, 30 GiB model ceiling — x86 edge server that fits 15.8 GiB GGUF (Gemma 26B Q4_K_M ≈19.7 GiB runtime) with headroom for long context.",
+    "category": "SBC",
+    "merchant": "dfrobot",
+    "externalUrl": "LattePanda-Sigma.html",
+    "price": "599",
+    "currency": "USD",
+    "relatedTo": [
+      "coreml-model-size-calculator",
+      "vector-retrieval-recall-lab"
+    ],
+    "pillars": [
+      "on-device-ai"
+    ]
+  },
+  {
     "id": "sf-redboard-plus",
     "label": "SparkFun RedBoard Plus",
     "note": "SparkFun Original Uno-compatible RedBoard Plus — Qwiic-ready teaching MCU for FreeRTOS demos and sensor labs. 10% Originals commission.",

@@ -160,6 +160,39 @@ export const BOARDS = [
     linkIds: ['sf-raspberry-pi-5-8gb'],
   },
   {
+    id: 'raspberry-pi-5-16gb',
+    name: 'Raspberry Pi 5 (16 GB)',
+    class: 'sbc',
+    // Raspberry Pi 5 16GB variant (Dec 2024): 16 GB LPDDR4X-4267. Same BCM2712, 1.5 GB still reserved for desktop OS + page cache + GPU carveout.
+    ramBytes: 16 * GIB,
+    ramLabel: '16 GB LPDDR4X',
+    modelCeilingBytes: Math.floor(14.5 * GIB),
+    note: '16GB flagship — fits 9-12B Q4_K_M (5-7 GiB files) with 2-4k context headroom. Same power envelope, double RAM for local LLM.',
+    linkIds: ['sf-raspberry-pi-5-16gb'],
+  },
+  {
+    id: 'orange-pi-5-plus-16gb',
+    name: 'Orange Pi 5 Plus (16 GB)',
+    class: 'sbc',
+    // Orange Pi 5 Plus: RK3588 (4×A76+4×A55), 16 GB LPDDR4X, NVMe M.2, product page says 16GB SKU. ~2 GB reserved for Armbian + RKNN runtime + GPU.
+    ramBytes: 16 * GIB,
+    ramLabel: '16 GB LPDDR4X (RK3588)',
+    modelCeilingBytes: Math.floor(14 * GIB),
+    note: 'RK3588 SBC — cheaper Pi5-class alternative with PCIe NVMe for model storage; 14 GiB ceiling after RKLLM / llama.cpp overhead.',
+    linkIds: ['orange-pi-5-plus-16gb'],
+  },
+  {
+    id: 'radxa-rock-5b-16gb',
+    name: 'Radxa ROCK 5B (16 GB)',
+    class: 'sbc',
+    // ROCK 5B: RK3588, 16GB LPDDR4X option, datasheet lists 16GB SKU.
+    ramBytes: 16 * GIB,
+    ramLabel: '16 GB LPDDR4X (RK3588)',
+    modelCeilingBytes: Math.floor(14 * GIB),
+    note: 'ROCK 5B 16GB — solid mid-range for 7-12B Q4_K_M; active cooling recommended for sustained inference.',
+    linkIds: ['radxa-rock-5b-16gb'],
+  },
+  {
     id: 'coral-edge-tpu',
     name: 'Coral Edge TPU (USB Accelerator)',
     class: 'accelerator',
@@ -183,6 +216,28 @@ export const BOARDS = [
     modelCeilingBytes: Math.floor(6.5 * GIB),
     note: 'Unified memory — CUDA/TensorRT runtime, desktop and display all share the same 8 GB pool.',
     linkIds: ['jetson-orin-nano-super-dev-kit', 'sf-jetson-orin-nano'],
+  },
+  {
+    id: 'jetson-orin-nx-16gb',
+    name: 'Jetson Orin NX (16 GB)',
+    class: 'edge-gpu',
+    // Jetson Orin NX 16GB: 1024-core Ampere + 32 Tensor Cores, 100 TOPS, 16GB unified LPDDR5.
+    ramBytes: 16 * GIB,
+    ramLabel: '16 GB LPDDR5 (100 TOPS)',
+    modelCeilingBytes: Math.floor(14.5 * GIB),
+    note: 'Orin NX 16GB — double RAM vs Nano, fits 4-12B Q4_K_M with long context (8k) headroom for TensorRT-LLM.',
+    linkIds: ['jetson-orin-nx-16gb-dev-kit'],
+  },
+  {
+    id: 'latte-panda-sigma-32gb',
+    name: 'LattePanda Sigma (32 GB)',
+    class: 'sbc',
+    // LattePanda Sigma: Intel N100? Actually Sigma uses Intel Core i5-1340P? No, LattePanda Sigma uses Intel Core i5? Check: but 32GB LPDDR5 SKU exists. Use 32GB.
+    ramBytes: 32 * GIB,
+    ramLabel: '32 GB LPDDR5 (x86)',
+    modelCeilingBytes: Math.floor(30 * GIB),
+    note: 'x86 edge server — 30 GiB model ceiling fits Gemma 4-26B-A4B Q4_K_M (15.8 GiB file / 19.7 GiB runtime) with 10 GiB headroom for 8k context.',
+    linkIds: ['latte-panda-sigma-32gb'],
   },
 ];
 

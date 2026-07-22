@@ -140,12 +140,14 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
   </div>
 
   {/* Radar Board Chip Selector Bar */}
-  <div class="mt-3 flex flex-wrap gap-1.5" id={`${componentId}-chips`}>
+  <div class="mt-3 flex flex-wrap gap-1.5" id={`${componentId}-chips`} role="tablist" aria-label="Select hardware board to inspect">
     {axes.map((ax, idx) => (
       <button
         type="button"
+        role="tab"
+        aria-selected={idx === defaultBoardIdx ? 'true' : 'false'}
         data-board-idx={idx}
-        class={`radar-chip-btn rounded-full border px-2.5 py-1 font-mono text-[0.6rem] transition-colors ${
+        class={`radar-chip-btn rounded-full border px-2.5 py-1 font-mono text-[0.6rem] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor ${
           idx === defaultBoardIdx
             ? 'active border-primary-text bg-primary-text font-bold text-canvas'
             : 'border-border bg-elevated text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text'
@@ -249,6 +251,9 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
           <g
             class="radar-vertex-group cursor-pointer"
             data-board-idx={i}
+            tabindex="0"
+            role="button"
+            aria-label={`Inspect ${ax.fullShortName} board — ${ax.fitsCount} fits`}
           >
             {/* Outer halo highlight when selected */}
             <circle
@@ -375,39 +380,43 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
   </div>
 </div>
 
-{/* Inline Vanilla Script for Interactive Vertex & Chip Switching */}
+{/* Inline Vanilla Script — Event Delegation + Idempotent Binding (View-Transition safe) */}
 <script is:inline define:vars={{ componentId }}>
   function setupRadarInspector() {
     const root = document.getElementById(componentId);
     if (!root) return;
-
-    const chips = root.querySelectorAll('.radar-chip-btn');
-    const vertices = root.querySelectorAll('.radar-vertex-group');
-    const panels = root.querySelectorAll('.inspector-panel');
+    // Avoid rebinding duplicate listeners on Astro view transitions
+    if (root.dataset.radarBound === 'true') {
+      // Re-query live nodes for state sync after DOM swap, then exit early; delegated listeners survive
+      return;
+    }
+    root.dataset.radarBound = 'true';
 
     function setActiveBoard(idx) {
-      // Update Chip buttons
+      const chips = root.querySelectorAll('.radar-chip-btn');
+      const vertices = root.querySelectorAll('.radar-vertex-group');
+      const panels = root.querySelectorAll('.inspector-panel');
+
       chips.forEach((c) => {
         const cIdx = parseInt(c.getAttribute('data-board-idx') || '0', 10);
-        if (cIdx === idx) {
+        const isActive = cIdx === idx;
+        if (isActive) {
           c.classList.add('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas');
           c.classList.remove('border-border', 'bg-elevated', 'text-muted-text');
+          c.setAttribute('aria-selected', 'true');
         } else {
           c.classList.remove('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas');
           c.classList.add('border-border', 'bg-elevated', 'text-muted-text');
+          c.setAttribute('aria-selected', 'false');
         }
       });
 
-      // Update Vertex highlight circles
       vertices.forEach((v) => {
         const vIdx = parseInt(v.getAttribute('data-board-idx') || '0', 10);
         const hl = v.querySelector('.vertex-highlight');
-        if (hl) {
-          hl.setAttribute('r', vIdx === idx ? '10' : '0');
-        }
+        if (hl) hl.setAttribute('r', vIdx === idx ? '10' : '0');
       });
 
-      // Update Inspector Detail Panels
       panels.forEach((p) => {
         const pIdx = parseInt(p.getAttribute('data-inspector-idx') || '0', 10);
         if (pIdx === idx) {
@@ -420,27 +429,56 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
       });
     }
 
-    // Attach click listeners to chips
-    chips.forEach((c) => {
-      c.addEventListener('click', () => {
-        const idx = parseInt(c.getAttribute('data-board-idx') || '0', 10);
-        setActiveBoard(idx);
-      });
+    // Single delegated click handler for chips + SVG vertices
+    root.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const btn = target.closest('.radar-chip-btn, .radar-vertex-group');
+      if (!btn) return;
+      // Ensure clicked element belongs to this root instance
+      if (!root.contains(btn)) return;
+      const raw = btn.getAttribute('data-board-idx');
+      if (raw === null) return;
+      const idx = parseInt(raw, 10);
+      if (Number.isNaN(idx)) return;
+      setActiveBoard(idx);
     });
 
-    // Attach click listeners to SVG vertices
-    vertices.forEach((v) => {
-      v.addEventListener('click', () => {
-        const idx = parseInt(v.getAttribute('data-board-idx') || '0', 10);
-        setActiveBoard(idx);
-      });
+    // Keyboard activation for SVG vertices (Enter/Space)
+    root.addEventListener('keydown', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const vertex = target.closest('.radar-vertex-group');
+      if (!vertex || !root.contains(vertex)) return;
+      e.preventDefault();
+      const idx = parseInt(vertex.getAttribute('data-board-idx') || '0', 10);
+      setActiveBoard(idx);
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupRadarInspector);
-  } else {
-    setupRadarInspector();
+  function initRadarAll() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupRadarInspector, { once: true });
+    } else {
+      setupRadarInspector();
+    }
   }
-  document.addEventListener('astro:page-load', setupRadarInspector);
+
+  initRadarAll();
+  document.addEventListener('astro:page-load', () => {
+    const root = document.getElementById(componentId);
+    if (root) {
+      // Clear bound flag so fresh DOM can rebind after full page swap, but delegated pattern stays idempotent
+      if (!root.dataset.radarBound) {
+        setupRadarInspector();
+      } else {
+        // Edge case: same id persisted but new children: ensure listeners still exist; if not, reset flag and re-init
+        // We keep flag true to avoid double binding; setActive still callable via new click events.
+      }
+    } else {
+      setupRadarInspector();
+    }
+  });
+  document.addEventListener('astro:after-swap', setupRadarInspector);
 </script>

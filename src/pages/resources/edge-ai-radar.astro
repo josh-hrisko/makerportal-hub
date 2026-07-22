@@ -88,21 +88,35 @@ const boardKits = boards
       .map((l) => resolveAffiliateLink(l)),
   }));
 
-// Summary Stats
+// Summary Stats — dynamic across 10 boards (7 MiB → 30 GiB)
 const totalModels = models.length;
 const totalBoards = boards.length;
-const pi5Fits = models.filter((m) => {
-  const f = fitFor(m.id, 'raspberry-pi-5-8gb');
-  return f && f.verdict !== 'no';
-}).length;
-const mcuFits = models.filter((m) => {
-  const f = fitFor(m.id, 'esp32-s3-n8r8');
+
+const fitsForBoard = (boardId: string) => models.filter((m) => {
+  const f = fitFor(m.id, boardId);
   return f && f.verdict !== 'no';
 }).length;
 
+// 16GB+ class fits
+const pi5_16Fits = fitsForBoard('raspberry-pi-5-16gb');
+const orinNx16Fits = fitsForBoard('jetson-orin-nx-16gb');
+const sigma32Fits = fitsForBoard('latte-panda-sigma-32gb');
+// Max fits across all 6.5+ GiB boards
+const highRamBoards = boards.filter((b) => b.modelCeilingBytes >= Math.floor(6.5 * 1024*1024*1024)).map((b) => b.id);
+const highRamFits = models.filter((m) => highRamBoards.some((bid) => {
+  const f = fitFor(m.id, bid);
+  return f && f.verdict !== 'no';
+})).length;
+
+const minCeil = Math.min(...boards.map((b) => b.modelCeilingBytes));
+const maxCeil = Math.max(...boards.map((b) => b.modelCeilingBytes));
+const fmtCeilRange = `${(minCeil / MIB).toFixed(0)}M–${(maxCeil / GIB).toFixed(maxCeil >= 30*GIB ? 0 : 1)}G`;
+
+const boardListDesc = boards.map((b) => b.name.split('(')[0].trim()).slice(0, 6).join(', ') + (boards.length > 6 ? ` +${boards.length - 6} more` : '');
+
 const title = 'Edge AI Radar — Daily TinyML & GGUF Hardware Fit Report | MakerPortal';
 const description =
-  'Daily deterministic radar: fresh GGUF/ONNX model releases from Hugging Face, sized against the real memory ceilings of ESP32-S3, Teensy 4.1, Raspberry Pi 5, Coral Edge TPU and Jetson Orin Nano.';
+  `Daily deterministic radar: fresh GGUF/ONNX releases (Q4_K_M etc) sized against real memory ceilings of ${boardListDesc} (${fmtCeilRange}).`;
 ---
 
 <Layout title={title} description={description}>
@@ -151,27 +165,27 @@ const description =
                 </p>
               </div>
 
-              {/* Stat Grid */}
+              {/* Stat Grid — now reflects 7M–30G span and high-RAM family */}
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div class="rounded-[14px] border border-border bg-card-bg p-4">
                   <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Scanned</span>
                   <div class="mt-1 font-mono text-[1.4rem] font-bold text-primary-text">{totalModels}</div>
-                  <span class="text-[0.7rem] text-muted-text">HF Releases</span>
+                  <span class="text-[0.7rem] text-muted-text">HF Releases · {totalBoards} boards</span>
                 </div>
                 <div class="rounded-[14px] border border-border bg-card-bg p-4">
                   <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">Ceilings</span>
-                  <div class="mt-1 font-mono text-[1.25rem] font-bold text-primary-text">7M–6.5G</div>
-                  <span class="text-[0.7rem] text-muted-text">RAM Span</span>
+                  <div class="mt-1 font-mono text-[1.25rem] font-bold text-primary-text">{fmtCeilRange}</div>
+                  <span class="text-[0.7rem] text-muted-text">RAM Span · MCU→Sigma</span>
                 </div>
                 <div class="rounded-[14px] border border-border bg-card-bg p-4">
-                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">SBC Fits</span>
-                  <div class="mt-1 font-mono text-[1.4rem] font-bold text-emerald-600 dark:text-emerald-400">{pi5Fits}/{totalModels}</div>
-                  <span class="text-[0.7rem] text-muted-text">Pi 5 / Orin Nano</span>
+                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">SBC+GPU Fits</span>
+                  <div class="mt-1 font-mono text-[1.4rem] font-bold text-emerald-600 dark:text-emerald-400">{highRamFits}/{totalModels}</div>
+                  <span class="text-[0.7rem] text-muted-text">Any ≥6.5 GiB board</span>
                 </div>
                 <div class="rounded-[14px] border border-border bg-card-bg p-4">
-                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">MCU Fits</span>
-                  <div class="mt-1 font-mono text-[1.4rem] font-bold text-muted-text">{mcuFits}/{totalModels}</div>
-                  <span class="text-[0.7rem] text-muted-text">ESP32 / Teensy</span>
+                  <span class="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-muted-text">16 GB+ Fits</span>
+                  <div class="mt-1 font-mono text-[1.4rem] font-bold text-primary-text">{Math.max(pi5_16Fits, orinNx16Fits)}/{totalModels}</div>
+                  <span class="text-[0.7rem] text-muted-text">Pi5 16GB / Orin NX · Sigma {sigma32Fits}/{totalModels}</span>
                 </div>
               </div>
             </div>
@@ -192,7 +206,7 @@ const description =
               <span class="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-text">Interactive Simulator 01</span>
               <h2 id="landscape-title" class="mt-1 text-[clamp(1.4rem,3vw,1.9rem)] font-bold tracking-[-0.04em] text-primary-text">Memory topology & context pressure</h2>
               <p class="mt-2 max-w-2xl text-[0.9rem] leading-[1.6] text-muted-text">
-                Simulate how model tensor weights, runtime scratchpads, and expanding KV cache context windows occupy memory across hardware targets — from 7 MiB microcontrollers to 6.5 GiB SBCs.
+                Simulate how model tensor weights, runtime scratchpads, and expanding KV cache context windows occupy memory across hardware targets — from 7 MiB microcontrollers to 30 GiB x86 edge servers (Pi 5 8GB/16GB, Orange Pi 5 Plus 16GB, Rock 5B 16GB, Orin Nano/NX, Sigma 32GB).
               </p>
             </div>
             <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card-bg px-3.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-text">
@@ -208,7 +222,7 @@ const description =
             <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1">
               🟢 Weights + 🟦 Overhead + 🔷 KV Cache
             </span>
-            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-3 py-1">7 MiB MCU → 6.5 GiB SBC</span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-3 py-1">{fmtCeilRange} MCU → Sigma 32GB</span>
             <span class="inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-3 py-1">512 to 8,192 token context scaling</span>
           </div>
         </div>
@@ -232,7 +246,7 @@ const description =
           </div>
 
           <div class="mt-8 overflow-x-auto rounded-[20px] border border-border bg-card-bg shadow-sm">
-            <table class="w-full min-w-[780px] border-collapse text-left">
+            <table class="w-full min-w-[1080px] border-collapse text-left">
               <thead>
                 <tr class="border-b border-border bg-elevated/40">
                   <th scope="col" class="sticky left-0 z-10 bg-card-bg px-4 py-3.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-muted-text">Model · representative file</th>

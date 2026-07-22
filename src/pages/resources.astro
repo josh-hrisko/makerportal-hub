@@ -45,6 +45,22 @@ const radarBoards = latestRadar?.data.boards ?? [];
 const radarModels = latestRadar?.data.models ?? [];
 const radarFits = latestRadar?.data.fits ?? [];
 
+// Dynamic fit stats for bento teaser (replaces hardcoded 8/12)
+function radarFitsCountFor(boardId: string) {
+  return radarModels.filter((m) => {
+    const f = radarFits.find((x) => x.modelId === m.id && x.boardId === boardId);
+    return f && f.verdict !== 'no';
+  }).length;
+}
+const radarPi5Fits = radarFitsCountFor('raspberry-pi-5-8gb');
+const radarOrinFits = radarFitsCountFor('jetson-orin-nano-8gb');
+const radarSbcFits = Math.max(radarPi5Fits, radarOrinFits);
+const radarMcuFits = radarModels.filter((m) => {
+  const fEsp = radarFits.find((x) => x.modelId === m.id && x.boardId === 'esp32-s3-n8r8');
+  const fTeensy = radarFits.find((x) => x.modelId === m.id && x.boardId === 'teensy-4-1');
+  return (fEsp && fEsp.verdict !== 'no') || (fTeensy && fTeensy.verdict !== 'no');
+}).length;
+
 const linkTrendScore = (link: { pillars?: string[] }) =>
   (link.pillars ?? []).reduce((sum, p) => sum + (pillarCounts[p] ?? 0), 0);
 const linkIsTrending = (link: { pillars?: string[] }) =>
@@ -194,11 +210,15 @@ const developerTools = [
                 </div>
                 <div class="flex justify-between border-b border-border pb-1">
                   <span>Hardware Ceilings:</span>
-                  <strong class="text-primary-text">5 Boards</strong>
+                  <strong class="text-primary-text">{radarBoards.length} Boards</strong>
                 </div>
                 <div class="flex justify-between border-b border-border pb-1">
                   <span>Pi 5 / Orin Fits:</span>
-                  <strong class="text-emerald-600 dark:text-emerald-400">8/12</strong>
+                  <strong class="text-emerald-600 dark:text-emerald-400">{radarSbcFits}/{radarModels.length}</strong>
+                </div>
+                <div class="flex justify-between border-b border-border pb-1">
+                  <span>MCU Fits:</span>
+                  <strong class={`${radarMcuFits > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-text'}`}>{radarMcuFits}/{radarModels.length}</strong>
                 </div>
                 <div class="flex justify-between">
                   <span>Methodology:</span>
@@ -341,39 +361,49 @@ const developerTools = [
       </div>
 
       {/* Category Filter Tabs */}
-      <div class="mt-8 flex flex-wrap gap-2 border-b border-border pb-4" id="playground-filter-bar">
+      <div class="mt-8 flex flex-wrap gap-2 border-b border-border pb-4" id="playground-filter-bar" role="tablist" aria-label="Filter simulators by category">
         <button
           type="button"
+          role="tab"
+          aria-selected="true"
           data-filter="all"
-          class="sim-filter-btn active rounded-full bg-primary-text px-4 py-1.5 font-mono text-[0.68rem] font-bold uppercase tracking-[0.1em] text-canvas transition-colors"
+          class="sim-filter-btn active rounded-full bg-primary-text px-4 py-1.5 font-mono text-[0.68rem] font-bold uppercase tracking-[0.1em] text-canvas transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
         >
           All ({playground.filter((p) => p.status === 'live').length})
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected="false"
           data-filter="on-device-ai"
-          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
         >
           On-Device AI
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected="false"
           data-filter="dsp-audio"
-          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
         >
           DSP & Audio
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected="false"
           data-filter="physics"
-          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
         >
           Physics & Solvers
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected="false"
           data-filter="lab"
-          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors"
+          class="sim-filter-btn rounded-full border border-border bg-card-bg px-4 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor"
         >
           App Grounded Lab
         </button>
@@ -429,52 +459,58 @@ const developerTools = [
     </div>
   </section>
 
-  {/* Client-side filter script for simulators */}
+  {/* Client-side filter script — event delegation + idempotent binding */}
   <script is:inline>
     function setupSimFilters() {
       const filterBar = document.getElementById('playground-filter-bar');
       const grid = document.getElementById('simulators-grid');
       if (!filterBar || !grid) return;
+      if (filterBar.dataset.bound === 'true') return;
+      filterBar.dataset.bound = 'true';
 
-      const buttons = filterBar.querySelectorAll('.sim-filter-btn');
-      const cards = grid.querySelectorAll('.sim-card');
+      filterBar.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+        const btn = target.closest('.sim-filter-btn');
+        if (!btn || !filterBar.contains(btn)) return;
 
-      buttons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const filter = btn.getAttribute('data-filter');
+        const filter = btn.getAttribute('data-filter');
+        const buttons = filterBar.querySelectorAll('.sim-filter-btn');
+        const cards = grid.querySelectorAll('.sim-card');
 
-          buttons.forEach((b) => {
-            b.classList.remove('active', 'bg-primary-text', 'text-canvas');
-            b.classList.add('border', 'border-border', 'bg-card-bg', 'text-muted-text');
-          });
+        buttons.forEach((b) => {
+          b.classList.remove('active', 'bg-primary-text', 'text-canvas');
+          b.classList.add('border', 'border-border', 'bg-card-bg', 'text-muted-text');
+          b.setAttribute('aria-selected', 'false');
+        });
 
-          btn.classList.add('active', 'bg-primary-text', 'text-canvas');
-          btn.classList.remove('border', 'border-border', 'bg-card-bg', 'text-muted-text');
+        btn.classList.add('active', 'bg-primary-text', 'text-canvas');
+        btn.classList.remove('border', 'border-border', 'bg-card-bg', 'text-muted-text');
+        btn.setAttribute('aria-selected', 'true');
 
-          cards.forEach((card) => {
-            const p = card.getAttribute('data-pillar');
-            const grounded = card.getAttribute('data-grounded') === 'true';
-
-            if (filter === 'all') {
-              card.style.display = 'flex';
-            } else if (filter === 'lab') {
-              card.style.display = grounded ? 'flex' : 'none';
-            } else if (filter === p) {
-              card.style.display = 'flex';
-            } else {
-              card.style.display = 'none';
-            }
-          });
+        cards.forEach((card) => {
+          const p = card.getAttribute('data-pillar');
+          const grounded = card.getAttribute('data-grounded') === 'true';
+          if (filter === 'all') {
+            card.style.display = 'flex';
+          } else if (filter === 'lab') {
+            card.style.display = grounded ? 'flex' : 'none';
+          } else if (filter === p) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
         });
       });
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', setupSimFilters);
+      document.addEventListener('DOMContentLoaded', setupSimFilters, { once: true });
     } else {
       setupSimFilters();
     }
     document.addEventListener('astro:page-load', setupSimFilters);
+    document.addEventListener('astro:after-swap', setupSimFilters);
   </script>
 
   {/* ── Section 3: Developer Toolkit ("Tools We Use") ─────────────── */}

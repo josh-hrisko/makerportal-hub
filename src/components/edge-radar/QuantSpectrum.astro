@@ -72,7 +72,31 @@ for (const m of models) {
   groups.set(qKey, existing);
 }
 
-const groupList = [...groups.values()].sort((a, b) => a.bpw - b.bpw);
+const rawGroupList = [...groups.values()].sort((a, b) => a.bpw - b.bpw);
+
+// Collision-aware vertical stagger for badges sharing close bpw positions
+const groupList = rawGroupList.map((g, idx) => {
+  const gx = LEFT + frac(g.bpw) * TRACK_W;
+  // Look back for close neighbors within 48px
+  let stagger = 0;
+  for (let j = idx - 1; j >= 0; j--) {
+    const prevGx = LEFT + frac(rawGroupList[j].bpw) * TRACK_W;
+    if (Math.abs(gx - prevGx) < 56) {
+      stagger = (rawGroupList as any)[j].__stagger + 1 || 1;
+      // Cap stagger at 2 levels, then wrap with extra horizontal nudge
+      if (stagger > 2) stagger = 0;
+      break;
+    }
+  }
+  // Store stagger for next iteration lookup
+  (g as any).__stagger = stagger;
+  (g as any).__gx = gx;
+  return {
+    ...g,
+    __stagger: stagger,
+    __gx: gx,
+  };
+});
 
 const ticks = [
   { label: '2 bpw', bpw: 2.0, note: 'Extreme loss' },
@@ -137,12 +161,21 @@ const ticks = [
         stroke-width="1"
       />
 
-      {/* Sweet spot indicator highlight */}
+      {/* Sweet spot indicator highlight — emerald glow + outline */}
       <g>
         {(() => {
           const q4x = LEFT + frac(4.85) * TRACK_W;
           return (
             <g>
+              <rect
+                x={q4x - 26}
+                y={TRACK_Y - 4}
+                width="52"
+                height={TRACK_H + 8}
+                rx="8"
+                fill="#10b981"
+                opacity="0.12"
+              />
               <rect
                 x={q4x - 22}
                 y={TRACK_Y - 2}
@@ -199,12 +232,17 @@ const ticks = [
         );
       })}
 
-      {/* Plotted model groups on top of spectrum */}
-      {groupList.map((g, i) => {
-        const gx = LEFT + frac(g.bpw) * TRACK_W;
+      {/* Plotted model groups on top of spectrum — collision-aware stagger */}
+      {groupList.map((g: any) => {
+        const gx = g.__gx as number;
+        const stagger = g.__stagger as number;
         const count = g.models.length;
-        // Stagger y position if needed
-        const badgeY = TRACK_Y - 14 - (i % 2) * 12;
+        const badgeY = TRACK_Y - 16 - stagger * 16;
+
+        const label = `${g.quant} (${count})`;
+        // Rough width estimation for badge background: 6px per char + 12 padding
+        const badgeW = Math.max(48, label.length * 5.8 + 14);
+        const halfW = badgeW / 2;
 
         return (
           <g class="group/quant">
@@ -216,39 +254,40 @@ const ticks = [
               y2={TRACK_Y}
               stroke="var(--mp-border-strong)"
               stroke-width="1"
+              opacity="0.9"
             />
             {/* Dot on track */}
             <circle
               cx={gx}
               cy={TRACK_Y + TRACK_H / 2}
-              r="4.5"
+              r="5"
               fill="var(--mp-card)"
-              stroke="currentColor"
-              stroke-width="1.8"
+              stroke={Math.abs(g.bpw - 4.85) < 0.15 ? '#10b981' : 'currentColor'}
+              stroke-width="2"
               class="text-primary-text"
             />
-            {/* Quant badge above */}
-            <g transform={`translate(${clamp(gx, LEFT + 24, W - RIGHT - 24)}, ${badgeY})`}>
+            {/* Quant badge above — auto-sized */}
+            <g transform={`translate(${clamp(gx, LEFT + halfW + 2, W - RIGHT - halfW - 2)}, ${badgeY})`}>
               <rect
-                x="-24"
+                x={-halfW}
                 y="-10"
-                width="48"
+                width={badgeW}
                 height="14"
-                rx="6"
+                rx="7"
                 fill="var(--mp-card)"
-                stroke="var(--mp-border)"
-                stroke-width="1"
+                stroke={Math.abs(g.bpw - 4.85) < 0.15 ? '#10b981' : 'var(--mp-border)'}
+                stroke-width={Math.abs(g.bpw - 4.85) < 0.15 ? 1.4 : 1}
               />
               <text
                 text-anchor="middle"
-                y="0"
+                y="0.5"
                 font-family="var(--font-mono)"
-                font-size="8"
-                font-weight="700"
+                font-size="7.8"
+                font-weight={Math.abs(g.bpw - 4.85) < 0.15 ? '800' : '700'}
                 fill="currentColor"
-                class="text-primary-text"
+                class={Math.abs(g.bpw - 4.85) < 0.15 ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary-text'}
               >
-                {g.quant} ({count})
+                {label}
               </text>
             </g>
           </g>
