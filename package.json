@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "build": "node --experimental-strip-types scripts/generate-llms.ts && astro check && astro build && npx pagefind --site dist/client && node scripts/sync-pagefind.mjs && node scripts/strip-dev-pages.mjs",
     "preview": "astro preview",
-    "check": "astro check && node scripts/amazon/audit-asins.mjs --sims-only && node scripts/amazon/smoke-sim-gear.mjs",
+    "check": "astro check && node --experimental-strip-types scripts/nav/dead-link-audit.mjs && node scripts/amazon/audit-asins.mjs --sims-only && node scripts/amazon/smoke-sim-gear.mjs",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "brand:assets": "node scripts/brand-assets/generate.mjs",
     "amazon:audit": "node scripts/amazon/audit-asins.mjs",
