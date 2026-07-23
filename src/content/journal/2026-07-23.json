@@ -1,0 +1,424 @@
+{
+  "generatedAt": "2026-07-23T12:26:54.235Z",
+  "items": [
+    {
+      "id": "github-1267734215",
+      "source": "github",
+      "title": "ANEForge – Pythonic binding to the Apple Neural Engine",
+      "url": "https://github.com/sbryngelson/ANEForge",
+      "author": "sbryngelson",
+      "publishedAt": "2026-07-23T01:18:26Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 30,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1267734215.webp"
+    },
+    {
+      "id": "github-1164344011",
+      "source": "github",
+      "title": "imp – From-scratch C++/CUDA inference engine for the NVIDIA RTX 5090 (sm_120a) — the best single-GPU backend for agentic AI: t",
+      "url": "https://github.com/kekzl/imp",
+      "author": "kekzl",
+      "publishedAt": "2026-07-23T12:09:15Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1164344011.webp"
+    },
+    {
+      "id": "github-1149307294",
+      "source": "github",
+      "title": "speech-swift – AI speech toolkit for Apple Silicon — ASR, TTS, speech-to-speech, VAD, and diarization powered by MLX and CoreML",
+      "url": "https://github.com/soniqo/speech-swift",
+      "author": "soniqo",
+      "publishedAt": "2026-07-23T08:19:37Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1149307294.webp"
+    },
+    {
+      "id": "github-1161274003",
+      "source": "github",
+      "title": "EnviousWispr – Free, sub-second on-device AI dictation for macOS. Dual engines (Whisper + Parakeet) on Apple Silicon. Optional AI polis",
+      "url": "https://github.com/saurabhav88/EnviousWispr",
+      "author": "saurabhav88",
+      "publishedAt": "2026-07-22T21:20:42Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1161274003.webp"
+    },
+    {
+      "id": "hackernews-49007801",
+      "source": "hackernews",
+      "title": "A privacy-first macOS meeting-notes and writing app that runs on-device",
+      "url": "https://github.com/bitwize-ai/Logue",
+      "author": "westerosweb",
+      "publishedAt": "2026-07-22T14:55:39Z",
+      "tags": [
+        "on-device-ai",
+        "privacy-arch"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "bluesky",
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-49007801.webp"
+    },
+    {
+      "id": "github-1222842232",
+      "source": "github",
+      "title": "llm-quant-bench – Measuring accuracy loss across GGUF quantization levels for small open-weight LLMs (Gemma 4, Qwen 3.x) using lm-evaluati",
+      "url": "https://github.com/yrougy/llm-quant-bench",
+      "author": "yrougy",
+      "publishedAt": "2026-07-23T08:42:16Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 23,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1222842232.webp"
+    },
+    {
+      "id": "github-1289152890",
+      "source": "github",
+      "title": "FABULA-LLM-5 – Frontier models sell confidence. FABULA ships proof — an agent harness where any model is a swappable chip and every fin",
+      "url": "https://github.com/sergezuber/FABULA-LLM-5",
+      "author": "sergezuber",
+      "publishedAt": "2026-07-23T12:20:18Z",
+      "tags": [
+        "metal-ane",
+        "privacy-arch"
+      ],
+      "score": 21,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1289152890.webp"
+    },
+    {
+      "id": "bluesky-3mr6l77u7xk2j",
+      "source": "bluesky",
+      "title": "they have a llama.cpp fork and GGUFs huggingface.co/poolside/Lag...\n\ni fear i may be doing another round of overnight tuning for the ideal GPU+CPU config for these",
+      "url": "https://bsky.app/profile/philpax.me/post/3mr6l77u7xk2j",
+      "author": "philpax.me",
+      "publishedAt": "2026-07-21T19:47:18.319Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 16,
+      "domain": "huggingface.co",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr6l77u7xk2j.webp"
+    },
+    {
+      "id": "bluesky-3mravxnsche23",
+      "source": "bluesky",
+      "title": "Why Mac RAM is \"soldered\": it is not soldered. The LPDDR packages sit on the SoC substrate next to the M-series die, sharing one memory controller with the CPU, GPU, Neural Engine, and SEP. UMA is the engineering reason ",
+      "url": "https://bsky.app/profile/macfax.bsky.social/post/3mravxnsche23",
+      "author": "macfax.bsky.social",
+      "publishedAt": "2026-07-22T18:05:14.894Z",
+      "tags": [
+        "metal-ane"
+      ],
+      "score": 14,
+      "domain": "bsky.app",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mravxnsche23.webp"
+    },
+    {
+      "id": "bluesky-3mradcb7cgs2e",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: A breakpoint that plays a sound and continues automatically is a surprisingly effective way to monitor SwiftUI redraws without ever pausing your app. www.hackingwithswift.com/plus/learn-s...",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mradcb7cgs2e",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-22T12:31:09.934Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 13,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mradcb7cgs2e.webp"
+    },
+    {
+      "id": "hackernews-49015424",
+      "source": "hackernews",
+      "title": "Localmaxxing – Local LLM Inference Benchmarks",
+      "url": "https://www.localmaxxing.com/en",
+      "author": "ilreb",
+      "publishedAt": "2026-07-23T00:41:00Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "localmaxxing.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-49015424.webp"
+    },
+    {
+      "id": "devto-4207525",
+      "source": "devto",
+      "title": "I turned my phone into a remote deck for my Windows laptop — no cloud, no accounts, one npm start",
+      "url": "https://dev.to/ronak_parmar_033c50d168b5/i-turned-my-phone-into-a-remote-deck-for-my-windows-laptop-no-cloud-no-accounts-one-npm-start-34hb",
+      "author": "ronak_parmar_033c50d168b5",
+      "publishedAt": "2026-07-22T15:52:01Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 12,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4207525.webp"
+    },
+    {
+      "id": "hackernews-49007664",
+      "source": "hackernews",
+      "title": "Airtight – privacy-first crypto portfolio tracker,single HTML file, zero servers",
+      "url": "https://airtight.sell.app/product/airtight-private-portfolio-tracker",
+      "author": "AirTight",
+      "publishedAt": "2026-07-22T14:45:54Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 12,
+      "domain": "airtight.sell.app",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-49007664.webp"
+    },
+    {
+      "id": "devto-4177986",
+      "source": "devto",
+      "title": "Part 5 — Deals, pricing, and a real board",
+      "url": "https://dev.to/nerd_snipe_dev/part-5-deals-pricing-and-a-real-board-a1c",
+      "author": "nerd_snipe_dev",
+      "publishedAt": "2026-07-22T16:15:00Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 11,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4177986.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-17T23:44:54.611Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 9,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "bluesky-3mqlmuvrv6k2u",
+      "source": "bluesky",
+      "title": "I've released an update to my book \"The SwiftUI Way\"! It expands the coverage of SwiftUI data flow, view updates, and performance, and includes new guidance for changes introduced in Xcode 27: books.nilcoalescing.com/the",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mqlmuvrv6k2u",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-14T06:56:44.666Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 9,
+      "domain": "books.nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mqlmuvrv6k2u.webp"
+    },
+    {
+      "id": "bluesky-3mr2zp4r53k2m",
+      "source": "bluesky",
+      "title": "To prepare Strolly for app resizability in iOS 27, we wanted its non-modal detent sheets to adapt into side panels on wider displays.\n\nSwiftUI sheets don’t support that presentation, so we built our own panel API:\n\nnilco",
+      "url": "https://bsky.app/profile/hishnash.bsky.social/post/3mr2zp4r53k2m",
+      "author": "hishnash.bsky.social",
+      "publishedAt": "2026-07-20T09:56:05.374Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 8,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr2zp4r53k2m.webp"
+    },
+    {
+      "id": "hackernews-48967743",
+      "source": "hackernews",
+      "title": "Subrust, a no_std, no alloc Subset-of-Rust interpreter",
+      "url": "https://github.com/orbitalhigh/subrust",
+      "author": "makira",
+      "publishedAt": "2026-07-19T12:48:04Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 8,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48967743.webp"
+    },
+    {
+      "id": "hackernews-48946283",
+      "source": "hackernews",
+      "title": "Prompt submitted to cloud even when using local LLM by default",
+      "url": "https://github.com/anomalyco/opencode/issues/15854",
+      "author": "josh-wrale",
+      "publishedAt": "2026-07-17T12:00:37Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 7,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48946283.webp"
+    },
+    {
+      "id": "hackernews-48946222",
+      "source": "hackernews",
+      "title": "A sandbox for running real jailbreak techniques against local LLMs",
+      "url": "https://github.com/joshfischer1108/jailbreak-lab",
+      "author": "joshfischer1108",
+      "publishedAt": "2026-07-17T11:54:03Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 7,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48946222.webp"
+    },
+    {
+      "id": "devto-4168048",
+      "source": "devto",
+      "title": "Build a Contacts app in 20 minutes with DesignFoundation",
+      "url": "https://dev.to/nerd_snipe_dev/build-a-contacts-app-in-20-minutes-with-designfoundation-4ph1",
+      "author": "nerd_snipe_dev",
+      "publishedAt": "2026-07-17T15:54:17Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 3,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4168048.webp"
+    },
+    {
+      "id": "arxiv-2607.17012v1",
+      "source": "arxiv",
+      "title": "Schema-Bound LLM Control of Scientific Instrumentation through Model Context Protocol Skills",
+      "url": "http://arxiv.org/abs/2607.17012v1",
+      "author": "Roberto dos Reis",
+      "publishedAt": "2026-07-19T00:16:24Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -91,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SE",
+      "image": "/trends/arxiv-2607.17012v1.webp"
+    },
+    {
+      "id": "arxiv-2607.13278v2",
+      "source": "arxiv",
+      "title": "Adapting Diffusion-Based Music Synthesis to Speech and Singing Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.13278v2",
+      "author": "Ben Maman",
+      "publishedAt": "2026-07-14T21:29:17Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -93,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.13278v2.webp"
+    },
+    {
+      "id": "arxiv-2607.11706v1",
+      "source": "arxiv",
+      "title": "VoxENES 2026: Benchmarking Generalization of Speech Spoofing Detectors Against LLM-Era TTS and Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.11706v1",
+      "author": "Aastha Sharma",
+      "publishedAt": "2026-07-13T15:35:29Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": -93,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SD",
+      "image": "/trends/arxiv-2607.11706v1.webp"
+    }
+  ]
+}
