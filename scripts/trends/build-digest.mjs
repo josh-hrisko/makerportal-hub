@@ -153,7 +153,7 @@ function scoreBreakdown(c) {
 function renderSummary(picked, funnel, timestamp) {
   const lines = [
     'Automated daily trend scan (Bluesky, Hacker News) — **auto-published** to the ',
-    '/journal archive and surfaced as the latest entry on /resources "Signals we\'re tracking". ',
+    '/journal archive (Library daily engine) and surfaced on /resources. ',
     'To remove anything the gates missed, edit or revert `src/content/journal/YYYY-MM-DD.json` on main.',
     '',
     `**Funnel:** ${funnel.fetched} fetched → ${funnel.deduped} after dedupe → ${funnel.gated} passed gates` +

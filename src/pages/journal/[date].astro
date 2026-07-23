@@ -76,7 +76,7 @@ const uniqueSources = [...new Set(items.flatMap((i: any) => i.sources ?? [i.sour
 
 <Layout title={title} description={description}>
   <HubShell
-    kicker={`Learn · Signals Journal · ${dateStr}`}
+    kicker={`Library · Signals Journal · ${dateStr}`}
     title={formattedDate}
     lead={`Captured ${genFormatted} — ${items.length} signals across ${pillarEntries.length} pillars, ${uniqueSources.length} source networks. Scores weighted by keyword hits, artifact bonus, and cross-source corroboration.`}
     status="Journal"

@@ -144,19 +144,21 @@ MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](h
 
 **Core principles:** On-device first where possible, transparent hybrid for agentic, no committee software, useful on day one, craft over clutter, one deliberate release at a time.
 
-## Site map (hub) — empire IA
+## Site map (hub) — empire IA (D-024)
 
-Primary nav (≤7): Apps · Notes · Learn · Shop · Watch · Studio · Contact
+Primary nav (6): Apps · Lab · Library · Blog · Shop · Studio
 
 - [Home](https://www.makerportal.ai): Studio hub
 - [Apps](https://www.makerportal.ai/apps): Catalog — 11 live (5 on *.makerportal.ai + 6 legacy bridge on makersportal.com/apps migrating)
-- [Field notes / blog](https://www.makerportal.ai/blog): Articles & craft
-- [Learn / resources](https://www.makerportal.ai/resources): Topic hubs, tools, affiliate-ready guides
+- [Lab / playground](https://www.makerportal.ai/playground): 32 browser research instruments (DSP, physics, edge AI, deployment labs)
+- [Library](https://www.makerportal.ai/resources): Daily engines + gear + tools hub
+- [Edge AI Radar](https://www.makerportal.ai/resources/edge-ai-radar): Daily GGUF/ONNX × board memory ceilings (deterministic)
+- [Signals Journal](https://www.makerportal.ai/journal): Daily trend backlog (under Library — not a top-level nav peer)
+- [Field notes / blog](https://www.makerportal.ai/blog): Human-authored articles & craft
 - [Shop](https://www.makerportal.ai/shop): Digital goods, code packs, archives
-- [Watch](https://www.makerportal.ai/watch): Video / YouTube surface
-- [About](https://www.makerportal.ai/about) · [Team](https://www.makerportal.ai/team) · [Press](https://www.makerportal.ai/press) · [Advertise](https://www.makerportal.ai/advertise)
+- [Studio](https://www.makerportal.ai/about) · [Team](https://www.makerportal.ai/team) · [Press](https://www.makerportal.ai/press) · [Advertise](https://www.makerportal.ai/advertise) · [Watch](https://www.makerportal.ai/watch) (scaffold)
 - [Contact](https://www.makerportal.ai/contact) · [Privacy](https://www.makerportal.ai/privacy) · [Terms](https://www.makerportal.ai/terms)
-- [RSS](https://www.makerportal.ai/rss.xml) · [Sitemap](https://www.makerportal.ai/sitemap.xml)
+- [RSS](https://www.makerportal.ai/rss.xml) · [Sitemap](https://www.makerportal.ai/sitemap.xml) · [Agent map](https://www.makerportal.ai/llms)
 
 ## Application Matrix — 11 Live (Featured indicated with *)
 
@@ -164,13 +166,13 @@ Full studio catalog available at [makerportal.ai/apps](https://www.makerportal.a
 
 ${parsedApps.map(app => `- [${app.featured ? '*' : ''}${app.title} — ${app.tagline}](${app.url}): ${app.description.replace(/\\s+/g, ' ')} (${app.platform}). Category: ${app.category}. Tech: ${app.techBadges.join(', ')}`).join('\n')}
 
-## Interactive Playground — 18 Live Tools
+## Lab — Interactive Playground
 
 Browser-native mathematical and physical simulations: [makerportal.ai/playground](https://www.makerportal.ai/playground).
 
 ${parsedPlayground.map(tool => `- [${tool.title}](${tool.slug.startsWith('http') ? tool.slug : `https://www.makerportal.ai/playground/${tool.slug}`}): ${tool.tagline} (${tool.isGrounded ? 'Grounded in shipped app' : 'Independent research instrument'})${tool.relatedApp ? ` ↳ Related to ${tool.relatedApp}` : ''}`).join('\n')}
 
-## Trending Signals
+## Library — Trending Signals (daily engine)
 
 Score-weighted, source-corroborated technical signals from our latest daily scan (Scan Date: ${latestJournalDate || 'N/A'}): [makerportal.ai/journal](https://www.makerportal.ai/journal).
 
@@ -207,16 +209,19 @@ let llmsFullTxt = `# Human-friendly view → https://www.makerportal.ai/llms —
 
 ${llmsTxt.split('## Site map (hub)')[0]}
 
-## Site map (hub) — empire IA
+## Site map (hub) — empire IA (D-024)
 
-Primary nav (≤7): Apps · Notes · Learn · Shop · Watch · Studio · Contact
+Primary nav (6): Apps · Lab · Library · Blog · Shop · Studio
 
 - [Home](https://www.makerportal.ai): Studio hub
-- [Apps](https://www.makerportal.ai/apps): Catalog — 11 live (5 on *.makerportal.ai + 6 legacy bridge on makersportal.com/apps migrating)
-- [Field notes / blog](https://www.makerportal.ai/blog): Articles & craft
-- [Learn / resources](https://www.makerportal.ai/resources): Topic hubs, tools, affiliate-ready guides
+- [Apps](https://www.makerportal.ai/apps): Catalog — 11 live
+- [Lab / playground](https://www.makerportal.ai/playground): 32 browser research instruments
+- [Library](https://www.makerportal.ai/resources): Daily engines + gear + tools
+- [Edge AI Radar](https://www.makerportal.ai/resources/edge-ai-radar): GGUF × board ceilings
+- [Signals Journal](https://www.makerportal.ai/journal): Daily trend backlog (under Library)
+- [Field notes / blog](https://www.makerportal.ai/blog): Human-authored craft
 - [Shop](https://www.makerportal.ai/shop): Digital goods, code packs, archives
-- [Watch](https://www.makerportal.ai/watch): Video / YouTube surface
+- [Studio](https://www.makerportal.ai/about) · [Watch](https://www.makerportal.ai/watch) (scaffold)
 
 ---
 

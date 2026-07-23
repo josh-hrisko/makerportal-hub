@@ -129,7 +129,7 @@ const description =
 
 <Layout title={title} description={description}>
   <HubShell
-    kicker={`Learn · Resources · Edge AI Radar${dateStr ? ` · ${dateStr}` : ''}`}
+    kicker={`Library · Edge AI Radar${dateStr ? ` · ${dateStr}` : ''}`}
     title="Which fresh models actually fit your board."
     lead="A daily, deterministic scan of new GGUF and ONNX releases on Hugging Face — verified file bytes in, datasheet memory ceilings out. Every fit verdict on this page is arithmetic you can check, not a benchmark we invented."
     status="Daily"
@@ -142,7 +142,7 @@ const description =
         <a href="#radar" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Fit matrix ↓</a>
         <a href="#quant-spectrum" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">BPW spectrum ↓</a>
         <a href="#methodology" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">Methodology</a>
-        <a href="/resources" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">← Resources</a>
+        <a href="/resources" class="inline-flex min-h-11 items-center rounded-full border border-border bg-elevated px-5 text-[0.9rem] font-medium text-muted-text hover:border-[var(--mp-border-strong)] hover:text-primary-text">← Library</a>
       </div>
       {generatedAt && (
         <p class="mt-6 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-muted-text">
@@ -478,7 +478,7 @@ const description =
   ) : (
     <section class="border-b border-border bg-canvas py-24 text-center">
       <p class="text-muted-text">No radar snapshot has been published yet — the daily pipeline writes one after the first successful scan.</p>
-      <a href="/resources" class="mt-6 inline-flex min-h-10 items-center rounded-full bg-primary-text px-5 text-[0.85rem] font-bold text-canvas">← Resources</a>
+      <a href="/resources" class="mt-6 inline-flex min-h-10 items-center rounded-full bg-primary-text px-5 text-[0.85rem] font-bold text-canvas">← Library</a>
     </section>
   )}
 </Layout>

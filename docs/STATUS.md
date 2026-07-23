@@ -1,14 +1,17 @@
 # Status — MakerPortal Hub
 
-Current snapshot as of 2026-07-19. Code and registries are authoritative when
+Current snapshot as of 2026-07-22. Code and registries are authoritative when
 this document conflicts with a generated-data commit.
 
 ## Product surface
 
+- **Primary nav (D-024):** Apps · Lab · Library · Blog · Shop · Studio.
+  Signals Journal + Edge AI Radar live under Library; Watch demoted to Studio.
+  SSOT: `src/data/site-nav.ts`.
 - **Stack:** Astro 7, Tailwind 4, vanilla client TypeScript in inline scripts,
   Vercel adapter, static output, Pagefind build-time search.
 - **Apps:** 11 live products in `src/data/apps.ts`.
-- **Playground:** 32 live instruments in `src/data/playground.ts`. Every
+- **Playground (Lab):** 32 live instruments in `src/data/playground.ts`. Every
   monetized simulator keeps the required DOM order: Simulator → Anatomy → Gear
   (third) → KitBuilder (fourth) → Math → Code → ExportGate → FAQ.
 - **Blog:** 11 posts, including the 2026-07-19 field notes for ElevenLabs/Web

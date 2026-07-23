@@ -5,9 +5,10 @@ import { hubRoutes } from '../data/site-nav';
 // Quick links for empty state – curated, not exhaustive
 const quickLinks = [
   { label: 'App matrix', href: '/apps', desc: '11 live titles • on-device first', kbd: 'A' },
+  { label: 'Lab', href: '/playground', desc: '32 research instruments', kbd: 'P' },
+  { label: 'Library', href: '/resources', desc: 'Radar · signals · gear', kbd: 'L' },
+  { label: 'Edge AI Radar', href: '/resources/edge-ai-radar', desc: 'GGUF × board ceilings', kbd: 'R' },
   { label: 'Field notes', href: '/blog', desc: 'CoreML, SwiftUI, shipping', kbd: 'N' },
-  { label: 'Resources', href: '/resources', desc: 'Guides, tools, gear', kbd: 'R' },
-  { label: 'Agent map', href: '/llms', desc: 'Human + AI index (llms.txt)', kbd: 'L' },
   { label: 'Contact', href: '/contact', desc: 'Human inbox • SF → Worldwide', kbd: 'C' },
 ];
 
@@ -249,11 +250,11 @@ const featuredApps = apps.slice(0, 4);
         const u = new URL(url, location.origin);
         const p = u.pathname;
         if (p.startsWith('/apps')) return { label:'Apps', dot:'bg-violet-500' };
+        if (p.startsWith('/playground')) return { label:'Lab', dot:'bg-sky-500' };
         if (p.startsWith('/blog')) return { label:'Field notes', dot:'bg-amber-500' };
-        if (p.startsWith('/resources') || p.startsWith('/llms')) return { label:'Guides', dot:'bg-brand-anchor' };
+        if (p.startsWith('/resources') || p.startsWith('/journal') || p.startsWith('/llms')) return { label:'Library', dot:'bg-brand-anchor' };
         if (p.startsWith('/shop')) return { label:'Shop', dot:'bg-emerald-500' };
-        if (p.startsWith('/watch')) return { label:'Watch', dot:'bg-primary-cta' };
-        if (p.startsWith('/about') || p.startsWith('/team') || p.startsWith('/press')) return { label:'Studio', dot:'bg-cyan-500' };
+        if (p.startsWith('/watch') || p.startsWith('/about') || p.startsWith('/team') || p.startsWith('/press') || p.startsWith('/contact')) return { label:'Studio', dot:'bg-cyan-500' };
         return { label:'Page', dot:'bg-border' };
       } catch { return { label:'Page', dot:'bg-border' }; }
     };

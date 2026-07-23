@@ -16,16 +16,19 @@ MakerPortal ([makerportal.ai](https://www.makerportal.ai) / [makersportal.com](h
 
 
 
-## Site map (hub) — empire IA
+## Site map (hub) — empire IA (D-024)
 
-Primary nav (≤7): Apps · Notes · Learn · Shop · Watch · Studio · Contact
+Primary nav (6): Apps · Lab · Library · Blog · Shop · Studio
 
 - [Home](https://www.makerportal.ai): Studio hub
-- [Apps](https://www.makerportal.ai/apps): Catalog — 11 live (5 on *.makerportal.ai + 6 legacy bridge on makersportal.com/apps migrating)
-- [Field notes / blog](https://www.makerportal.ai/blog): Articles & craft
-- [Learn / resources](https://www.makerportal.ai/resources): Topic hubs, tools, affiliate-ready guides
+- [Apps](https://www.makerportal.ai/apps): Catalog — 11 live
+- [Lab / playground](https://www.makerportal.ai/playground): 32 browser research instruments
+- [Library](https://www.makerportal.ai/resources): Daily engines + gear + tools
+- [Edge AI Radar](https://www.makerportal.ai/resources/edge-ai-radar): GGUF × board ceilings
+- [Signals Journal](https://www.makerportal.ai/journal): Daily trend backlog (under Library)
+- [Field notes / blog](https://www.makerportal.ai/blog): Human-authored craft
 - [Shop](https://www.makerportal.ai/shop): Digital goods, code packs, archives
-- [Watch](https://www.makerportal.ai/watch): Video / YouTube surface
+- [Studio](https://www.makerportal.ai/about) · [Watch](https://www.makerportal.ai/watch) (scaffold)
 
 ---
 
@@ -567,4 +570,4 @@ curated developer hardware and equipment specifications:
 - **ANE Acceleration**: Apple Neural Engine cores leveraged directly via CoreML FP16 formats to avoid thermal throttling and save battery.
 - **Zero Telemetry Stance**: Absolute privacy posture. No third-party SDKs, no segment, no Firebase. All logs remain local on device.
 
-Last updated: 2026-07-22 — compiled automatically at build time.
+Last updated: 2026-07-23 — compiled automatically at build time.

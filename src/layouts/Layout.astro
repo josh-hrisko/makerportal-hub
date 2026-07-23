@@ -46,10 +46,14 @@ const isActive = (href: string) => {
 
 // Ownership: first claimant wins. Primary hrefs claimed first so they beat cross-links.
 // Pre-populated with manual mappings for shared or standalone sub-routes to ensure tab active state is deterministic.
+// D-024 ownership: Lab owns playground; Library owns resources + journal + llms; Watch → Studio
 const routeOwner = new Map<string, string>([
   ['/advertise', 'shop'],
-  ['/llms', 'resources'],
-  ['/playground', 'resources'],
+  ['/llms', 'library'],
+  ['/journal', 'library'],
+  ['/resources', 'library'],
+  ['/playground', 'lab'],
+  ['/watch', 'studio'],
   ['/contact', 'studio'],
   ['/press', 'studio'],
   ['/team', 'studio'],

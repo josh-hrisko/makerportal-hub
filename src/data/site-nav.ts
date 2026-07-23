@@ -1,11 +1,18 @@
 /**
  * Single source of truth for MakerPortal hub information architecture.
  * Distilled from large content properties (Smashing, Verge-class media, Wirecutter,
- * Substack/Medium hubs, SaaS mega-navs): 5–7 primary items, mega panels for density,
+ * Substack/Medium hubs, SaaS mega-navs): ≤6 primary items, mega panels for density,
  * footer as full sitemap, socials/legal secondary, CTAs isolated.
  *
+ * 2026-07-22 IA (D-024): Apps · Lab · Library · Blog · Shop · Studio
+ * - Lab elevates /playground (32 instruments)
+ * - Library owns daily engines (Edge AI Radar + Signals Journal) + gear/tools
+ * - Signals demoted from primary (was peer of Resources — unclear job)
+ * - Watch demoted to Studio/footer until real video series ship
+ * URLs stable: /resources, /journal, /playground, /watch unchanged.
+ *
  * Full research write-up: docs/RESEARCH-EMPIRE-IA.md
- * Decisions: docs/DECISIONS.md (D-002, D-005)
+ * Decisions: docs/DECISIONS.md (D-002, D-005, D-024)
  */
 
 export type NavLink = {
@@ -78,7 +85,10 @@ export const productLinks: NavLink[] = [
   { label: 'BLExAR', href: 'https://makersportal.com/apps/blexar', description: 'BLE Arduino • CSV export' },
 ];
 
-/** Top bar — keep ≤7 for scanability (NN/g + 2025–26 mega-menu research). */
+/**
+ * Top bar — 6 job-named primaries (NN/g scanability).
+ * Order: product → try → learn → read → buy → company.
+ */
 export const primaryNav: PrimaryNavItem[] = [
   {
     id: 'apps',
@@ -106,6 +116,69 @@ export const primaryNav: PrimaryNavItem[] = [
     },
   },
   {
+    id: 'lab',
+    label: 'Lab',
+    href: '/playground',
+    columns: [
+      {
+        title: 'Instruments',
+        links: [
+          { label: 'All 32 instruments', href: '/playground', description: 'DSP · physics · edge AI' },
+          { label: 'Live Earth', href: '/playground/globe', description: 'Weather · ISS · day/night' },
+          { label: 'Biquad designer', href: '/playground/biquad-filter-designer', description: 'RBJ · DF2T core' },
+          { label: 'CoreML size calc', href: '/playground/coreml-model-size-calculator', description: 'Quant math only' },
+        ],
+      },
+      {
+        title: 'Deployment labs',
+        links: [
+          { label: 'ElevenLabs DSP', href: '/playground/elevenlabs-dsp-sandbox', description: 'TTS → Web Audio rack' },
+          { label: 'Vector recall lab', href: '/playground/vector-retrieval-recall-lab', description: 'Local Float32 ANN' },
+          { label: 'WebGPU matmul', href: '/playground/modal-gpu-benchmarker', description: 'Whisper-tiny scale' },
+          { label: 'Fly edge DB', href: '/playground/fly-edge-db-lab', description: 'LiteFS multi-region' },
+        ],
+      },
+    ],
+    featured: {
+      kicker: '32 live · Zero install',
+      title: 'Open the lab',
+      description: 'Frontier research instruments — grounded app math where we ship it, rigorous physics elsewhere. No account, no cloud runtime tax.',
+      href: '/playground',
+      cta: 'Enter playground →',
+    },
+  },
+  {
+    id: 'library',
+    label: 'Library',
+    href: '/resources',
+    columns: [
+      {
+        title: 'Daily engines',
+        links: [
+          { label: 'Edge AI Radar', href: '/resources/edge-ai-radar', description: 'GGUF × board ceilings', badge: 'Daily' },
+          { label: 'Signals Journal', href: '/journal', description: 'Trend backlog archive', badge: 'Daily' },
+          { label: 'Latest signals', href: '/journal/latest', description: 'Today’s scan' },
+        ],
+      },
+      {
+        title: 'Reference',
+        links: [
+          { label: 'Library hub', href: '/resources', description: 'Radar · gear · tools' },
+          { label: 'Curated gear', href: '/resources#gear', description: 'Hardware picks' },
+          { label: 'Tools we use', href: '/resources#tools', description: 'Studio toolchain' },
+          { label: 'Agent map', href: '/llms', description: 'llms.txt index' },
+        ],
+      },
+    ],
+    featured: {
+      kicker: 'Daily · Deterministic',
+      title: 'Edge AI Radar',
+      description: 'Fresh Hugging Face GGUF/ONNX releases sized against real board memory ceilings — verified file bytes × 1.25, datasheet constants only.',
+      href: '/resources/edge-ai-radar',
+      cta: 'Open radar matrix →',
+    },
+  },
+  {
     id: 'blog',
     label: 'Blog',
     href: '/blog',
@@ -126,69 +199,11 @@ export const primaryNav: PrimaryNavItem[] = [
       },
     ],
     featured: {
-      kicker: 'Content engine',
+      kicker: 'Human-authored',
       title: 'Thinking in public',
-      description: 'CoreML experiments, SwiftUI edges, shipping discipline — the fuel for SEO, AEO, and social.',
+      description: 'CoreML experiments, SwiftUI edges, shipping discipline — field notes, not automated digests.',
       href: '/blog',
       cta: 'Read blog →',
-    },
-  },
-  {
-    id: 'resources',
-    label: 'Resources',
-    href: '/resources',
-    columns: [
-      {
-        title: 'Resources',
-        links: [
-          { label: 'Resource hub', href: '/resources', description: 'Guides & downloads' },
-          { label: 'Playground', href: '/playground', description: 'Frontier research instruments' },
-          { label: 'Agent map', href: '/llms', description: 'Human + AI index (llms.txt)' },
-        ],
-      },
-      {
-        title: 'On this page',
-        links: [
-          { label: 'Tools we use', href: '/resources#tools', description: 'Studio toolchain' },
-          { label: 'Gear', href: '/resources#gear', description: 'Hardware picks' },
-        ],
-      },
-    ],
-    featured: {
-      kicker: 'Scale-ready library',
-      title: 'Learn the stack',
-      description: 'Topic hubs, downloads, and affiliate-ready tool guides — structured for millions of sessions.',
-      href: '/resources',
-      cta: 'Browse resources →',
-    },
-  },
-  {
-    id: 'signals',
-    label: 'Signals',
-    href: '/journal',
-    columns: [
-      {
-        title: 'Archive',
-        links: [
-          { label: 'All scans', href: '/journal', description: 'Chronological backlog' },
-          { label: 'Latest report', href: '/journal/latest', description: 'Trending scan results' },
-        ],
-      },
-      {
-        title: 'How it works',
-        links: [
-          { label: 'Topic pillars', href: '/journal#pillars', description: '6 core focus areas' },
-          { label: 'Scoring formula', href: '/journal#scoring', description: 'Gating & ranking logic' },
-          { label: 'Daily schedule', href: '/journal#schedule', description: 'Auto-published 14:00 UTC' },
-        ],
-      },
-    ],
-    featured: {
-      kicker: 'Daily · Auto-published',
-      title: 'Signals Journal',
-      description: 'Every day saved at its own URL — score-weighted, pillar-filtered, with self-hosted thumbnails and source corroboration.',
-      href: '/journal',
-      cta: 'Open archive →',
     },
   },
   {
@@ -211,21 +226,16 @@ export const primaryNav: PrimaryNavItem[] = [
       },
     ],
     featured: {
-      kicker: 'Monetization surface',
+      kicker: 'First-party archives',
       title: 'Shop the archive',
-      description: 'Downloads, code packs, and curated gear — transparent affiliate disclosures where used.',
+      description: 'Real code from real builds — MoR tax via Lemon Squeezy. Affiliate gear lives under Library with full disclosure.',
       href: '/shop',
       cta: 'Open shop →',
     },
   },
   {
-    id: 'watch',
-    label: 'Watch',
-    href: '/watch',
-  },
-  {
     id: 'studio',
-    label: 'About',
+    label: 'Studio',
     href: '/about',
     columns: [
       {
@@ -238,8 +248,13 @@ export const primaryNav: PrimaryNavItem[] = [
         ],
       },
       {
-        title: 'Connect',
-        links: socials,
+        title: 'Media & connect',
+        links: [
+          { label: 'Watch', href: '/watch', description: 'Video surface (scaffold)' },
+          { label: 'YouTube', href: 'https://www.youtube.com/@MakerPortal', description: 'Demos & ship logs', external: true },
+          { label: 'GitHub', href: 'https://github.com/makerportal', external: true },
+          { label: 'X / Twitter', href: 'https://x.com/maker_portal', external: true },
+        ],
       },
     ],
     featured: {
@@ -258,11 +273,12 @@ export const footerColumns: FooterColumn[] = [
     links: [
       { label: 'Home', href: '/' },
       { label: 'Apps', href: '/apps' },
+      { label: 'Lab', href: '/playground' },
+      { label: 'Library', href: '/resources' },
+      { label: 'Edge AI Radar', href: '/resources/edge-ai-radar' },
+      { label: 'Signals Journal', href: '/journal' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Resources', href: '/resources' },
-      { label: 'Signals', href: '/journal' },
       { label: 'Shop', href: '/shop' },
-      { label: 'Watch', href: '/watch' },
     ],
   },
   {
@@ -273,6 +289,7 @@ export const footerColumns: FooterColumn[] = [
       { label: 'Contact', href: '/contact' },
       { label: 'Press kit', href: '/press' },
       { label: 'Advertise', href: '/advertise' },
+      { label: 'Watch', href: '/watch' },
       { label: 'Journal ↗', href: 'https://makersportal.com', external: true },
     ],
   },
@@ -299,23 +316,26 @@ export const footerColumns: FooterColumn[] = [
 export const hubRoutes: { path: string; priority: string; changefreq: string }[] = [
   { path: '/', priority: '1.0', changefreq: 'weekly' },
   { path: '/apps', priority: '0.95', changefreq: 'weekly' },
+  { path: '/playground', priority: '0.95', changefreq: 'weekly' },
+  { path: '/resources', priority: '0.95', changefreq: 'daily' },
+  { path: '/resources/edge-ai-radar', priority: '0.95', changefreq: 'daily' },
   { path: '/blog', priority: '0.95', changefreq: 'weekly' },
-  { path: '/resources', priority: '0.9', changefreq: 'daily' },
-  { path: '/journal', priority: '0.8', changefreq: 'daily' },
-  { path: '/playground', priority: '0.8', changefreq: 'monthly' },
+  { path: '/journal', priority: '0.85', changefreq: 'daily' },
   { path: '/playground/agentic-dsp-pipeline', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/biquad-filter-designer', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/ble-gatt-visualizer', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/coreml-model-size-calculator', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/head-tracked-stereo-pan', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/quaternion-euler-converter', priority: '0.8', changefreq: 'monthly' },
+  { path: '/playground/elevenlabs-dsp-sandbox', priority: '0.8', changefreq: 'monthly' },
+  { path: '/playground/vector-retrieval-recall-lab', priority: '0.8', changefreq: 'monthly' },
   { path: '/playground/fourier-epicycles', priority: '0.75', changefreq: 'monthly' },
-  { path: '/playground/globe', priority: '0.75', changefreq: 'daily' },
+  { path: '/playground/globe', priority: '0.8', changefreq: 'daily' },
   { path: '/playground/double-pendulum', priority: '0.75', changefreq: 'monthly' },
   { path: '/playground/chladni-cymatics', priority: '0.75', changefreq: 'monthly' },
   { path: '/playground/n-body-choreography', priority: '0.75', changefreq: 'monthly' },
   { path: '/shop', priority: '0.9', changefreq: 'weekly' },
-  { path: '/watch', priority: '0.85', changefreq: 'weekly' },
+  { path: '/watch', priority: '0.5', changefreq: 'monthly' },
   { path: '/about', priority: '0.85', changefreq: 'monthly' },
   { path: '/team', priority: '0.85', changefreq: 'monthly' },
   { path: '/contact', priority: '0.85', changefreq: 'monthly' },

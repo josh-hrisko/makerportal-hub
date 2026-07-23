@@ -4,7 +4,8 @@ on:
   schedule:
     # Daily 13:30 UTC — offset from the :00 thundering herd and from the trend
     # digest's 11:00/12:00 UTC slots so direct-to-main pushes rarely race.
-    - cron: '30 13 * * *' # publishes that day's EdgeSpec & TinyML Hardware Radar
+    # Publishes Edge AI Radar snapshot → /resources/edge-ai-radar (Library featured engine, D-024).
+    - cron: '30 13 * * *'
   workflow_dispatch: {}
 
 permissions:

@@ -6,7 +6,8 @@ on:
     # drops (seen 2026-07-20: 13:00 job never created while globe's 12:00 job did).
     # Second run is idempotent: build-digest dedupes recentSeen + porcelain check skips empty publish.
     # Earlier 11 UTC = 03:00 PST / 04:00 PDT gives extra buffer before morning check.
-    - cron: '0 11,12 * * *' # 03:00/04:00 PST, 04:00/05:00 PDT — publishes that day's Signals Journal
+    # Publishes Signals Journal (/journal) — Library daily engine (D-024), not a primary-nav peer.
+    - cron: '0 11,12 * * *' # 03:00/04:00 PST, 04:00/05:00 PDT
   workflow_dispatch: {}
 
 permissions:

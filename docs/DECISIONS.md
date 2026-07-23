@@ -10,7 +10,8 @@
 
 **Decision:** Pillars Apps / Notes / Learn / Shop / Watch / Studio + Contact CTA.  
 **Why:** Research on scanability; mega menus for density.  
-**Code:** `src/data/site-nav.ts`, `Layout.astro`.
+**Code:** `src/data/site-nav.ts`, `Layout.astro`.  
+**Status:** Superseded by **D-024** (2026-07-22) — 6 job-named primaries; Watch demoted; Signals folded into Library.
 
 ## D-003 — Dark default, hybrid light, reading paper (superseded by D-010)
 
@@ -256,3 +257,17 @@
 **Do not:** re-add Reddit via unauthenticated `reddit.com/*.json` / RSS polling — that's the exact anti-evasion pattern D-011 declined. Re-enable only with approved Data API credentials added as repo secrets. Keep the `'reddit'` enum value even while dormant — removing it would be a breaking schema change for any historical journal entry that ever carried a Reddit item.
 
 **Status (2026-07-17):** Reddit disabled, workflows on `@v5`, build re-verified (astro check 0 errors, 36 pages), 13 pipeline tests pass. `draft-post.mjs --list` confirmed reading the latest journal entry.
+
+## D-024 — Primary nav IA: Apps · Lab · Library · Blog · Shop · Studio
+
+**Decision:** Collapse top bar from 7 busy/unclear items to **6 job-named primaries**. Promote Playground to **Lab**. Rename Resources label to **Library** (URL `/resources` stable). Fold **Signals Journal** into Library mega (no longer a primary peer). Demote **Watch** to Studio mega + footer until real video series exist. Feature **Edge AI Radar** as Library mega card. About label → **Studio**.
+
+**Why:** Resources vs Signals were not peer jobs — Signals is one daily engine inside the library (alongside Edge AI Radar). Watch was an empty primary (trust tax). Lab (32 instruments) and Radar were under-linked relative to their weight. Matches 2026 job-based IA (product → try → learn → read → buy → company).
+
+**Code:**
+- `src/data/site-nav.ts` — `primaryNav`, `footerColumns`, `hubRoutes` priorities
+- `src/layouts/Layout.astro` — `routeOwner` map (`lab` owns `/playground`, `library` owns `/resources`+`/journal`+`/llms`, `studio` owns `/watch`)
+- Kickers/copy on `/resources`, `/resources/edge-ai-radar`, `/journal/*`, `/playground`, `/watch`, SearchModal, `scripts/generate-llms.ts`
+- Workflows unchanged on paths: `trends-digest.yml` still writes `/journal`, `edgespec-digest.yml` still writes edge-radar snapshots — only chrome IA moved
+
+**Do not:** merge Blog + Signals (different trust contracts); invent a top-level Radar or Engines tab; re-promote Watch without real series content.
