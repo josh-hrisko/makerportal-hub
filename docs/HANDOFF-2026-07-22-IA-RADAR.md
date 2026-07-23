@@ -163,9 +163,9 @@ Optional browser QA: serve `dist/client`, 390px + 1440px, light/dark, console cl
 
 ## 7. What to work on next (priority)
 
-1. **Radar polish remaining:** TrendSparkline only becomes a true multi-day trend after ≥2–7 real UTC snapshots accumulate — do not fake history. Keyboard/VoiceOver pass on CeilingStrip + RadarSpider. Optical polish at 390px on fit matrix sticky column.
+1. **Radar polish remaining:** TrendSparkline only becomes a true multi-day trend after ≥2–7 real UTC snapshots accumulate — do not fake history. ~~Keyboard/VoiceOver pass on CeilingStrip + RadarSpider~~ DONE 2026-07-22 (radiogroup pills, slider name/valuetext, live regions, tab↔tabpanel wiring, vertex focus ring). Optical polish at 390px on fit matrix sticky column still open.
 2. **Library page density:** `/resources` is still a long kitchen sink — consider clearer section anchors matching Library mega (`#radar` if added, existing `#gear` `#tools` `#playground`). Ensure every mega link target exists (hash or page).
-3. **Dead-link audit:** crawl `primaryNav` + `footerColumns` + `hubRoutes` vs actual `src/pages/**` — fix any href that 404s. Especially mega deep links to playground slugs.
+3. ~~**Dead-link audit**~~ DONE 2026-07-22: `scripts/nav/dead-link-audit.mjs` wired into `npm run check` — nav/footer/hubRoutes/SearchModal hrefs + hash anchors + `routeOwner` pre-map all gated. Keep it green; extend it when chrome surfaces change.
 4. **Engine 2 (TCO):** only when Engine 1 is stable; respect section-order law on sim pages.
 5. **Do not re-open:** Modal/Fly credits, Vercel Analytics, unauthenticated Reddit scrape, SparkFun for Pi boards, future-dated edge-radar JSON, Watch as primary.
 

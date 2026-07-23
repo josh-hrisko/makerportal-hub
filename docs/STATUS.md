@@ -138,6 +138,15 @@ rejected push; inspect the remote commit before resolving any overlap.
   Signals/Watch demoted; Lab elevated; Library mega features Edge AI Radar.
   `routeOwner`, SearchModal, llms.txt, kickers, footer aligned. Build: 88
   Pagefind pages; check 0/0/0.
+- **Nav dead-link gate (2026-07-22):** `scripts/nav/dead-link-audit.mjs` runs in
+  `npm run check` — all `primaryNav`/`footerColumns`/`hubRoutes`/SearchModal
+  hrefs must resolve to real pages/content instances, hash anchors must exist,
+  `/brand` links fail, `routeOwner` pre-map ids must match current primaries.
+- **Radar a11y pass (2026-07-22):** CeilingStrip model pills upgraded to a true
+  radiogroup (roving tabindex + arrow keys), context slider announces
+  "N tokens" via `aria-valuetext`, selection changes announced via polite live
+  region; RadarSpider tabs wired to `tabpanel`s, SVG is `role="group"` so
+  vertex buttons reach AT, keyboard focus ring on vertices.
 
 ## Known residual risks
 
