@@ -161,7 +161,7 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="max-w-3xl">
         <div class="flex items-center gap-2 font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-primary-text">
-          <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
           Hardware RAM Containment & Context Pressure
         </div>
         <p class="mt-1.5 text-[0.88rem] leading-[1.55] text-muted-text">
@@ -171,11 +171,11 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2.5 font-mono text-[0.62rem] text-muted-text">
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> Weights</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-cyan-400"></span> KV Cache (context)</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-slate-500"></span> Overhead</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-amber-500"></span> Tight</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-red-500"></span> Exceeds</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500" aria-hidden="true"></span> Weights</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-cyan-400" aria-hidden="true"></span> KV Cache (context)</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-slate-500" aria-hidden="true"></span> Overhead</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-amber-500" aria-hidden="true"></span> Tight</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-red-500" aria-hidden="true"></span> Exceeds</span>
       </div>
     </div>
 
@@ -186,7 +186,7 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
           <span class="font-mono text-[0.6rem] font-bold uppercase tracking-wider text-muted-text">1. Select model (verified bytes)</span>
           <span class="font-mono text-[0.6rem] text-muted-text">{models.length} releases today</span>
         </div>
-        <div class="mt-2 flex flex-wrap gap-1.5 max-h-[96px] overflow-y-auto pr-1" id={`${componentId}-model-pills`}>
+        <div class="mt-2 flex flex-wrap gap-1.5 max-h-[96px] overflow-y-auto pr-1" id={`${componentId}-model-pills`} role="radiogroup" aria-label="Select model (verified file bytes)">
           {models.map((m, idx) => {
             const short = m.id.split('/').pop() || m.id;
             const isSelected = idx === 0;
@@ -194,6 +194,9 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
             return (
               <button
                 type="button"
+                role="radio"
+                aria-checked={isSelected ? 'true' : 'false'}
+                tabindex={isSelected ? 0 : -1}
                 data-model-idx={idx}
                 title={`${m.id}\n${m.fileName ?? m.id} — ${sizeLabel} file, ${fmtBytes(m.runtimeBytes)} runtime est. ${m.quant ? `· ${m.quant}` : ''}`}
                 class={`sim-pill-btn group relative rounded-full border px-3 py-1 text-left font-mono text-[0.62rem] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor ${
@@ -222,6 +225,8 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
           max="8192"
           step="512"
           value="2048"
+          aria-label="Context window in tokens"
+          aria-valuetext="2,048 tokens"
           class="mt-3 w-full h-2 accent-cyan-500 rounded-lg cursor-pointer bg-elevated"
         />
         <div class="mt-1.5 flex justify-between font-mono text-[0.58rem] text-muted-text">
@@ -235,8 +240,8 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
     </div>
   </div>
 
-  {/* Active summary */}
-  <div class="border-b border-border bg-canvas/90 px-6 py-3 flex flex-wrap items-center justify-between gap-3 font-mono text-[0.68rem]">
+  {/* Active summary — polite live region so model/context changes announce */}
+  <div class="border-b border-border bg-canvas/90 px-6 py-3 flex flex-wrap items-center justify-between gap-3 font-mono text-[0.68rem]" aria-live="polite" aria-atomic="true">
     <div class="flex flex-wrap items-center gap-2">
       <span class="text-muted-text">Active:</span>
       <span class="font-bold text-primary-text max-w-[28rem] truncate" id={`${componentId}-active-name`}>{defaultModel.id}</span>
@@ -255,7 +260,7 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
     {orderedGroups.map((group) => (
       <div>
         <div class="mb-3 flex items-center gap-2">
-          <span class="text-[1.1rem]">{group.badge.icon}</span>
+          <span class="text-[1.1rem]" aria-hidden="true">{group.badge.icon}</span>
           <h3 class="font-mono text-[0.7rem] font-bold uppercase tracking-[0.14em] text-primary-text">{group.badge.label}</h3>
           <span class="font-mono text-[0.62rem] text-muted-text">· {group.badge.desc} · {group.boards.length} board{group.boards.length===1?'':'s'}</span>
           <div class="ml-2 h-px flex-1 bg-gradient-to-r from-border to-transparent"></div>
@@ -280,7 +285,8 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
                   </div>
                 </div>
 
-                <div class="relative h-7 w-full rounded-xl bg-canvas border border-border overflow-hidden flex">
+                {/* Visual bar only — the text row below carries the same data for AT */}
+                <div class="relative h-7 w-full rounded-xl bg-canvas border border-border overflow-hidden flex" aria-hidden="true">
                   <div class="absolute top-0 bottom-0 w-[2px] bg-amber-500/80 z-20" style="left: 80%;" title="80% safety"></div>
                   {/* Always present segments — JS toggles width / visibility */}
                   <div class="sim-seg-weights h-full bg-emerald-500 transition-all duration-200" style={`width: ${item.sim.isCompatible ? item.sim.weightsPct : 0}%;`}></div>
@@ -352,6 +358,8 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
 
       const seqLabel = getById(`${componentId}-seq-label`);
       if (seqLabel) seqLabel.textContent = activeSeqLen.toLocaleString() + ' tokens';
+      const slider = getById(`${componentId}-seq-slider`);
+      if (slider) slider.setAttribute('aria-valuetext', `${activeSeqLen.toLocaleString()} tokens`);
 
       const nameEl = getById(`${componentId}-active-name`);
       const metaEl = getById(`${componentId}-active-meta`);
@@ -382,11 +390,13 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
         if (idx === activeModelIdx) {
           btn.classList.add('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas', 'shadow-xs');
           btn.classList.remove('border-border', 'bg-canvas', 'text-muted-text');
-          btn.setAttribute('aria-selected', 'true');
+          btn.setAttribute('aria-checked', 'true');
+          btn.setAttribute('tabindex', '0');
         } else {
           btn.classList.remove('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas', 'shadow-xs');
           btn.classList.add('border-border', 'bg-canvas', 'text-muted-text');
-          btn.setAttribute('aria-selected', 'false');
+          btn.setAttribute('aria-checked', 'false');
+          btn.setAttribute('tabindex', '-1');
         }
       });
 
@@ -481,6 +491,30 @@ const boardsJson = JSON.stringify(boards.map((b) => ({
         if (Number.isNaN(v)) return;
         activeSeqLen = v;
         render();
+      });
+
+      // Roving-tabindex radiogroup: arrows/Home/End move selection + focus
+      root.addEventListener('keydown', (e) => {
+        const el = e.target;
+        if (!(el instanceof Element)) return;
+        const btn = el.closest('.sim-pill-btn');
+        if (!btn || !root.contains(btn)) return;
+        const nav = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+        if (!nav.includes(e.key)) return;
+        e.preventDefault();
+        const pills = Array.from(root.querySelectorAll('.sim-pill-btn'));
+        const cur = pills.indexOf(btn);
+        if (cur < 0) return;
+        let next = cur;
+        if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = pills.length - 1;
+        else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (cur + 1) % pills.length;
+        else next = (cur - 1 + pills.length) % pills.length;
+        const idx = parseInt(pills[next].getAttribute('data-model-idx') || '0', 10);
+        if (Number.isNaN(idx)) return;
+        activeModelIdx = idx;
+        render();
+        pills[next].focus();
       });
     }
 

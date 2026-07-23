@@ -128,7 +128,7 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
   <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
     <div>
       <div class="flex items-center gap-1.5 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-primary-text">
-        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
         Interactive Board Coverage Radar
       </div>
       <p class="mt-0.5 font-mono text-[0.6rem] text-muted-text">
@@ -147,7 +147,10 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
       <button
         type="button"
         role="tab"
+        id={`${componentId}-tab-${idx}`}
+        aria-controls={`${componentId}-panel-${idx}`}
         aria-selected={idx === defaultBoardIdx ? 'true' : 'false'}
+        tabindex={idx === defaultBoardIdx ? 0 : -1}
         data-board-idx={idx}
         class={`radar-chip-btn rounded-full border px-2.5 py-1 font-mono text-[0.6rem] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-anchor ${
           idx === defaultBoardIdx
@@ -166,8 +169,8 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
       viewBox={`${VB_X} ${VB_Y} ${VB_W} ${VB_H}`}
       width="100%"
       height="100%"
-      role="img"
-      aria-label={`Interactive radar chart showing fit capacity across ${N} hardware boards`}
+      role="group"
+      aria-label={`Interactive radar chart showing fit capacity across ${N} hardware boards. Use the board tabs above or move focus onto a vertex to inspect a board.`}
       class="absolute inset-0 h-full w-full overflow-visible text-primary-text"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -268,6 +271,19 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
               class="vertex-highlight transition-all"
             />
 
+            {/* Keyboard focus ring — shown only on :focus-visible (CSS, not JS state) */}
+            <circle
+              cx={CX + R * ax.cos}
+              cy={CY + R * ax.sin}
+              r="13"
+              fill="none"
+              stroke="var(--mp-anchor)"
+              stroke-width="2"
+              stroke-dasharray="3 2"
+              class="vertex-focus-ring"
+              aria-hidden="true"
+            />
+
             {/* Axis boundary dot */}
             <circle
               cx={CX + R * ax.cos}
@@ -321,11 +337,19 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
     </svg>
   </div>
 
+  {/* Screen-reader status — announces board switches made via SVG vertices or chips */}
+  <div class="sr-only" aria-live="polite" id={`${componentId}-sr-status`}>
+    Inspecting {axes[defaultBoardIdx]?.board.name} — {axes[defaultBoardIdx]?.fitsCount} of {totalModels} scanned models fit
+  </div>
+
   {/* Interactive Board Detail Inspector Panel */}
   <div class="mt-2 border-t border-border pt-3" id={`${componentId}-inspector`}>
     {axes.map((ax, idx) => (
       <div
         data-inspector-idx={idx}
+        role="tabpanel"
+        id={`${componentId}-panel-${idx}`}
+        aria-labelledby={`${componentId}-tab-${idx}`}
         class={`inspector-panel ${idx === defaultBoardIdx ? 'block' : 'hidden'}`}
       >
         <div class="flex items-center justify-between gap-2">
@@ -382,6 +406,25 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
   </div>
 </div>
 
+{/* Keyboard focus ring visibility — CSS-driven so it works without JS state */}
+<style>
+  .radar-vertex-group {
+    outline: none;
+  }
+  .vertex-focus-ring {
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+  .radar-vertex-group:focus-visible .vertex-focus-ring {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vertex-focus-ring {
+      transition: none;
+    }
+  }
+</style>
+
 {/* Inline Vanilla Script — Event Delegation + Idempotent Binding (View-Transition safe) */}
 <script is:inline define:vars={{ componentId }}>
   function setupRadarInspector() {
@@ -406,10 +449,12 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
           c.classList.add('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas');
           c.classList.remove('border-border', 'bg-elevated', 'text-muted-text');
           c.setAttribute('aria-selected', 'true');
+          c.setAttribute('tabindex', '0');
         } else {
           c.classList.remove('active', 'border-primary-text', 'bg-primary-text', 'font-bold', 'text-canvas');
           c.classList.add('border-border', 'bg-elevated', 'text-muted-text');
           c.setAttribute('aria-selected', 'false');
+          c.setAttribute('tabindex', '-1');
         }
       });
 
@@ -429,6 +474,15 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
           p.classList.add('hidden');
         }
       });
+
+      const status = document.getElementById(`${componentId}-sr-status`);
+      if (status) {
+        const panel = root.querySelector(`[data-inspector-idx="${idx}"]`);
+        const name = panel?.querySelector('h4')?.textContent?.trim();
+        const fitsEl = panel?.querySelector('.text-emerald-600, .text-emerald-400');
+        const fitsTxt = fitsEl?.textContent?.trim();
+        if (name) status.textContent = `Inspecting ${name}${fitsTxt ? ` — ${fitsTxt}` : ''}`;
+      }
     }
 
     // Single delegated click handler for chips + SVG vertices
@@ -446,10 +500,31 @@ const componentId = `radar-${Math.random().toString(36).substring(2, 7)}`;
       setActiveBoard(idx);
     });
 
-    // Keyboard activation for SVG vertices (Enter/Space)
+    // Keyboard: Enter/Space activates SVG vertices; arrows/Home/End roam the tablist
     root.addEventListener('keydown', (e) => {
       const target = e.target;
       if (!(target instanceof Element)) return;
+
+      const chip = target.closest('.radar-chip-btn');
+      if (chip && root.contains(chip)) {
+        const nav = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+        if (!nav.includes(e.key)) return;
+        e.preventDefault();
+        const chips = Array.from(root.querySelectorAll('.radar-chip-btn'));
+        const cur = chips.indexOf(chip);
+        if (cur < 0) return;
+        let next = cur;
+        if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = chips.length - 1;
+        else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (cur + 1) % chips.length;
+        else next = (cur - 1 + chips.length) % chips.length;
+        const idx = parseInt(chips[next].getAttribute('data-board-idx') || '0', 10);
+        if (Number.isNaN(idx)) return;
+        setActiveBoard(idx); // automatic activation, standard for instant-switch inspectors
+        chips[next].focus();
+        return;
+      }
+
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const vertex = target.closest('.radar-vertex-group');
       if (!vertex || !root.contains(vertex)) return;
