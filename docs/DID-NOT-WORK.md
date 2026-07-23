@@ -19,6 +19,31 @@
 
 - **Deep hub product pages** competing with subdomains — rejected.  
 - **Prod `/brand` static shell as 200** — fixed with strip script; keep PROD 404 + strip.
+- **Signals as a primary-nav peer of Resources (pre-D-024)** — users could not tell
+  “daily stuff” from “library.” Signals Journal is one *engine inside Library*, not a
+  peer pillar. Re-adding it as top-level recreates the confusion. Keep under Library
+  mega + footer Explore; URL `/journal` stays stable.
+- **Watch as primary while scaffold-only** — empty top-level tabs train distrust.
+  Watch lives under Studio mega + footer until real series ship. Do not re-promote.
+- **Playground buried only under Resources** while 32 instruments were the strongest
+  interactive differentiator — elevated to primary **Lab** (`/playground`) in D-024.
+  Do not demote Lab back under Library-only without a decision.
+- **Renaming nav IDs without updating `Layout.astro` `routeOwner`** — e.g. old map had
+  `['/playground','resources']`; after Lab ownership, playground would still light
+  Library if the pre-map is stale. First-claimant columns + pre-map must match D-024
+  in the **same commit** as `site-nav.ts`.
+- **Nav label change without `scripts/generate-llms.ts` + SearchModal** — agent/search
+  surfaces drift from chrome. Fold llms regen + quick-link labels into the IA commit.
+- **`name.split('(')[0]` board short names** — collides `Raspberry Pi 5 (8 GB)` and
+  `(16 GB)` into identical labels in matrix headers, spider chips, kit cards.
+  Always use `shortBoardLabel()` (`src/lib/edge-radar-labels.ts` /
+  `radar-core.mjs`). Gate test asserts unique labels across BOARDS.
+- **Future-dated `src/content/edge-radar/YYYY-MM-DD.json`** — TrendSparkline and
+  “latest” sort treat lexical max as newest; a 2026-07-23 file on 2026-07-22 made
+  history look ahead of wall clock. Filename date = actual UTC publish day only.
+  One snapshot file per day; delete accidental futures.
+- **SparkFun links for Raspberry Pi boards expecting commission** — Pi is third-party
+  on SparkFun; program pays $0. Use Amazon ASINs + `engineersport-20` (already migrated).
 
 ## Theme
 

@@ -1,5 +1,9 @@
 # HANDOFF DOCUMENT: Edge AI Radar UI/UX Architecture & Handoff Prompt
 
+> **Superseded for full-project continuity** by [`HANDOFF-2026-07-22-IA-RADAR.md`](./HANDOFF-2026-07-22-IA-RADAR.md)
+> (includes D-024 Library placement, 10-board table, shortBoardLabel, nav rules).
+> Keep this file for radar-specific visual history; prefer the 2026-07-22 handoff for new chats.
+
 **Timestamp**: `2026-07-22T20:34:00Z`  
 **Repository**: `makerportal-hub`  
 **Target Pages**:

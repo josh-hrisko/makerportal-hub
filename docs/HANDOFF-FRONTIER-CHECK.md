@@ -1,5 +1,10 @@
 # Handoff Prompt — 2026 Frontier UI/UX Engineer
 
+> **SUPERSEDED 2026-07-22** by [`HANDOFF-2026-07-22-IA-RADAR.md`](./HANDOFF-2026-07-22-IA-RADAR.md).
+> That document includes D-024 nav IA (Apps·Lab·Library·Blog·Shop·Studio), Edge AI
+> Radar board/label rules, routeOwner/link integrity, and the current work queue.
+> Prefer the new file for any new chat. Content below is historical context only.
+
 Copy everything below the line into your next chat to launch the autonomous development loop.
 
 ---

@@ -1,6 +1,13 @@
 /**
  * Compact board labels that always retain RAM SKU size.
- * Never strip parenthetical size alone — that collides Pi 5 8GB vs 16GB.
+ *
+ * DEAD-END (do not reintroduce): `name.split('(')[0].trim()` collapses
+ * "Raspberry Pi 5 (8 GB)" and "Raspberry Pi 5 (16 GB)" to the same string,
+ * which broke fit-matrix headers, spider chips, kit cards, and MemoryBar groups.
+ *
+ * SSOT for Astro UI. Mirror kept in scripts/edgespec/radar-core.mjs for gate tests
+ * (shortBoardLabel uniqueness across BOARDS). Keep both implementations in sync
+ * when adding boards.
  *
  * "Raspberry Pi 5 (8 GB)"  → "Pi 5 8GB"
  * "Raspberry Pi 5 (16 GB)" → "Pi 5 16GB"

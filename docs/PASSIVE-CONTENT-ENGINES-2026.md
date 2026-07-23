@@ -50,16 +50,17 @@ This document outlines the architectural design, monetization mechanics, and exe
           v                                                                 v
 +--------------------------------------------------------------------------------------------------+
 |                              Auto-Publish to Astro Content Collections                            |
-|                       (/resources/edge-radar & /journal/YYYY-MM-DD)                              |
+|              Library engines: /resources/edge-ai-radar & /journal/YYYY-MM-DD (D-024)              |
 +--------------------------------------------------------------------------------------------------+
 ```
 
 ### Engine 1: EdgeSpec & TinyML Hardware Radar (`edgespec-digest.yml`)
-- **Trigger & Cadence:** Daily GitHub Action (`.github/workflows/edgespec-digest.yml`).
-- **Data Ingestion:** Scrapes Hugging Face Hub (new quantized models: GGUF, ONNX, WebGPU LLMs/Vision models), arXiv tinyML papers, and micro-hardware releases from SparkFun/Adafruit API feeds.
-- **Deterministic Computation:** Runs `scripts/edgespec/build-radar.mjs` to calculate required RAM, SRAM bounds, FLOPs per inference, power draw target, and memory footprint across microcontrollers (ESP32-S3, Teensy 4.1, Raspberry Pi 5, Coral TPU, Jetson Orin Nano).
-- **Auto-Publish Target:** Emits daily JSON snapshots to `src/content/edge-radar/YYYY-MM-DD.json` rendered on `/resources/edge-ai-radar` and featured in `/journal/YYYY-MM-DD`.
-- **Monetization Mechanics:** Automatically maps required compute specs to recommended development kits in `src/data/kits.json` & `src/data/amazon-catalog.json`. Links to **SparkFun Originals (10%)** and **Amazon Associates (`engineersport-20`)**.
+- **IA placement (D-024):** Library primary mega featured card — **not** its own top-level nav item. Companion daily engine: Signals Journal (`/journal`) also under Library.
+- **Trigger & Cadence:** Daily GitHub Action (`.github/workflows/edgespec-digest.yml`, 13:30 UTC).
+- **Data Ingestion:** Hugging Face Hub tree API (verified file bytes for GGUF/ONNX). No invented sizes.
+- **Deterministic Computation:** `scripts/edgespec/radar-core.mjs` + `build-radar.mjs` — runtime = file×1.25, fit vs datasheet ceilings, 10 boards (Sigma 30 GiB … MCU 7 MiB), most-powerful-first UI sort. Labels via `shortBoardLabel` (keep RAM SKU).
+- **Auto-Publish Target:** `src/content/edge-radar/YYYY-MM-DD.json` (**UTC date = wall-clock day only**) → `/resources/edge-ai-radar`. Gate: `node --test scripts/edgespec/pipeline.test.mjs`.
+- **Monetization Mechanics:** Board `linkIds` → `affiliate-links` registry. **Pi boards = Amazon only** (SparkFun pays $0 on Pi). SparkFun Originals 10% (`rOtrc44SZw`); Amazon `engineersport-20`; DFRobot Sigma `tracking_id=vwfcds`. ASINs must exist in `amazon-catalog.json`.
 
 ---
 

@@ -25,11 +25,17 @@ Successful multi-million-session properties are not “one long landing page.”
 
 ## 2. Navigation research → rules we adopted
 
-### Primary nav: 5–7 items max
+### Primary nav: ≤6 job-named items (D-024, 2026-07-22)
 
-- NN/g-style guidance and modern mega-menu writing converge: **short-term memory + scanability** break past ~7 top-level items.
-- We use: **Apps · Notes · Learn · Shop · Watch · Studio** + isolated **Contact** CTA.
-- Studio is a **mega** (About, Team, Press, Advertise, socials) so company density doesn’t explode the top bar.
+- NN/g-style guidance and modern mega-menu writing converge: **short-term memory + scanability** break past ~7 top-level items. We ship **6**.
+- **Shipped IA:** **Apps · Lab · Library · Blog · Shop · Studio**
+  - **Lab** = `/playground` (try / instruments) — elevated because 32 sims are a moat.
+  - **Library** = `/resources` (learn hub) — owns daily engines: Edge AI Radar + Signals Journal + gear/tools/`/llms`.
+  - **Blog** = human field notes only (do not merge with automated Signals).
+  - **Studio** = company mega (About, Team, Contact, Press) + Watch scaffold + socials.
+- **Demoted from primary:** Signals (was unclear peer of Resources), Watch (empty scaffold).
+- **URLs stable** under renames: `/resources`, `/journal`, `/playground`, `/watch` keep working; only chrome labels/ownership moved.
+- Historical research draft used Apps/Notes/Learn/Shop/Watch/Studio — superseded by D-024 job names above.
 
 ### Mega menus when density > flat links
 
@@ -45,12 +51,13 @@ Successful multi-million-session properties are not “one long landing page.”
 ### Topic over format
 
 - Content empires organize by **subject** (on-device AI, privacy, shipping), not only by “articles vs videos vs podcasts.”
-- Formats still exist (`/blog`, `/watch`) but Learn is **topic-first**.
+- Formats still exist (`/blog`, `/watch`) but Library is **topic + engine first**.
 
-### Single source of truth
+### Single source of truth (+ active-tab twin)
 
 - All primary nav, footer, and hub route lists live in **`src/data/site-nav.ts`**.
-- Adding a pillar = edit that file first, then page scaffold, then sitemap via `hubRoutes`.
+- Active-tab ownership twin: **`src/layouts/Layout.astro` `routeOwner`** — must update when primary `id`s or ownership change (D-024: `lab`→playground, `library`→resources/journal/llms, `studio`→watch).
+- Adding a route users should find = (1) page under `src/pages/`, (2) `hubRoutes`, (3) footer and/or mega link, (4) SearchModal category if needed, (5) `generate-llms.ts` site map. Same commit — no orphan URLs.
 
 ---
 

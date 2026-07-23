@@ -44,9 +44,22 @@ const isActive = (href: string) => {
 };
 
 
-// Ownership: first claimant wins. Primary hrefs claimed first so they beat cross-links.
-// Pre-populated with manual mappings for shared or standalone sub-routes to ensure tab active state is deterministic.
-// D-024 ownership: Lab owns playground; Library owns resources + journal + llms; Watch → Studio
+/**
+ * Active-tab ownership (twin SSOT to site-nav.ts primaryNav ids).
+ * First claimant wins. Pre-map beats later column claims for shared routes.
+ *
+ * D-024 (2026-07-22) — keep in lockstep with site-nav.ts:
+ *   lab      → /playground/*
+ *   library  → /resources/*, /journal/*, /llms
+ *   shop     → /shop, /advertise
+ *   studio   → /about, /team, /contact, /press, /watch (scaffold — not a primary)
+ *   blog/apps → their href prefixes via primaryNav loop below
+ *
+ * When you add/rename a primary id or move a route between pillars, update THIS
+ * map in the same commit or the wrong tab will highlight (e.g. old bug:
+ * playground claimed by resources before Lab existed).
+ * Nested paths use longest-prefix match in getPathOwner (edge-ai-radar → library).
+ */
 const routeOwner = new Map<string, string>([
   ['/advertise', 'shop'],
   ['/llms', 'library'],
@@ -68,6 +81,7 @@ for (const item of primaryNav) {
     for (const link of col.links) {
       const c = normalizeHref(link.href);
       if (!c) continue;
+      // Skip external / hash-only; normalizeHref already drops empties
       if (!routeOwner.has(c)) routeOwner.set(c, item.id);
     }
   }

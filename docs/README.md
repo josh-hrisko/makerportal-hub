@@ -2,24 +2,26 @@
 
 **Not a public site surface.** These files are for humans and coding agents working in this repo. They are not linked from the marketing site, sitemap, or `llms.txt`.
 
-Compressed 2026-07-15; reconciled after the SaaS/GPU expansion on 2026-07-19.
-Older handoffs remain historical. `HANDOFF-FRONTIER-CHECK.md` is the only current
-copy-paste continuation prompt.
+Compressed 2026-07-15; reconciled SaaS/GPU 2026-07-19; nav IA + Edge AI Radar 2026-07-22.
+Older handoffs are historical. **Current copy-paste prompt:**
+`HANDOFF-2026-07-22-IA-RADAR.md` (supersedes `HANDOFF-FRONTIER-CHECK.md`).
 
 | Doc | Purpose | Status |
 |-----|---------|--------|
-| [STATUS.md](./STATUS.md) | **Start here** — single snapshot: 11 apps, theme, pipelines, monetization state, last verifications | Evergreen — update each session |
-| [BACKLOG.md](./BACKLOG.md) | Comprehensive phased plan (traffic visibility → content → distribution → backlinks → revenue → engineering) — no DONE history noise | Evergreen — check in + burn down each session |
-| [MONETIZATION.md](./MONETIZATION.md) | Shop/email/affiliate/trends stack, verified pricing, prioritized avenues, shop MVP plan | Evergreen — replaces handoff + dated strategy |
-| [SAAS-GPU-MONETIZATION.md](./SAAS-GPU-MONETIZATION.md) | Browser evidence, SaaS/GPU growth state, privacy/integrity rules, exact owner blockers | Evergreen — source of truth for deployment labs |
-| [DEVREL-PITCHES-SAAS-GPU.md](./DEVREL-PITCHES-SAAS-GPU.md) | Owner-send Modal/Fly drafts, evidence gate, workload walkthrough | Active draft — contains no credentials and sends nothing |
-| [HANDOFF-FRONTIER-CHECK.md](./HANDOFF-FRONTIER-CHECK.md) | Copy-paste prompt for the next autonomous frontier developer | Current handoff — supersedes other `HANDOFF-*` files |
-| [DECISIONS.md](./DECISIONS.md) | ADR log D-001→D-023 — why we chose X and hard-won constraints | Keep, append only |
-| [THEME-SYSTEM.md](./THEME-SYSTEM.md) | Light default + hidden toggle + reading paper — tokens, QA checklist, a11y ratios | Keep — working per owner |
-| [RESEARCH-EMPIRE-IA.md](./RESEARCH-EMPIRE-IA.md) | Content empires, nav IA ≤7 items, blog patterns → what we shipped | Keep — working |
-| [DID-NOT-WORK.md](./DID-NOT-WORK.md) | Failed approaches (backdrop-filter iOS lag, blur ATF, slug as ground truth) | Keep — working |
-| [AFFILIATE-CANDIDATES.md](./AFFILIATE-CANDIDATES.md) | Sourcing trail for 50 Amazon picks — copy-pasteable names, Confirmed vs Suggested | Keep — working |
-| [archive/](./archive/) | Old handoff prompts + verbose OPEN-ITEMS history | Archive — do not use as source of truth |
+| [STATUS.md](./STATUS.md) | **Start here** — nav IA, apps, pipelines, monetization, last verifications | Evergreen — update each session |
+| [HANDOFF-2026-07-22-IA-RADAR.md](./HANDOFF-2026-07-22-IA-RADAR.md) | **Current handoff prompt** — D-024 nav, radar, dead-link rules, next work | Current — copy into next chat |
+| [BACKLOG.md](./BACKLOG.md) | Phased plan (visibility → content → revenue → engines → polish) | Evergreen |
+| [MONETIZATION.md](./MONETIZATION.md) | Shop/email/affiliate/trends stack | Evergreen |
+| [SAAS-GPU-MONETIZATION.md](./SAAS-GPU-MONETIZATION.md) | Deployment labs + SaaS affiliate boundaries | Evergreen |
+| [PASSIVE-CONTENT-ENGINES-2026.md](./PASSIVE-CONTENT-ENGINES-2026.md) | Daily engines roadmap + visual-first law | Evergreen |
+| [DECISIONS.md](./DECISIONS.md) | ADR log D-001→D-024 | Append only |
+| [DID-NOT-WORK.md](./DID-NOT-WORK.md) | Failed approaches incl. nav/label/snapshot traps | Keep — working |
+| [RESEARCH-EMPIRE-IA.md](./RESEARCH-EMPIRE-IA.md) | Content empires + nav research → D-024 shipped IA | Keep — working |
+| [THEME-SYSTEM.md](./THEME-SYSTEM.md) | Light default + tokens + a11y | Keep |
+| [AFFILIATE-CANDIDATES.md](./AFFILIATE-CANDIDATES.md) | Amazon pick sourcing trail | Keep |
+| [DEVREL-PITCHES-SAAS-GPU.md](./DEVREL-PITCHES-SAAS-GPU.md) | Deprecated Modal/Fly credit path drafts — do not send | Archived intent |
+| [HANDOFF-FRONTIER-CHECK.md](./HANDOFF-FRONTIER-CHECK.md) | Prior frontier handoff | Superseded by HANDOFF-2026-07-22 |
+| [archive/](./archive/) | Old handoffs + OPEN-ITEMS history | Do not use as SoT |
 
 ## Stack reminder
 

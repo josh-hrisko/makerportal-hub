@@ -86,8 +86,16 @@ export const productLinks: NavLink[] = [
 ];
 
 /**
- * Top bar — 6 job-named primaries (NN/g scanability).
+ * Top bar — 6 job-named primaries (NN/g scanability). D-024.
  * Order: product → try → learn → read → buy → company.
+ *
+ * Link integrity rules (prevent dead mega/footer links):
+ * 1. Every internal href here must resolve to a real page or in-page hash that exists.
+ * 2. New public routes: add page → hubRoutes → footer and/or mega → SearchModal
+ *    category if needed → scripts/generate-llms.ts — same commit.
+ * 3. Changing a primary `id` requires Layout.astro routeOwner update same commit.
+ * 4. Do not re-add Signals or Watch as primaries without reversing D-024 in DECISIONS.md.
+ * 5. Content roots stay put: /resources, /journal, /playground, /watch — only chrome moves.
  */
 export const primaryNav: PrimaryNavItem[] = [
   {

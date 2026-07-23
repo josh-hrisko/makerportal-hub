@@ -7,13 +7,17 @@ this document conflicts with a generated-data commit.
 
 - **Primary nav (D-024):** Apps · Lab · Library · Blog · Shop · Studio.
   Signals Journal + Edge AI Radar live under Library; Watch demoted to Studio.
-  SSOT: `src/data/site-nav.ts`.
+  SSOT: `src/data/site-nav.ts`. Active tabs: `Layout.astro` `routeOwner`.
+  Continuity prompt: `docs/HANDOFF-2026-07-22-IA-RADAR.md`.
 - **Stack:** Astro 7, Tailwind 4, vanilla client TypeScript in inline scripts,
   Vercel adapter, static output, Pagefind build-time search.
 - **Apps:** 11 live products in `src/data/apps.ts`.
 - **Playground (Lab):** 32 live instruments in `src/data/playground.ts`. Every
   monetized simulator keeps the required DOM order: Simulator → Anatomy → Gear
   (third) → KitBuilder (fourth) → Math → Code → ExportGate → FAQ.
+- **Library engines:** Edge AI Radar (`/resources/edge-ai-radar`) — 10 boards ×
+  daily GGUF/ONNX fits, most-powerful-first, `shortBoardLabel` for SKU-safe names;
+  Signals Journal (`/journal`) — daily gated trend backlog.
 - **Blog:** 11 posts, including the 2026-07-19 field notes for ElevenLabs/Web
   Audio latency, WebGPU browser benchmarking, and LiteFS multi-region SQLite.
 - **Theme/accessibility:** light default, dark tokenized through `--mp-*`,
@@ -90,10 +94,10 @@ Current commercial state:
 
 | Pipeline | Cadence | Runtime secrets | State |
 |---|---:|---|---|
-| `trends-digest.yml` | daily | Bluesky credentials | Live; publishes gated journal data and self-hosted thumbnails |
+| `trends-digest.yml` | daily 11/12 UTC | Bluesky credentials | Live; writes `/journal` (Library engine, not primary nav) + `public/trends` thumbs |
 | `amazon-catalog.yml` | monthly/manual | Amazon Creators API credentials | Live, PR-gated catalog refresh |
 | `globe-data-digest.yml` | every 4h | none | Live; direct weather/TLE data commits can advance `main` during work |
-| `edgespec-digest.yml` | daily | none | Live since 2026-07-22; EdgeSpec & TinyML Hardware Radar ([PASSIVE-CONTENT-ENGINES-2026.md](file:///Users/josh/Documents/GitHub/makerportal-hub/docs/PASSIVE-CONTENT-ENGINES-2026.md)) — gate tests, HF fetch, direct commit |
+| `edgespec-digest.yml` | daily 13:30 UTC | none | Live; writes `src/content/edge-radar/` → `/resources/edge-ai-radar` (Library featured). Gate tests + HF fetch. Date file = UTC day only |
 | `cloud-tco-digest.yml` | daily (planned) | none | Planned; Cloud vs Edge TCO breakeven calculator engine |
 
 Full architecture, sequence, and integrity rules for passive daily content engines: [PASSIVE-CONTENT-ENGINES-2026.md](file:///Users/josh/Documents/GitHub/makerportal-hub/docs/PASSIVE-CONTENT-ENGINES-2026.md).
@@ -126,14 +130,14 @@ rejected push; inspect the remote commit before resolving any overlap.
   change). Re-run the commands below before trusting these counts after new
   templates/content.
 - EdgeSpec Radar launch (2026-07-22): `scripts/edgespec/` (pure core +
-  HF orchestrator + 18 gate tests), `/resources/edge-ai-radar`, and
-  `edgespec-digest.yml` live. First snapshot: 12 models × 5 boards from
-  verified Hugging Face file trees; real-Chromium QA at 390px/desktop in both
-  themes — zero console errors, zero document overflow (matrix scrolls
-  horizontally with a sticky model column), zero external requests on load,
-  6 sponsored kit links (Amazon/SparkFun) with correct rels. Build: 88
-  Pagefind pages, 17,180 indexed words (growth = new radar route + daily
-  journal entries).
+  HF orchestrator + gate tests), `/resources/edge-ai-radar`, and
+  `edgespec-digest.yml` live. Expanded to **10 boards** (Sigma 32GB → Teensy),
+  most-powerful-first ordering, `shortBoardLabel` uniqueness gate, Pi boards on
+  Amazon (not SparkFun). Snapshot consolidated to single UTC day file.
+- **Nav IA D-024 (2026-07-22):** 6 primaries Apps·Lab·Library·Blog·Shop·Studio;
+  Signals/Watch demoted; Lab elevated; Library mega features Edge AI Radar.
+  `routeOwner`, SearchModal, llms.txt, kickers, footer aligned. Build: 88
+  Pagefind pages; check 0/0/0.
 
 ## Known residual risks
 
