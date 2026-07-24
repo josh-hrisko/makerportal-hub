@@ -1,0 +1,419 @@
+{
+  "generatedAt": "2026-07-24T12:23:32.709Z",
+  "items": [
+    {
+      "id": "github-755968402",
+      "source": "github",
+      "title": "yolo-ios-app – Ultralytics YOLO iOS app and Swift package for real-time Core ML inference across major computer vision tasks.",
+      "url": "https://github.com/ultralytics/yolo-ios-app",
+      "author": "ultralytics",
+      "publishedAt": "2026-07-24T12:22:48Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-755968402.webp"
+    },
+    {
+      "id": "github-1116516142",
+      "source": "github",
+      "title": "Fun-ASR – Open-source LLM-based ASR model family for Chinese, dialect, accent, and multilingual speech, with FunASR, vLLM, streami",
+      "url": "https://github.com/QwenAudio/Fun-ASR",
+      "author": "QwenAudio",
+      "publishedAt": "2026-07-24T11:01:41Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1116516142.webp"
+    },
+    {
+      "id": "github-1051796718",
+      "source": "github",
+      "title": "ETOS-LLM-Studio – A native LLM client for iOS & Apple Watch. Run local GGUF models offline via llama.cpp, or connect to OpenAI/Claude/Gemi",
+      "url": "https://github.com/Eric-Terminal/ETOS-LLM-Studio",
+      "author": "Eric-Terminal",
+      "publishedAt": "2026-07-24T08:58:39Z",
+      "tags": [
+        "local-llm",
+        "ios-craft"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-1095330682",
+      "source": "github",
+      "title": "LLMKube – Kubernetes operator for self-hosted LLM inference across a heterogeneous GPU fleet: NVIDIA CUDA, AMD Vulkan, and Apple S",
+      "url": "https://github.com/defilantech/LLMKube",
+      "author": "defilantech",
+      "publishedAt": "2026-07-24T08:21:09Z",
+      "tags": [
+        "metal-ane",
+        "local-llm"
+      ],
+      "score": 24,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-1095330682.webp"
+    },
+    {
+      "id": "github-1089922766",
+      "source": "github",
+      "title": "swift-2026-course – 🚀 Complete Swift & Apple Platforms 2026 guide: iOS 26, ML, Foundation Models, SwiftUI, Xcode 26, monetization strategie",
+      "url": "https://github.com/durellwilson/swift-2026-course",
+      "author": "durellwilson",
+      "publishedAt": "2026-07-24T08:19:02Z",
+      "tags": [
+        "on-device-ai",
+        "ios-craft"
+      ],
+      "score": 23,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ]
+    },
+    {
+      "id": "github-704261783",
+      "source": "github",
+      "title": "capacitor-mobile-claw – Run a full AI agent on mobile with local LLM calls, on-device memory, code execution, and native HTTP support in Capacit",
+      "url": "https://github.com/sernnee/capacitor-mobile-claw",
+      "author": "sernnee",
+      "publishedAt": "2026-07-24T10:43:34Z",
+      "tags": [
+        "on-device-ai",
+        "local-llm"
+      ],
+      "score": 22,
+      "domain": "github.com",
+      "sources": [
+        "github"
+      ],
+      "image": "/trends/github-704261783.webp"
+    },
+    {
+      "id": "bluesky-3mr5a24xhs224",
+      "source": "bluesky",
+      "title": "Mentioned a few times I've been looking at ANE (Apple Neural Engine, the fp16 chip in all new Macs & iPhones).\n\nJust came across another great resource, published a few weeks ago, reverse engineered a lot of the lower le",
+      "url": "https://bsky.app/profile/hydroxide.dev/post/3mr5a24xhs224",
+      "author": "hydroxide.dev",
+      "publishedAt": "2026-07-21T06:54:56.608Z",
+      "tags": [
+        "on-device-ai",
+        "metal-ane"
+      ],
+      "score": 20,
+      "domain": "arxiv.org",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr5a24xhs224.webp"
+    },
+    {
+      "id": "hackernews-49022911",
+      "source": "hackernews",
+      "title": "Palmier Pro – Open-source macOS video editor built for AI",
+      "url": "https://github.com/palmier-io/palmier-pro",
+      "author": "harrisontin",
+      "publishedAt": "2026-07-23T15:11:37Z",
+      "tags": [
+        "on-device-ai"
+      ],
+      "score": 18,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-49022911.webp"
+    },
+    {
+      "id": "bluesky-3mrepdjsr3s2c",
+      "source": "bluesky",
+      "title": "I’ve been wanting to explore and document SwiftUI’s blend modes for a while. I finally worked through all 21 of them, with visuals and practical examples showing how each one works and when it can be useful:\nnilcoalescin",
+      "url": "https://bsky.app/profile/natpanferova.bsky.social/post/3mrepdjsr3s2c",
+      "author": "natpanferova.bsky.social",
+      "publishedAt": "2026-07-24T06:17:16.370Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 14,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mrepdjsr3s2c.webp"
+    },
+    {
+      "id": "bluesky-3mr6l77u7xk2j",
+      "source": "bluesky",
+      "title": "they have a llama.cpp fork and GGUFs huggingface.co/poolside/Lag...\n\ni fear i may be doing another round of overnight tuning for the ideal GPU+CPU config for these",
+      "url": "https://bsky.app/profile/philpax.me/post/3mr6l77u7xk2j",
+      "author": "philpax.me",
+      "publishedAt": "2026-07-21T19:47:18.319Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 14,
+      "domain": "huggingface.co",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr6l77u7xk2j.webp"
+    },
+    {
+      "id": "hackernews-49028737",
+      "source": "hackernews",
+      "title": "Mumble Dictation – local dictation that learns your vocabulary",
+      "url": "https://news.ycombinator.com/item?id=49028737",
+      "author": "tarafans7",
+      "publishedAt": "2026-07-23T22:10:17Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 13,
+      "domain": "news.ycombinator.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "arxiv-2607.20951v1",
+      "source": "arxiv",
+      "title": "Designed Vocalizations Dataset: Sound-Designed Human and Animal Voices for Non-human Voice Conversion",
+      "url": "http://arxiv.org/abs/2607.20951v1",
+      "author": "Seolhee Lee",
+      "publishedAt": "2026-07-23T06:04:10Z",
+      "tags": [
+        "dsp-audio"
+      ],
+      "score": 13,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "eess.AS",
+      "image": "/trends/arxiv-2607.20951v1.webp"
+    },
+    {
+      "id": "hackernews-49022840",
+      "source": "hackernews",
+      "title": "Local-first archive of your ChatGPT/Claude chats",
+      "url": "https://chromewebstore.google.com/detail/anamne-â-your-ai-conversa/famgjpiggdaenmgnemmcjobbogdmghlj",
+      "author": "mdrzn",
+      "publishedAt": "2026-07-23T15:05:48Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 12,
+      "domain": "chromewebstore.google.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-49022840.webp"
+    },
+    {
+      "id": "hackernews-49022761",
+      "source": "hackernews",
+      "title": "WatchMachineGo – A visualizer to show hardware performing LLM inference",
+      "url": "https://watchmachinego.com/llm-inference",
+      "author": "dev_dan_2",
+      "publishedAt": "2026-07-23T15:00:52Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 12,
+      "domain": "watchmachinego.com",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "id": "hackernews-49005915",
+      "source": "hackernews",
+      "title": "SynthCut – An open-source, local-first AI video editor",
+      "url": "https://github.com/Relo-video/SynthCut",
+      "author": "Vraj911",
+      "publishedAt": "2026-07-22T12:45:05Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": 12,
+      "domain": "github.com",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-49005915.webp"
+    },
+    {
+      "id": "bluesky-3mradcb7cgs2e",
+      "source": "bluesky",
+      "title": "For HWS+ subscribers: A breakpoint that plays a sound and continues automatically is a surprisingly effective way to monitor SwiftUI redraws without ever pausing your app. www.hackingwithswift.com/plus/learn-s...",
+      "url": "https://bsky.app/profile/twostraws.bsky.social/post/3mradcb7cgs2e",
+      "author": "twostraws.bsky.social",
+      "publishedAt": "2026-07-22T12:31:09.934Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 10,
+      "domain": "hackingwithswift.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mradcb7cgs2e.webp"
+    },
+    {
+      "id": "bluesky-3mquwmfur3s2f",
+      "source": "bluesky",
+      "title": "\"The SwiftUI Way\" book by @natpanferova.bsky.social has been updated with expanded guidance on SwiftUI data flow, view updates, and performance, including changes introduced in Xcode 27: \nnilcoalescing.com/blog/TheSwif..",
+      "url": "https://bsky.app/profile/nilcoalescing.com/post/3mquwmfur3s2f",
+      "author": "nilcoalescing.com",
+      "publishedAt": "2026-07-17T23:44:54.611Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 9,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mquwmfur3s2f.webp"
+    },
+    {
+      "id": "devto-4178044",
+      "source": "devto",
+      "title": "Part 6 — Nudges, prompts, and knowing when to buy",
+      "url": "https://dev.to/nerd_snipe_dev/part-6-nudges-prompts-and-knowing-when-to-buy-426m",
+      "author": "nerd_snipe_dev",
+      "publishedAt": "2026-07-22T15:18:00Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 8,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4178044.webp"
+    },
+    {
+      "id": "bluesky-3mr2zp4r53k2m",
+      "source": "bluesky",
+      "title": "To prepare Strolly for app resizability in iOS 27, we wanted its non-modal detent sheets to adapt into side panels on wider displays.\n\nSwiftUI sheets don’t support that presentation, so we built our own panel API:\n\nnilco",
+      "url": "https://bsky.app/profile/hishnash.bsky.social/post/3mr2zp4r53k2m",
+      "author": "hishnash.bsky.social",
+      "publishedAt": "2026-07-20T09:56:05.374Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": 8,
+      "domain": "nilcoalescing.com",
+      "sources": [
+        "bluesky"
+      ],
+      "image": "/trends/bluesky-3mr2zp4r53k2m.webp"
+    },
+    {
+      "id": "hackernews-48973357",
+      "source": "hackernews",
+      "title": "6.4x faster than llama.cpp, 3.9x faster than MLX",
+      "url": "https://www.basecompute.co/getbasert",
+      "author": "lukasonedge",
+      "publishedAt": "2026-07-20T01:13:45Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 6,
+      "domain": "basecompute.co",
+      "sources": [
+        "hackernews"
+      ],
+      "image": "/trends/hackernews-48973357.webp"
+    },
+    {
+      "id": "arxiv-2607.10183v2",
+      "source": "arxiv",
+      "title": "Automated Tensor Scheduling for Hybrid CPU-GPU LLM Inference on Consumer Devices",
+      "url": "http://arxiv.org/abs/2607.10183v2",
+      "author": "Yangyijian Liu",
+      "publishedAt": "2026-07-11T08:00:05Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": 5,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.DC",
+      "image": "/trends/arxiv-2607.10183v2.webp"
+    },
+    {
+      "id": "devto-4207525",
+      "source": "devto",
+      "title": "I turned my phone into a remote deck for my Windows laptop — no cloud, no accounts, one npm start",
+      "url": "https://dev.to/ronak_parmar_033c50d168b5/i-turned-my-phone-into-a-remote-deck-for-my-windows-laptop-no-cloud-no-accounts-one-npm-start-34hb",
+      "author": "ronak_parmar_033c50d168b5",
+      "publishedAt": "2026-07-22T15:52:01Z",
+      "tags": [
+        "privacy-arch"
+      ],
+      "score": -90,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4207525.webp"
+    },
+    {
+      "id": "devto-4177986",
+      "source": "devto",
+      "title": "Part 5 — Deals, pricing, and a real board",
+      "url": "https://dev.to/nerd_snipe_dev/part-5-deals-pricing-and-a-real-board-a1c",
+      "author": "nerd_snipe_dev",
+      "publishedAt": "2026-07-22T16:15:00Z",
+      "tags": [
+        "ios-craft"
+      ],
+      "score": -92,
+      "domain": "dev.to",
+      "sources": [
+        "devto"
+      ],
+      "image": "/trends/devto-4177986.webp"
+    },
+    {
+      "id": "arxiv-2607.17012v1",
+      "source": "arxiv",
+      "title": "Schema-Bound LLM Control of Scientific Instrumentation through Model Context Protocol Skills",
+      "url": "http://arxiv.org/abs/2607.17012v1",
+      "author": "Roberto dos Reis",
+      "publishedAt": "2026-07-19T00:16:24Z",
+      "tags": [
+        "local-llm"
+      ],
+      "score": -92,
+      "domain": "arxiv.org",
+      "sources": [
+        "arxiv"
+      ],
+      "category": "cs.SE",
+      "image": "/trends/arxiv-2607.17012v1.webp"
+    }
+  ]
+}
